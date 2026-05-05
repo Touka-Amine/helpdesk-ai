@@ -1,0 +1,42 @@
+{
+  "model_name": "LR_SMOTE_GridSearch",
+  "f1_macro_test": 0.7695,
+  "f1_macro_cv": 1.0,
+  "accuracy_test": 0.7702,
+  "confidence_threshold": 0.4,
+  "classes": [
+    "Applicatifs",
+    "Backup",
+    "Communication",
+    "Infrastructure",
+    "Microsoft",
+    "Réseau",
+    "Système",
+    "Sécurité"
+  ],
+  "best_params": {
+    "model__C": 1.0,
+    "tfidf__max_features": 3000,
+    "tfidf__min_df": 1,
+    "tfidf__ngram_range": [
+      1,
+      1
+    ]
+  },
+  "train_size": 1404,
+  "test_size": 396,
+  "unique_train": 100,
+  "unique_test": 25,
+  "dataset_note": "125 textes uniques sur 1800 tickets — dataset synthétique",
+  "known_weaknesses": [
+    "Sécurité : recall faible (vocabulaire proche de Microsoft/Applicatifs)",
+    "Microsoft : confusion avec Applicatifs sur tickets d'accès"
+  ],
+  "confidence_stats": {
+    "haute_confiance_pct": 68.7,
+    "haute_confiance_accuracy": 1.0,
+    "basse_confiance_pct": 31.3,
+    "basse_confiance_accuracy": 0.27,
+    "interpretation": "68.7% des tickets routés automatiquement avec 100% de précision. 31.3% flaggés pour révision humaine."
+  }
+}
