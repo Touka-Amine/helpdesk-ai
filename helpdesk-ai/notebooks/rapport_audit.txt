@@ -1,0 +1,22 @@
+
+========================================
+RAPPORT D'AUDIT EDA — HELPDESK AI
+========================================
+Date           : 2026-05-05 02:56
+Dataset        : data/raw/HelpDesk1.csv
+Nb tickets     : 1800
+Nb colonnes    : 23
+
+--- CIBLE ---
+Colonne cible  : Catégorie
+Nb classes     : 8
+Ratio déséquil : 5.9x
+
+--- TEXTE ---
+Mots médiane   : 38
+Tickets vides  : 0
+Duplicatas     : 265
+Labels incoh.  : 0
+
+--- RAG ---
+Base RAG size  : 450 tickets
