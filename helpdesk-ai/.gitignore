@@ -5,9 +5,12 @@ __pycache__/
 .env
 
 # Données (gérées par DVC)
-data/raw/
-data/processed/
-data/splits/
+data/raw/*
+data/processed/*
+data/splits/*
+!data/raw/*.dvc
+!data/processed/*.dvc
+!data/splits/*.dvc
 
 # Modèles lourds
 models/*.pkl
