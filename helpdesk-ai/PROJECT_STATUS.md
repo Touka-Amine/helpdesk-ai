@@ -7,11 +7,11 @@
 
 | | |
 |---|---|
-| **Phase active** | Phase 0 — Initialisation & gouvernance |
-| **Progression globale** | ~5 % |
+| **Phase active** | Phase 1 — Cadrage scientifique & SRS |
+| **Progression globale** | ~8 % (Phase 0 terminée) |
 | **Périmètre** | Cœur rehaussé (Must) |
 | **Durée** | Stage 6 mois · GPU local |
-| **Prochaine étape** | `.gitignore` + figer l'environnement + init DVC |
+| **Prochaine étape** | Phase 1 : problématique → objectifs SMART → exigences |
 
 ## ✅ Terminé
 - EDA + preprocessing (notebooks 01–02)
@@ -35,7 +35,7 @@
 ## Avancement par phase
 | Phase | Avancement |
 |---|---|
-| 0 Initialisation | 🟡 ~70 % |
+| 0 Initialisation | ✅ 100 % |
 | 1 Cadrage & SRS | 🔴 0 % |
 | 2 Data & RGPD | 🔴 0 % |
 | 3 EDA | 🟡 ~80 % (à consolider) |

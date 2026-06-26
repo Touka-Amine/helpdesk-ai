@@ -4,8 +4,8 @@
 > prévue ici. À chaque session : relire ce fichier → identifier la phase/tâche active → exécuter
 > **une seule** tâche → tester → mettre à jour ce fichier → cocher → résumer → proposer la suite.
 >
-> **Méta** — Dernière mise à jour : *à la création* · Phase active : **Phase 0** · Périmètre :
-> **Cœur rehaussé (Must)** · Durée : **stage 6 mois** · Compute : **GPU local**.
+> **Méta** — Dernière mise à jour : **2026-06-26** · Phase active : **Phase 1** (Phase 0 terminée)
+> · Périmètre : **Cœur rehaussé (Must)** · Durée : **stage 6 mois** · Compute : **GPU local**.
 >
 > **Documents liés** : [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) ·
 > [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [RISKS.md](RISKS.md) ·
@@ -325,13 +325,13 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 
 > Chaque tâche est atomique (réalisable en 1 session). On coche au fil de l'eau.
 
-### Phase 0 — Initialisation
-- [ ] Créer les 11 fichiers de pilotage
-- [ ] Écrire/compléter `.gitignore` (node_modules, venv, *.pkl, data lourde, .env)
-- [ ] Figer l'environnement Python (`requirements.txt` vérifié / venv)
-- [ ] Initialiser et configurer DVC
-- [ ] Premier commit de la gouvernance (sur une branche)
-- [ ] Vérifier la cohérence inter-fichiers (cycle workflow à blanc)
+### Phase 0 — Initialisation ✅ (terminée 2026-06-26)
+- [x] Créer les 11 fichiers de pilotage
+- [x] Écrire/compléter `.gitignore` (node_modules, venv, *.pkl, data lourde, .env)
+- [x] Figer l'environnement Python (`requirements.txt` vérifié / venv)
+- [x] Initialiser et configurer DVC (déjà initialisé, vérifié)
+- [x] Premier commit de la gouvernance (branche `chore/gouvernance-pfe`, 3 commits)
+- [x] Vérifier la cohérence inter-fichiers (cycle workflow déroulé)
 
 ### Phase 1 — Cadrage & SRS
 - [ ] Figer problématique + hypothèses + questions de recherche
@@ -487,12 +487,12 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~5 %** (gouvernance en place) |
-| **Phase actuelle** | Phase 0 — Initialisation |
-| **Tâche actuelle** | Créer les 11 fichiers de pilotage |
-| **Tâches terminées** | Création du système documentaire (en cours) |
+| **Progression globale** | **~8 %** (Phase 0 terminée) |
+| **Phase actuelle** | Phase 1 — Cadrage scientifique & SRS |
+| **Tâche actuelle** | (à démarrer) Figer problématique + hypothèses |
+| **Tâches terminées** | Phase 0 : gouvernance (11 fichiers), `.gitignore`, DVC vérifié, 3 commits |
 | **Tâches restantes** | Phases 1 → 15 |
-| **Prochaine étape** | `.gitignore` + figer l'environnement + init DVC |
+| **Prochaine étape** | Phase 1 : problématique → objectifs SMART → exigences (MoSCoW + ENF) |
 | **Risques ouverts** | Données synthétiques · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
 | **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (QLoRA, hybrid search, re-ranking, agents, K8s…) |

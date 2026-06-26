@@ -3,13 +3,22 @@
 > Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/). Types : `Ajouté`,
 > `Modifié`, `Corrigé`, `Supprimé`, `Sécurité`, `Déprécié`. Source de vérité : [PLAN.md](PLAN.md).
 
-## [Non publié]
+## [Non publié] — branche `chore/gouvernance-pfe`
 
 ### Ajouté
 - Système de pilotage documentaire du PFE : `PLAN.md` (source de vérité) + `PROJECT_STATUS.md`,
   `TASKS.md`, `BACKLOG.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `RISKS.md`, `TESTING.md`,
   `DEPLOYMENT.md`, `PFE_PROGRESS.md`.
 - `CAHIER_DES_CHARGES.md` : audit critique + restructuration au niveau ingénieur/industriel.
+- `.gitignore` racine du dépôt (exclut `venv/`, `node_modules/`, `*.pkl`, `*.db`, `.env`).
+
+### Modifié
+- `helpdesk-ai/.gitignore` : ajout `node_modules/`, `data/*.db`, artefacts build frontend.
+
+### Phase 0 — commits (2026-06-26)
+- `07cd6a9` docs(pilotage) : système de gestion de projet PFE + cahier des charges.
+- `8dae2fd` feat(frontend) : application Angular 21 (scaffold client/admin).
+- `2532828` chore(ml) : maj notebooks, preprocessing, moteur RAG, config + metadata.
 
 ---
 
