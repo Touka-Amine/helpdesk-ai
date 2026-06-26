@@ -8,9 +8,9 @@
 
 | # | Chapitre | Phase(s) source | État | Notes |
 |---|---|---|---|---|
-| 1 | Introduction générale | 1 | 🔴 | Problématique, objectifs, contributions |
-| 2 | État de l'art & existant | 1 | 🔴 | NLP FR, RAG, LLM, positionnement |
-| 3 | Analyse & spécification des besoins | 1 | 🔴 | EF/ENF, UML, traçabilité |
+| 1 | Introduction générale | 1 | 🟡 | Ébauché via `CADRAGE_SRS.md` (problématique, objectifs) |
+| 2 | État de l'art & existant | 1 | 🟡 | Synthèse dans `CADRAGE_SRS.md` + cahier des charges |
+| 3 | Analyse & spécification des besoins | 1 | 🟡 | EF/ENF + traçabilité dans `CADRAGE_SRS.md` |
 | 4 | Conception & architecture | — | 🟡 | S'appuie sur [ARCHITECTURE.md](ARCHITECTURE.md) |
 | 5 | Données & gouvernance | 2 | 🔴 | RGPD, qualité, DVC |
 | 6 | Modélisation IA (NLP) | 3,4,5 | 🟡 | Baseline faite, CamemBERT à venir |

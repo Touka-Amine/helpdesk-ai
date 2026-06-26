@@ -333,13 +333,14 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [x] Premier commit de la gouvernance (branche `chore/gouvernance-pfe`, 3 commits)
 - [x] Vérifier la cohérence inter-fichiers (cycle workflow déroulé)
 
-### Phase 1 — Cadrage & SRS
-- [ ] Figer problématique + hypothèses + questions de recherche
-- [ ] Rédiger objectifs SMART
-- [ ] Synthétiser l'état de l'art (NLP FR, RAG, LLM)
-- [ ] Lister les exigences fonctionnelles (MoSCoW)
-- [ ] Lister les exigences non-fonctionnelles (perf, sécurité, RGPD, accessibilité)
-- [ ] Construire la matrice de traçabilité exigences ↔ tests
+### Phase 1 — Cadrage & SRS 🟡 (v0.1 rédigée → `CADRAGE_SRS.md`, en validation)
+- [x] Figer problématique + hypothèses + questions de recherche
+- [x] Rédiger objectifs SMART
+- [x] Synthétiser l'état de l'art (NLP FR, RAG, LLM)
+- [x] Lister les exigences fonctionnelles (MoSCoW)
+- [x] Lister les exigences non-fonctionnelles (perf, sécurité, RGPD, accessibilité)
+- [x] Construire la matrice de traçabilité exigences ↔ tests
+- [ ] **Validation par l'étudiant** des points 🟠 (entreprise, données réelles, RGPD, date, périmètre)
 
 ### Phase 2 — Data Engineering & RGPD
 - [ ] Audit qualité (doublons, NaN, déséquilibre, fuite)
@@ -487,12 +488,12 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~8 %** (Phase 0 terminée) |
-| **Phase actuelle** | Phase 1 — Cadrage scientifique & SRS |
-| **Tâche actuelle** | (à démarrer) Figer problématique + hypothèses |
-| **Tâches terminées** | Phase 0 : gouvernance (11 fichiers), `.gitignore`, DVC vérifié, 3 commits |
-| **Tâches restantes** | Phases 1 → 15 |
-| **Prochaine étape** | Phase 1 : problématique → objectifs SMART → exigences (MoSCoW + ENF) |
+| **Progression globale** | **~12 %** (Phase 1 rédigée, en validation) |
+| **Phase actuelle** | Phase 1 — Cadrage & SRS (v0.1 à valider) |
+| **Tâche actuelle** | Validation des points 🟠 du `CADRAGE_SRS.md` par l'étudiant |
+| **Tâches terminées** | Phase 0 complète ; Phase 1 : `CADRAGE_SRS.md` v0.1 (cadrage + SRS) |
+| **Tâches restantes** | Validation Phase 1 → Phases 2 → 15 |
+| **Prochaine étape** | Valider le cadrage, puis Phase 2 (Data Engineering + RGPD) |
 | **Risques ouverts** | Données synthétiques · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
 | **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (QLoRA, hybrid search, re-ranking, agents, K8s…) |
