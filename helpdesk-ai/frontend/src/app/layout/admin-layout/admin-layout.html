@@ -1,0 +1,43 @@
+<div class="layout-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-h">Helpdesk</span> <span class="logo-ai">AI</span>
+      <div class="sidebar-role">Admin · IT Support</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/admin/dashboard" routerLinkActive="active-link" class="nav-item">
+        <i class="ti ti-layout-dashboard"></i><span>Tableau de bord</span>
+      </a>
+      <a routerLink="/admin/approval-queue" routerLinkActive="active-link" class="nav-item">
+        <i class="ti ti-checklist"></i><span>File d'approbation</span>
+        @if (pendingCount() > 0) {
+          <span class="nav-badge">{{ pendingCount() }}</span>
+        }
+      </a>
+      <a routerLink="/admin/tickets" routerLinkActive="active-link" class="nav-item">
+        <i class="ti ti-list"></i><span>Tous les tickets</span>
+      </a>
+      <a routerLink="/admin/notifications" routerLinkActive="active-link" class="nav-item">
+        <i class="ti ti-bell"></i><span>Notifications</span>
+      </a>
+      <a routerLink="/admin/users" routerLinkActive="active-link" class="nav-item">
+        <i class="ti ti-users"></i><span>Utilisateurs</span>
+      </a>
+    </nav>
+
+    <button class="logout-btn" (click)="logout()">
+      <i class="ti ti-logout"></i><span>Déconnexion</span>
+    </button>
+  </aside>
+
+  <div class="layout-main">
+    <header class="topbar">
+      <span class="topbar-title">{{ pageTitle() }}</span>
+      <div class="topbar-right">
+        <div class="avatar">{{ initials() }}</div>
+      </div>
+    </header>
+    <main class="layout-content"><router-outlet /></main>
+  </div>
+</div>

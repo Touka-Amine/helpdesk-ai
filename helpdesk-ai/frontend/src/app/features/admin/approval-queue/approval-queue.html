@@ -1,0 +1,96 @@
+<div class="approval-page">
+  <div class="page-header">
+    <div class="page-title">File d'approbation</div>
+    <div class="page-subtitle">{{ pendingTickets().length }} ticket(s) en attente de validation</div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-text">Chargement...</div>
+  } @else if (error()) {
+    <div class="error-text">{{ error() }}</div>
+  } @else if (pendingTickets().length === 0) {
+    <div class="empty-state">Aucun ticket en attente d'approbation.</div>
+  } @else {
+
+    <div class="approval-layout">
+
+      <div class="queue-list">
+        @for (t of pendingTickets(); track t.id) {
+          <div
+            class="queue-item"
+            [class.active]="selectedTicket()?.id === t.id"
+            (click)="selectTicket(t)"
+          >
+            <div class="queue-item-title">#{{ t.id.toString().padStart(4, '0') }} — {{ t.titre }}</div>
+            <div class="queue-item-meta">
+              <span class="confidence-badge" [class.low]="getConfidence(t) < 0.40">
+                Confiance {{ (getConfidence(t) * 100).toFixed(0) }}%
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (selectedTicket()) {
+        <div class="detail-panel">
+
+          <div class="detail-card">
+            <div class="detail-label">Résumé ticket</div>
+            <div class="detail-title">{{ selectedTicket()!.titre }}</div>
+            <div class="detail-text">{{ selectedTicket()!.description }}</div>
+            <div class="detail-tags">
+              <span class="tag"><i class="ti ti-building"></i>{{ selectedTicket()!.filiale || '—' }}</span>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-label">Résultat ML</div>
+            <div class="ml-row"><span>Catégorie</span><span class="ml-value">{{ getCategory(selectedTicket()!) }}</span></div>
+            <div class="ml-row"><span>Confiance</span><span class="ml-value" [class.green]="getConfidence(selectedTicket()!) >= 0.40" [class.red]="getConfidence(selectedTicket()!) < 0.40">{{ (getConfidence(selectedTicket()!) * 100).toFixed(0) }}%</span></div>
+            <div class="ml-row">
+              <span>Routage</span>
+              <span class="status-badge" [class.green]="isAutoRouted(selectedTicket()!)" [class.amber]="!isAutoRouted(selectedTicket()!)">
+                {{ isAutoRouted(selectedTicket()!) ? 'Auto (≥0.40)' : 'Révision requise' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-label-row">
+              <span class="detail-label">Suggestion RAG</span>
+              <span class="refresh-link" (click)="refreshRag()"><i class="ti ti-refresh"></i> Rafraîchir</span>
+            </div>
+            <div class="detail-text">{{ getRagSuggestion(selectedTicket()!) }}</div>
+          </div>
+
+          <div class="decision-card">
+            <div class="detail-label orange">Décision</div>
+
+            <label class="field-label">Message au client</label>
+            <textarea
+              [(ngModel)]="messageClient"
+              rows="2"
+              placeholder="Ex : Votre problème a été résolu, merci de vérifier..."
+            ></textarea>
+
+            <label class="field-label">Note interne</label>
+            <textarea
+              [(ngModel)]="noteInterne"
+              rows="2"
+              placeholder="Note visible uniquement par l'équipe IT..."
+            ></textarea>
+
+            <div class="decision-actions">
+              <button class="btn-reject" [disabled]="submitting()" (click)="reject()">Rejeter</button>
+              <button class="btn-approve" [disabled]="submitting()" (click)="approve()">
+                {{ submitting() ? 'Envoi...' : 'Valider' }}
+              </button>
+            </div>
+          </div>
+
+        </div>
+      }
+
+    </div>
+  }
+</div>

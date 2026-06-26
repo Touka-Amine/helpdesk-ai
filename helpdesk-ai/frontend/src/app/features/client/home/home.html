@@ -1,0 +1,82 @@
+<div class="home-grid">
+
+  <div class="home-main">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-head"><span>Total</span><i class="ti ti-ticket"></i></div>
+        <div class="stat-value">{{ totalCount() }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-head"><span>En cours</span><i class="ti ti-clock"></i></div>
+        <div class="stat-value blue">{{ enCoursCount() }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-head"><span>Résolus</span><i class="ti ti-check"></i></div>
+        <div class="stat-value green">{{ resoluCount() }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-head"><span>Délai moyen</span><i class="ti ti-hourglass"></i></div>
+        <div class="stat-value">4h</div>
+      </div>
+    </div>
+
+    <div class="recent-card">
+      <div class="recent-header">
+        <span>Mes tickets récents</span>
+        <span class="see-all" (click)="goToMyTickets()">Voir tout →</span>
+      </div>
+
+      @if (loading()) {
+        <div class="recent-loading">Chargement...</div>
+      } @else if (recentTickets().length === 0) {
+        <div class="recent-empty">Aucun ticket pour le moment.</div>
+      } @else {
+        @for (t of recentTickets(); track t.id) {
+          <div class="recent-row" (click)="goToDetail(t.id)">
+            <div>
+              <div class="recent-title">#{{ t.id.toString().padStart(4, '0') }} — {{ t.titre }}</div>
+              <div class="recent-meta">{{ formatDateShort(t.created_at) }} · {{ t.filiale || '—' }}</div>
+            </div>
+            <span class="status-badge" [ngClass]="'status-' + t.statut.toLowerCase().replace(' ', '-')">
+              {{ statutCfg[t.statut].label }}
+            </span>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <div class="home-side">
+    <div class="cta-card" (click)="goToNewTicket()">
+      <div class="cta-title">Déclarer un problème</div>
+      <div class="cta-text">Notre IA pré-analyse votre demande en quelques secondes.</div>
+      <div class="cta-btn">Commencer</div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-label">Assistant IA</div>
+
+      <div class="ai-row">
+        <span>Routage automatique</span>
+        <span class="ai-value green">{{ aiStats().autoRoutedPercent }}%</span>
+      </div>
+      <div class="ai-bar"><div class="ai-bar-fill" [style.width.%]="aiStats().autoRoutedPercent"></div></div>
+
+      <div class="ai-row" style="margin-top: 10px">
+        <span>Confiance moyenne</span>
+        <span class="ai-value blue">{{ aiStats().avgConfidence }}</span>
+      </div>
+
+      <div class="ai-note">
+        Sur vos {{ aiStats().totalCount }} tickets, {{ aiStats().autoRoutedCount }} ont été classés et routés sans intervention humaine.
+      </div>
+    </div>
+
+    <div class="contact-card">
+      <div class="contact-label">Besoin d'aide ?</div>
+      <div class="contact-line"><i class="ti ti-phone"></i> (+216) 39 140 000</div>
+      <div class="contact-line"><i class="ti ti-mail"></i> contact.otbs&#64;onetech-group.com</div>
+    </div>
+  </div>
+
+</div>

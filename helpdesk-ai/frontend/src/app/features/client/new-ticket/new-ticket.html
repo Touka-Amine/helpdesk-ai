@@ -1,0 +1,48 @@
+<div class="simple-form-wrapper">
+  <div class="simple-form-header">
+    <p class="simple-title">Besoin d'aide ?</p>
+    <p class="simple-subtitle">Décrivez votre problème simplement, on s'occupe du reste.</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="simple-form">
+    <div class="field-group">
+      <label>Quel est votre problème ? <span class="required">*</span></label>
+      <input type="text" formControlName="titre" placeholder="Ex : Mon imprimante ne marche plus" />
+      @if (form.get('titre')?.hasError('required') && form.get('titre')?.touched) {
+        <span class="field-error">Merci de décrire votre problème.</span>
+      }
+    </div>
+
+    <div class="field-group">
+      <label>Pouvez-vous nous en dire un peu plus ?</label>
+      <textarea formControlName="actions" rows="3" placeholder="Ex : ça affiche « hors ligne » depuis ce matin..."></textarea>
+    </div>
+
+    <div class="field-group">
+      <label>C'est urgent ?</label>
+      <div class="urgence-choice">
+        <div
+          class="urgence-option"
+          [class.selected]="form.get('priorite')?.value === 'Modéré'"
+          (click)="form.patchValue({ priorite: 'Modéré' })"
+        >🙂 Pas urgent</div>
+        <div
+          class="urgence-option urgent"
+          [class.selected]="form.get('priorite')?.value === 'Urgent'"
+          (click)="form.patchValue({ priorite: 'Urgent' })"
+        >😟 Ça bloque mon travail</div>
+      </div>
+    </div>
+
+    @if (errorMsg()) {
+      <div class="alert error">{{ errorMsg() }}</div>
+    }
+    @if (successMsg()) {
+      <div class="alert success">{{ successMsg() }}</div>
+    }
+
+    <button type="submit" class="submit-btn" [disabled]="submitting()">
+      <i class="ti ti-send"></i> {{ submitting() ? 'Envoi...' : 'Envoyer ma demande' }}
+    </button>
+  </form>
+</div>

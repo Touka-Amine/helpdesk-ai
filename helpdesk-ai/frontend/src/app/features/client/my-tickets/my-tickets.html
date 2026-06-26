@@ -1,0 +1,46 @@
+<div class="page-header">
+  <p class="page-subtitle">Suivez l'avancement de vos demandes.</p>
+</div>
+
+<div class="filters-bar">
+  <div class="filter-select">
+    <i class="ti ti-filter"></i>
+    <select [(ngModel)]="statutFilter">
+      @for (s of statutOptions; track s) {
+        <option [value]="s">{{ s }}</option>
+      }
+    </select>
+  </div>
+  <div class="search-box">
+    <i class="ti ti-search"></i>
+    <input type="text" [(ngModel)]="searchFilter" placeholder="Rechercher par titre ou numéro..." />
+  </div>
+</div>
+
+<div class="ot-count">{{ filtered().length }} ticket(s)</div>
+
+@if (loading()) {
+  <div class="skeleton" *ngFor="let i of [1,2,3]"></div>
+} @else if (filtered().length === 0) {
+  <div class="ot-empty">Aucun ticket ne correspond à votre recherche.</div>
+} @else {
+  <div class="ticket-list">
+    @for (t of filtered(); track t.id) {
+      <div class="ticket-card">
+        <div class="ticket-info">
+          <div class="ticket-title">#{{ t.id.toString().padStart(4, '0') }} — {{ t.titre }}</div>
+          <div class="ticket-meta">
+            <span><i class="ti ti-building"></i>{{ t.filiale || '—' }}</span>
+            <span><i class="ti ti-calendar"></i>{{ formatDateShort(t.created_at) }}</span>
+          </div>
+        </div>
+        <div class="ticket-actions">
+          <span class="status-badge" [ngClass]="'status-' + t.statut.toLowerCase().replace(' ', '-')">
+            {{ statutCfg[t.statut].label }}
+          </span>
+          <button class="detail-btn" (click)="goToDetail(t.id)">Détails</button>
+        </div>
+      </div>
+    }
+  </div>
+}

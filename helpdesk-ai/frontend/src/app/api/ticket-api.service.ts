@@ -1,0 +1,52 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+import {
+  Ticket,
+  CreateTicketRequest,
+  ApproveTicketRequest,
+  TicketHistoryEntry,
+} from '../models/ticket.models';
+
+// Note : Swagger confirme que les endpoints admin (approve, admin/all, history)
+// sont sous /tickets/..., pas sous un routeur /admin/... séparé comme supposé
+// initialement dans le mapping spec-frontend-angular.md. Un seul service couvre
+// donc l'espace client ET l'espace admin pour les tickets.
+@Injectable({ providedIn: 'root' })
+export class TicketApiService {
+  private readonly base = `${environment.apiUrl}/tickets`;
+
+  constructor(private http: HttpClient) {}
+
+  // --- Espace client ---
+ createTicket(payload: CreateTicketRequest) {
+  return this.http.post<Ticket>(`${this.base}/`, payload);
+}
+
+
+
+  getMyTickets() {
+    return this.http.get<Ticket[]>(`${this.base}/me`);
+  }
+
+  getMyTicketDetail(ticketId: number) {
+    return this.http.get<Ticket>(`${this.base}/${ticketId}`);
+  }
+
+  // --- Espace admin ---
+  getAllTickets() {
+    return this.http.get<Ticket[]>(`${this.base}/admin/all`);
+  }
+
+  approveTicket(ticketId: number, payload: ApproveTicketRequest) {
+    return this.http.patch<Ticket>(`${this.base}/${ticketId}/approve`, payload);
+  }
+
+  refreshRag(ticketId: number) {
+    return this.http.post<Ticket>(`${this.base}/${ticketId}/refresh-rag`, {});
+  }
+
+  getTicketHistory(ticketId: number) {
+    return this.http.get<TicketHistoryEntry[]>(`${this.base}/${ticketId}/history`);
+  }
+}

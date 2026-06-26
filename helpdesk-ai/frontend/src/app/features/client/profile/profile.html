@@ -1,0 +1,55 @@
+<div class="profile-wrapper">
+  <div class="avatar-section">
+    <div class="avatar-circle">
+      @if (photoUrl()) {
+        <img [src]="photoUrl()" alt="Photo de profil" />
+      } @else {
+        {{ initials() }}
+      }
+    </div>
+    <div>
+      <label class="change-photo-btn">
+        <i class="ti ti-camera"></i> Changer la photo
+        <input type="file" accept="image/png, image/jpeg" hidden (change)="onPhotoSelected($event)" />
+      </label>
+      <div class="photo-hint">JPG ou PNG, 2 Mo max</div>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="profile-form">
+    <div class="field-group">
+      <label>Nom complet</label>
+      <input type="text" formControlName="nom" />
+    </div>
+
+    <div class="field-group">
+      <label><i class="ti ti-mail"></i> Email</label>
+      <input type="email" formControlName="email" />
+      @if (form.get('email')?.hasError('email')) {
+        <span class="field-error">Email invalide.</span>
+      }
+    </div>
+
+    <div class="field-group">
+      <label><i class="ti ti-phone"></i> Numéro de téléphone</label>
+      <input type="tel" formControlName="telephone" placeholder="+216 XX XXX XXX" />
+    </div>
+
+    <div class="field-group">
+      <label><i class="ti ti-building"></i> Filiale</label>
+      <select formControlName="filiale">
+        @for (f of filiales; track f) {
+          <option [value]="f">{{ f }}</option>
+        }
+      </select>
+    </div>
+
+    @if (saveMsg()) {
+      <div class="alert success">{{ saveMsg() }}</div>
+    }
+
+    <button type="submit" class="submit-btn" [disabled]="saving()">
+      {{ saving() ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+    </button>
+  </form>
+</div>

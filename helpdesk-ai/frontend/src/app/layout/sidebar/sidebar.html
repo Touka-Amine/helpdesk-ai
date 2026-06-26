@@ -1,0 +1,25 @@
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-one">One</span><span class="logo-tech">Tech</span>
+    <span class="logo-bs">B.S</span>
+  </div>
+
+  <mat-nav-list class="sidebar-nav">
+    @for (item of navItems; track item.route) {
+      
+      <a mat-list-item
+        [routerLink]="item.route"
+        routerLinkActive="active-link"
+        class="nav-item"
+      >
+        <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    }
+  </mat-nav-list>
+
+  <button class="logout-btn" (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    <span>Déconnexion</span>
+  </button>
+</aside>

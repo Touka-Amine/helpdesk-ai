@@ -1,0 +1,11 @@
+<header class="topbar">
+  <h1 class="page-heading">Espace client</h1>
+
+  <div class="topbar-right">
+    <mat-icon class="bell-icon">notifications</mat-icon>
+    <div class="user-chip">
+      <div class="avatar">{{ (user?.nom || user?.email || '?').charAt(0).toUpperCase() }}</div>
+      <span class="user-name">{{ user?.nom || user?.email }}</span>
+    </div>
+  </div>
+</header>

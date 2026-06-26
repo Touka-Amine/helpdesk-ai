@@ -1,0 +1,60 @@
+<div class="layout-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-h">Helpdeskk</span> <span class="logo-ai">AI</span>
+      <div class="sidebar-user">{{ user?.nom || user?.email }}</div>
+      <div class="sidebar-role">Client</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/client/home" routerLinkActive="active-link" class="nav-item">
+        <i class="ti ti-layout-dashboard"></i><span>Accueil</span>
+      </a>
+      <a routerLink="/client/new-ticket" routerLinkActive="active-link" class="nav-item">
+        <i class="ti ti-plus"></i><span>Nouveau ticket</span>
+      </a>
+      <a routerLink="/client/my-tickets" routerLinkActive="active-link" class="nav-item">
+        <i class="ti ti-ticket"></i><span>Mes tickets</span>
+      </a>
+      
+      <a routerLink="/client/profile" routerLinkActive="active-link" class="nav-item">
+        <i class="ti ti-user"></i><span>Mon profil</span>
+      </a>
+    </nav>
+
+    <button class="logout-btn" (click)="logout()">
+      <i class="ti ti-logout"></i><span>Déconnexion</span>
+    </button>
+  </aside>
+
+  <div class="layout-main">
+    <header class="topbar">
+      <span class="topbar-title">Espace client</span>
+      <div class="topbar-right">
+        <div class="notif-wrapper">
+          <button class="notif-btn" (click)="toggleNotif()" aria-label="Notifications">
+            <i class="ti ti-bell"></i>
+            @if (notifications().length > 0) {
+              <span class="notif-badge">{{ notifications().length }}</span>
+            }
+          </button>
+
+          @if (notifOpen()) {
+            <div class="notif-panel">
+              <div class="notif-panel-title">Notifications</div>
+              @for (n of notifications(); track n.id) {
+                <div class="notif-item">{{ n.message }}</div>
+              }
+              @if (notifications().length === 0) {
+                <div class="notif-empty">Aucune notification</div>
+              }
+            </div>
+          }
+        </div>
+        <div class="avatar">{{ initials() }}</div>
+      </div>
+    </header>
+
+    <main class="layout-content"><router-outlet /></main>
+  </div>
+</div>

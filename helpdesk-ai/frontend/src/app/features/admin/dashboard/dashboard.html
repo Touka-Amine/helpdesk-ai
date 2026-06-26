@@ -1,0 +1,53 @@
+<div class="dashboard-page">
+  <div class="page-header">
+    <div class="page-title">Tableau de bord</div>
+    <div class="page-subtitle">Vue d'ensemble des tickets et des prédictions IA.</div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-text">Chargement...</div>
+  } @else {
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Total tickets</div><div class="stat-value">{{ totalCount() }}</div></div>
+      <div class="stat-card"><div class="stat-label">En attente</div><div class="stat-value amber">{{ enAttenteCount() }}</div></div>
+      <div class="stat-card"><div class="stat-label">En cours</div><div class="stat-value blue">{{ enCoursCount() }}</div></div>
+      <div class="stat-card"><div class="stat-label">Résolus</div><div class="stat-value green">{{ resoluCount() }}</div></div>
+      <div class="stat-card"><div class="stat-label">Rejetés</div><div class="stat-value red">{{ rejeteCount() }}</div></div>
+    </div>
+
+    <div class="section-title">Métriques IA</div>
+    <div class="ai-metrics-row">
+      <div class="ai-card">
+        <div class="stat-label">Confiance moyenne</div>
+        <div class="stat-value orange">{{ avgConfidence() }}%</div>
+      </div>
+      <div class="ai-card">
+        <div class="stat-label">À valider</div>
+        <div class="stat-value green">{{ aValiderCount() }}</div>
+        <div class="ai-note">confiance ≥ 40%</div>
+      </div>
+      <div class="ai-card">
+        <div class="stat-label">Révision urgente</div>
+        <div class="stat-value red">{{ revisionUrgenteCount() }}</div>
+        <div class="ai-note">confiance &lt; 40%</div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="section-title">Distribution par statut</div>
+        <div class="chart-wrapper">
+          <canvas baseChart [data]="statutChartData()" [options]="chartOptions" type="bar"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="section-title">Distribution par catégorie</div>
+        <div class="chart-wrapper">
+          <canvas baseChart [data]="categorieChartData" [options]="chartOptions" type="bar"></canvas>
+        </div>
+      </div>
+    </div>
+
+  }
+</div>
