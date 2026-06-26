@@ -2,7 +2,7 @@
 ========================================
 RAPPORT D'AUDIT EDA — HELPDESK AI
 ========================================
-Date           : 2026-05-05 02:56
+Date           : 2026-05-31 19:26
 Dataset        : data/raw/HelpDesk1.csv
 Nb tickets     : 1800
 Nb colonnes    : 23

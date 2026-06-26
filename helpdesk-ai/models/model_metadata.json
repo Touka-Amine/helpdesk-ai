@@ -37,6 +37,6 @@
     "haute_confiance_accuracy": 1.0,
     "basse_confiance_pct": 31.3,
     "basse_confiance_accuracy": 0.27,
-    "interpretation": "68.7% des tickets routés automatiquement avec 100% de précision. 31.3% flaggés pour révision humaine."
+    "interpretation": "68.7% des tickets routes automatiquement avec 100% de precision. 31.3% flagges pour revision humaine."
   }
 }
