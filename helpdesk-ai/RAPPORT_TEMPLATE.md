@@ -148,7 +148,7 @@ Après:
 ```
 Dataset: HelpDesk1.csv
 - Taille: 1800 tickets
-- Textes uniques: 125 (dataset synthétique)
+- Textes uniques après nettoyage: ~125 (≈58 types de tickets récurrents)
 - Classes: 8 catégories
 
 Distribution:
@@ -231,7 +231,7 @@ Macro F1: 0.7695
 
 | Problème | Root Cause | Solution |
 |----------|-----------|----------|
-| VPN classé Microsoft (25% conf) | Dataset synthétique, peu de VPN | Heuristiques keyword-based |
+| VPN classé Microsoft (25% conf) | Corpus à forte redondance, peu d'exemples VPN | Heuristiques keyword-based |
 | Sécurité recall faible (20%) | Vocabulaire proche Microsoft | Keyword rules: ransomware, phishing |
 | Backup F1 bas | Très peu d'exemples (4) | Rules: "sauvegarde", "veeam" |
 | Overfitting CV | 125 textes uniques / 1800 tickets | Test set bien séparé, acceptable |
@@ -678,8 +678,8 @@ ROI Calculation:
 ### 10.1 Limitations Actuelles
 
 ```
-✋ Dataset synthétique:
-   - Seulement 125 textes uniques
+✋ Corpus à forte redondance:
+   - ~125 motifs distincts après nettoyage (≈58 types de tickets)
    - Donc overfitting mais managé par test set
    - Solution: Collecte plus de tickets réels
 
@@ -955,7 +955,7 @@ Points forts:
 ✓ Scalable architecture
 
 Points à adresser honnêtement:
-⚠️ Dataset synthétique limité
+⚠️ Corpus à forte redondance (diversité limitée)
 ⚠️ RAG simple (pas de semantic)
 ⚠️ Sécurité recall faible
 ⚠️ Pas de notifications client

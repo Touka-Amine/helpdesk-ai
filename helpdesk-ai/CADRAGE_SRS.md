@@ -139,7 +139,7 @@ Détail dans [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) (Ch. 2). Points clé
 
 ## 6. Points à valider par l'étudiant (🟠)
 1. **Entreprise d'accueil** : nom, contexte, volumétrie réelle des tickets, chiffres avant/après.
-2. **Données réelles** : possibilité d'obtenir des tickets réels (vs dataset synthétique actuel) ?
+2. **Données réelles** : possibilité d'obtenir davantage de tickets réels (le corpus actuel présente une forte redondance) ?
 3. **Contraintes RGPD** spécifiques de l'organisation.
 4. **Date de soutenance** et disponibilité hebdomadaire (pour convertir le planning relatif en daté).
 5. **Périmètre EF optionnelles** : confirmer S/C (ex. génération LLM EF-14, dashboard EF-15).

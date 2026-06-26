@@ -27,7 +27,7 @@
   "test_size": 396,
   "unique_train": 100,
   "unique_test": 25,
-  "dataset_note": "125 textes uniques sur 1800 tickets — dataset synthétique",
+  "dataset_note": "Corpus organisé en ~58 types de tickets récurrents ; diversité lexicale réduite après prétraitement (à optimiser)",
   "known_weaknesses": [
     "Sécurité : recall faible (vocabulaire proche de Microsoft/Applicatifs)",
     "Microsoft : confusion avec Applicatifs sur tickets d'accès"

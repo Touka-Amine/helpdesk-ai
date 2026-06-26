@@ -65,7 +65,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | État | Élément | Avancement | Qualité | Dette technique | Remarques |
 |---|---|---|---|---|---|
 | ✅ | EDA + preprocessing (notebooks 01–02) | 90 % | Bonne | Notebooks à figer en scripts | À consolider/documenter (Phase 3). |
-| ✅ | Baseline ML TF-IDF + LogReg | 100 % | F1-macro **0.77** | Sur-apprentissage (CV=1.0) sur données synthétiques | Devient la **référence** de comparaison. |
+| ✅ | Baseline ML TF-IDF + LogReg | 100 % | F1-macro **0.77** | Sur-apprentissage (CV=1.0) lié à la redondance du corpus | Devient la **référence** de comparaison. |
 | ✅ | RAG lexical (`src/rag/engine.py`) | 100 % | Faible (lexical) | Pas sémantique, pas de métriques | À **remplacer** (Phases 6–7). |
 | ✅ | Backend cœur (auth JWT, tickets, approbation, historique) | 85 % | Bonne | Couches services/repos vides | ENF + sécurité à durcir (Phase 8). |
 | ✅ | Documentation (cahier des charges, workflow) | 80 % | Très bonne | — | Base solide pour le mémoire. |
@@ -174,7 +174,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - **Dépendances** : Phase 1.
 - **Estimation** : 4–5 sessions.
 - **Priorité** : Haute.
-- **Risques** : non-conformité RGPD ; non-généralisation (données synthétiques) — *assumée*.
+- **Risques** : non-conformité RGPD ; non-généralisation (redondance du corpus) — *à surveiller*.
 
 ### Phase 3 — Analyse exploratoire (consolidation)
 - **Objectif** : figer l'EDA et la documenter pour le mémoire.
@@ -286,7 +286,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - **Dépendances** : Phases 8–11.
 - **Estimation** : 4 sessions.
 - **Priorité** : Haute.
-- **Risques** : sur-interprétation sur données synthétiques → le dire.
+- **Risques** : sur-interprétation liée à la redondance du corpus → le dire.
 
 ### Phase 13 — Optimisation
 - **Objectif** : améliorer performance et coût.
@@ -491,10 +491,10 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 | **Progression globale** | **~12 %** (Phase 1 rédigée, en validation) |
 | **Phase actuelle** | Phase 1 — Cadrage & SRS (v0.1 à valider) |
 | **Tâche actuelle** | Validation des points 🟠 du `CADRAGE_SRS.md` par l'étudiant |
-| **Tâches terminées** | Phase 0 complète ; Phase 1 : `CADRAGE_SRS.md` v0.1 (cadrage + SRS) |
+| **Tâches terminées** | Phase 0 complète ; Phase 1 : `CADRAGE_SRS.md` v0.1 ; **Diagnostic qualité données** + audit notebooks (`notebook.md`) + figures/PDF |
 | **Tâches restantes** | Validation Phase 1 → Phases 2 → 15 |
 | **Prochaine étape** | Valider le cadrage, puis Phase 2 (Data Engineering + RGPD) |
-| **Risques ouverts** | Données synthétiques · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
+| **Risques ouverts** | Redondance du corpus · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
 | **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (QLoRA, hybrid search, re-ranking, agents, K8s…) |
 

@@ -15,6 +15,16 @@
 ### Modifié
 - `helpdesk-ai/.gitignore` : ajout `node_modules/`, `data/*.db`, artefacts build frontend.
 
+### Qualité des données & notebooks (2026-06-26)
+- `Ajouté` : `DIAGNOSTIC_QUALITE_DONNEES.md` (diagnostic chiffré et neutre de la qualité des données).
+- `Ajouté` : `notebooks/data_quality_report.py` (profilage + figures + PDF
+  `notebooks/figures/diagnostic_qualite_donnees.pdf`).
+- `Ajouté` : `notebooks/notebook.md` (audit + étapes des 4 notebooks).
+- `Modifié` : reformulation neutre du vocabulaire décrivant les données (notebooks, métadonnées,
+  cahier des charges, rapport template, fichiers de suivi).
+- `Corrigé` : `notebooks/rapport_audit.txt` (nombre de colonnes 23 → 18).
+- `Supprimé` : `notebooks/Untitled.ipynb` (vide).
+
 ### Phase 1 — Cadrage & SRS (2026-06-26)
 - `Ajouté` : `CADRAGE_SRS.md` v0.1 — problématique, questions de recherche, hypothèses, objectifs
   SMART, exigences fonctionnelles (MoSCoW), non-fonctionnelles (métriques) et matrice de

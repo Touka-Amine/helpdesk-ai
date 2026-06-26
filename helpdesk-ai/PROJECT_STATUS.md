@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md — Avancement global
 
-> Snapshot synthétique. **Source de vérité : [PLAN.md](PLAN.md)** (section 10 — Tableau de bord).
+> Résumé concis. **Source de vérité : [PLAN.md](PLAN.md)** (section 10 — Tableau de bord).
 > Dernière mise à jour : *à la création*.
 
 ## Bandeau

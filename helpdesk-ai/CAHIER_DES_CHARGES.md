@@ -60,7 +60,7 @@ items d'un tableau d'avancement (*kanban*). Le jury a raison. Quatre défauts st
   *contribution*. Le jury attend au minimum une comparaison baseline → modèle profond (transformer
   francophone) → éventuellement LLM, avec benchmark chiffré.
 - **Sur-apprentissage masqué.** `f1_macro_cv = 1.0` contre `f1_macro_test = 0.77`, sur un dataset
-  **synthétique** (125 textes uniques sur 1800). Ce point doit être *assumé et traité* dans le
+  **à forte redondance** (≈58 types de tickets, ~125 motifs après nettoyage). Ce point doit être *assumé et traité* dans le
   cahier des charges (qualité des données, risque de non-généralisation), pas caché.
 - **RAG archaïque.** `src/rag/engine.py` fait du TF-IDF + cosinus : **recherche lexicale**, pas
   **sémantique**. Il ne capte pas la synonymie (« impossible d'accéder à la base » ≠ « base
@@ -101,7 +101,7 @@ Ch. 7). En résumé : embeddings denses francophones + base vectorielle + hybrid
 ### 1.1.4 Sous-sections à ajouter
 1. Problématique et hypothèses de recherche.
 2. État de l'art (NLP court francophone, RAG, LLM helpdesk).
-3. Jeu de données : provenance, schéma, qualité, déséquilibre, **caractère synthétique assumé**,
+3. Jeu de données : provenance, schéma, qualité, déséquilibre, **redondance assumée (types de tickets récurrents)**,
    stratégie d'acquisition de données réelles.
 4. Protocole d'évaluation et métriques.
 5. Baselines et modèles avancés (benchmark).
@@ -274,7 +274,7 @@ monitoring CPU/RAM.
 - **Diagrammes** : diagramme de contexte (système et acteurs).
 - **Tableaux** : objectifs SMART ; périmètre inclus/exclu.
 - **Métriques** : KPIs métier cibles (temps de traitement, taux d'auto-routage fiable, satisfaction).
-- **Risques** : périmètre trop large ; données synthétiques.
+- **Risques** : périmètre trop large ; redondance du corpus.
 - **Livrables** : note de cadrage, problématique validée.
 
 ## Chapitre 2 — Étude de l'existant et état de l'art
@@ -322,14 +322,14 @@ monitoring CPU/RAM.
 ## Chapitre 5 — Données et gouvernance
 - **Objectif** : spécifier données, qualité, RGPD, versionnage.
 - **Contenu** : schéma des données (23 colonnes du CSV), **audit qualité** (doublons, NaN,
-  déséquilibre 5,9×, **caractère synthétique : 125 textes uniques/1800**), stratégie d'acquisition
+  déséquilibre 5,9×, **redondance : ≈58 types de tickets, ~125 motifs après nettoyage**), stratégie d'acquisition
   de données réelles, **anonymisation/pseudonymisation (RGPD)**, politique de rétention,
   versionnage **DVC** (activer `dvc.yaml` : preprocess → split → train → eval), lignage des données.
 - **Diagrammes** : pipeline de données (DVC DAG).
 - **Tableaux** : dictionnaire de données ; rapport qualité ; registre RGPD (donnée, finalité,
   base légale, durée).
 - **Métriques** : % complétude, % doublons, ratio de déséquilibre, taux de PII anonymisées.
-- **Risques** : non-conformité RGPD ; non-généralisation (synthétique).
+- **Risques** : non-conformité RGPD ; non-généralisation (redondance).
 - **Livrables** : data card, pipeline DVC reproductible, registre de traitement.
 
 ## Chapitre 6 — Modélisation IA (NLP)
@@ -420,7 +420,7 @@ monitoring CPU/RAM.
 - **Diagrammes** : courbes de résultats ; comparatifs.
 - **Tableaux** : synthèse des métriques vs cibles (matrice exigence→résultat).
 - **Métriques** : toutes les cibles des chapitres 6–9 + KPIs métier.
-- **Risques** : sur-interprétation sur données synthétiques.
+- **Risques** : sur-interprétation sur données à forte redondance.
 - **Livrables** : rapport d'évaluation, dashboards, démonstration.
 
 ## Chapitre 13 — Gestion de projet
@@ -435,7 +435,7 @@ monitoring CPU/RAM.
 
 ## Chapitre 14 — Conclusion & perspectives
 - **Objectif** : bilan critique et ouverture.
-- **Contenu** : contributions, limites assumées (données synthétiques, etc.), perspectives
+- **Contenu** : contributions, limites assumées (redondance du corpus, etc.), perspectives
   (multi-agents, knowledge graph, K8s, continual learning) clairement positionnées comme *futures*.
 - **Livrables** : synthèse, feuille de route.
 
@@ -508,7 +508,7 @@ CHAPITRE 4 — CONCEPTION ET ARCHITECTURE
 
 CHAPITRE 5 — DONNÉES ET GOUVERNANCE
   5.1 Sources et dictionnaire de données
-  5.2 Audit qualité (doublons, NaN, déséquilibre, synthétique)
+  5.2 Audit qualité (doublons, NaN, déséquilibre, redondance)
   5.3 Conformité RGPD et anonymisation
   5.4 Versionnage et lignage (DVC)
   5.5 Stratégie d'acquisition de données réelles
@@ -592,7 +592,7 @@ ANNEXES : data card, model cards, ADRs, contrat OpenAPI, registre de prompts,
 - **Métriques clés** : F1-macro & par classe (focus Sécurité), MCC, ECE ; Precision@k, Recall@k,
   MRR, nDCG, Context Precision/Recall, Faithfulness, Answer Relevancy, Hallucination Rate ;
   latence P95, débit, dispo ; drift (PSI/KL) ; coût €/1000 tickets.
-- **Risques majeurs** : données synthétiques (non-généralisation), hallucinations LLM, coût/latence
+- **Risques majeurs** : redondance du corpus (non-généralisation), hallucinations LLM, coût/latence
   d'inférence, conformité RGPD, sur-dimensionnement, sécurité (secrets, injection de prompt).
 
 ## Recommandation finale du comité (priorisation réaliste pour le PFE)

@@ -1,0 +1,62 @@
+{
+  "n_lignes": 1800,
+  "n_colonnes": 18,
+  "n_classes": 8,
+  "classes": {
+    "Microsoft": 409,
+    "Réseau": 369,
+    "Applicatifs": 326,
+    "Infrastructure": 224,
+    "Système": 186,
+    "Communication": 144,
+    "Sécurité": 73,
+    "Backup": 69
+  },
+  "ratio_desequilibre": 5.93,
+  "doublons_lignes_completes": 0,
+  "descriptions_uniques": 1535,
+  "titres_uniques": 58,
+  "doublons_description": 265,
+  "doublons_titre_desc": 265,
+  "tickets_vides": 0,
+  "mots_desc_min": 23,
+  "mots_desc_median": 33,
+  "mots_desc_max": 46,
+  "mots_desc_moyenne": 33.1,
+  "statut": {
+    "Résolu": 476,
+    "Rejeté": 464,
+    "Problème": 328,
+    "Prise en Charge": 321,
+    "En attente": 211
+  },
+  "base_rag_resolus": 476,
+  "completude_pct": {
+    "ID": 100.0,
+    "STATUT": 100.0,
+    "Titre": 100.0,
+    "Description": 100.0,
+    "Demandeur": 100.0,
+    "Classification": 100.0,
+    "Catégorie": 100.0,
+    "Date de création": 100.0,
+    "Date de résolution": 26.44,
+    "CID": 49.72,
+    "Filiale": 100.0,
+    "Priorité": 96.61,
+    "Assigné à": 96.94,
+    "Résolution/Motif": 94.06,
+    "Analyse": 94.44,
+    "knowledge Base": 100.0,
+    "Type d'élément": 100.0,
+    "Chemin d'accès": 100.0
+  },
+  "manquants_pct": {
+    "Date de résolution": 73.56,
+    "CID": 50.28,
+    "Priorité": 3.39,
+    "Assigné à": 3.06,
+    "Résolution/Motif": 5.94,
+    "Analyse": 5.56
+  }
+}
