@@ -19,5 +19,15 @@ mlruns/
 # Jupyter checkpoints
 .ipynb_checkpoints/
 
+# Frontend (Node / Angular)
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Bases de données locales (runtime)
+data/*.db
+data/*.sqlite*
+
 # OS
 .DS_Store
