@@ -36,18 +36,18 @@
 | Phase | Avancement |
 |---|---|
 | 0 Initialisation | ✅ 100 % |
-| 1 Cadrage & SRS | 🔴 0 % |
-| 2 Data & RGPD | 🔴 0 % |
-| 3 EDA | 🟡 ~80 % (à consolider) |
-| 4 ML baseline | 🟡 ~70 % (à formaliser) |
+| 1 Cadrage & SRS | 🟡 ~80 % (en validation) |
+| 2 Data & RGPD | 🟡 ~40 % (diagnostic qualité fait, RGPD à faire) |
+| 3 EDA | 🟡 ~80 % (consolidé) |
+| 4 ML baseline | ✅ ~90 % (multi-modèles + heuristiques — F1 visé ≥ 0.87) |
 | 5 Fine-Tuning | 🔴 0 % |
 | 6 RAG sémantique | 🔴 0 % |
 | 7 Éval RAG | 🔴 0 % |
-| 8 Backend | 🟡 ~85 % |
+| 8 Backend | 🟡 ~88 % (NoSQL TinyDB ajouté pour tickets résolus) |
 | 9 Frontend | 🟡 ~65 % |
 | 10 MLOps | 🔴 ~5 % |
 | 11 Déploiement | 🔴 0 % |
 | 12 Tests | 🔴 0 % |
 | 13 Optimisation | 🔴 0 % |
-| 14 Doc/mémoire | 🟡 ~10 % |
+| 14 Doc/mémoire | 🟡 ~15 % |
 | 15 Soutenance | 🔴 0 % |

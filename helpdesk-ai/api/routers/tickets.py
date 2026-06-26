@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.db.database import get_db
 from api.db.models import Ticket, User, TicketHistory
+from api.db.nosql_store import archive_resolved_ticket, get_stats as nosql_stats, get_all_resolved
 from api.routers.auth import get_current_user, require_admin
 from api.schemas.ticket_schemas import ApproveRequest, TicketCreate, TicketOut
 from api.services.ai_service import predict_and_recommend, recommend_for_category
@@ -198,10 +199,23 @@ def approve_ticket(
     
     ticket.approved_by = str(admin.id)
     
-    # Marquer comme résolu si le statut est "Résolu"
+    # Marquer comme résolu + archiver dans TinyDB
     if new_status == "Résolu":
         ticket.resolved_at = datetime.utcnow()
-    
+        archive_resolved_ticket(
+            ticket_id          = ticket.id,
+            titre              = ticket.titre,
+            description        = ticket.description,
+            categorie          = ticket.categorie_finale or ticket.categorie_predite or "",
+            confiance          = ticket.confiance,
+            solution           = ticket.solution_rag or "",
+            knowledge          = ticket.knowledge_rag or "",
+            filiale            = ticket.filiale or "",
+            equipement         = ticket.equipement or "",
+            commentaire_client = ticket.commentaire_client or "",
+            approved_by        = str(admin.id),
+        )
+
     db.commit()
     return {"message": "Ticket mis à jour", "id": ticket_id, "nouveau_statut": new_status}
 
@@ -284,3 +298,27 @@ def get_ticket_history(
         }
         for h in history
     ]
+
+
+# ── Endpoints NoSQL (TinyDB) ───────────────────────────────────────────────────
+
+@router.get("/resolved/stats")
+def get_resolved_stats(_: User = Depends(require_admin)):
+    """
+    KPIs agrégés des tickets résolus archivés dans TinyDB.
+    Retourne : total, répartition par catégorie, par filiale.
+    """
+    return nosql_stats()
+
+
+@router.get("/resolved/archive")
+def get_resolved_archive(
+    limit: int = 50,
+    _: User = Depends(require_admin),
+):
+    """
+    Liste des tickets résolus archivés dans TinyDB (les plus récents en premier).
+    Constitue la mémoire institutionnelle des résolutions approuvées.
+    """
+    docs = get_all_resolved(limit=limit)
+    return {"total": len(docs), "tickets": docs}
