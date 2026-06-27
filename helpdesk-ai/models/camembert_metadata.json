@@ -1,0 +1,38 @@
+{
+  "model_name": "CamemBERT-base + LoRA",
+  "base_model": "camembert-base",
+  "lora_r": 8,
+  "lora_alpha": 16,
+  "lora_target_modules": [
+    "query",
+    "value"
+  ],
+  "max_length": 128,
+  "epochs_trained": 10,
+  "f1_macro": 0.5685,
+  "accuracy": 0.6873,
+  "f1_baseline_tfidf": 0.3753,
+  "f1_baseline_heuristiques": 0.5673,
+  "gain_vs_baseline": 0.0012,
+  "split_strategy": "GroupShuffleSplit par Titre (46 train / 12 test)",
+  "confidence_threshold": 0.4,
+  "hitl_auto_pct": 91.0,
+  "hitl_auto_precision": 0.6997,
+  "classes": [
+    "Applicatifs",
+    "Backup",
+    "Communication",
+    "Infrastructure",
+    "Microsoft",
+    "Réseau",
+    "Système",
+    "Sécurité"
+  ],
+  "train_size": 1300,
+  "val_size": 145,
+  "test_size": 355,
+  "device": "cuda",
+  "torch_dtype": "float32",
+  "feature": "text_enriched (type <classification_simple> priorite <priorite_simple> + titre + description)",
+  "f1_macro_sans_enrichissement": 0.5325
+}

@@ -17,6 +17,9 @@ data/external/
 
 # Modèles lourds
 models/*.pkl
+# Checkpoints d'entraînement CamemBERT intermédiaires (~80 Mo).
+# L'adaptateur final models/camembert_lora_adapter/ reste versionné.
+models/camembert_lora/
 mlruns/
 
 # Jupyter checkpoints

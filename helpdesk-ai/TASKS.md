@@ -1,18 +1,22 @@
 # TASKS.md — Tâches de la phase active
 
 > Tâches du sprint courant. Détail complet des checklists dans [PLAN.md](PLAN.md) (section 6).
-> Dernière mise à jour : **2026-06-26**. **Phase active : Phase 1 — Cadrage & SRS (en validation).**
+> Dernière mise à jour : **2026-06-27**. **Phase active : Phase 6 — RAG sémantique.**
 
-## 🔵 En cours / en attente de toi
-- [ ] **Valider les points 🟠 du [CADRAGE_SRS.md](CADRAGE_SRS.md)** : entreprise d'accueil, données
-  réelles, contraintes RGPD, date de soutenance, périmètre des EF optionnelles, choix LLM.
+## 🔵 En cours / prochaine
+- [ ] **Phase 6 — RAG sémantique** : choisir la base vectorielle (ADR-004) → chunking de la base de
+  connaissance → embeddings FR → indexation → retrieval (+ filtre catégorie) → intégration inférence.
 
-## ⚪ À faire (Phase 2 — Data Engineering & RGPD, aperçu)
-- [ ] Audit qualité (doublons, NaN, déséquilibre, fuite)
+## ⚪ À faire (Phase 2 — reliquat Data Engineering & RGPD)
 - [ ] Anonymisation des PII + registre de traitement RGPD
 - [ ] Écrire les stages DVC (preprocess → split → rag)
 - [ ] Dictionnaire de données + data card
-- [ ] Décider DVC vs git pour `HelpDesk1.csv`
+
+## ✅ Terminé — Phase 5 (CamemBERT LoRA + features enrichies, 2026-06-27)
+- [x] Features enrichies `text_enriched` (priorité 4→3, classification 5→3) dans `02_preprocessing.ipynb`
+- [x] Fine-tuning CamemBERT-base + LoRA (split anti-fuite, GPU local, FP32)
+- [x] Évaluation + benchmark vs TF-IDF — **F1-macro 0.5685** (gain enrichissement +0.036)
+- [x] Sauvegarde adaptateur + métadonnées + figures + documentation
 
 ## ✅ Terminé — Phase 1 (Cadrage & SRS v0.1, 2026-06-26)
 - [x] Problématique + questions de recherche + hypothèses

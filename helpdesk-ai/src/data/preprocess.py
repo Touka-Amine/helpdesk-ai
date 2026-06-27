@@ -83,9 +83,45 @@ def clean_text(text: str) -> str:
     return " ".join(tokens)
 
 
+# ── Regroupement des valeurs catégorielles ─────────────────────────────────────
+
+_MAP_PRIORITE = {
+    "mineur":   "basse",
+    "mineure":  "basse",
+    "modere":   "normale",
+    "modéré":   "normale",
+    "majeur":   "haute",
+    "critique": "haute",
+}
+
+_MAP_CLASSIFICATION = {
+    "incident":           "incident",
+    "alerte / evenement": "incident",
+    "alerte / événement": "incident",
+    "demande":            "demande",
+    "probleme":           "changement",
+    "problème":           "changement",
+    "changement":         "changement",
+}
+
+
+def simplify_priorite(val: str) -> str:
+    """Regroupe les 4 niveaux de priorité en 3 (basse / normale / haute)."""
+    if not isinstance(val, str):
+        return "normale"
+    return _MAP_PRIORITE.get(val.strip().lower(), "normale")
+
+
+def simplify_classification(val: str) -> str:
+    """Regroupe les 5 types de classification en 3 (incident / demande / changement)."""
+    if not isinstance(val, str):
+        return "demande"
+    return _MAP_CLASSIFICATION.get(val.strip().lower(), "demande")
+
+
 def build_text_for_model(titre: str, description: str) -> str:
     """
-    Feature pour la classification ML.
+    Feature pour la classification ML (TF-IDF).
 
     Utilise titre + description (dans cet ordre) pour que les mots-clés
     du titre (souvent très discriminants : 'Problème VPN', 'Ransomware détecté')
@@ -93,6 +129,31 @@ def build_text_for_model(titre: str, description: str) -> str:
     """
     combined = f"{titre} {description}"
     return clean_text(combined)
+
+
+def build_text_enriched(
+    titre: str,
+    description: str,
+    classification: str = "",
+    priorite: str = "",
+) -> str:
+    """
+    Feature enrichie pour CamemBERT : préfixe structuré + texte nettoyé.
+
+    Format : "type <clf_simplifié> priorite <prio_simplifiée> <titre> <description>"
+
+    Les valeurs simplifiées (3 niveaux priorité, 3 types classification) réduisent
+    le bruit par rapport aux 5 valeurs originales et fournissent un signal contextuel
+    supplémentaire au transformer (ex: 'priorite haute' corrèle avec Infrastructure/Sécurité).
+    """
+    parts = []
+    if classification:
+        parts.append(f"type {simplify_classification(classification)}")
+    if priorite:
+        parts.append(f"priorite {simplify_priorite(priorite)}")
+    parts.append(str(titre or ""))
+    parts.append(str(description or ""))
+    return clean_text(" ".join(parts))
 
 
 def build_text_for_rag(

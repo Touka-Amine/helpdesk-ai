@@ -4,7 +4,7 @@
 > prévue ici. À chaque session : relire ce fichier → identifier la phase/tâche active → exécuter
 > **une seule** tâche → tester → mettre à jour ce fichier → cocher → résumer → proposer la suite.
 >
-> **Méta** — Dernière mise à jour : **2026-06-27** · Phase active : **Phase 5** (Phases 0–4 terminées)
+> **Méta** — Dernière mise à jour : **2026-06-27** · Phase active : **Phase 6** (Phases 0–5 terminées)
 > · Périmètre : **Cœur rehaussé (Must)** · Durée : **stage 6 mois** · Compute : **GPU local**.
 >
 > **Documents liés** : [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) ·
@@ -72,7 +72,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | 🟡 | Frontend Angular 21 | 65 % | Moyenne | `environment.ts` vide, enum/`Ticket` désalignés, page détail absente, pas de guards | **Non connecté** au backend (Phase 9). |
 | 🟡 | Couches `services/`, `db/repositories/`, `middleware/` | 10 % | — | Squelettes vides, logique dans routers | À implémenter ou assumer (Phase 8). |
 | 🔴 | Endpoint `/ingest` | Cassé | — | Import `datetime` manquant, mauvais appel, non enregistré | À réparer (Phase 8). |
-| 🔴 | CamemBERT fine-tuné (LoRA) + benchmark | 0 % | — | — | Phase 5. |
+| ✅ | CamemBERT fine-tuné (LoRA) + benchmark | 100 % | F1=0.5685 | features enrichies | Phase 5 — à parité avec TF-IDF+heuristiques (0.5673, écart dans le bruit) mais sans règles codées. Infrastructure/Sécurité à 0.00. |
 | 🔴 | RAG sémantique (embeddings FR + vector DB) + RAGAS | 0 % | — | — | Phases 6–7. |
 | 🔴 | RGPD / anonymisation | 0 % | — | Données personnelles non traitées | Phase 2. |
 | 🔴 | MLOps (pipeline DVC, MLflow registry) | 5 % | — | `dvc.yaml` vide | Phase 10. |
@@ -362,17 +362,19 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [ ] Rédiger le rapport d'éval baseline + model card
 
 ### Phase 5 — Fine-Tuning CamemBERT
-- [ ] Construire le dataset HuggingFace
-- [ ] Tokenisation CamemBERT
-- [ ] Split anti-fuite (textes uniques)
-- [ ] Configurer LoRA (r, alpha, dropout)
-- [ ] Entraînement GPU local
-- [ ] Évaluation (F1-macro, rappel Sécurité, matrice de confusion)
-- [ ] Benchmark vs LogReg
-- [ ] Calibration
-- [ ] Log MLflow + model card
-- [ ] Sauvegarde de l'adaptateur
-- [ ] Documenter
+- [x] Construire le dataset HuggingFace
+- [x] Tokenisation CamemBERT
+- [x] Split anti-fuite (GroupShuffleSplit par Titre — 46 train / 12 test, overlap 0)
+- [x] Configurer LoRA (r=8, alpha=16, modules query+value)
+- [x] Entraînement GPU local (MX130, 10 epochs, FP32)
+- [x] Features enrichies (`text_enriched` : type+priorité simplifiés + titre + description) → F1 0.5325 → 0.5685
+- [x] Évaluation (F1-macro 0.5685 / Accuracy 0.6873, matrice de confusion `cam_01`)
+- [x] Benchmark vs LogReg (CamemBERT 0.5685 ≈ TF-IDF+heuristiques 0.5673 — écart +0.0012 dans le bruit, mais sans règles codées)
+- [x] Analyse confiance / HITL (seuil 0.4 → 91 % auto-route @ 70 % précision)
+- [x] Sauvegarde de l'adaptateur (`models/camembert_lora_adapter/`)
+- [x] Documenter (CHANGELOG, `camembert_metadata.json`)
+- [ ] Calibration fine (température/Platt) — *renvoyée Phase 13*
+- [ ] Log MLflow + model card — *renvoyé Phase 10 (MLOps)*
 
 ### Phase 6 — RAG sémantique
 - [ ] Choisir la base vectorielle (ADR-004)
@@ -488,14 +490,14 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~25 %** (Phases 0–1 terminées, Phase 3–4 ML baseline complète) |
-| **Phase actuelle** | Phase 4 terminée · prochaine : Phase 5 (CamemBERT fine-tuning) |
-| **Tâche actuelle** | Aucune en cours — en attente validation avant Phase 5 |
-| **Tâches terminées** | Phase 0 complète · Phase 1 (SRS v0.1) · Phase 3 (EDA + preprocessing + benchmark externe) · Phase 4 (baseline ML : split anti-fuite GroupShuffleSplit, multi-modèles, heuristiques, HITL, benchmark public, correctifs fuite) |
-| **Tâches restantes** | Phase 5 (CamemBERT LoRA) → Phases 6–15 |
-| **Prochaine étape** | Phase 5 — Fine-tuning CamemBERT (LoRA) sur le corpus ; benchmark vs baseline TF-IDF |
-| **Risques ouverts** | F1 baseline honnête faible (0.57) → motivation CamemBERT · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
-| **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté · SOFT_RULES Backup/Sécurité insuffisantes pour Titres de test |
+| **Progression globale** | **~32 %** (Phases 0–1 terminées, Phases 3–5 complètes) |
+| **Phase actuelle** | Phase 5 terminée (CamemBERT LoRA) · prochaine : Phase 6 (RAG sémantique) |
+| **Tâche actuelle** | Aucune en cours — en attente validation avant Phase 6 |
+| **Tâches terminées** | Phase 0 complète · Phase 1 (SRS v0.1) · Phase 3 (EDA + preprocessing + benchmark externe) · Phase 4 (baseline ML : split anti-fuite GroupShuffleSplit, multi-modèles, heuristiques, HITL, benchmark public) · Phase 5 (CamemBERT-base + LoRA, features enrichies, **F1=0.5685 ≈ TF-IDF+heuristiques 0.5673**, sans règles codées) |
+| **Tâches restantes** | Phase 6 (RAG sémantique) → Phases 7–15 |
+| **Prochaine étape** | Phase 6 — RAG sémantique (embeddings FR + base vectorielle + retrieval) |
+| **Risques ouverts** | F1 reste < objectif PFE 0.80 (Infrastructure/Sécurité à 0.00 sur Titres inédits) · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
+| **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté · Calibration fine + MLflow renvoyés (Phases 13/10) · Infrastructure/Sécurité à 0.00 (peu de Titres distincts en entraînement) |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (QLoRA, hybrid search, re-ranking, agents, K8s…) |
 
 > **Calcul de la progression** : moyenne pondérée de l'avancement des 15 phases par leur priorité.

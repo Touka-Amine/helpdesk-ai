@@ -67,13 +67,18 @@ aide-moi à combler l'écart. Données EN FRANÇAIS.
 
 # CE QUI EST FAIT ET FONCTIONNE
 - Données : HelpDesk1.csv — 1800 tickets, 8 catégories, en français.
-  ⚠️ Dataset SYNTHÉTIQUE : ~125 textes uniques sur 1800 (beaucoup de doublons) ; classe
-  Sécurité sous-représentée.
+  ⚠️ Corpus à forte redondance : ~58 types de tickets récurrents (≈125 textes uniques sur 1800,
+  beaucoup de doublons) ; chaque Titre est lié à une seule Catégorie ; classe Sécurité
+  sous-représentée.
 - Classification ML : pipeline scikit-learn = TF-IDF (unigrammes, max_features=3000) + SMOTE
-  + LogisticRegression. F1-macro test = 0.77, accuracy = 0.77, F1 en validation croisée = 1.0
-  (SUR-APPRENTISSAGE dû aux données synthétiques). Seuil de confiance = 0.40 (68.7% des tickets
-  auto-routés à 100% de précision ; 31.3% envoyés en revue humaine). Heuristiques mots-clés pour
-  corriger les prédictions peu confiantes.
+  + LinearSVC calibré. Avec un **split anti-fuite GroupShuffleSplit par Titre** (le modèle ne voit
+  aucun Titre de test en entraînement), F1-macro honnête = **0.38 ML seul / 0.57 avec heuristiques**
+  (les anciens F1≈0.77 / 1.0 venaient d'une fuite : mêmes Titres en train et test). Seuil de
+  confiance = 0.40 (≈91% auto-routés à ~70% de précision ; le reste en revue humaine). Heuristiques
+  mots-clés (FORCE_RULES) pour corriger les prédictions peu confiantes.
+- Classification avancée : **CamemBERT-base + LoRA** (features enrichies `text_enriched`) —
+  F1-macro = **0.5685**, à parité avec TF-IDF+heuristiques (0.5673 ; écart +0.0012 dans le bruit
+  statistique), mais obtenu par compréhension sémantique sans règles codées à la main.
 - RAG : src/rag/engine.py = TF-IDF + similarité cosinus → RECHERCHE LEXICALE, PAS sémantique.
   Top-3, seuil 0.30, fallback 0.10. AUCUN embedding, AUCUNE base vectorielle, AUCUN LLM, AUCUN
   re-ranking, AUCUNE métrique RAG.
