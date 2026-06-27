@@ -1,0 +1,16 @@
+{
+  "phase": "Phase 6 - RAG semantique",
+  "model_embeddings": "paraphrase-multilingual-mpnet-base-v2",
+  "vector_db": "FAISS IndexFlatIP (cosinus via L2-norm)",
+  "embed_dim": 768,
+  "n_tickets_indexed": 476,
+  "top_k": 3,
+  "similarity_threshold": 0.3,
+  "couverture_globale_pct": 100.0,
+  "score_moyen_top1_sem": 0.9321,
+  "score_moyen_top1_lex": 0.7646,
+  "gain_score_moyen": 0.1675,
+  "index_path": "models/semantic_rag/",
+  "adr004_decision": "FAISS local - simplicite et reproductibilite sans serveur",
+  "prochaine_etape": "Phase 7 - Evaluation RAGAS + generation avec citations"
+}

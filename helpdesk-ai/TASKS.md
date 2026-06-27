@@ -4,13 +4,21 @@
 > Dernière mise à jour : **2026-06-27**. **Phase active : Phase 6 — RAG sémantique.**
 
 ## 🔵 En cours / prochaine
-- [ ] **Phase 6 — RAG sémantique** : choisir la base vectorielle (ADR-004) → chunking de la base de
-  connaissance → embeddings FR → indexation → retrieval (+ filtre catégorie) → intégration inférence.
+- [ ] **Phase 7 — Évaluation RAG (RAGAS)** : construire le jeu d'évaluation (requêtes + vérités terrain)
+  → mesurer Precision@k / Recall@k → RAGAS (Faithfulness, Answer Relevancy, Context Precision/Recall)
+  → implémentation génération de réponse avec citations → LLM-as-a-Judge → comparatif lexical vs sémantique.
 
 ## ⚪ À faire (Phase 2 — reliquat Data Engineering & RGPD)
 - [ ] Anonymisation des PII + registre de traitement RGPD
 - [ ] Écrire les stages DVC (preprocess → split → rag)
 - [ ] Dictionnaire de données + data card
+
+## ✅ Terminé — Phase 6 (RAG sémantique FAISS, 2026-06-27)
+- [x] ADR-004 décidé : FAISS local (pas ChromaDB/Weaviate)
+- [x] `src/rag/semantic_engine.py` — `SemanticRAGEngine` FAISS + `paraphrase-multilingual-mpnet-base-v2`
+- [x] `notebooks/06_rag_semantique.ipynb` — pipeline complet + évaluation réaliste (query = titre+desc)
+- [x] Score cosinus top-1 : **0.93 sémantique vs 0.76 lexical (+0.17)**, couverture 100 %
+- [x] Sauvegarde index + metadata + figure comparaison
 
 ## ✅ Terminé — Phase 5 (CamemBERT LoRA + features enrichies, 2026-06-27)
 - [x] Features enrichies `text_enriched` (priorité 4→3, classification 5→3) dans `02_preprocessing.ipynb`

@@ -5,6 +5,36 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 6 — RAG sémantique (FAISS + embeddings FR) (2026-06-27)
+
+#### Moteur RAG sémantique
+- `Ajouté` : `src/rag/semantic_engine.py` — `SemanticRAGEngine` : embeddings denses
+  `paraphrase-multilingual-mpnet-base-v2` (768d, multilingue FR+EN) + index FAISS IndexFlatIP
+  (cosinus via L2-norm). Filtre par catégorie via index FAISS dédié par classe. Save/load
+  (index.faiss + parquet + metadata.json).
+- `Ajouté` : `notebooks/06_rag_semantique.ipynb` — pipeline complet : chargement base 476 tickets →
+  encodage FAISS → tests qualitatifs → évaluation quantitative (query = titre+description seul,
+  évaluation réaliste) → comparaison lexical vs sémantique → sauvegarde.
+- `Ajouté` : `models/semantic_rag/` — index FAISS + knowledge base parquet + metadata.
+- `Ajouté` : `models/semantic_rag_metadata.json` — métriques Phase 6.
+- `Ajouté` : `notebooks/figures/rag6_01_comparaison.png` — double bar chart lexical vs sémantique.
+
+#### Résultats Phase 6 (évaluation réaliste : query = titre+description)
+| Métrique | Lexical (TF-IDF) | Sémantique (FAISS) | Gain |
+|---|---|---|---|
+| Score cosinus moyen top-1 | 0.7646 | **0.9321** | **+0.1675** |
+| Couverture globale | 100 % | 100 % | = |
+
+Gain sémantique uniforme sur toutes les catégories (+0.12 à +0.20). La compréhension
+sémantique permet de retrouver des résolutions pertinentes même quand les mots-clés diffèrent.
+
+#### ADR-004 décidé
+- `Ajouté` : décision FAISS local (pas ChromaDB/Weaviate) — simplicité, reproductibilité,
+  pas de dépendance serveur, compatible GPU/CPU local.
+
+- `Corrigé` : évaluation naïve (query = text_rag complet → score=1.0 artificiel) remplacée
+  par évaluation réaliste (query = titre+description uniquement).
+
 ### Phase 5 — Fine-tuning CamemBERT (LoRA) + features enrichies (2026-06-27)
 
 #### Fine-tuning CamemBERT-base + LoRA

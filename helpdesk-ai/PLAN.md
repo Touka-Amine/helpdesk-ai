@@ -4,7 +4,7 @@
 > prévue ici. À chaque session : relire ce fichier → identifier la phase/tâche active → exécuter
 > **une seule** tâche → tester → mettre à jour ce fichier → cocher → résumer → proposer la suite.
 >
-> **Méta** — Dernière mise à jour : **2026-06-27** · Phase active : **Phase 6** (Phases 0–5 terminées)
+> **Méta** — Dernière mise à jour : **2026-06-27** · Phase active : **Phase 7** (Phases 0–6 terminées)
 > · Périmètre : **Cœur rehaussé (Must)** · Durée : **stage 6 mois** · Compute : **GPU local**.
 >
 > **Documents liés** : [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) ·
@@ -73,7 +73,8 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | 🟡 | Couches `services/`, `db/repositories/`, `middleware/` | 10 % | — | Squelettes vides, logique dans routers | À implémenter ou assumer (Phase 8). |
 | 🔴 | Endpoint `/ingest` | Cassé | — | Import `datetime` manquant, mauvais appel, non enregistré | À réparer (Phase 8). |
 | ✅ | CamemBERT fine-tuné (LoRA) + benchmark | 100 % | F1=0.5685 | features enrichies | Phase 5 — à parité avec TF-IDF+heuristiques (0.5673, écart dans le bruit) mais sans règles codées. Infrastructure/Sécurité à 0.00. |
-| 🔴 | RAG sémantique (embeddings FR + vector DB) + RAGAS | 0 % | — | — | Phases 6–7. |
+| ✅ | RAG sémantique (embeddings FR + FAISS) | 100 % | Score cosinus 0.93 vs 0.76 lexical (+0.17) | FAISS local | Phase 6 terminée. |
+| 🔴 | Évaluation RAG (RAGAS) + génération | 0 % | — | — | Phase 7. |
 | 🔴 | RGPD / anonymisation | 0 % | — | Données personnelles non traitées | Phase 2. |
 | 🔴 | MLOps (pipeline DVC, MLflow registry) | 5 % | — | `dvc.yaml` vide | Phase 10. |
 | 🔴 | Docker / CI-CD / monitoring | 0 % | — | — | Phases 10–11. |
@@ -377,12 +378,13 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [ ] Log MLflow + model card — *renvoyé Phase 10 (MLOps)*
 
 ### Phase 6 — RAG sémantique
-- [ ] Choisir la base vectorielle (ADR-004)
-- [ ] Chunking de la base de connaissance
-- [ ] Choisir/charger les embeddings FR
-- [ ] Indexer la base
-- [ ] Implémenter le retrieval (+ filtre catégorie)
-- [ ] Intégrer au service d'inférence
+- [x] Choisir la base vectorielle (ADR-004 → FAISS local, sans serveur)
+- [x] Choisir/charger les embeddings FR (`paraphrase-multilingual-mpnet-base-v2`, 768d)
+- [x] Encoder la base de connaissance (476 tickets résolus → vecteurs FAISS IndexFlatIP)
+- [x] Implémenter le retrieval (+ filtre catégorie via index FAISS dédié par classe)
+- [x] Évaluation réaliste (query = titre+description ; score cosinus 0.93 sem vs 0.76 lex)
+- [x] Sauvegarde `models/semantic_rag/` + `semantic_rag_metadata.json`
+- [ ] Intégrer au service d'inférence backend — *renvoyé Phase 8 (Backend)*
 
 ### Phase 7 — Évaluation RAG + génération
 - [ ] Construire le jeu d'évaluation RAG (requêtes + vérités terrain)
@@ -490,14 +492,14 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~32 %** (Phases 0–1 terminées, Phases 3–5 complètes) |
-| **Phase actuelle** | Phase 5 terminée (CamemBERT LoRA) · prochaine : Phase 6 (RAG sémantique) |
-| **Tâche actuelle** | Aucune en cours — en attente validation avant Phase 6 |
-| **Tâches terminées** | Phase 0 complète · Phase 1 (SRS v0.1) · Phase 3 (EDA + preprocessing + benchmark externe) · Phase 4 (baseline ML : split anti-fuite GroupShuffleSplit, multi-modèles, heuristiques, HITL, benchmark public) · Phase 5 (CamemBERT-base + LoRA, features enrichies, **F1=0.5685 ≈ TF-IDF+heuristiques 0.5673**, sans règles codées) |
-| **Tâches restantes** | Phase 6 (RAG sémantique) → Phases 7–15 |
-| **Prochaine étape** | Phase 6 — RAG sémantique (embeddings FR + base vectorielle + retrieval) |
-| **Risques ouverts** | F1 reste < objectif PFE 0.80 (Infrastructure/Sécurité à 0.00 sur Titres inédits) · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
-| **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté · Calibration fine + MLflow renvoyés (Phases 13/10) · Infrastructure/Sécurité à 0.00 (peu de Titres distincts en entraînement) |
+| **Progression globale** | **~38 %** (Phases 0–1 terminées, Phases 3–6 complètes) |
+| **Phase actuelle** | Phase 6 terminée (RAG sémantique) · prochaine : Phase 7 (évaluation RAGAS) |
+| **Tâche actuelle** | Aucune en cours — en attente validation avant Phase 7 |
+| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML F1=0.57) · Phase 5 (CamemBERT LoRA F1=0.5685) · **Phase 6 (RAG sémantique FAISS, score cosinus 0.93 vs 0.76 lexical)** |
+| **Tâches restantes** | Phase 7 (RAGAS + génération) → Phases 8–15 |
+| **Prochaine étape** | Phase 7 — Évaluation RAG (RAGAS) + génération de réponse avec citations |
+| **Risques ouverts** | F1 classification < objectif PFE 0.80 · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
+| **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté · SemanticRAG non intégré au backend (renvoyé Phase 8) · Calibration + MLflow renvoyés (Phases 13/10) |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (QLoRA, hybrid search, re-ranking, agents, K8s…) |
 
 > **Calcul de la progression** : moyenne pondérée de l'avancement des 15 phases par leur priorité.

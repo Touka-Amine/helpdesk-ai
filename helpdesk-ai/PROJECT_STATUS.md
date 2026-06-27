@@ -7,18 +7,19 @@
 
 | | |
 |---|---|
-| **Phase active** | Phase 6 — RAG sémantique |
-| **Progression globale** | ~32 % (Phases 0–1, 3–5 terminées) |
+| **Phase active** | Phase 7 — Évaluation RAG (RAGAS) |
+| **Progression globale** | ~38 % (Phases 0–1, 3–6 terminées) |
 | **Périmètre** | Cœur rehaussé (Must) |
 | **Durée** | Stage 6 mois · GPU local |
-| **Prochaine étape** | Phase 6 : embeddings FR → base vectorielle → retrieval |
+| **Prochaine étape** | Phase 7 : RAGAS + génération de réponse avec citations |
 
 ## ✅ Terminé
 - EDA + preprocessing (notebooks 01–02) + features enrichies (`text_enriched`)
 - Baseline ML TF-IDF (F1-macro honnête 0.38 seul / 0.57 avec heuristiques, split anti-fuite) — *référence*
-- **CamemBERT-base + LoRA — F1-macro 0.5685** (à parité avec TF-IDF+heuristiques 0.5673, sans règles codées)
+- **CamemBERT-base + LoRA — F1-macro 0.5685** (à parité avec TF-IDF+heuristiques, sans règles codées)
 - Benchmark externe public (Tobi-Bueck : TYPE F1=0.83 / QUEUE F1=0.48)
-- RAG lexical (TF-IDF + cosinus) — *à remplacer (Phase 6)*
+- RAG lexical (TF-IDF + cosinus) — *conservé comme baseline*
+- **RAG sémantique FAISS** — `paraphrase-multilingual-mpnet-base-v2`, score cosinus **0.93 vs 0.76** lexical (+0.17)
 - Backend cœur (auth, tickets, approbation, historique) + NoSQL TinyDB
 - Documentation (cahier des charges, workflow)
 - Système de pilotage documentaire (11 fichiers)
@@ -43,7 +44,7 @@
 | 3 EDA | ✅ ~90 % (consolidé + benchmark externe) |
 | 4 ML baseline | ✅ 100 % (multi-modèles + heuristiques, F1 honnête 0.57) |
 | 5 Fine-Tuning | ✅ 100 % (CamemBERT LoRA, F1=0.5685) |
-| 6 RAG sémantique | 🔴 0 % |
+| 6 RAG sémantique | ✅ 100 % (FAISS + paraphrase-multilingual, score 0.93) |
 | 7 Éval RAG | 🔴 0 % |
 | 8 Backend | 🟡 ~88 % (NoSQL TinyDB ajouté pour tickets résolus) |
 | 9 Frontend | 🟡 ~65 % |
