@@ -26,8 +26,8 @@ _BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 _DB_PATH = os.path.join(_BASE_DIR, "data", "resolved_tickets.json")
 
 
-def _get_db() -> TinyDB:
-    """Retourne l'instance TinyDB (crée le dossier si nécessaire)."""
+def _open_db() -> TinyDB:
+    """Ouvre une instance TinyDB (crée le dossier si nécessaire)."""
     os.makedirs(os.path.dirname(_DB_PATH), exist_ok=True)
     return TinyDB(_DB_PATH, indent=2, ensure_ascii=False)
 
@@ -53,21 +53,21 @@ def archive_resolved_ticket(
     Appelé automatiquement depuis approve_ticket() quand statut → 'Résolu'.
     Retourne le doc_id TinyDB du document inséré.
     """
-    db = _get_db()
-    doc_id = db.insert({
-        "ticket_id"         : ticket_id,
-        "titre"             : titre,
-        "description"       : description,
-        "categorie"         : categorie,
-        "confiance_ml"      : round(confiance, 4) if confiance is not None else None,
-        "solution"          : solution,
-        "knowledge"         : knowledge,
-        "filiale"           : filiale,
-        "equipement"        : equipement,
-        "commentaire_client": commentaire_client,
-        "approved_by"       : approved_by,
-        "resolved_at"       : datetime.utcnow().isoformat(),
-    })
+    with _open_db() as db:
+        doc_id = db.insert({
+            "ticket_id"         : ticket_id,
+            "titre"             : titre,
+            "description"       : description,
+            "categorie"         : categorie,
+            "confiance_ml"      : round(confiance, 4) if confiance is not None else None,
+            "solution"          : solution,
+            "knowledge"         : knowledge,
+            "filiale"           : filiale,
+            "equipement"        : equipement,
+            "commentaire_client": commentaire_client,
+            "approved_by"       : approved_by,
+            "resolved_at"       : datetime.utcnow().isoformat(),
+        })
     return doc_id
 
 
@@ -75,23 +75,23 @@ def archive_resolved_ticket(
 
 def get_all_resolved(limit: int = 100) -> list[Document]:
     """Retourne tous les tickets résolus (les plus récents en premier, limité)."""
-    db = _get_db()
-    docs = db.all()
+    with _open_db() as db:
+        docs = db.all()
     return sorted(docs, key=lambda d: d.get("resolved_at", ""), reverse=True)[:limit]
 
 
 def get_resolved_by_categorie(categorie: str) -> list[Document]:
     """Retourne les tickets résolus d'une catégorie donnée."""
-    db = _get_db()
-    Q = Query()
-    return db.search(Q.categorie == categorie)
+    with _open_db() as db:
+        Q = Query()
+        return db.search(Q.categorie == categorie)
 
 
 def get_resolved_by_filiale(filiale: str) -> list[Document]:
     """Retourne les tickets résolus d'une filiale donnée."""
-    db = _get_db()
-    Q = Query()
-    return db.search(Q.filiale == filiale)
+    with _open_db() as db:
+        Q = Query()
+        return db.search(Q.filiale == filiale)
 
 
 # ── Statistiques ───────────────────────────────────────────────────────────────
@@ -101,10 +101,10 @@ def get_stats() -> dict:
     Retourne les KPIs agrégés de la base de tickets résolus.
     Utilisé par l'endpoint /tickets/resolved/stats.
     """
-    db = _get_db()
-    docs = db.all()
-    total = len(docs)
+    with _open_db() as db:
+        docs = db.all()
 
+    total = len(docs)
     if total == 0:
         return {"total": 0, "par_categorie": {}, "par_filiale": {}}
 
@@ -126,4 +126,5 @@ def get_stats() -> dict:
 
 def count_resolved() -> int:
     """Nombre total de tickets résolus archivés."""
-    return len(_get_db())
+    with _open_db() as db:
+        return len(db)

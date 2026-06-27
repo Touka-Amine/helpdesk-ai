@@ -4,7 +4,7 @@
 > prévue ici. À chaque session : relire ce fichier → identifier la phase/tâche active → exécuter
 > **une seule** tâche → tester → mettre à jour ce fichier → cocher → résumer → proposer la suite.
 >
-> **Méta** — Dernière mise à jour : **2026-06-26** · Phase active : **Phase 1** (Phase 0 terminée)
+> **Méta** — Dernière mise à jour : **2026-06-27** · Phase active : **Phase 5** (Phases 0–4 terminées)
 > · Périmètre : **Cœur rehaussé (Must)** · Durée : **stage 6 mois** · Compute : **GPU local**.
 >
 > **Documents liés** : [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) ·
@@ -488,14 +488,14 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~12 %** (Phase 1 rédigée, en validation) |
-| **Phase actuelle** | Phase 1 — Cadrage & SRS (v0.1 à valider) |
-| **Tâche actuelle** | Validation des points 🟠 du `CADRAGE_SRS.md` par l'étudiant |
-| **Tâches terminées** | Phase 0 complète ; Phase 1 : `CADRAGE_SRS.md` v0.1 ; **Diagnostic qualité données** + audit notebooks (`notebook.md`) + figures/PDF |
-| **Tâches restantes** | Validation Phase 1 → Phases 2 → 15 |
-| **Prochaine étape** | Valider le cadrage, puis Phase 2 (Data Engineering + RGPD) |
-| **Risques ouverts** | Redondance du corpus · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
-| **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté |
+| **Progression globale** | **~25 %** (Phases 0–1 terminées, Phase 3–4 ML baseline complète) |
+| **Phase actuelle** | Phase 4 terminée · prochaine : Phase 5 (CamemBERT fine-tuning) |
+| **Tâche actuelle** | Aucune en cours — en attente validation avant Phase 5 |
+| **Tâches terminées** | Phase 0 complète · Phase 1 (SRS v0.1) · Phase 3 (EDA + preprocessing + benchmark externe) · Phase 4 (baseline ML : split anti-fuite GroupShuffleSplit, multi-modèles, heuristiques, HITL, benchmark public, correctifs fuite) |
+| **Tâches restantes** | Phase 5 (CamemBERT LoRA) → Phases 6–15 |
+| **Prochaine étape** | Phase 5 — Fine-tuning CamemBERT (LoRA) sur le corpus ; benchmark vs baseline TF-IDF |
+| **Risques ouverts** | F1 baseline honnête faible (0.57) → motivation CamemBERT · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
+| **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté · SOFT_RULES Backup/Sécurité insuffisantes pour Titres de test |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (QLoRA, hybrid search, re-ranking, agents, K8s…) |
 
 > **Calcul de la progression** : moyenne pondérée de l'avancement des 15 phases par leur priorité.

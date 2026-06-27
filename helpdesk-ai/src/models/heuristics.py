@@ -38,7 +38,7 @@ FORCE_RULES: list[tuple[list[str], str]] = [
     (
         ["ransomware", "malware", "cryptolocker", "wannacry",
          "virus informatique", "attaque ddos", "intrusion detectee",
-         "intrusion détectée", "cyberattaque"],
+         "cyberattaque"],
         "Sécurité",
     ),
     # Applicatifs — logiciels métier nommés
