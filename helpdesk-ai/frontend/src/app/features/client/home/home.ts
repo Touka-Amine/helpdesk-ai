@@ -27,7 +27,7 @@ export class Home implements OnInit {
   statutCfg = STATUT_CFG;
 
   totalCount = computed(() => this.tickets().length);
-  enCoursCount = computed(() => this.tickets().filter(t => t.statut === 'En cours').length);
+  enCoursCount = computed(() => this.tickets().filter(t => t.statut === 'Prise en Charge').length);
   resoluCount = computed(() => this.tickets().filter(t => t.statut === 'Résolu').length);
   recentTickets = computed(() => this.tickets().slice(0, 3));
 

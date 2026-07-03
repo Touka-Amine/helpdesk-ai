@@ -1,1 +1,154 @@
-<p>ticket-detail works!</p>
+@if (loading()) {
+  <div class="loading">Chargement…</div>
+} @else if (error() && !ticket()) {
+  <div class="error-box">{{ error() }}</div>
+} @else if (ticket(); as t) {
+  <div class="detail-page">
+
+    <div class="detail-header">
+      <a routerLink="/admin/tickets" class="btn-back">← Liste des tickets</a>
+      <div class="header-right">
+        <span class="statut-badge"
+              [style.color]="statutCfg[t.statut]?.color"
+              [style.background]="statutCfg[t.statut]?.bg">
+          {{ statutCfg[t.statut]?.label ?? t.statut }}
+        </span>
+        <span class="ticket-id">#{{ t.id }}</span>
+      </div>
+    </div>
+
+    <h1 class="ticket-titre">{{ t.titre }}</h1>
+    <p class="ticket-meta">
+      Soumis le {{ formatDate(t.created_at) }}
+      @if (t.filiale) { · <strong>{{ t.filiale }}</strong> }
+      @if (t.priorite_saisie) { · Priorité : <strong>{{ t.priorite_saisie }}</strong> }
+    </p>
+
+    <div class="layout-2col">
+
+      <!-- Colonne gauche — infos ticket -->
+      <div class="col-left">
+
+        <section class="card">
+          <h3 class="card-title">Description</h3>
+          <p class="description-text">{{ t.description }}</p>
+        </section>
+
+        <section class="card">
+          <h3 class="card-title">Classification IA</h3>
+          <div class="classify-row">
+            <span class="label">Catégorie prédite</span>
+            <span class="cat-badge">{{ t.categorie_predite || '—' }}</span>
+          </div>
+          <div class="classify-row">
+            <span class="label">Catégorie finale</span>
+            <span class="cat-badge final">{{ t.categorie_finale || t.categorie_predite || '—' }}</span>
+          </div>
+          <div class="classify-row">
+            <span class="label">Confiance</span>
+            <div class="conf-wrap">
+              <div class="conf-bar-bg">
+                <div class="conf-bar" [style.width.%]="confPct(t.confiance)"
+                     [style.background]="confianceColor(t.confiance)"></div>
+              </div>
+              <span [style.color]="confianceColor(t.confiance)" style="font-weight:700">
+                {{ confPct(t.confiance) }}%
+              </span>
+            </div>
+          </div>
+        </section>
+
+        @if (t.solution_rag) {
+          <section class="card rag-card">
+            <div class="rag-header">
+              <h3 class="card-title">💡 Solution RAG</h3>
+              <button class="btn-refresh" (click)="refreshRag()" title="Rafraîchir la recommandation RAG">
+                ↺ Rafraîchir
+              </button>
+            </div>
+            <p class="rag-text">{{ t.solution_rag }}</p>
+            @if (t.knowledge_rag) {
+              <details class="rag-source">
+                <summary>Source de connaissance</summary>
+                <blockquote>{{ t.knowledge_rag }}</blockquote>
+              </details>
+            }
+          </section>
+        }
+
+        <!-- Historique -->
+        @if (history().length) {
+          <section class="card">
+            <h3 class="card-title">Historique</h3>
+            <ul class="history-list">
+              @for (h of history(); track h.id) {
+                <li class="history-item">
+                  <span class="hist-date">{{ formatDate(h.timestamp) }}</span>
+                  <span class="hist-champ">{{ h.champ }}</span>
+                  @if (h.ancienne_valeur) {
+                    <span class="hist-old">{{ h.ancienne_valeur }}</span>
+                    <span>→</span>
+                  }
+                  <span class="hist-new">{{ h.nouvelle_valeur }}</span>
+                  <span class="hist-par">{{ h.par }}</span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+
+      <!-- Colonne droite — formulaire d'approbation -->
+      <div class="col-right">
+        <section class="card approve-card">
+          <h3 class="card-title">Traitement du ticket</h3>
+
+          <form [formGroup]="form" (ngSubmit)="save()">
+
+            <div class="field">
+              <label>Nouveau statut</label>
+              <select formControlName="statut">
+                <option [value]="t.statut">{{ statutCfg[t.statut]?.label ?? t.statut }} (actuel)</option>
+                @for (s of availableStatuts(); track s) {
+                  <option [value]="s">{{ statutCfg[s]?.label ?? s }}</option>
+                }
+              </select>
+              @if (!availableStatuts().length) {
+                <span class="field-hint">Statut terminal — aucune transition possible.</span>
+              }
+            </div>
+
+            <div class="field">
+              <label>Catégorie finale <span class="optional">(correction si besoin)</span></label>
+              <input type="text" formControlName="categorie_finale"
+                     placeholder="{{ t.categorie_predite || 'Catégorie' }}" />
+            </div>
+
+            <div class="field">
+              <label>Réponse au client</label>
+              <textarea rows="3" formControlName="commentaire_client"
+                        placeholder="Message visible par le client…"></textarea>
+            </div>
+
+            <div class="field">
+              <label>Note interne <span class="optional">(non visible client)</span></label>
+              <textarea rows="2" formControlName="commentaire_interne"
+                        placeholder="Note pour l'équipe IT…"></textarea>
+            </div>
+
+            @if (error()) {
+              <div class="alert-error">{{ error() }}</div>
+            }
+            @if (success()) {
+              <div class="alert-success">{{ success() }}</div>
+            }
+
+            <button type="submit" class="btn-save" [disabled]="saving() || !availableStatuts().length">
+              @if (saving()) { Enregistrement… } @else { Enregistrer }
+            </button>
+          </form>
+        </section>
+      </div>
+    </div>
+  </div>
+}

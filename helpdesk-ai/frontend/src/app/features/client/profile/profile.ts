@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService, CurrentUser } from '../../../core/services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { FILIALES } from '../../../models/ticket.models';
 
 @Component({

@@ -1,0 +1,139 @@
+@if (loading()) {
+  <div class="loading">Chargement…</div>
+} @else if (error()) {
+  <div class="error-box">{{ error() }}</div>
+} @else if (ticket(); as t) {
+  <div class="detail-page">
+
+    <!-- En-tête -->
+    <div class="detail-header">
+      <button class="btn-back" (click)="goBack()">← Mes tickets</button>
+      <div class="header-right">
+        <span class="statut-badge"
+              [style.color]="statutCfg[t.statut]?.color"
+              [style.background]="statutCfg[t.statut]?.bg">
+          {{ statutCfg[t.statut]?.label ?? t.statut }}
+        </span>
+        <span class="ticket-id">#{{ t.id }}</span>
+      </div>
+    </div>
+
+    <h1 class="ticket-titre">{{ t.titre }}</h1>
+    <p class="ticket-meta">
+      Soumis le {{ formatDate(t.created_at) }}
+      @if (t.filiale) { · <strong>{{ t.filiale }}</strong> }
+      @if (t.priorite_saisie) { · Priorité : <strong>{{ t.priorite_saisie }}</strong> }
+    </p>
+
+    <!-- Description -->
+    <section class="card">
+      <h3 class="card-title">Description du problème</h3>
+      <p class="description-text">{{ t.description }}</p>
+    </section>
+
+    <!-- Classification IA -->
+    <section class="card">
+      <h3 class="card-title">Classification IA</h3>
+      <div class="classify-grid">
+        <div class="classify-item">
+          <span class="label">Catégorie</span>
+          <span class="value cat-badge">{{ t.categorie_finale || t.categorie_predite || '—' }}</span>
+        </div>
+        <div class="classify-item">
+          <span class="label">Confiance</span>
+          @if (confiance() != null) {
+            <div class="conf-bar-wrap">
+              <div class="conf-bar" [style.width.%]="confiance()"
+                   [style.background]="confianceColor()"></div>
+            </div>
+            <span class="conf-pct" [style.color]="confianceColor()">{{ confiance() }}%</span>
+          } @else {
+            <span class="value">—</span>
+          }
+        </div>
+        @if (confiance() != null && confiance()! < 40) {
+          <p class="low-conf-warn">
+            ⚠️ Confiance faible — un agent IT vérifiera la classification manuellement.
+          </p>
+        }
+      </div>
+    </section>
+
+    <!-- Solution RAG -->
+    @if (t.solution_rag) {
+      <section class="card rag-card">
+        <h3 class="card-title">💡 Solution suggérée</h3>
+        <p class="rag-solution">{{ t.solution_rag }}</p>
+
+        @if (t.knowledge_rag) {
+          <details class="rag-source">
+            <summary>Voir la source de connaissance</summary>
+            <blockquote class="rag-knowledge">{{ t.knowledge_rag }}</blockquote>
+          </details>
+        }
+      </section>
+    }
+
+    <!-- Réponse IT -->
+    @if (t.commentaire_client) {
+      <section class="card response-card">
+        <h3 class="card-title">💬 Réponse de l'équipe IT</h3>
+        <p>{{ t.commentaire_client }}</p>
+      </section>
+    }
+
+    <!-- Résolution -->
+    @if (t.date_resolution) {
+      <div class="resolved-banner">
+        ✅ Résolu le {{ formatDate(t.date_resolution) }}
+      </div>
+    }
+
+    <!-- Feedback utilisateur -->
+    @if (t.statut === 'Résolu' && !feedbackSent()) {
+      <section class="card feedback-card">
+        <h3 class="card-title">La solution vous a-t-elle aidé ?</h3>
+        <div class="feedback-btns">
+          <button class="btn-feedback up" [class.active]="feedback() === 'up'"
+                  (click)="sendFeedback('up')">👍 Oui</button>
+          <button class="btn-feedback down" [class.active]="feedback() === 'down'"
+                  (click)="sendFeedback('down')">👎 Non</button>
+        </div>
+        @if (showFeedbackForm()) {
+          <div class="feedback-comment">
+            <label>Précisez le problème (optionnel)</label>
+            <textarea rows="3" [value]="feedbackComment()"
+                      (input)="feedbackComment.set($any($event.target).value)"
+                      placeholder="La solution proposée ne correspond pas à mon problème…"></textarea>
+            <button class="btn-submit-fb" (click)="submitFeedbackComment()">Envoyer</button>
+          </div>
+        }
+      </section>
+    }
+    @if (feedbackSent()) {
+      <div class="feedback-thanks">Merci pour votre retour !</div>
+    }
+
+    <!-- Historique -->
+    @if (history().length) {
+      <section class="card">
+        <h3 class="card-title">Historique des modifications</h3>
+        <ul class="history-list">
+          @for (h of history(); track h.id) {
+            <li class="history-item">
+              <span class="hist-date">{{ formatDate(h.timestamp) }}</span>
+              <span class="hist-champ">{{ h.champ }}</span>
+              @if (h.ancienne_valeur) {
+                <span class="hist-old">{{ h.ancienne_valeur }}</span>
+                <span class="hist-arrow">→</span>
+              }
+              <span class="hist-new">{{ h.nouvelle_valeur }}</span>
+              <span class="hist-par">{{ h.par }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+  </div>
+}

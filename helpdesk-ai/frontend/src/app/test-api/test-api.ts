@@ -28,7 +28,7 @@ export class TestApi {
     this.apiResponse = 'Connexion en cours...';
     const payload = { email: "test@domain.com", password: "password123" }; // Adaptez selon votre backend
     
-    this.authApi.login(payload).subscribe({
+    this.authApi.login(payload.email, payload.password).subscribe({
       next: (res: any) => {
         this.apiResponse = res;
         // On sauvegarde le token si la connexion réussit

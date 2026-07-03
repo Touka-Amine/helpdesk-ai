@@ -1,0 +1,79 @@
+.loading, .error-box { padding: 2rem; text-align: center; color: #6b7280; }
+.error-box { color: #dc2626; }
+
+.detail-page { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+.detail-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;
+}
+.btn-back { color: #2d6a9f; font-size: .9rem; font-weight: 600; text-decoration: none; }
+.btn-back:hover { text-decoration: underline; }
+.header-right { display: flex; align-items: center; gap: .75rem; }
+.statut-badge { padding: .25rem .75rem; border-radius: 20px; font-size: .82rem; font-weight: 700; }
+.ticket-id { color: #9ca3af; font-size: .85rem; }
+
+.ticket-titre { font-size: 1.3rem; font-weight: 700; color: #1e3a5f; margin: 0 0 .3rem; }
+.ticket-meta { font-size: .82rem; color: #6b7280; margin: 0 0 1.25rem; }
+
+.layout-2col {
+  display: grid; grid-template-columns: 1fr 360px; gap: 1rem; align-items: start;
+}
+@media (max-width: 768px) { .layout-2col { grid-template-columns: 1fr; } }
+
+.card {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+  padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.card-title { font-size: .95rem; font-weight: 700; color: #1e3a5f; margin: 0 0 .75rem; }
+.description-text { color: #374151; line-height: 1.6; margin: 0; white-space: pre-wrap; }
+
+.classify-row { display: flex; align-items: center; gap: .75rem; margin-bottom: .5rem; }
+.label { font-size: .82rem; color: #6b7280; min-width: 130px; }
+.cat-badge { background: #dbeafe; color: #1e40af; padding: .2rem .6rem; border-radius: 6px; font-size: .82rem; font-weight: 600; }
+.cat-badge.final { background: #d1fae5; color: #065f46; }
+.conf-wrap { display: flex; align-items: center; gap: .6rem; }
+.conf-bar-bg { background: #f3f4f6; border-radius: 4px; height: 8px; width: 100px; overflow: hidden; }
+.conf-bar { height: 100%; border-radius: 4px; }
+
+.rag-card { border-left: 4px solid #2d6a9f; }
+.rag-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .5rem; }
+.rag-header .card-title { margin: 0; }
+.btn-refresh {
+  font-size: .78rem; color: #2d6a9f; background: none; border: 1px solid #2d6a9f;
+  border-radius: 6px; padding: .2rem .6rem; cursor: pointer;
+}
+.btn-refresh:hover { background: #eff6ff; }
+.rag-text { color: #374151; line-height: 1.6; white-space: pre-wrap; margin: 0 0 .5rem; }
+.rag-source summary { font-size: .8rem; color: #6b7280; cursor: pointer; }
+.rag-source blockquote { border-left: 3px solid #d1d5db; padding-left: .75rem; color: #6b7280; font-size: .82rem; white-space: pre-wrap; margin: .5rem 0 0; }
+
+.history-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
+.history-item { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; font-size: .78rem; padding: .35rem .5rem; background: #f9fafb; border-radius: 6px; }
+.hist-date { color: #9ca3af; min-width: 115px; }
+.hist-champ { font-weight: 700; color: #374151; }
+.hist-old { color: #9ca3af; text-decoration: line-through; }
+.hist-new { color: #1e3a5f; font-weight: 600; }
+.hist-par { margin-left: auto; color: #6b7280; font-style: italic; }
+
+.approve-card { position: sticky; top: 1rem; }
+.field { display: flex; flex-direction: column; gap: .25rem; margin-bottom: .9rem; }
+.field label { font-size: .82rem; font-weight: 600; color: #374151; }
+.optional { font-weight: 400; color: #9ca3af; }
+.field input, .field select, .field textarea {
+  border: 1.5px solid #d1d5db; border-radius: 8px; padding: .5rem .7rem;
+  font-size: .9rem; outline: none; transition: border-color .2s; background: #fff; resize: vertical;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: #2d6a9f; }
+.field-hint { font-size: .76rem; color: #9ca3af; }
+
+.alert-error { background: #fee2e2; color: #991b1b; border-radius: 8px; padding: .5rem .75rem; font-size: .83rem; margin-bottom: .75rem; }
+.alert-success { background: #d1fae5; color: #065f46; border-radius: 8px; padding: .5rem .75rem; font-size: .83rem; margin-bottom: .75rem; }
+
+.btn-save {
+  width: 100%; padding: .7rem; background: #1e3a5f; color: #fff;
+  border: none; border-radius: 8px; font-size: .95rem; font-weight: 600;
+  cursor: pointer; transition: background .2s;
+}
+.btn-save:hover:not(:disabled) { background: #2d6a9f; }
+.btn-save:disabled { opacity: .55; cursor: not-allowed; }

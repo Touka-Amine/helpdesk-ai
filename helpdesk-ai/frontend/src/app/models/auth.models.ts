@@ -1,29 +1,36 @@
-// ⚠️ Champs déduits des routes Swagger (/auth/register, /auth/login) et de
-// RESUME_PROJET_PFE.md — à corriger une fois api/schemas/auth_schemas.py
-// ou /openapi.json consultés.
-
-export type UserRole = 'client' | 'admin';
+export type UserRole = 'client' | 'admin' | 'system';
 
 export interface RegisterRequest {
+  nom: string;
+  prenom: string;
   email: string;
   password: string;
-  full_name: string; // ⚠️ nom de champ à confirmer
+  filiale?: string;
 }
 
+/** Le backend utilise OAuth2PasswordRequestForm — champ "username" (pas "email") */
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
+/** Correspond à UserOut du backend */
 export interface AuthUser {
   id: number;
   email: string;
-  full_name?: string;
+  nom: string;
+  prenom: string;
   role: UserRole;
+  filiale: string;
 }
 
+/** Correspond à TokenOut du backend */
 export interface LoginResponse {
-  access_token: string; // ⚠️ à confirmer — FastAPI/OAuth2 utilise parfois "access_token" + "token_type"
-  token_type?: string; // ⚠️ souvent "bearer"
-  user: AuthUser;
+  access_token: string;
+  token_type: string;
+  role: UserRole;
+  nom: string;
+  prenom: string;
+  user_id: number;
+  filiale: string;
 }

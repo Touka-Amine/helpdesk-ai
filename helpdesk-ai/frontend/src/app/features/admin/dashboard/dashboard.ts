@@ -21,7 +21,7 @@ export class Dashboard implements OnInit {
   // --- Stats simples ---
   totalCount = computed(() => this.tickets().length);
   enAttenteCount = computed(() => this.tickets().filter(t => t.statut === 'Ouvert' as Statut || t.statut === 'En attente' as any).length);
-  enCoursCount = computed(() => this.tickets().filter(t => t.statut === 'En cours').length);
+  enCoursCount = computed(() => this.tickets().filter(t => t.statut === 'Prise en Charge').length);
   resoluCount = computed(() => this.tickets().filter(t => t.statut === 'Résolu').length);
   rejeteCount = computed(() => this.tickets().filter(t => (t.statut as any) === 'Rejeté').length);
 

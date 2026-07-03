@@ -3,9 +3,25 @@
 > Tâches du sprint courant. Détail complet des checklists dans [PLAN.md](PLAN.md) (section 6).
 > Dernière mise à jour : **2026-07-03**. **Phase active : Phase 9 — Frontend.**
 
-## 🔵 Prochaine phase
-- [ ] **Phase 9 — Frontend** : configurer `environment.ts` → aligner enum statuts → page détail ticket
-  → guards auth/rôles → afficher confiance + sources RAG → feedback utilisateur.
+## 🔵 Prochaine phase — Phase 10 (MLOps léger)
+- [ ] Pipeline DVC complet (`dvc.yaml`) : stages preprocess → split → train → rag → eval
+- [ ] MLflow registry (model cards, log run, promote best model)
+- [ ] Monitoring minimal (drift sur confiance)
+
+## ✅ Terminé — Phase 9 (Frontend connexion, 2026-07-04)
+- [x] `environment.ts` / `environment.development.ts` — `apiUrl` configuré
+- [x] Modèles TypeScript alignés sur backend : `auth.models.ts`, `ticket.models.ts`
+- [x] `AuthApiService.login()` → `application/x-www-form-urlencoded` (OAuth2)
+- [x] `AuthService` session manager (`setSession`, `logout`, `isAdmin`, `getToken`)
+- [x] Intercepteur HTTP (`auth.interceptor.ts`) — injecte `Authorization: Bearer <token>`
+- [x] Guards fonctionnels : `auth.guard.ts` (auth requise) + `admin.guard.ts` (rôle admin)
+- [x] `app.config.ts` — `provideHttpClient(withInterceptors([authInterceptor]))`
+- [x] `app.routes.ts` — routes auth/client/admin avec guards, lazy-load des détails
+- [x] Composant login (`features/auth/login/`) — form réactif, redirection par rôle
+- [x] Composant register (`features/auth/register/`) — inscription + auto-login
+- [x] Page détail ticket client (`features/client/ticket-detail/`) — confiance, RAG, feedback
+- [x] Page détail ticket admin (`features/admin/ticket-detail/`) — formulaire traitement, historique, refresh RAG
+- [x] Build Angular propre (0 erreur)
 
 ## ⚪ À faire (Phase 2 — reliquat Data Engineering & RGPD)
 - [ ] Anonymisation des PII + registre de traitement RGPD

@@ -90,8 +90,8 @@ export class ApprovalQueue implements OnInit {
   private submit(t: Ticket, statut: Statut): void {
     const payload: ApproveTicketRequest = {
       statut,
-      message_client: this.messageClient() || undefined,
-      note_interne: this.noteInterne() || undefined,
+      commentaire_client: this.messageClient() || undefined,
+      commentaire_interne: this.noteInterne() || undefined,
     };
 
     this.submitting.set(true);

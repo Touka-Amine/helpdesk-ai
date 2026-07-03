@@ -1,1 +1,66 @@
-<p>register works!</p>
+<div class="register-wrapper">
+  <div class="register-card">
+    <div class="card-logo">
+      <span>🎫</span>
+      <h1>Helpdesk<span>AI</span></h1>
+    </div>
+    <h2>Créer un compte</h2>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="row-2">
+        <div class="field">
+          <label>Nom</label>
+          <input type="text" formControlName="nom" placeholder="Dupont" />
+          @if (form.get('nom')?.touched && form.get('nom')?.invalid) {
+            <span class="field-error">Requis.</span>
+          }
+        </div>
+        <div class="field">
+          <label>Prénom</label>
+          <input type="text" formControlName="prenom" placeholder="Jean" />
+          @if (form.get('prenom')?.touched && form.get('prenom')?.invalid) {
+            <span class="field-error">Requis.</span>
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Adresse e-mail</label>
+        <input type="email" formControlName="email" placeholder="votre@email.com" />
+        @if (form.get('email')?.touched && form.get('email')?.invalid) {
+          <span class="field-error">Email invalide.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" formControlName="password" placeholder="6 caractères minimum" />
+        @if (form.get('password')?.touched && form.get('password')?.invalid) {
+          <span class="field-error">6 caractères minimum.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label>Filiale <span class="optional">(optionnel)</span></label>
+        <select formControlName="filiale">
+          <option value="">-- Sélectionner --</option>
+          @for (f of filiales; track f) {
+            <option [value]="f">{{ f }}</option>
+          }
+        </select>
+      </div>
+
+      @if (errorMsg()) {
+        <div class="alert-error">{{ errorMsg() }}</div>
+      }
+
+      <button type="submit" class="btn-primary" [disabled]="loading()">
+        @if (loading()) { Création… } @else { Créer mon compte }
+      </button>
+    </form>
+
+    <p class="footer-link">
+      Déjà inscrit ? <a routerLink="/auth/login">Se connecter</a>
+    </p>
+  </div>
+</div>

@@ -5,6 +5,41 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 9 — Frontend Angular : connexion complète back↔front (2026-07-04)
+
+#### Environnement & configuration
+- `Modifié` : `environments/environment.ts` + `environment.development.ts` — `apiUrl` = `http://localhost:8000/api/v1`.
+
+#### Modèles TypeScript alignés sur le backend
+- `Modifié` : `models/auth.models.ts` — `LoginResponse` (flat TokenOut), `AuthUser`, `LoginRequest` (champ `username` OAuth2).
+- `Modifié` : `models/ticket.models.ts` — `Statut` (5 valeurs réelles), `Ticket` (tous les champs), `STATUT_CFG`, `TicketCategory`, `FILIALES`.
+
+#### Couche API & session
+- `Modifié` : `api/auth-api.service.ts` — `login()` envoie `application/x-www-form-urlencoded` via `HttpParams`.
+- `Modifié` : `core/services/auth.service.ts` — gestionnaire de session uniquement : `setSession()`, `logout()`, `isAdmin()`, `getToken()`.
+
+#### Sécurité Angular
+- `Ajouté` : `core/interceptors/auth.interceptor.ts` — `HttpInterceptorFn` qui injecte `Bearer <token>`.
+- `Ajouté` : `core/guards/auth.guard.ts` — `CanActivateFn` (authentification requise).
+- `Ajouté` : `core/guards/admin.guard.ts` — `CanActivateFn` (rôle admin requis).
+- `Modifié` : `app.config.ts` — `provideHttpClient(withInterceptors([authInterceptor]))`.
+- `Modifié` : `app.routes.ts` — routes auth/client/admin avec guards, `tickets/:id` pour détail.
+
+#### Composants auth
+- `Modifié` : `features/auth/login/` — formulaire réactif, appel `AuthApiService.login()`, redirection par rôle.
+- `Modifié` : `features/auth/register/` — inscription + auto-login après succès.
+
+#### Pages détail ticket
+- `Ajouté` : `features/client/ticket-detail/` — confiance (barre colorée), solution RAG + sources, réponse IT, feedback 👍/👎, historique.
+- `Ajouté` : `features/admin/ticket-detail/` — vue 2 colonnes : infos/RAG/historique + formulaire traitement (statut, catégorie, commentaires), refresh RAG.
+
+#### Corrections de build
+- `Corrigé` : `dashboard.ts`, `home.ts` — `'En cours'` → `'Prise en Charge'` (statut réel).
+- `Corrigé` : `profile.ts` — import `CurrentUser` supprimé (type inexistant).
+- `Corrigé` : `approval-queue.ts` — champs `message_client`/`note_interne` → `commentaire_client`/`commentaire_interne`.
+- `Corrigé` : `test-api.ts` — `login(payload)` → `login(payload.email, payload.password)`.
+- `Corrigé` : `client/ticket-detail.ts` — `RouterLink` retiré des imports (non utilisé dans le template).
+
 ### Phase 8 — Backend API v1.1 : sécurité + intégration sémantique + /ingest (2026-07-03)
 
 #### Contrat OpenAPI versionné
