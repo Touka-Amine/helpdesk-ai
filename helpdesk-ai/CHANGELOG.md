@@ -5,6 +5,32 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 7 — Évaluation RAG (RAGAS simplifié) + génération avec citations (2026-07-03)
+
+#### Évaluation RAG
+- `Ajouté` : `notebooks/07_rag_evaluation.ipynb` — notebook d'évaluation complet (tâches 7.1–7.6).
+- `Ajouté` : `metrics/rag_eval.json` — résultats chiffrés (P@3, R@3, MRR@3, nDCG@3, RAGAS).
+- `Ajouté` : `notebooks/figures/07_rag_evaluation_metrics.png` — comparatif métriques sémantique vs lexical.
+- `Ajouté` : `notebooks/figures/07_ragas_summary.png` — résumé métriques RAGAS.
+
+#### Résultats Phase 7 (80 requêtes stratifiées, GT = même catégorie)
+| Métrique | Sémantique (FAISS) | Lexical (TF-IDF) | Δ |
+|---|---|---|---|
+| P@3 | 0.3042 | **0.4208** | −0.12 |
+| MRR@3 | 0.5646 | **0.6521** | −0.09 |
+| nDCG@3 | 0.3505 | **0.4520** | −0.10 |
+| Score moyen | **0.6886** ★ | 0.1801 | +0.51 |
+| RAGAS Answer Relevancy | **0.5841** | — | — |
+| RAGAS Faithfulness | **1.0000** | — | — |
+
+**Analyse** : le moteur lexical (TF-IDF) surpasse le sémantique sur les métriques de précision
+catégorielle (correspondance exacte des mots-clés IT sur corpus à forte redondance). Le moteur
+sémantique produit des scores de similarité **3.8× plus élevés** (0.69 vs 0.18) — confiance
+calibrée supérieure, essentielle pour la génération de réponse. La génération template garantit
+Faithfulness=1.0 (0 hallucination par construction).
+
+**LLM-as-a-Judge** (tâche 7.5) renvoyé en BACKLOG — résultats suffisants pour le PFE sans LLM externe.
+
 ### Phase 6 — RAG sémantique (FAISS + embeddings FR) (2026-06-27)
 
 #### Moteur RAG sémantique

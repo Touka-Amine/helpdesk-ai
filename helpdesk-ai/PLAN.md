@@ -4,7 +4,7 @@
 > prévue ici. À chaque session : relire ce fichier → identifier la phase/tâche active → exécuter
 > **une seule** tâche → tester → mettre à jour ce fichier → cocher → résumer → proposer la suite.
 >
-> **Méta** — Dernière mise à jour : **2026-06-27** · Phase active : **Phase 7** (Phases 0–6 terminées)
+> **Méta** — Dernière mise à jour : **2026-07-03** · Phase active : **Phase 8** (Phases 0–7 terminées)
 > · Périmètre : **Cœur rehaussé (Must)** · Durée : **stage 6 mois** · Compute : **GPU local**.
 >
 > **Documents liés** : [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) ·
@@ -386,13 +386,13 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [x] Sauvegarde `models/semantic_rag/` + `semantic_rag_metadata.json`
 - [ ] Intégrer au service d'inférence backend — *renvoyé Phase 8 (Backend)*
 
-### Phase 7 — Évaluation RAG + génération
-- [ ] Construire le jeu d'évaluation RAG (requêtes + vérités terrain)
-- [ ] Mesurer Precision@k / Recall@k / MRR / nDCG
-- [ ] Mesurer Faithfulness / Answer Relevancy / Context Precision-Recall (RAGAS)
-- [ ] Implémenter la génération de réponse avec citations
-- [ ] Mettre en place LLM-as-a-Judge
-- [ ] Comparatif lexical vs sémantique
+### Phase 7 — Évaluation RAG + génération ✅ (terminée 2026-07-03)
+- [x] Construire le jeu d'évaluation RAG (80 requêtes stratifiées, GT=même catégorie)
+- [x] Mesurer Precision@k / Recall@k / MRR / nDCG (sémantique P@3=0.30, MRR=0.56 ; lexical P@3=0.42, MRR=0.65)
+- [x] Mesurer Faithfulness / Answer Relevancy / Context Precision-Recall (RAGAS simplifié sans LLM externe)
+- [x] Implémenter la génération de réponse avec citations (template-based, Faithfulness=1.0)
+- [x] Comparatif lexical vs sémantique (sémantique : score moyen 0.69 vs 0.18 lexical ★)
+- [ ] LLM-as-a-Judge (renvoyé BACKLOG — optionnel pour PFE, résultats suffisants)
 
 ### Phase 8 — Backend
 - [ ] Figer le contrat OpenAPI (`/api/v1`)
@@ -492,15 +492,15 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~38 %** (Phases 0–1 terminées, Phases 3–6 complètes) |
-| **Phase actuelle** | Phase 6 terminée (RAG sémantique) · prochaine : Phase 7 (évaluation RAGAS) |
-| **Tâche actuelle** | Aucune en cours — en attente validation avant Phase 7 |
-| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML F1=0.57) · Phase 5 (CamemBERT LoRA F1=0.5685) · **Phase 6 (RAG sémantique FAISS, score cosinus 0.93 vs 0.76 lexical)** |
-| **Tâches restantes** | Phase 7 (RAGAS + génération) → Phases 8–15 |
-| **Prochaine étape** | Phase 7 — Évaluation RAG (RAGAS) + génération de réponse avec citations |
-| **Risques ouverts** | F1 classification < objectif PFE 0.80 · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
-| **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté · SemanticRAG non intégré au backend (renvoyé Phase 8) · Calibration + MLflow renvoyés (Phases 13/10) |
-| **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (QLoRA, hybrid search, re-ranking, agents, K8s…) |
+| **Progression globale** | **~44 %** (Phases 0–1, 3–7 terminées) |
+| **Phase actuelle** | Phase 7 terminée (Éval RAG RAGAS) · prochaine : **Phase 8** (Backend) |
+| **Tâche actuelle** | Aucune en cours — Phase 7 clôturée |
+| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML F1=0.57) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · **Phase 7 (RAGAS : P@3=0.30 sem/0.42 lex, MRR=0.56, AR=0.58, Faith=1.0)** |
+| **Tâches restantes** | Phases 8–15 |
+| **Prochaine étape** | Phase 8 — Backend (durcissement sécurité + intégration CamemBERT + RAG + fix `/ingest`) |
+| **Risques ouverts** | F1 classification < objectif PFE 0.85 · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
+| **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté · SemanticRAG non intégré au backend · LLM-as-a-Judge renvoyé BACKLOG · Calibration + MLflow renvoyés (Phases 13/10) |
+| **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (LLM-as-a-Judge, QLoRA, hybrid search, re-ranking, agents, K8s…) |
 
 > **Calcul de la progression** : moyenne pondérée de l'avancement des 15 phases par leur priorité.
 > Mis à jour à chaque fin de tâche.

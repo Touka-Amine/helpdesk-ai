@@ -1,0 +1,35 @@
+{
+  "phase": "Phase 7 - Evaluation RAG",
+  "date": "2026-07-03",
+  "n_eval_queries": 80,
+  "eval_protocol": "Stratified sample 10/cat, GT=meme categorie, auto-match filtre (score>=0.999)",
+  "semantic": {
+    "engine": "SemanticRAGEngine (FAISS + paraphrase-multilingual-mpnet-base-v2)",
+    "precision_at_3": 0.3042,
+    "recall_at_3": 0.0277,
+    "mrr_at_3": 0.5646,
+    "ndcg_at_3": 0.3505,
+    "avg_similarity_score": 0.6886
+  },
+  "lexical": {
+    "engine": "RAGEngine (TF-IDF cosinus)",
+    "precision_at_3": 0.4208,
+    "recall_at_3": 0.0295,
+    "mrr_at_3": 0.6521,
+    "ndcg_at_3": 0.452,
+    "avg_similarity_score": 0.1801
+  },
+  "ragas": {
+    "context_precision": 0.3042,
+    "context_recall": 0.0277,
+    "answer_relevancy": 0.5841,
+    "faithfulness": 1.0,
+    "hallucination_rate": 0.0,
+    "n_ragas_queries": 40
+  },
+  "generation": {
+    "method": "Template-based avec citations numerotees",
+    "faithfulness": 1.0,
+    "hallucination_rate": 0.0
+  }
+}
