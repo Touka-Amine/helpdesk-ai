@@ -1,8 +1,10 @@
 # api/config.py
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
+
     SECRET_KEY           : str   = "change-this-in-production-min-32-chars"
     ALGORITHM            : str   = "HS256"
     TOKEN_EXPIRE_MIN     : int   = 480
@@ -17,9 +19,6 @@ class Settings(BaseSettings):
 
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
-
-    class Config:
-        env_file = ".env"
 
 
 settings = Settings()

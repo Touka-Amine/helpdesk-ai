@@ -15,7 +15,7 @@ Fichier JSON : data/resolved_tickets.json
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from tinydb import TinyDB, Query
@@ -66,7 +66,7 @@ def archive_resolved_ticket(
             "equipement"        : equipement,
             "commentaire_client": commentaire_client,
             "approved_by"       : approved_by,
-            "resolved_at"       : datetime.utcnow().isoformat(),
+            "resolved_at"       : datetime.now(timezone.utc).isoformat(),
         })
     return doc_id
 

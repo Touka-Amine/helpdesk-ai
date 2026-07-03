@@ -4,22 +4,31 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Header, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from api.config import settings
 from api.db.database import get_db
 from api.db.models import Ticket, User
 from api.services.ai_service import predict_and_recommend
+from api.services.ticket_service import log_ticket_history
 
 router = APIRouter(prefix="/ingest", tags=["Power Automate"])
 
 
 class IngestRequest(BaseModel):
-    titre      : str = Field(..., min_length=3,  max_length=255,
-                             example="VPN inaccessible depuis ce matin")
-    description: str = Field(..., min_length=10,
-                             example="Impossible de se connecter au VPN depuis 8h00")
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "titre"      : "VPN inaccessible depuis ce matin",
+            "description": "Impossible de se connecter au VPN depuis 8h00",
+            "demandeur"  : "Jean Dupont",
+            "priorite"   : "Urgent",
+            "filiale"    : "OTBS",
+        }
+    })
+
+    titre      : str = Field(..., min_length=3,  max_length=255)
+    description: str = Field(..., min_length=10)
     demandeur  : str = Field(default="", max_length=255)
     priorite   : str = Field(default="Modéré", max_length=50)
     filiale    : str = Field(default="", max_length=100)
@@ -79,6 +88,10 @@ def ingest_from_email(
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
+
+    log_ticket_history(db, ticket.id, sys_user.id, "statut", None, "En attente")
+    log_ticket_history(db, ticket.id, sys_user.id, "categorie_finale", None, pred.get("categorie", ""))
+    db.commit()
 
     return {
         "ticket_id"     : ticket.id,

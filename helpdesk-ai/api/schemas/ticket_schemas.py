@@ -3,24 +3,19 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TicketInput(BaseModel):
-    titre: str = Field(..., min_length=3, example="Erreur activation Office 365")
-    description: str = Field(
-        ...,
-        min_length=10,
-        example="Microsoft Office affiche message produit non active",
-    )
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "titre": "Probleme connexion VPN",
-                "description": "Impossible de se connecter au VPN depuis hier soir",
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "titre": "Probleme connexion VPN",
+            "description": "Impossible de se connecter au VPN depuis hier soir",
         }
+    })
+
+    titre: str = Field(..., min_length=3)
+    description: str = Field(..., min_length=10)
 
 
 class TicketCreate(BaseModel):

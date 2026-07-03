@@ -1,7 +1,11 @@
 # api/services/ticket_service.py
 """Service tickets — sérialisation et logique métier."""
 
-from api.db.models import Ticket
+from datetime import datetime, timezone
+
+from sqlalchemy.orm import Session
+
+from api.db.models import Ticket, TicketHistory
 
 
 def ticket_to_dict(ticket: Ticket) -> dict:
@@ -27,3 +31,25 @@ def ticket_to_dict(ticket: Ticket) -> dict:
         "commentaire_interne": getattr(ticket, "commentaire_admin", "") or "",
         "classification"     : "",
     }
+
+
+def log_ticket_history(
+    db: Session,
+    ticket_id: int,
+    changed_by,
+    field: str,
+    old_value,
+    new_value,
+) -> None:
+    """Enregistre un changement dans l'historique du ticket. Idempotent si old == new."""
+    if old_value == new_value:
+        return
+    db.add(TicketHistory(
+        ticket_id       = ticket_id,
+        changed_by      = changed_by,
+        champ_modifie   = field,
+        ancienne_valeur = str(old_value) if old_value is not None else None,
+        nouvelle_valeur = str(new_value) if new_value is not None else None,
+        timestamp       = datetime.now(timezone.utc),
+    ))
+    db.flush()

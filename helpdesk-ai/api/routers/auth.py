@@ -44,7 +44,7 @@ def login(
 ):
     email = form.username.lower()
     user = db.query(User).filter(User.email == email).first()
-    if not user or not verify_password(form.password, user.hashed_password):
+    if not user or not user.is_active or not verify_password(form.password, user.hashed_password):
         raise HTTPException(401, "Identifiants incorrects")
 
     token = create_token({"sub": str(user.id), "role": user.role})
@@ -66,8 +66,8 @@ def get_current_user(
     try:
         payload = decode_token(token)
         user = db.query(User).filter(User.id == int(payload["sub"])).first()
-        if not user:
-            raise HTTPException(401, "Utilisateur introuvable")
+        if not user or not user.is_active:
+            raise HTTPException(401, "Utilisateur introuvable ou désactivé")
         return user
     except (JWTError, KeyError, ValueError):
         raise HTTPException(401, "Token invalide")

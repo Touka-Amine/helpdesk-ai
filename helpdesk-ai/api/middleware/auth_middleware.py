@@ -2,7 +2,7 @@
 """Rate limiting et sécurité — dépendances FastAPI (pas middleware HTTP)."""
 
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, Request
 
@@ -19,7 +19,7 @@ async def check_login_rate_limit(request: Request) -> None:
     Lever HTTPException 429 si dépassé.
     """
     ip = request.client.host if request.client else "unknown"
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     window_start = now - timedelta(seconds=_RATE_WINDOW_S)
 
     _login_attempts[ip] = [t for t in _login_attempts[ip] if t > window_start]

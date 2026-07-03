@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -9,7 +9,7 @@ from api.db.nosql_store import archive_resolved_ticket, get_stats as nosql_stats
 from api.routers.auth import get_current_user, require_admin
 from api.schemas.ticket_schemas import ApproveRequest, TicketCreate, TicketOut
 from api.services.ai_service import predict_and_recommend, recommend_for_category
-from api.services.ticket_service import ticket_to_dict
+from api.services.ticket_service import ticket_to_dict, log_ticket_history
 
 # Statuts valides et transitions permises
 VALID_STATUSES = ["En attente", "Prise en Charge", "Résolu", "Rejeté", "Problème"]
@@ -20,21 +20,6 @@ STATUS_TRANSITIONS = {
     "Résolu": [],
     "Rejeté": [],
 }
-
-def _log_ticket_history(db: Session, ticket_id: int, changed_by: int, field: str, old_value, new_value):
-    """Enregistre un changement dans l'historique du ticket."""
-    if old_value == new_value:
-        return
-    history = TicketHistory(
-        ticket_id=ticket_id,
-        changed_by=changed_by,
-        champ_modifie=field,
-        ancienne_valeur=str(old_value) if old_value is not None else None,
-        nouvelle_valeur=str(new_value) if new_value is not None else None,
-        timestamp=datetime.utcnow()
-    )
-    db.add(history)
-    db.flush()
 
 
 router = APIRouter(prefix="/tickets", tags=["Tickets"])
@@ -61,15 +46,15 @@ def create_ticket(
         statut="En attente",
         solution_rag=pred.get("solution", ""),
         knowledge_rag=pred.get("knowledge", ""),
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
     )
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
     
     # Log initial
-    _log_ticket_history(db, ticket.id, None, "statut", None, "En attente")
-    _log_ticket_history(db, ticket.id, None, "categorie_finale", None, pred.get("categorie", ""))
+    log_ticket_history(db, ticket.id, None, "statut", None, "En attente")
+    log_ticket_history(db, ticket.id, None, "categorie_finale", None, pred.get("categorie", ""))
     db.commit()
     
     return ticket_to_dict(ticket)
@@ -130,7 +115,7 @@ def approve_ticket(
         )
 
     # Log du changement de statut
-    _log_ticket_history(db, ticket.id, admin.id, "statut", ticket.statut, new_status)
+    log_ticket_history(db, ticket.id, admin.id, "statut", ticket.statut, new_status)
     ticket.statut = new_status
     
     # Gestion de la catégorie
@@ -139,7 +124,7 @@ def approve_ticket(
     allow_fallback = not (ticket.confiance is not None and ticket.confiance < threshold)
     
     if body.categorie_finale and body.categorie_finale != previous_category:
-        _log_ticket_history(db, ticket.id, admin.id, "categorie_finale", previous_category, body.categorie_finale)
+        log_ticket_history(db, ticket.id, admin.id, "categorie_finale", previous_category, body.categorie_finale)
         ticket.categorie_finale = body.categorie_finale
         rec = recommend_for_category(
             ticket.titre,
@@ -149,7 +134,7 @@ def approve_ticket(
         )
         ticket.solution_rag = rec.get("solution", "")
         ticket.knowledge_rag = rec.get("knowledge", "")
-        _log_ticket_history(db, ticket.id, admin.id, "solution_rag", None, "(mise à jour)")
+        log_ticket_history(db, ticket.id, admin.id, "solution_rag", None, "(mise à jour)")
     elif ticket.confiance is not None and ticket.confiance < threshold:
         rec = recommend_for_category(
             ticket.titre,
@@ -165,20 +150,20 @@ def approve_ticket(
         old_comment = ticket.commentaire_client
         new_comment = body.commentaire_client or body.commentaire or ""
         ticket.commentaire_client = new_comment
-        _log_ticket_history(db, ticket.id, admin.id, "commentaire_client", old_comment, new_comment[:100])
+        log_ticket_history(db, ticket.id, admin.id, "commentaire_client", old_comment, new_comment[:100])
     
     # Commentaires admin (notes internes)
     if hasattr(ticket, "commentaire_admin"):
         old_admin_comment = ticket.commentaire_admin
         new_admin_comment = body.commentaire_interne or ""
         ticket.commentaire_admin = new_admin_comment
-        _log_ticket_history(db, ticket.id, admin.id, "commentaire_admin", old_admin_comment, new_admin_comment[:100])
+        log_ticket_history(db, ticket.id, admin.id, "commentaire_admin", old_admin_comment, new_admin_comment[:100])
     
     ticket.approved_by = str(admin.id)
     
     # Marquer comme résolu + archiver dans TinyDB
     if new_status == "Résolu":
-        ticket.resolved_at = datetime.utcnow()
+        ticket.resolved_at = datetime.now(timezone.utc)
         archive_resolved_ticket(
             ticket_id          = ticket.id,
             titre              = ticket.titre,
@@ -223,7 +208,7 @@ def refresh_rag(
     old_solution = ticket.solution_rag
     ticket.solution_rag = rec.get("solution", "")
     ticket.knowledge_rag = rec.get("knowledge", "")
-    _log_ticket_history(db, ticket.id, admin.id, "solution_rag", old_solution[:50] if old_solution else None, "(MAJ RAG)")
+    log_ticket_history(db, ticket.id, admin.id, "solution_rag", old_solution[:50] if old_solution else None, "(MAJ RAG)")
     db.commit()
     return {
         "message": "RAG mis a jour",

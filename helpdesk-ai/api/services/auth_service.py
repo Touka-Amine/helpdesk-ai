@@ -1,7 +1,7 @@
 # api/services/auth_service.py
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from api.config import settings
 
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -14,7 +14,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_token(data: dict) -> str:
     payload = data.copy()
-    payload["exp"] = datetime.utcnow() + timedelta(
+    payload["exp"] = datetime.now(timezone.utc) + timedelta(
         minutes=settings.TOKEN_EXPIRE_MIN
     )
     return jwt.encode(payload, settings.SECRET_KEY,
