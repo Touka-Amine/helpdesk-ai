@@ -72,7 +72,7 @@ def create_ticket(
     _log_ticket_history(db, ticket.id, None, "categorie_finale", None, pred.get("categorie", ""))
     db.commit()
     
-    return _ticket_to_dict(ticket)
+    return ticket_to_dict(ticket)
 
 
 @router.get("/me")
