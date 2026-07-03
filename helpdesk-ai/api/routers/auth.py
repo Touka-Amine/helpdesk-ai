@@ -6,12 +6,13 @@ from sqlalchemy.orm import Session
 from api.config import settings
 from api.db.database import get_db
 from api.db.models import User
+from api.middleware.auth_middleware import check_login_rate_limit
 from api.schemas.auth_schemas import TokenOut, UserCreate, UserOut
 from api.services.auth_service import create_token, decode_token, hash_password, verify_password
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 @router.post("/register", response_model=UserOut)
@@ -39,6 +40,7 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
 def login(
     form: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
+    _: None = Depends(check_login_rate_limit),
 ):
     email = form.username.lower()
     user = db.query(User).filter(User.email == email).first()

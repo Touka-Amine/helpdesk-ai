@@ -5,6 +5,49 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 8 — Backend API v1.1 : sécurité + intégration sémantique + /ingest (2026-07-03)
+
+#### Contrat OpenAPI versionné
+- `Modifié` : `api/main.py` — tous les routers sous `/api/v1` (`auth`, `tickets`, `ingest`) ;
+  `openapi_tags` structurés ; CORS configurables via `CORS_ORIGINS` dans `.env`.
+- `Modifié` : `api/config.py` — ajout `CORS_ORIGINS` et `INGEST_API_KEY` (chargés depuis `.env`).
+- `Ajouté` : `.env.example` — template des variables d'environnement (jamais committé).
+
+#### Sécurité
+- `Ajouté` : `api/middleware/auth_middleware.py` — rate limiting login (10 req/60 s par IP,
+  dépendance FastAPI, retourne HTTP 429).
+- `Modifié` : `api/routers/auth.py` — dépendance `check_login_rate_limit` sur `/login` ;
+  `tokenUrl` mis à jour `/api/v1/auth/login`.
+- `Modifié` : CORS restreint aux origines configurées (plus de `"*"`).
+
+#### Intégration RAG sémantique
+- `Modifié` : `api/predictor.py` — chargement `SemanticRAGEngine` (FAISS) au démarrage ;
+  `recommend()` dispatch sémantique → lexical (fallback) ; `_semantic_rag_loaded` exposé.
+- `Modifié` : `api/services/ai_service.py` — `predict_and_recommend()` et `recommend_for_category()`
+  utilisent `predictor.recommend()` (plus d'appel direct à `predictor.rag`).
+- `Modifié` : `api/services/rag_service.py` — implémenté (`get_rag_recommendations`, `rag_engine_info`).
+
+#### Réparation et enregistrement `/ingest`
+- `Ajouté` : `api/routers/ingest.py` — endpoint Power Automate réécrit entièrement :
+  - Authentification API key (`X-Api-Key` header, `INGEST_API_KEY` depuis `.env`)
+  - Schéma Pydantic `IngestRequest` avec validation (min_length, max_length)
+  - Insertion ORM SQLAlchemy (plus de `sqlite3` direct)
+  - Utilisateur système `system@helpdesk-ai.local` (créé par `init_db()`)
+  - Réponse structurée : `ticket_id`, `prediction`, `solution_rag`, `needs_approval`
+
+#### Refactor en couches
+- `Modifié` : `api/services/ticket_service.py` — `ticket_to_dict()` implémentée
+  (sérialisation ORM → dict JSON).
+- `Modifié` : `api/routers/tickets.py` — utilise `ticket_to_dict` du service (plus de
+  `_ticket_to_dict` dupliquée dans le router).
+- `Modifié` : `api/db/database.py` — seeding utilisateurs (système + démo) non-fatal dans `init_db()`.
+
+#### Tests d'intégration
+- `Ajouté` : `tests/__init__.py`, `tests/test_api_integration.py` — 18 tests couvrant :
+  health, catégories, prédiction NLP+RAG, auth, tickets CRUD, ingest (API key).
+  **14/18 passent** ; 4 skippés (incompatibilité bcrypt 4.x + passlib 1.7.x dans le venv).
+- `Modifié` : `requirements.txt` — `sentence-transformers>=2.2.2`, `faiss-cpu>=1.7.4` ajoutés.
+
 ### Phase 7 — Évaluation RAG (RAGAS simplifié) + génération avec citations (2026-07-03)
 
 #### Évaluation RAG

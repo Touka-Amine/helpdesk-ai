@@ -9,6 +9,7 @@ from api.db.nosql_store import archive_resolved_ticket, get_stats as nosql_stats
 from api.routers.auth import get_current_user, require_admin
 from api.schemas.ticket_schemas import ApproveRequest, TicketCreate, TicketOut
 from api.services.ai_service import predict_and_recommend, recommend_for_category
+from api.services.ticket_service import ticket_to_dict
 
 # Statuts valides et transitions permises
 VALID_STATUSES = ["En attente", "Prise en Charge", "Résolu", "Rejeté", "Problème"]
@@ -37,30 +38,6 @@ def _log_ticket_history(db: Session, ticket_id: int, changed_by: int, field: str
 
 
 router = APIRouter(prefix="/tickets", tags=["Tickets"])
-
-
-def _ticket_to_dict(ticket: Ticket) -> dict:
-    categorie_predite = getattr(ticket, "categorie_predite", "") or ""
-    categorie_finale = getattr(ticket, "categorie_finale", "") or categorie_predite
-    return {
-        "id": ticket.id,
-        "titre": ticket.titre,
-        "description": ticket.description,
-        "priorite_saisie": ticket.priorite_saisie or getattr(ticket, "priorite", "") or "",
-        "filiale": getattr(ticket, "filiale", "") or "",
-        "equipement": getattr(ticket, "equipement", "") or "",
-        "categorie_predite": categorie_predite,
-        "categorie_finale": categorie_finale,
-        "confiance": getattr(ticket, "confiance", None),
-        "solution_rag": getattr(ticket, "solution_rag", "") or getattr(ticket, "solution", "") or "",
-        "knowledge_rag": getattr(ticket, "knowledge_rag", "") or getattr(ticket, "knowledge", "") or "",
-        "statut": ticket.statut or "En attente",
-        "created_at": ticket.created_at,
-        "date_resolution": getattr(ticket, "resolved_at", None) or getattr(ticket, "date_resolution", None),
-        "commentaire_client": getattr(ticket, "commentaire_client", "") or "",
-        "commentaire_interne": getattr(ticket, "commentaire_admin", "") or "",
-        "classification": getattr(ticket, "classification_finale", "") or getattr(ticket, "classification_predite", "") or "",
-    }
 
 
 @router.post("/", response_model=TicketOut)
@@ -109,7 +86,7 @@ def get_my_tickets(
         .order_by(Ticket.id.desc())
         .all()
     )
-    return [_ticket_to_dict(ticket) for ticket in tickets]
+    return [ticket_to_dict(ticket) for ticket in tickets]
 
 
 @router.get("/{ticket_id}")
@@ -125,7 +102,7 @@ def get_my_ticket_detail(
     )
     if not ticket:
         raise HTTPException(404, "Ticket introuvable")
-    return _ticket_to_dict(ticket)
+    return ticket_to_dict(ticket)
 
 
 @router.patch("/{ticket_id}/approve")
@@ -262,7 +239,7 @@ def get_all_tickets(
     _: User = Depends(require_admin),
 ):
     tickets = db.query(Ticket).order_by(Ticket.id.desc()).all()
-    return [_ticket_to_dict(ticket) for ticket in tickets]
+    return [ticket_to_dict(ticket) for ticket in tickets]
 
 
 @router.get("/{ticket_id}/history")

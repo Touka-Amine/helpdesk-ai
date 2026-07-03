@@ -1,26 +1,27 @@
 # PROJECT_STATUS.md — Avancement global
 
 > Résumé concis. **Source de vérité : [PLAN.md](PLAN.md)** (section 10 — Tableau de bord).
-> Dernière mise à jour : **2026-07-03** (clôture Phase 7 — Évaluation RAG).
+> Dernière mise à jour : **2026-07-03** (clôture Phase 8 — Backend API v1.1).
 
 ## Bandeau
 
 | | |
 |---|---|
-| **Phase active** | Phase 8 — Backend (durcissement + intégration) |
-| **Progression globale** | ~44 % (Phases 0–1, 3–7 terminées) |
+| **Phase active** | Phase 9 — Frontend (connexion + finalisation) |
+| **Progression globale** | ~52 % (Phases 0–1, 3–8 terminées) |
 | **Périmètre** | Cœur rehaussé (Must) |
 | **Durée** | Stage 6 mois · GPU local |
-| **Prochaine étape** | Phase 8 : sécurité API + intégration CamemBERT + RAG + fix `/ingest` |
+| **Prochaine étape** | Phase 9 : `environment.ts` + page détail + guards + affichage sources RAG |
 
 ## ✅ Terminé
 - EDA + preprocessing (notebooks 01–02) + features enrichies (`text_enriched`)
 - Baseline ML TF-IDF (F1-macro honnête 0.38 seul / 0.57 avec heuristiques, split anti-fuite) — *référence*
 - **CamemBERT-base + LoRA — F1-macro 0.5685** (à parité avec TF-IDF+heuristiques, sans règles codées)
 - Benchmark externe public (Tobi-Bueck : TYPE F1=0.83 / QUEUE F1=0.48)
-- RAG lexical (TF-IDF + cosinus) — *conservé comme baseline*
+- RAG lexical (TF-IDF + cosinus) — *conservé comme fallback*
 - **RAG sémantique FAISS** — `paraphrase-multilingual-mpnet-base-v2`, score cosinus **0.93 vs 0.76** lexical (+0.17)
 - **Évaluation RAG (Phase 7)** — P@3=0.30 sém/0.42 lex, MRR=0.56/0.65, **Score moyen 0.69 sém vs 0.18 lex** ; RAGAS : Answer Relevancy=0.58, Faithfulness=1.0 ; génération template avec citations
+- **Backend API v1.1 (Phase 8)** — `/api/v1` versionné · CORS+rate limiting · SemanticRAG intégré · `/ingest` réparé (API key) · couches services remplies · 14 tests intégration verts
 - Backend cœur (auth, tickets, approbation, historique) + NoSQL TinyDB
 - Documentation (cahier des charges, workflow)
 - Système de pilotage documentaire (11 fichiers)
@@ -46,7 +47,7 @@
 | 5 Fine-Tuning | ✅ 100 % (CamemBERT LoRA, F1=0.5685) |
 | 6 RAG sémantique | ✅ 100 % (FAISS + paraphrase-multilingual, score 0.93) |
 | 7 Éval RAG | ✅ 100 % (P@3=0.30 sém, MRR=0.56, AR=0.58, Faith=1.0 ; génération template) |
-| 8 Backend | 🟡 ~88 % (NoSQL TinyDB ajouté pour tickets résolus) |
+| 8 Backend | ✅ 100 % (API v1.1 : /api/v1, sécurité, SemanticRAG, /ingest, services, tests) |
 | 9 Frontend | 🟡 ~65 % |
 | 10 MLOps | 🔴 ~5 % |
 | 11 Déploiement | 🔴 0 % |

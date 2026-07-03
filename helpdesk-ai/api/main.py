@@ -1,186 +1,151 @@
 # api/main.py
-
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+
+from api.config import settings
 from api.db.database import init_db
-from api.routers.auth import router as auth_router
-from api.routers.tickets import router as tickets_router
-from api.schemas import TicketInput, FullResponse, HealthResponse
 from api.predictor import predictor
+from api.routers.auth import router as auth_router
+from api.routers.ingest import router as ingest_router
+from api.routers.tickets import router as tickets_router
+from api.schemas import FullResponse, HealthResponse, TicketInput
+
+# Rate limiting — voir api/middleware/auth_middleware.py (dépendance FastAPI)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Chargement au démarrage — une seule fois
     init_db()
     predictor.load()
     yield
-    # Nettoyage à l'arrêt (optionnel)
-    print("🛑 API arrêtée")
 
+
+OPENAPI_TAGS = [
+    {"name": "Accueil",        "description": "Santé et informations de l'API"},
+    {"name": "Auth",           "description": "Authentification JWT — register / login"},
+    {"name": "Tickets",        "description": "CRUD tickets IT + workflow approbation admin"},
+    {"name": "Prédiction",     "description": "Classification NLP + recommandations RAG sémantique"},
+    {"name": "Power Automate", "description": "Webhook d'ingestion de tickets depuis email"},
+    {"name": "Monitoring",     "description": "Santé des modèles et métriques"},
+    {"name": "Metadata",       "description": "Métadonnées du modèle (catégories, seuil)"},
+]
 
 app = FastAPI(
-    title       = "Helpdesk AI API",
-    description = "Routage automatique et recommandations RAG pour tickets IT",
-    version     = "1.0.0",
-    lifespan    = lifespan
+    title="Helpdesk AI API",
+    description=(
+        "Plateforme IA de routage et d'assistance à la résolution de tickets IT francophones. "
+        "Classification CamemBERT-base + RAG sémantique FAISS (`paraphrase-multilingual-mpnet-base-v2`) "
+        "+ Human-in-the-loop. **Version 1.1 — Phase 8**."
+    ),
+    version="1.1.0",
+    lifespan=lifespan,
+    openapi_tags=OPENAPI_TAGS,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# CORS — autorise Streamlit à appeler l'API
+# ── CORS — origines configurables via CORS_ORIGINS dans .env ──────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins  = ["*"],
-    allow_methods  = ["*"],
-    allow_headers  = ["*"],
+    allow_origins=settings.cors_origins_list(),
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Api-Key"],
 )
 
-app.include_router(auth_router)
-app.include_router(tickets_router)
+
+# ── Routers — toutes les routes versionnées sous /api/v1 ──────────────────────
+V1 = "/api/v1"
+app.include_router(auth_router,    prefix=V1)
+app.include_router(tickets_router, prefix=V1)
+app.include_router(ingest_router,  prefix=V1)
 
 
+# ── Racine ────────────────────────────────────────────────────────────────────
 @app.get("/", tags=["Accueil"])
 def root():
-    """Page d'accueil simple pour eviter le 404 sur la racine."""
+    """Page d'accueil — liens vers la documentation et les endpoints principaux."""
     return {
-        "message": "Bienvenue sur Helpdesk AI API",
-        "docs": "/docs",
-        "health": "/health",
-        "predict": "/predict",
-        "categories": "/categories"
+        "message" : "Helpdesk AI API v1.1",
+        "docs"    : "/docs",
+        "redoc"   : "/redoc",
+        "api"     : "/api/v1",
+        "health"  : "/api/v1/health",
+        "predict" : "/api/v1/predict",
     }
 
 
-@app.get("/health", response_model=HealthResponse, tags=["Monitoring"])
+# ── Health ────────────────────────────────────────────────────────────────────
+@app.get(f"{V1}/health", response_model=HealthResponse, tags=["Monitoring"])
 def health_check():
-    """Vérifie que l'API et les modèles sont opérationnels."""
+    """État des modèles ML et RAG."""
     return {
         "status"      : "ok",
         "model_loaded": predictor._loaded,
-        "rag_loaded"  : predictor._loaded,
-        "version"     : "1.0.0"
+        "rag_loaded"  : predictor._loaded and predictor._semantic_rag_loaded,
+        "version"     : "1.1.0",
     }
 
 
-@app.post("/predict", response_model=FullResponse, tags=["Prédiction"])
+# ── Métadonnées ───────────────────────────────────────────────────────────────
+@app.get(f"{V1}/categories", tags=["Metadata"])
+def get_categories():
+    """Catégories IT supportées par le modèle et seuil de confiance."""
+    return {
+        "categories": predictor.classes,
+        "threshold" : predictor.threshold,
+        "rag_engine": "SemanticRAG (FAISS)" if predictor._semantic_rag_loaded else "LexicalRAG (TF-IDF)",
+    }
+
+
+# ── Prédiction ────────────────────────────────────────────────────────────────
+@app.post(f"{V1}/predict", response_model=FullResponse, tags=["Prédiction"])
 def predict_ticket(ticket: TicketInput):
     """
-    Analyse un ticket IT et retourne :
-    - La catégorie prédite avec score de confiance
-    - Les solutions similaires issues de la base de connaissance
+    Classification NLP + recommandations RAG sémantique (sans enregistrement).
+
+    - Retourne la catégorie prédite avec score de confiance
+    - Retourne les solutions similaires issues de la base de connaissance (FAISS)
     """
     if not predictor._loaded:
-        raise HTTPException(status_code=503,
-                            detail="Modèles non chargés")
-
-    # Validation minimale
+        raise HTTPException(503, "Modèles non chargés — relancer le serveur")
     if len(ticket.description.strip()) < 10:
-        raise HTTPException(status_code=422,
-                            detail="Description trop courte")
+        raise HTTPException(422, "Description trop courte (minimum 10 caractères)")
 
     try:
-        # Prédiction
         prediction = predictor.predict(ticket.titre, ticket.description)
-
-        # Recommandations RAG filtrées par catégorie prédite
         category_filter = None if prediction["low_confidence"] else prediction["categorie"]
-        allow_fallback = not prediction["low_confidence"]
         raw_recs = predictor.recommend(
             ticket.titre,
             ticket.description,
             category_filter,
-            allow_fallback=allow_fallback,
+            allow_fallback=not prediction["low_confidence"],
         )
-
-        # Formater les recommandations
-        recommendations = []
-        for i, rec in enumerate(raw_recs, 1):
-            recommendations.append({
+        recommendations = [
+            {
                 "rank"      : i,
-                "score"     : rec['score'],
-                "resolution": rec.get('resolution', ''),
-                "knowledge" : rec.get('knowledge', ''),
-                "titre"     : rec.get('titre', ''),
-                "fallback"  : rec.get('fallback', False)
-            })
-
-        # Message contextuel
-        if prediction['low_confidence']:
-            message = (
-                f"⚠️ Confiance faible ({prediction['confiance']:.0%}) — "
-                f"vérification humaine recommandée"
-            )
+                "score"     : rec["score"],
+                "resolution": rec.get("resolution", ""),
+                "knowledge" : rec.get("knowledge", ""),
+                "titre"     : rec.get("titre", ""),
+                "fallback"  : rec.get("fallback", False),
+            }
+            for i, rec in enumerate(raw_recs, 1)
+        ]
+        if prediction["low_confidence"]:
+            message = f"⚠️ Confiance faible ({prediction['confiance']:.0%}) — vérification humaine recommandée"
         else:
-            message = (
-                f"✅ Routage automatique — "
-                f"confiance {prediction['confiance']:.0%}"
-            )
+            message = f"✅ Routage automatique — confiance {prediction['confiance']:.0%}"
 
         return {
             "ticket_titre"   : ticket.titre,
             "prediction"     : prediction,
             "recommendations": recommendations,
-            "message"        : message
+            "message"        : message,
         }
-
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail=f"Erreur interne : {str(e)}")
-
-
-@app.get("/categories", tags=["Metadata"])
-def get_categories():
-    """Retourne les catégories supportées par le modèle."""
-    return {
-        "categories" : predictor.classes,
-        "threshold"  : predictor.threshold
-    }
-
-# Ajoute dans api/main.py
-
-import sqlite3, os
-
-DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'tickets.db')
-
-@app.post("/ingest", tags=["Power Automate"])
-def ingest_from_email(ticket: TicketInput,
-                      demandeur: str = "",
-                      priorite:  str = "Modéré",
-                      filiale:   str = ""):
-    """
-    Endpoint appelé par Power Automate.
-    Prédit, enregistre en base et retourne le résultat complet.
-    """
-    result, _ = predict_ticket(ticket)   # réutilise la logique existante
-
-    pred = result['prediction']
-    recs = result['recommendations']
-    sol  = recs[0]['resolution'] if recs else ""
-    kb   = recs[0]['knowledge']  if recs else ""
-
-    con = sqlite3.connect(DB_PATH)
-    cur = con.execute("""
-        INSERT INTO tickets
-        (titre,description,demandeur,priorite,filiale,
-         categorie_predite,confiance,auto_routed,
-         categorie_finale,statut,solution,knowledge,created_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-    """, (
-        ticket.titre, ticket.description,
-        demandeur, priorite, filiale,
-        pred['categorie'], pred['confiance'],
-        int(pred['auto_routed']), pred['categorie'],
-        'Auto-routé' if pred['auto_routed'] else 'En attente',
-        sol, kb,
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    ))
-    ticket_id = cur.lastrowid
-    con.commit(); con.close()
-
-    return {
-        **result,
-        "ticket_id"    : ticket_id,
-        "saved_to_db"  : True,
-        "needs_approval": pred['low_confidence']
-    }
+        raise HTTPException(500, f"Erreur interne : {str(e)}")

@@ -27,6 +27,10 @@ email-validator>=2.0.0
 sqlalchemy>=2.0.25           # ORM — base opérationnelle (SQLite)
 tinydb>=4.8.0                # NoSQL document store — tickets résolus archivés
 
+# ── RAG sémantique ────────────────────────────────────────────────────────────
+sentence-transformers>=2.2.2    # paraphrase-multilingual-mpnet-base-v2 (768d)
+faiss-cpu>=1.7.4                # index vectoriel FAISS — retrieval sémantique
+
 # ── Sécurité / Auth ───────────────────────────────────────────────────────────
 python-jose>=3.3.0
 passlib[bcrypt]>=1.7.4

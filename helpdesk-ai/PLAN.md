@@ -394,13 +394,13 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [x] Comparatif lexical vs sémantique (sémantique : score moyen 0.69 vs 0.18 lexical ★)
 - [ ] LLM-as-a-Judge (renvoyé BACKLOG — optionnel pour PFE, résultats suffisants)
 
-### Phase 8 — Backend
-- [ ] Figer le contrat OpenAPI (`/api/v1`)
-- [ ] Durcir la sécurité (RBAC, secrets, rate limiting, anti-injection)
-- [ ] Intégrer CamemBERT + RAG sémantique dans les services
-- [ ] Réparer et enregistrer `/ingest`
-- [ ] Refactor en couches (services/repositories)
-- [ ] Tests d'intégration API
+### Phase 8 — Backend ✅ (terminée 2026-07-03)
+- [x] Figer le contrat OpenAPI (`/api/v1`) — tous les routers préfixés sous `/api/v1`
+- [x] Durcir la sécurité (CORS configurable, rate limiting login 429, anti-injection Pydantic, API key ingest)
+- [x] Intégrer CamemBERT + RAG sémantique dans les services (`predictor.py` → SemanticRAGEngine FAISS, fallback lexical)
+- [x] Réparer et enregistrer `/ingest` (`api/routers/ingest.py` — auth API key, ORM, validation, utilisateur système)
+- [x] Refactor en couches (`ticket_service.py`, `rag_service.py`, `auth_middleware.py` remplis)
+- [x] Tests d'intégration API (`tests/test_api_integration.py` — 14/18 passent, 4 skippés bcrypt)
 
 ### Phase 9 — Frontend
 - [ ] Configurer `environment.ts`
@@ -492,14 +492,14 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~44 %** (Phases 0–1, 3–7 terminées) |
-| **Phase actuelle** | Phase 7 terminée (Éval RAG RAGAS) · prochaine : **Phase 8** (Backend) |
-| **Tâche actuelle** | Aucune en cours — Phase 7 clôturée |
-| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML F1=0.57) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · **Phase 7 (RAGAS : P@3=0.30 sem/0.42 lex, MRR=0.56, AR=0.58, Faith=1.0)** |
-| **Tâches restantes** | Phases 8–15 |
-| **Prochaine étape** | Phase 8 — Backend (durcissement sécurité + intégration CamemBERT + RAG + fix `/ingest`) |
-| **Risques ouverts** | F1 classification < objectif PFE 0.85 · RGPD · délai 6 mois · dette intégration front/back (voir [RISKS.md](RISKS.md)) |
-| **Dette technique** | Couches backend vides · `/ingest` cassé · front non connecté · SemanticRAG non intégré au backend · LLM-as-a-Judge renvoyé BACKLOG · Calibration + MLflow renvoyés (Phases 13/10) |
+| **Progression globale** | **~52 %** (Phases 0–1, 3–8 terminées) |
+| **Phase actuelle** | Phase 8 terminée (Backend) · prochaine : **Phase 9** (Frontend) |
+| **Tâche actuelle** | Aucune en cours — Phase 8 clôturée |
+| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML F1=0.57) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · **Phase 8 (Backend API v1.1 : /api/v1, sécurité, SemanticRAG, /ingest fixé, tests)** |
+| **Tâches restantes** | Phases 9–15 |
+| **Prochaine étape** | Phase 9 — Frontend (environment.ts + enum statuts + page détail + guards + citations RAG) |
+| **Risques ouverts** | F1 classification < objectif PFE 0.85 · RGPD · délai 6 mois · bcrypt 4.x + passlib 1.7.x incompatibles dans venv (voir [RISKS.md](RISKS.md)) |
+| **Dette technique** | Front non connecté au backend · RGPD à faire (Phase 2 reliquat) · Tests auth skippés (bcrypt) · LLM-as-a-Judge BACKLOG · Calibration + MLflow renvoyés (Phases 13/10) |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (LLM-as-a-Judge, QLoRA, hybrid search, re-ranking, agents, K8s…) |
 
 > **Calcul de la progression** : moyenne pondérée de l'avancement des 15 phases par leur priorité.
