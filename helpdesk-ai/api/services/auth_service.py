@@ -1,6 +1,6 @@
 # api/services/auth_service.py
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+from jose import jwt
 from datetime import datetime, timedelta, timezone
 from api.config import settings
 

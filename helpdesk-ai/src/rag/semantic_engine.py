@@ -14,7 +14,6 @@ Avantages vs TF-IDF :
 from __future__ import annotations
 
 import json
-import pickle
 from pathlib import Path
 
 import faiss

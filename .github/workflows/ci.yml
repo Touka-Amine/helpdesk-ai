@@ -47,14 +47,10 @@ jobs:
         run: ruff check src/ api/ tests/ --ignore E501,E402
 
       - name: Tests unitaires (pytest)
+        # Exclut test_api_integration.py : nécessite models/best_pipeline.pkl,
+        # ignoré par .gitignore (models/*.pkl) et donc absent du checkout CI.
         run: >
-          pytest tests/test_preprocess.py -v --tb=short
-        env:
-          SECRET_KEY: "ci-test-secret-key-minimum-32chars-xx"
-          DB_URL: "sqlite:///./data/ci_test.db"
-          ADMIN_EMAILS: "admin@test.com"
-          CORS_ORIGINS: "http://localhost:4200"
-          INGEST_API_KEY: "ci-test-api-key"
+          pytest tests/ --ignore=tests/test_api_integration.py -v --tb=short
 
   # ── Angular : build de production ────────────────────────────────────────────
   angular-ci:

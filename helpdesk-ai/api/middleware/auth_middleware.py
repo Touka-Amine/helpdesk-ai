@@ -4,7 +4,7 @@
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import HTTPException, Request
 
 # ── Rate limiting login ────────────────────────────────────────────────────────
 _login_attempts: dict[str, list[datetime]] = defaultdict(list)

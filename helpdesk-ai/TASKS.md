@@ -1,9 +1,22 @@
 # TASKS.md — Tâches de la phase active
 
 > Tâches du sprint courant. Détail complet des checklists dans [PLAN.md](PLAN.md) (section 6).
-> Dernière mise à jour : **2026-07-04**. **Phase active : Phase 13 — Optimisation (plan d'amélioration).**
+> Dernière mise à jour : **2026-07-04**. **Phase active : Phase 12 — Tests & validation.**
 
-## 🟢 En cours — Phase 13 : Optimisation (plan d'amélioration expert)
+## 🟢 En cours — Phase 12 : Tests & validation
+- [x] Tests unitaires NLP — `tests/test_preprocess.py` (16 tests : clean_text, simplify_*, build_text_*)
+- [x] Tests unitaires heuristiques — `tests/test_heuristics.py` (8 tests : FORCE/SOFT_RULES, word boundary)
+- [x] Tests unitaires RAG lexical — `tests/test_rag_engine.py` (8 tests : filtre catégorie, seuil, fallback, dédup)
+- [x] Tests unitaires RAG hybride — `tests/test_hybrid_engine.py` (9 tests : fusion de scores, save/restore sous-moteurs)
+- [x] Corrigé `tests/test_preprocess.py` cassé (`basic_clean` inexistant → `clean_text`)
+- [x] Corrigé 6 lints ruff préexistants (imports morts) + supprimé code mort `api/db/__init__.py::init_db` (bug F821 `User`/`pwd_ctx` non définis, jamais appelé — doublon mort de `api/db/database.py::init_db`)
+- [x] CI : `ci.yml` exécute désormais toute la suite unitaire (hors `test_api_integration.py`, qui nécessite `models/best_pipeline.pkl` absent du checkout car ignoré par git)
+- [ ] Tests d'intégration end-to-end (existant Phase 8 : 14/18 passent, 4 skip bcrypt — non branché en CI, cf. ci-dessus)
+- [ ] Test de charge (latence P95)
+- [ ] Matrice exigences → résultats
+- [ ] Étude utilisateur légère
+
+## 🟡 En pause — Phase 13 : Optimisation (plan d'amélioration expert)
 
 ### Semaine 1 — Quick wins ✅ TERMINÉ
 - [x] Corriger `FORCE_RULES` : `"teams"` retiré de Microsoft → Communication ; `"san"` + `"ids"` + `"acces non autorise"` ajoutés en FORCE_RULES Infrastructure/Sécurité
@@ -41,8 +54,6 @@
 - [x] `docker/docker-compose.yml` — 3 services (api, frontend, dashboard), volume SQLite, réseau interne, healthchecks
 - [x] `.github/workflows/ci.yml` — 3 jobs : ruff+pytest / ng build / docker build
 - [x] `DEPLOYMENT.md` — guide complet (démarrage rapide, variables env, CI/CD, sécurité)
-
-## 🔵 Prochaine phase — Phase 12 (Tests & validation)
 
 ## ✅ Terminé — Phase 9 (Frontend connexion, 2026-07-04)
 - [x] `environment.ts` / `environment.development.ts` — `apiUrl` configuré

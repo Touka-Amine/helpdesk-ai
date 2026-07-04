@@ -14,7 +14,6 @@ Usage :
 """
 
 import os
-import sys
 import yaml
 import pandas as pd
 from sklearn.model_selection import GroupShuffleSplit

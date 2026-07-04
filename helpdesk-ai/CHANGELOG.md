@@ -5,6 +5,41 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 12 — Tests & validation (2026-07-04, en cours)
+
+#### Tests unitaires (41 nouveaux tests)
+- `Ajouté` : `tests/test_heuristics.py` — 8 tests : FORCE_RULES (override, no-op si déjà
+  correct, limites de mots avec `\b`), SOFT_RULES (seuil de confiance), plancher de
+  confiance à 0.80.
+- `Ajouté` : `tests/test_rag_engine.py` — 8 tests : recommandation avant `fit()`, requête
+  vide, correspondance exacte, filtre catégorie, seuil + fallback, déduplication des
+  résolutions identiques (base de connaissance en mémoire, scores TF-IDF vérifiés).
+- `Ajouté` : `tests/test_hybrid_engine.py` — 9 tests : validation `alpha`, fusion de
+  scores (`0.5×sém + 0.5×lex`), limite `top_k`, sauvegarde/restauration de l'état des
+  sous-moteurs partagés (régression du Bug 1 de Phase 13), fallback hybride. Sous-moteurs
+  remplacés par des doublures (`FakeEngine`) pour éviter le téléchargement du modèle
+  sentence-transformers pendant les tests.
+- `Corrigé` : `tests/test_preprocess.py` — cassait la collection pytest entière
+  (`ImportError: basic_clean` — fonction renommée `clean_text` depuis). Réécrit avec
+  16 tests couvrant `clean_text`, `simplify_priorite/classification`, `build_text_*`.
+
+#### Nettoyage découvert pendant l'audit lint (ruff)
+- `Supprimé` : `api/db/__init__.py::init_db` — fonction dupliquée et cassée (`User` et
+  `pwd_ctx` non importés, bug F821) ; jamais appelée (le vrai `init_db()` utilisé par
+  `api/main.py` vit dans `api/db/database.py`). Code mort supprimé.
+- `Corrigé` : imports inutilisés supprimés — `os` (`api/db/database.py`), `Depends`
+  (`api/middleware/auth_middleware.py`), `JWTError` (`api/services/auth_service.py`),
+  `sys` (`src/pipeline/split.py`), `pickle` (`src/rag/semantic_engine.py`).
+
+#### CI/CD
+- `Modifié` : `.github/workflows/ci.yml` — le job `python-ci` exécute maintenant
+  `pytest tests/ --ignore=tests/test_api_integration.py` (toute la suite unitaire) au lieu
+  de seulement `test_preprocess.py`. `test_api_integration.py` reste exclu du CI : il
+  nécessite `models/best_pipeline.pkl`, ignoré par `.gitignore` (`models/*.pkl`) et donc
+  absent d'un checkout CI frais.
+
+---
+
 ### Phase 11 — Déploiement Docker + CI/CD (2026-07-04)
 
 #### Docker

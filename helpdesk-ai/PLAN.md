@@ -4,7 +4,7 @@
 > prévue ici. À chaque session : relire ce fichier → identifier la phase/tâche active → exécuter
 > **une seule** tâche → tester → mettre à jour ce fichier → cocher → résumer → proposer la suite.
 >
-> **Méta** — Dernière mise à jour : **2026-07-03** · Phase active : **Phase 8** (Phases 0–7 terminées)
+> **Méta** — Dernière mise à jour : **2026-07-04** · Phase active : **Phase 12** (Phases 0–11 terminées)
 > · Périmètre : **Cœur rehaussé (Must)** · Durée : **stage 6 mois** · Compute : **GPU local**.
 >
 > **Documents liés** : [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) ·
@@ -65,20 +65,21 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | État | Élément | Avancement | Qualité | Dette technique | Remarques |
 |---|---|---|---|---|---|
 | ✅ | EDA + preprocessing (notebooks 01–02) | 90 % | Bonne | Notebooks à figer en scripts | À consolider/documenter (Phase 3). |
-| ✅ | Baseline ML TF-IDF + LogReg | 100 % | F1-macro **0.77** | Sur-apprentissage (CV=1.0) lié à la redondance du corpus | Devient la **référence** de comparaison. |
-| ✅ | RAG lexical (`src/rag/engine.py`) | 100 % | Faible (lexical) | Pas sémantique, pas de métriques | À **remplacer** (Phases 6–7). |
-| ✅ | Backend cœur (auth JWT, tickets, approbation, historique) | 85 % | Bonne | Couches services/repos vides | ENF + sécurité à durcir (Phase 8). |
-| ✅ | Documentation (cahier des charges, workflow) | 80 % | Très bonne | — | Base solide pour le mémoire. |
-| 🟡 | Frontend Angular 21 | 65 % | Moyenne | `environment.ts` vide, enum/`Ticket` désalignés, page détail absente, pas de guards | **Non connecté** au backend (Phase 9). |
-| 🟡 | Couches `services/`, `db/repositories/`, `middleware/` | 10 % | — | Squelettes vides, logique dans routers | À implémenter ou assumer (Phase 8). |
-| 🔴 | Endpoint `/ingest` | Cassé | — | Import `datetime` manquant, mauvais appel, non enregistré | À réparer (Phase 8). |
-| ✅ | CamemBERT fine-tuné (LoRA) + benchmark | 100 % | F1=0.5685 | features enrichies | Phase 5 — à parité avec TF-IDF+heuristiques (0.5673, écart dans le bruit) mais sans règles codées. Infrastructure/Sécurité à 0.00. |
+| ✅ | Baseline ML TF-IDF + LogReg/LinearSVC | 100 % | F1-macro heuristiques **0.685** | Sur-apprentissage (CV=1.0) lié à la redondance du corpus | Référence de comparaison ; pipeline DVC (Phase 10). |
+| ✅ | RAG lexical (`src/rag/engine.py`) | 100 % | Bonne (fallback) | — | Conservé comme fallback du RAG hybride (Phase 13). |
+| ✅ | Backend cœur (auth JWT, tickets, approbation, historique) | 100 % | Bonne | Couches services/repos minces mais fonctionnelles | Durci Phase 8 (CORS, rate limiting, OpenAPI /api/v1). |
+| ✅ | Documentation (cahier des charges, workflow) | 85 % | Très bonne | — | Base solide pour le mémoire. |
+| ✅ | Frontend Angular 21 | 100 % | Bonne | — | Connecté au backend (Phase 9) : auth, guards, pages détail, intercepteur JWT. |
+| ✅ | Couches `services/`, `db/repositories/`, `middleware/` | 90 % | Bonne | Code mort supprimé (`api/db/__init__.py`, Phase 12) | Rate limiting via dépendance FastAPI. |
+| ✅ | Endpoint `/ingest` | Fonctionnel | Bonne | — | Réécrit Phase 8 : API key, ORM, validation Pydantic. |
+| ✅ | CamemBERT fine-tuné (LoRA) + benchmark | 100 % | F1=0.5685 | features enrichies | Phase 5 — à parité avec TF-IDF+heuristiques mais sans règles codées. Infrastructure/Sécurité à 0.00. |
 | ✅ | RAG sémantique (embeddings FR + FAISS) | 100 % | Score cosinus 0.93 vs 0.76 lexical (+0.17) | FAISS local | Phase 6 terminée. |
-| 🔴 | Évaluation RAG (RAGAS) + génération | 0 % | — | — | Phase 7. |
-| 🔴 | RGPD / anonymisation | 0 % | — | Données personnelles non traitées | Phase 2. |
-| 🔴 | MLOps (pipeline DVC, MLflow registry) | 5 % | — | `dvc.yaml` vide | Phase 10. |
-| 🔴 | Docker / CI-CD / monitoring | 0 % | — | — | Phases 10–11. |
-| 🔴 | Tests automatisés | 0 % | — | Aucun test | Phase 12. |
+| ✅ | RAG hybride (sémantique + lexical) | 100 % | score = 0.5×sém + 0.5×lex | Gain P@3/MRR à mesurer (notebook à ré-exécuter) | Phase 13 Semaine 2. |
+| ✅ | Évaluation RAG (RAGAS) + génération | 100 % | P@3 0.30 sém/0.42 lex, MRR 0.56/0.65 | RAGAS simplifié (template-based) | Phase 7 terminée. |
+| 🔴 | RGPD / anonymisation | 0 % | — | Données personnelles non traitées | Phase 2 (reliquat). |
+| ✅ | MLOps (pipeline DVC, MLflow registry) | 100 % | F1-macro heuristiques 0.685 tracké | Model cards à enrichir | Phase 10 : 4 stages DVC + MLflow. |
+| ✅ | Docker / CI-CD / monitoring | 100 % | `docker compose up` opérationnel | Pas de scan de sécurité d'image | Phase 11 : 3 services + CI 3 jobs. |
+| 🟡 | Tests automatisés | 40 % | 41 tests unitaires + 18 tests d'intégration (14 passent, 4 skip bcrypt) | Pas de test de charge, pas de matrice exigences→résultats | Phase 12 en cours. |
 | 🔴 | Mémoire PFE | 10 % | — | — | Phase 14 (continu). |
 
 ---
@@ -416,15 +417,15 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [ ] Rédiger model cards / data cards
 - [ ] Monitoring minimal (métriques IA)
 
-### Phase 11 — Déploiement
-- [ ] Dockerfile API + Dockerfile front
-- [ ] `docker-compose` multi-services
-- [ ] Pipeline CI/CD (lint, tests, build, scan)
-- [ ] Observabilité de base (logs structurés)
+### Phase 11 — Déploiement ✅ TERMINÉ (2026-07-04)
+- [x] Dockerfile API + Dockerfile front
+- [x] `docker-compose` multi-services
+- [x] Pipeline CI/CD (lint, tests, build) — scan de sécurité d'image non fait (BACKLOG)
+- [x] Observabilité de base (healthchecks + logs stdout/stderr)
 
-### Phase 12 — Tests & validation
-- [ ] Tests unitaires (NLP, RAG, services)
-- [ ] Tests d'intégration end-to-end
+### Phase 12 — Tests & validation (en cours)
+- [x] Tests unitaires (NLP, RAG, services) — 41 tests : `test_preprocess.py`, `test_heuristics.py`, `test_rag_engine.py`, `test_hybrid_engine.py`
+- [x] Tests d'intégration end-to-end (Phase 8 : `test_api_integration.py`, 14/18 passent, 4 skip bcrypt — non branché en CI)
 - [ ] Test de charge (latence P95)
 - [ ] Matrice exigences → résultats
 - [ ] Étude utilisateur légère
@@ -492,15 +493,15 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~52 %** (Phases 0–1, 3–8 terminées) |
-| **Phase actuelle** | Phase 8 terminée (Backend) · prochaine : **Phase 9** (Frontend) |
-| **Tâche actuelle** | Aucune en cours — Phase 8 clôturée |
-| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML F1=0.57) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · **Phase 8 (Backend API v1.1 : /api/v1, sécurité, SemanticRAG, /ingest fixé, tests)** |
-| **Tâches restantes** | Phases 9–15 |
-| **Prochaine étape** | Phase 9 — Frontend (environment.ts + enum statuts + page détail + guards + citations RAG) |
-| **Risques ouverts** | F1 classification < objectif PFE 0.85 · RGPD · délai 6 mois · bcrypt 4.x + passlib 1.7.x incompatibles dans venv (voir [RISKS.md](RISKS.md)) |
-| **Dette technique** | Front non connecté au backend · RGPD à faire (Phase 2 reliquat) · Tests auth skippés (bcrypt) · LLM-as-a-Judge BACKLOG · Calibration + MLflow renvoyés (Phases 13/10) |
-| **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (LLM-as-a-Judge, QLoRA, hybrid search, re-ranking, agents, K8s…) |
+| **Progression globale** | **~78 %** (Phases 0–11 terminées, Phase 13 partiellement avancée) |
+| **Phase actuelle** | Phase 12 — Tests & validation (en cours) |
+| **Tâche actuelle** | Tests unitaires NLP/RAG écrits (41 tests) ; reste : test de charge, matrice exigences→résultats, étude utilisateur |
+| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · Phase 9 (Frontend connecté) · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) |
+| **Tâches restantes** | Phase 12 (suite) · Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 |
+| **Prochaine étape** | Phase 12 — test de charge (latence P95) puis matrice exigences→résultats |
+| **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · RGPD non traité · délai 6 mois · bcrypt 4.x + passlib 1.7.x incompatibles dans venv (voir [RISKS.md](RISKS.md)) |
+| **Dette technique** | RGPD à faire (Phase 2 reliquat) · Tests auth skippés en TestClient (bcrypt) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git) · LLM-as-a-Judge BACKLOG |
+| **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (LLM-as-a-Judge, QLoRA, hybrid search avancé, re-ranking, agents, K8s…) |
 
 > **Calcul de la progression** : moyenne pondérée de l'avancement des 15 phases par leur priorité.
 > Mis à jour à chaque fin de tâche.
