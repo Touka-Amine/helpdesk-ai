@@ -15,7 +15,7 @@ class RAGEngine:
     d'un nouveau ticket entrant.
     """
 
-    def __init__(self, top_k: int = 3, similarity_threshold: float = 0.30) -> None:
+    def __init__(self, top_k: int = 3, similarity_threshold: float = 0.50) -> None:  # relevé 0.30→0.50
         self.top_k = top_k
         self.similarity_threshold = similarity_threshold
         self.vectorizer: TfidfVectorizer | None = None

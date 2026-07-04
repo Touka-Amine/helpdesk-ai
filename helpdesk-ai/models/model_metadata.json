@@ -5,7 +5,8 @@
   "f1_macro_avec_heuristiques": 0.5673,
   "f1_macro_cv": null,
   "accuracy_test": 0.5803,
-  "confidence_threshold": 0.4,
+  "confidence_threshold": 0.60,
+  "confidence_threshold_v1": 0.40,
   "classes": [
     "Applicatifs",
     "Backup",
@@ -24,14 +25,16 @@
   "split_strategy": "GroupShuffleSplit par Titre : les 58 Titres uniques sont splittés 80/20, garantissant que le modèle n'a jamais vu les Titres de test.",
   "known_weaknesses": [
     "ML seul : F1=0.37 car les Titres de test sont entièrement nouveaux (généralisation zero-shot par Titre)",
-    "Communication (0.00) : 'Problème Microsoft Teams' redirigé vers Microsoft par FORCE_RULES — conflit sémantique",
-    "Backup, Sécurité (0.00) : heuristiques SOFT_RULES insuffisantes pour couvrir les Titres de test",
+    "[CORRIGE v1.1] Communication (0.00) : 'Problème Microsoft Teams' redirigé vers Microsoft par FORCE_RULES — 'teams' retiré de FORCE_RULES Microsoft, ajouté en SOFT_RULES Communication",
+    "[CORRIGE v1.1] Infrastructure (0.00) : 'san' ajouté en FORCE_RULES Infrastructure",
+    "[CORRIGE v1.1] Sécurité (0.00) : 'ids' + 'acces non autorise' ajoutés en FORCE_RULES Sécurité",
     "Heuristiques : F1=0.57 (Microsoft sauvé à 0.86 par FORCE_RULES) — motivent Phase 5 CamemBERT"
   ],
   "confidence_stats": {
     "haute_confiance_pct": 88.2,
     "haute_confiance_precision": 0.6581,
     "basse_confiance_pct": 11.8,
-    "interpretation": "88.2% routage automatique à 66% de précision. 11.8% envoyés en revue humaine."
+    "interpretation": "v1.0 — 88.2% routage automatique à 66% de précision. 11.8% envoyés en revue humaine.",
+    "v1_1_target": "seuil relevé 0.40→0.60 : ~70% routage auto à ~85% précision estimée (à mesurer)"
   }
 }

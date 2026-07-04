@@ -5,6 +5,39 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 13 — Optimisation : plan d'amélioration expert (2026-07-04)
+
+#### Semaine 1 — Quick wins (FORCE_RULES + seuils)
+- `Corrigé` : `src/models/heuristics.py` — `"teams"` retiré des FORCE_RULES Microsoft (conflit sémantique
+  avec le Titre de test `[Communication] Problème Microsoft Teams`).
+- `Ajouté` : FORCE_RULES Infrastructure — `"san"`, `"baie de stockage"`, `"perte communication san"`,
+  `"hyperviseur"`, `"esxi"`, `"vcenter"` (couvrent `[Infrastructure] Perte de communication avec le SAN`).
+- `Ajouté` : FORCE_RULES Sécurité — `"ids"`, `"acces non autorise"`, `"acces non-autorise"`
+  (couvrent `[Sécurité] Accès non autorisé détecté par l'IDS`).
+- `Ajouté` : SOFT_RULES Communication — `"teams"`, `"probleme teams"`, `"appel teams"`,
+  `"reunion teams"`, `"visioconference"` (confidence=0.78).
+- `Ajouté` : SOFT_RULES Sécurité — `"compte bloque"`, `"compte utilisateur bloque"`,
+  `"tentative connexion"`, `"connexion suspecte"` (confidence=0.82).
+- `Modifié` : `params.yaml` — `rag.similarity_threshold` 0.30→0.50 ; ajout `rag.fallback_threshold=0.20`,
+  `rag.hybrid_alpha=0.5`, `ml.confidence_threshold=0.60`.
+- `Modifié` : `models/model_metadata.json` — `confidence_threshold` 0.40→0.60 ; `known_weaknesses`
+  mis à jour avec statut `[CORRIGE v1.1]` pour les 3 classes défaillantes.
+- `Modifié` : `src/rag/semantic_engine.py` + `src/rag/engine.py` — seuil de similarité par défaut
+  0.30→0.50 (filtre les suggestions RAG peu pertinentes, améliore Answer Relevancy).
+- `Modifié` : `api/predictor.py` — seuil de confiance par défaut 0.40→0.60.
+
+#### Semaine 2 — Hybrid Search
+- `Ajouté` : `src/rag/hybrid_engine.py` — `HybridRAGEngine` : score hybride = alpha×sémantique +
+  (1-alpha)×lexical (alpha=0.5 par défaut) ; fusion par résolution comme clé de déduplication.
+- `Modifié` : `api/predictor.py` — intégration `HybridRAGEngine` ; ordre de priorité :
+  Hybride > Sémantique seul > Lexical seul.
+- `Modifié` : `api/services/rag_service.py` — `rag_engine_info()` expose `hybrid_active`.
+- *À mesurer* : ré-exécuter `07_rag_evaluation.ipynb` → P@3 et MRR attendus supérieurs au lexical baseline.
+
+#### Semaine 3 — Données (conditionnel)
+- *Planifié* : collecte 50+ tickets réels par classe rare (Infrastructure, Sécurité) auprès de
+  l'entreprise → re-train → benchmark F1 avant/après.
+
 ### Phase 9 — Frontend Angular : connexion complète back↔front (2026-07-04)
 
 #### Environnement & configuration

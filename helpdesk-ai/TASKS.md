@@ -1,7 +1,26 @@
 # TASKS.md — Tâches de la phase active
 
 > Tâches du sprint courant. Détail complet des checklists dans [PLAN.md](PLAN.md) (section 6).
-> Dernière mise à jour : **2026-07-03**. **Phase active : Phase 9 — Frontend.**
+> Dernière mise à jour : **2026-07-04**. **Phase active : Phase 13 — Optimisation (plan d'amélioration).**
+
+## 🟢 En cours — Phase 13 : Optimisation (plan d'amélioration expert)
+
+### Semaine 1 — Quick wins ✅ TERMINÉ
+- [x] Corriger `FORCE_RULES` : `"teams"` retiré de Microsoft → Communication ; `"san"` + `"ids"` + `"acces non autorise"` ajoutés en FORCE_RULES Infrastructure/Sécurité
+- [x] Seuil de confiance ML : 0.40 → **0.60** (`params.yaml`, `model_metadata.json`, `predictor.py`)
+- [x] Seuil RAG : 0.30 → **0.50** (`semantic_engine.py`, `engine.py`, `params.yaml`) — filtre les suggestions peu pertinentes
+- [x] SOFT_RULES enrichies : `"compte bloque"` → Sécurité, `"teams"` → Communication
+
+### Semaine 2 — Hybrid Search ✅ TERMINÉ
+- [x] `src/rag/hybrid_engine.py` — `HybridRAGEngine` : score = 0.5×sémantique + 0.5×lexical
+- [x] `api/predictor.py` — intégration du moteur hybride (priorité : Hybride > Sémantique > Lexical)
+- [x] `api/services/rag_service.py` — `rag_engine_info()` mis à jour pour exposer `hybrid_active`
+- [ ] **À faire** : ré-exécuter `07_rag_evaluation.ipynb` avec le moteur hybride → mesurer gain P@3/MRR
+
+### Semaine 3 — Données (conditionnel)
+- [ ] Collecter 50+ vrais tickets par classe rare (Infrastructure, Sécurité) auprès de l'entreprise
+- [ ] Re-train pipeline ML avec nouvelles données → benchmark F1 avant/après
+- [ ] Ré-évaluer RAGAS après enrichissement base RAG
 
 ## 🔵 Prochaine phase — Phase 10 (MLOps léger)
 - [ ] Pipeline DVC complet (`dvc.yaml`) : stages preprocess → split → train → rag → eval

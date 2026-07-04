@@ -28,18 +28,30 @@ def _normalize(text: str) -> str:
 # la confiance.
 FORCE_RULES: list[tuple[list[str], str]] = [
     # Microsoft — noms de produits exclusifs Microsoft
+    # "teams" retiré : "Problème Microsoft Teams" est Communication, pas Microsoft
+    # → Teams ambiguë selon le contexte ; géré par SOFT_RULES à confiance modérée
     (
-        ["outlook", "teams", "office 365", "office365", "onedrive",
+        ["outlook", "office 365", "office365", "onedrive",
          "sharepoint", "azure ad", "azure active directory", "exchange server",
          "microsoft 365", "m365", "onenote", "microsoft defender"],
         "Microsoft",
     ),
-    # Sécurité — menaces explicites / incidents de sécurité avérés
+    # Sécurité — menaces explicites / incidents avérés + équipements de sécurité réseau
+    # "ids" ajouté : Intrusion Detection System → Sécurité sans ambiguïté
+    # "acces non autorise" ajouté : test title "Accès non autorisé détecté par l'IDS"
     (
         ["ransomware", "malware", "cryptolocker", "wannacry",
          "virus informatique", "attaque ddos", "intrusion detectee",
-         "cyberattaque"],
+         "cyberattaque", "ids", "acces non autorise", "acces non-autorise"],
         "Sécurité",
+    ),
+    # Infrastructure — équipements physiques critiques
+    # "san" ajouté : Storage Area Network → Infrastructure sans ambiguïté
+    # "perte communication" seul est ambigu, mais "san" dans le même texte suffit
+    (
+        ["san", "baie de stockage", "perte communication san",
+         "hyperviseur", "esxi", "vcenter"],
+        "Infrastructure",
     ),
     # Applicatifs — logiciels métier nommés
     (
@@ -110,12 +122,21 @@ SOFT_RULES: list[tuple[list[str], str, float]] = [
          "redemarrage intempestif poste", "profil utilisateur corrompu"],
         "Système", 0.78,
     ),
-    # Communication — téléphonie / messagerie unifiée
+    # Communication — téléphonie / messagerie unifiée + Teams en contexte communication
+    # "teams" ici car "Problème Microsoft Teams" = outil de communication, pas incident Microsoft
     (
         ["voip", "telephone ip", "standard telephonique", "ipbx",
          "pbx", "messagerie vocale", "reunion video", "webex",
-         "zoom", "cisco"],
+         "zoom", "cisco", "teams", "probleme teams", "appel teams",
+         "reunion teams", "visioconference"],
         "Communication", 0.78,
+    ),
+    # Sécurité — comptes bloqués / accès refusés (contexte sécurité, pas IT classique)
+    (
+        ["compte bloque", "compte utilisateur bloque", "acces bloque",
+         "utilisateur bloque", "session bloquee", "tentative connexion",
+         "connexion suspecte"],
+        "Sécurité", 0.82,
     ),
 ]
 

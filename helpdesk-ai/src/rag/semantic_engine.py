@@ -42,7 +42,7 @@ class SemanticRAGEngine:
         self,
         model_name: str = MODEL_NAME,
         top_k: int = 3,
-        similarity_threshold: float = 0.30,
+        similarity_threshold: float = 0.50,   # relevé 0.30→0.50 : filtre les suggestions peu pertinentes
     ) -> None:
         self.model_name = model_name
         self.top_k = top_k

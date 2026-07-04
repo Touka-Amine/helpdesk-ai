@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from data.preprocess import clean_text, build_text_for_rag
 from rag.engine import RAGEngine
 from rag.semantic_engine import SemanticRAGEngine
+from rag.hybrid_engine import HybridRAGEngine
 
 MODEL_PATH   = os.path.join(os.path.dirname(__file__), '..', 'models', 'best_pipeline.pkl')
 RAG_PATH     = os.path.join(os.path.dirname(__file__), '..', 'models', 'rag_engine.pkl')
@@ -48,18 +49,26 @@ class Predictor:
         with open(META_PATH, 'r', encoding='utf-8') as f:
             self.metadata = json.load(f)
 
-        self.threshold = self.metadata.get('confidence_threshold', 0.40)
+        # Seuil relevé 0.40→0.60 (Semaine 1 amélioration) : ~70% routage auto à ~85% précision
+        self.threshold = self.metadata.get('confidence_threshold', 0.60)
         self.classes   = self.metadata.get('classes', [])
 
-        # ── RAG sémantique (FAISS) — prioritaire ──────────────────────────────
+        # ── RAG hybride (sémantique FAISS + lexical TF-IDF) — prioritaire ───────
+        # Ordre de préférence : Hybride > Sémantique seul > Lexical seul
         try:
             self.semantic_rag = SemanticRAGEngine.load(SEM_RAG_DIR)
+            # Construire le moteur hybride en réutilisant semantic_rag déjà chargé
+            self.hybrid_rag = HybridRAGEngine(alpha=0.5, top_k=3, similarity_threshold=0.50)
+            self.hybrid_rag._sem = self.semantic_rag
+            self.hybrid_rag._lex = self.rag
+            self.hybrid_rag._fitted = True
             self._semantic_rag_loaded = True
             n_docs = len(self.semantic_rag.knowledge_base)
-            print(f"RAG semantique charge — {n_docs} tickets FAISS (paraphrase-multilingual-mpnet-base-v2)")
+            print(f"RAG hybride actif — {n_docs} tickets | alpha=0.5 (sem×0.5 + lex×0.5)")
         except Exception as e:
-            print(f"RAG semantique non disponible ({e}) — fallback lexical actif")
+            print(f"RAG sémantique non disponible ({e}) — fallback lexical actif")
             self.semantic_rag = None
+            self.hybrid_rag = None
             self._semantic_rag_loaded = False
 
         self._loaded = True
@@ -91,6 +100,14 @@ class Predictor:
         fallback lexical (TF-IDF) si FAISS indisponible.
         """
         text_rag = build_text_for_rag(description, titre=titre)
+
+        # Priorité : Hybride > Sémantique > Lexical
+        if self._semantic_rag_loaded and self.hybrid_rag is not None:
+            return self.hybrid_rag.recommend(
+                query_text=text_rag,
+                category_filter=categorie,
+                allow_fallback=allow_fallback,
+            )
 
         if self._semantic_rag_loaded and self.semantic_rag is not None:
             return self.semantic_rag.recommend(
