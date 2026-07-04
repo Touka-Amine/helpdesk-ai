@@ -88,13 +88,26 @@ class HybridRAGEngine:
         if not query_text or not query_text.strip():
             return []
 
-        # Résultats bruts des deux moteurs (sans seuil)
-        sem_results = self._sem.recommend(
-            query_text, category_filter=category_filter, allow_fallback=False
-        )
-        lex_results = self._lex.recommend(
-            query_text, category_filter=category_filter, allow_fallback=False
-        )
+        # Résultats bruts des deux moteurs — on force top_k large et seuil=0.0
+        # pour que la fusion hybride ait suffisamment de candidats à re-classer.
+        # Les engines partagés (predictor) ont leurs propres top_k/threshold ; on
+        # les restaure après l'appel pour ne pas perturber les autres chemins.
+        _saved_sem = (self._sem.top_k, self._sem.similarity_threshold)
+        _saved_lex = (self._lex.top_k, self._lex.similarity_threshold)
+        self._sem.top_k              = self.top_k * 5
+        self._sem.similarity_threshold = 0.0
+        self._lex.top_k              = self.top_k * 5
+        self._lex.similarity_threshold = 0.0
+        try:
+            sem_results = self._sem.recommend(
+                query_text, category_filter=category_filter, allow_fallback=False
+            )
+            lex_results = self._lex.recommend(
+                query_text, category_filter=category_filter, allow_fallback=False
+            )
+        finally:
+            self._sem.top_k, self._sem.similarity_threshold = _saved_sem
+            self._lex.top_k, self._lex.similarity_threshold = _saved_lex
 
         # Index par résolution (clé de dédoublonnage)
         merged: dict[str, dict] = {}

@@ -79,20 +79,24 @@ SOFT_RULES: list[tuple[list[str], str, float]] = [
         "Réseau", 0.75,
     ),
     # Sécurité — vocabulaire sécurité IT large
+    # "ids" retiré : déjà couvert par FORCE_RULES Sécurité (code mort en SOFT_RULES)
     (
-        ["phishing", "hameconnage", "intrusion", "ids", "firewall",
+        ["phishing", "hameconnage", "intrusion", "firewall",
          "dossier securise", "acces securise", "connexion suspecte",
          "tentatives connexion", "alerte securite", "droits acces refuses",
          "acces refuse dossier", "compromis", "credential",
          "mot de passe compromis", "fuite donnees", "chiffrement",
-         "antivirus", "malveillant", "piratage", "brute force"],
+         "antivirus", "malveillant", "piratage", "brute force",
+         "compte bloque", "compte utilisateur bloque", "acces bloque",
+         "utilisateur bloque", "session bloquee", "tentative connexion"],
         "Sécurité", 0.85,
     ),
     # Microsoft — produits Microsoft à confiance modérée
+    # "teams", "reunion teams", "calendrier teams" retirés : doivent aller en
+    # Communication (SOFT_RULES vérifie l'ordre ; Microsoft précède Communication)
     (
-        ["outlook", "teams", "office", "onedrive", "sharepoint",
-         "azure", "exchange", "onenote", "boite mail", "messagerie outlook",
-         "calendrier teams", "reunion teams"],
+        ["outlook", "office", "onedrive", "sharepoint",
+         "azure", "exchange", "onenote", "boite mail", "messagerie outlook"],
         "Microsoft", 0.80,
     ),
     # Applicatifs — logiciels métier génériques
@@ -130,13 +134,6 @@ SOFT_RULES: list[tuple[list[str], str, float]] = [
          "zoom", "cisco", "teams", "probleme teams", "appel teams",
          "reunion teams", "visioconference"],
         "Communication", 0.78,
-    ),
-    # Sécurité — comptes bloqués / accès refusés (contexte sécurité, pas IT classique)
-    (
-        ["compte bloque", "compte utilisateur bloque", "acces bloque",
-         "utilisateur bloque", "session bloquee", "tentative connexion",
-         "connexion suspecte"],
-        "Sécurité", 0.82,
     ),
 ]
 
