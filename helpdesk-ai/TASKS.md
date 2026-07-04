@@ -32,7 +32,17 @@
 - [x] MLflow runs dans `mlruns/` (experiment : `helpdesk-ai-classification`)
 - [ ] (optionnel) Monitoring drift sur confiance — reporté Phase 12
 
-## 🔵 Prochaine phase — Phase 11 (Déploiement Docker)
+## ✅ Terminé — Phase 11 (Déploiement Docker, 2026-07-04)
+- [x] `.dockerignore` — exclut venv, node_modules, mlruns, camembert_lora (~2 Go)
+- [x] `docker/requirements-api.txt` — dépendances runtime uniquement (sans dvc/mlflow/jupyter)
+- [x] `docker/Dockerfile.api` — python:3.11-slim, NLTK + sentence-transformers pré-téléchargés, healthcheck curl
+- [x] `docker/Dockerfile.front` — multi-stage : node:20 build → nginx:1.27 serve
+- [x] `docker/nginx.conf` — SPA routing, cache assets, headers sécurité
+- [x] `docker/docker-compose.yml` — 3 services (api, frontend, dashboard), volume SQLite, réseau interne, healthchecks
+- [x] `.github/workflows/ci.yml` — 3 jobs : ruff+pytest / ng build / docker build
+- [x] `DEPLOYMENT.md` — guide complet (démarrage rapide, variables env, CI/CD, sécurité)
+
+## 🔵 Prochaine phase — Phase 12 (Tests & validation)
 
 ## ✅ Terminé — Phase 9 (Frontend connexion, 2026-07-04)
 - [x] `environment.ts` / `environment.development.ts` — `apiUrl` configuré

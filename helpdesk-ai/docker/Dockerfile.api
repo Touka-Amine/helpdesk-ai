@@ -1,7 +1,51 @@
+# ── Helpdesk AI — API FastAPI ──────────────────────────────────────────────────
+# Image : python:3.11-slim
+# Exécution : uvicorn api.main:app --host 0.0.0.0 --port 8000
+#
+# Build (depuis helpdesk-ai/) :
+#   docker build -f docker/Dockerfile.api -t helpdesk-api .
+# ──────────────────────────────────────────────────────────────────────────────
+
 FROM python:3.11-slim
+
+# Dépendances système minimales pour faiss-cpu et sentence-transformers
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
-COPY requirements.txt ./
+
+# ── Dépendances Python (couche cachée) ────────────────────────────────────────
+COPY docker/requirements-api.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
+
+# ── Pré-téléchargement des données NLP (couche cachée) ────────────────────────
+# NLTK stopwords — requis par src/data/preprocess.py à l'import
+RUN python -c "\
+import nltk; \
+nltk.download('stopwords', quiet=True); \
+nltk.download('punkt_tab', quiet=True)"
+
+# Sentence-Transformers — modèle d'embedding FR (~420 Mo, mis en cache dans l'image)
+RUN python -c "\
+from sentence_transformers import SentenceTransformer; \
+SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')"
+
+# ── Code applicatif ───────────────────────────────────────────────────────────
+COPY src/   src/
+COPY api/   api/
+COPY models/ models/
+COPY params.yaml .
+
+# Répertoire SQLite (monté comme volume en prod)
+RUN mkdir -p data
+
 EXPOSE 8000
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# ── Health check ──────────────────────────────────────────────────────────────
+# start_period élevé : chargement FAISS + sklearn pipeline au démarrage
+HEALTHCHECK --interval=30s --timeout=10s --retries=5 --start-period=60s \
+    CMD curl -sf http://localhost:8000/api/v1/health || exit 1
+
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

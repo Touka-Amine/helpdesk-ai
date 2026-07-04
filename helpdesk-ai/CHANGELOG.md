@@ -5,6 +5,34 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 11 — Déploiement Docker + CI/CD (2026-07-04)
+
+#### Docker
+- `Ajouté` : `.dockerignore` — exclut `venv/`, `node_modules/`, `mlruns/`, `camembert_lora/`
+  (~2 Go) du contexte de build ; réduit la taille du contexte de façon significative.
+- `Ajouté` : `docker/requirements-api.txt` — dépendances runtime uniquement (sans dvc, mlflow,
+  jupyter, ipykernel, pytest, streamlit, imbalanced-learn) → image API plus légère.
+- `Modifié` : `docker/Dockerfile.api` — pré-téléchargement NLTK stopwords + modèle
+  sentence-transformers (~420 Mo) pendant le build (image auto-suffisante) ; `curl` pour
+  healthcheck ; 2 workers uvicorn.
+- `Ajouté` : `docker/Dockerfile.front` — build multi-stage : `node:20-alpine` (ng build
+  production) → `nginx:1.27-alpine` (serve SPA) ; healthcheck `wget`.
+- `Ajouté` : `docker/nginx.conf` — SPA routing (`try_files /index.html`), cache 1 an sur
+  assets hachés, headers sécurité (`X-Frame-Options`, `X-Content-Type-Options`).
+- `Modifié` : `docker/docker-compose.yml` — 3 services (`api`, `frontend`, `dashboard`) avec
+  healthchecks, `depends_on: condition: service_healthy`, volume `api-data` pour SQLite,
+  réseau interne `helpdesk-net`.
+
+#### CI/CD
+- `Ajouté` : `.github/workflows/ci.yml` — 3 jobs : `python-ci` (ruff lint + pytest unitaires),
+  `angular-ci` (npm ci + ng build prod), `docker-build` (docker build API + front après CI OK).
+
+#### Documentation
+- `Modifié` : `DEPLOYMENT.md` — guide complet : topologie Mermaid, démarrage rapide,
+  variables d'environnement, volumes, CI/CD, sécurité, observabilité.
+
+---
+
 ### Phase 10 — MLOps léger : pipeline DVC + MLflow (2026-07-04)
 
 #### Scripts pipeline (4 stages)

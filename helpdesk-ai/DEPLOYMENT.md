@@ -1,59 +1,161 @@
 # DEPLOYMENT.md — Déploiement & infrastructure
 
-> Squelette à enrichir (Phase 11). Source de vérité : [PLAN.md](PLAN.md). Décisions :
-> [DECISIONS.md](DECISIONS.md). Dernière mise à jour : *à la création*.
+> **Phase 11 — complétée (2026-07-04).** Source de vérité : [PLAN.md](PLAN.md). Décisions :
+> [DECISIONS.md](DECISIONS.md). Dernière mise à jour : **2026-07-04**.
+
+---
 
 ## 1. Topologie cible (PFE)
 
 ```mermaid
 flowchart LR
   subgraph docker-compose
-    front[front : Angular build/nginx]
-    api[api : FastAPI/uvicorn]
-    vdb[(vector db)]
-    db[(db : sqlite vol / postgres)]
+    front["frontend :80\nAngular / Nginx"]
+    api["api :8000\nFastAPI / uvicorn"]
+    dash["dashboard :8501\nStreamlit"]
+    vol[(SQLite vol)]
   end
-  front --> api --> vdb
-  api --> db
+
+  Navigateur -->|HTTP :80| front
+  Navigateur -->|HTTP :8000| api
+  front --> api
+  dash --> api
+  api --> vol
 ```
 
-> **Pas de Kubernetes** (ADR-005, hors périmètre). `docker-compose` suffit pour la démo et la
-> soutenance.
+> **Pas de Kubernetes** (ADR-005 — hors périmètre PFE). `docker compose` suffit pour la démo
+> et la soutenance.
 
-## 2. Services & ports (cible)
-| Service | Port | Description |
+---
+
+## 2. Services & ports
+
+| Service | Port | Image | Description |
+|---|---|---|---|
+| `api` | **8000** | `helpdesk-api:latest` | FastAPI + uvicorn (2 workers) |
+| `frontend` | **80** | `helpdesk-front:latest` | Angular build → Nginx |
+| `dashboard` | **8501** | `helpdesk-dashboard:latest` | Streamlit |
+
+---
+
+## 3. Démarrage rapide
+
+### Prérequis
+- Docker Desktop ≥ 24 (ou Docker Engine + Compose v2)
+- 4 Go RAM libres (sentence-transformers + FAISS chargés en mémoire)
+- Premier build : téléchargement du modèle `paraphrase-multilingual-mpnet-base-v2` (~420 Mo)
+
+### Étapes
+
+```bash
+# 1. Cloner et se placer dans le répertoire
+cd helpdesk-ai
+
+# 2. Créer le fichier d'environnement
+cp .env.example .env
+# Éditer .env : renseigner SECRET_KEY, ADMIN_EMAILS, INGEST_API_KEY
+
+# 3. Lancer tous les services
+docker compose -f docker/docker-compose.yml up --build
+
+# Accès :
+#   Frontend  → http://localhost
+#   API Swagger → http://localhost:8000/docs
+#   Dashboard → http://localhost:8501
+```
+
+### Commandes utiles
+
+```bash
+# Démarrage en arrière-plan
+docker compose -f docker/docker-compose.yml up -d --build
+
+# Logs d'un service
+docker compose -f docker/docker-compose.yml logs -f api
+
+# Arrêt (avec suppression des conteneurs)
+docker compose -f docker/docker-compose.yml down
+
+# Arrêt + suppression du volume SQLite
+docker compose -f docker/docker-compose.yml down -v
+
+# Rebuild forcé d'un seul service
+docker compose -f docker/docker-compose.yml build api
+docker compose -f docker/docker-compose.yml up -d api
+```
+
+---
+
+## 4. Fichiers Docker
+
+| Fichier | Rôle |
+|---|---|
+| `docker/Dockerfile.api` | Image API FastAPI (python:3.11-slim, NLTK + ST pré-téléchargés) |
+| `docker/Dockerfile.front` | Image Angular multi-stage (node:20 build → nginx:1.27 serve) |
+| `docker/Dockerfile.dashboard` | Image Streamlit (python:3.11-slim) |
+| `docker/docker-compose.yml` | Orchestration multi-services + volume SQLite + réseau interne |
+| `docker/requirements-api.txt` | Dépendances Python runtime uniquement (sans dvc/mlflow/jupyter) |
+| `docker/nginx.conf` | Config Nginx : SPA routing + cache assets + headers sécurité |
+| `.dockerignore` | Exclut node_modules, venv, mlruns, camembert_lora (~2 Go) du contexte |
+
+---
+
+## 5. Variables d'environnement
+
+Toutes les variables sont dans `.env` (copier depuis `.env.example`) :
+
+| Variable | Description | Défaut |
 |---|---|---|
-| `api` | 8000 | FastAPI (uvicorn) |
-| `front` | 4200 / 80 | Angular (dev / build nginx) |
-| `vector-db` | (selon ADR-004) | Base vectorielle |
-| `db` | 5432 | PostgreSQL (cible) |
+| `SECRET_KEY` | Clé JWT (min 32 chars) | *(à changer)* |
+| `ALGORITHM` | Algorithme JWT | `HS256` |
+| `TOKEN_EXPIRE_MIN` | Durée token (minutes) | `480` |
+| `DB_URL` | URL SQLAlchemy | `sqlite:///./data/tickets.db` |
+| `CONFIDENCE_THRESHOLD` | Seuil auto-routage | `0.40` |
+| `ADMIN_EMAILS` | Emails admins (virgule) | — |
+| `CORS_ORIGINS` | Origines CORS (virgule) | `http://localhost,http://localhost:4200` |
+| `INGEST_API_KEY` | Clé API `/ingest` | *(à changer)* |
 
-## 3. Conteneurisation
-- [ ] `Dockerfile` API (multi-stage : deps → runtime)
-- [ ] `Dockerfile` frontend (build Angular → nginx)
-- [ ] `docker-compose.yml` (api + front + vector-db + db, volumes, réseau)
-- [ ] Variables d'environnement via `.env` (jamais commitées)
+---
 
-## 4. CI/CD (GitHub Actions)
-- [ ] Lint (ruff/flake8, eslint)
-- [ ] Tests (pytest, vitest)
-- [ ] Build images Docker
-- [ ] Scan de sécurité d'image (trivy)
-- [ ] Déploiement (cible à définir)
+## 6. Volumes & persistance
 
-## 5. Configuration & secrets
-- Secrets via variables d'environnement / secret manager (jamais en clair).
-- Remplacer `SECRET_KEY=change-me` (cf. R-09).
-- Séparer config dev / prod.
+| Volume | Point de montage | Contenu |
+|---|---|---|
+| `api-data` | `/app/data` | Base SQLite `tickets.db` (persistée entre redémarrages) |
 
-## 6. Observabilité
-- [ ] Logs structurés (JSON)
-- [ ] Métriques techniques (latence, erreurs) — Prometheus
-- [ ] Métriques IA (distribution des confiances, taux de fallback RAG, hallucinations) — dashboard
-- [ ] Healthchecks (`/health`)
+Les modèles ML/RAG (`models/`) sont intégrés dans l'image API pour la démo. Pour mettre à jour
+un modèle sans rebuild : monter `models/` en volume override dans `docker-compose.yml`.
 
-## 7. Runbook (à compléter)
-- Démarrage : `docker-compose up -d`
-- Logs : `docker-compose logs -f api`
-- Reprise / rollback : redéployer l'image précédente.
-- Sauvegarde : volume BDD + index vectoriel.
+---
+
+## 7. CI/CD — GitHub Actions
+
+Workflow : `.github/workflows/ci.yml`
+
+| Job | Déclencheur | Étapes |
+|---|---|---|
+| `python-ci` | Push / PR | ruff lint + pytest (tests unitaires) |
+| `angular-ci` | Push / PR | npm ci + ng build (production) |
+| `docker-build` | Après python-ci + angular-ci | docker build API + docker build Frontend |
+
+Les jobs `docker-build` ne publient pas d'image en registry (pas de DockerHub configuré). Pour
+activer la publication : ajouter `docker/login-action` + `docker/build-push-action` dans le workflow.
+
+---
+
+## 8. Sécurité (minimal pour la démo PFE)
+
+- **Secrets** : `SECRET_KEY` et `INGEST_API_KEY` dans `.env` (jamais committé).
+- **CORS** : restreint aux origines listées dans `CORS_ORIGINS`.
+- **Rate limiting** : login limité (FastAPI middleware) — voir `api/middleware/auth_middleware.py`.
+- **Headers** : `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` via Nginx.
+- **À faire (hors PFE)** : HTTPS/TLS, secrets manager, scan d'image (Trivy).
+
+---
+
+## 9. Observabilité minimale
+
+- **Health check API** : `GET /api/v1/health` → `{"status": "ok", "model_loaded": true}`
+- **Logs** : stdout/stderr collectés par Docker, consultables via `docker compose logs`
+- **Métriques modèle** : `metrics/ml_eval.json` (DVC) et `mlruns/` (MLflow UI)
+- **À faire (hors PFE)** : Prometheus + Grafana, alerting sur drift confiance.

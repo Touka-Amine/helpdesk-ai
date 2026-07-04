@@ -1,0 +1,52 @@
+# ── Python ─────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# ── Environnements virtuels ─────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Node ────────────────────────────────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+frontend/.angular/
+frontend/dist/
+
+# ── Données runtime (montées comme volumes Docker) ─────────────────────────────
+data/tickets.db
+data/nosql_store.json
+
+# ── MLOps (non nécessaire à l'exécution) ───────────────────────────────────────
+mlruns/
+.dvc/cache/
+.dvc/tmp/
+
+# ── Modèles lourds non utilisés par l'API ──────────────────────────────────────
+# (CamemBERT LoRA ~2 Go — non chargé par predictor.py)
+models/camembert_lora/
+models/camembert_lora_adapter/
+
+# ── Développement ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+notebooks/
+*.ipynb
+.ipynb_checkpoints/
+
+# ── Git / CI ────────────────────────────────────────────────────────────────────
+.git/
+.github/
+
+# ── Environnement (injecté au runtime via env_file / secrets) ──────────────────
+.env
+
+# ── Divers ──────────────────────────────────────────────────────────────────────
+*.log
+*.tmp
+HelpDesk1.csv
+CAHIER_DES_CHARGES.pdf
