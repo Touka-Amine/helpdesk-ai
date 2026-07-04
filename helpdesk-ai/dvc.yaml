@@ -10,7 +10,6 @@ stages:
       - params.yaml:
           - data.raw_path
           - data.processed_path
-          - nlp
     outs:
       - data/processed/HelpDesk1.csv
 

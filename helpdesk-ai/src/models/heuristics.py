@@ -92,11 +92,10 @@ SOFT_RULES: list[tuple[list[str], str, float]] = [
         "Sécurité", 0.85,
     ),
     # Microsoft — produits Microsoft à confiance modérée
-    # "teams", "reunion teams", "calendrier teams" retirés : doivent aller en
-    # Communication (SOFT_RULES vérifie l'ordre ; Microsoft précède Communication)
+    # "teams"/"reunion teams"/"calendrier teams" retirés : SOFT_RULES Communication
+    # "outlook"/"onedrive"/"sharepoint"/"onenote" retirés : déjà en FORCE_RULES Microsoft
     (
-        ["outlook", "office", "onedrive", "sharepoint",
-         "azure", "exchange", "onenote", "boite mail", "messagerie outlook"],
+        ["office", "azure", "exchange", "boite mail", "messagerie outlook"],
         "Microsoft", 0.80,
     ),
     # Applicatifs — logiciels métier génériques
@@ -113,10 +112,10 @@ SOFT_RULES: list[tuple[list[str], str, float]] = [
         "Backup", 0.80,
     ),
     # Infrastructure — serveurs, hyperviseurs
+    # "san"/"hyperviseur"/"esxi"/"vcenter"/"baie de stockage" retirés : déjà en FORCE_RULES
     (
-        ["hyperviseur", "vmware", "hyper-v", "esxi", "vcenter",
-         "serveur physique", "baie de stockage", "san", "nas",
-         "alimentation serveur", "salle serveur"],
+        ["vmware", "hyper-v", "nas",
+         "serveur physique", "alimentation serveur", "salle serveur"],
         "Infrastructure", 0.78,
     ),
     # Système — OS et configurations locales

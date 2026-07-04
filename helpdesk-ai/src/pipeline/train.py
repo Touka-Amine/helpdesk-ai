@@ -14,7 +14,6 @@ import sys
 import json
 import yaml
 import joblib
-import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -113,17 +112,14 @@ def run() -> None:
     print(f"[train] Modèle sauvegardé : {MODEL_OUT}")
 
     # ── Métadonnées ──────────────────────────────────────────────────────────
-    existing_meta = {}
-    if os.path.exists(META_OUT):
-        with open(META_OUT, encoding="utf-8") as f:
-            existing_meta = json.load(f)
-
+    # Les champs curatoriaux (known_weaknesses, dataset_note, etc.) sont définis
+    # explicitement ici pour ne pas être perdus sur un run DVC propre (pas d'existing_meta).
     meta = {
-        **existing_meta,
         "model_name"                : "LinearSVC_calibré",
         "sklearn_version"           : __import__("sklearn").__version__,
         "f1_macro_ml_seul"          : round(f1_ml, 4),
         "f1_macro_avec_heuristiques": round(f1_h, 4),
+        "f1_macro_cv"               : None,
         "accuracy_test"             : round(acc_h, 4),
         "confidence_threshold"      : threshold,
         "confidence_threshold_v1"   : ml_p.get("confidence_threshold_v1", 0.40),
@@ -132,6 +128,24 @@ def run() -> None:
         "test_size"                 : len(X_test),
         "unique_train"              : int(train_df["Titre"].nunique()),
         "unique_test"               : int(test_df["Titre"].nunique()),
+        "dataset_note"              : (
+            "Corpus a 58 types de tickets recurrents ; split GroupShuffleSplit par Titre "
+            "(46 train / 12 test) — aucun Titre de test vu a l'entrainement."
+        ),
+        "split_strategy"            : (
+            "GroupShuffleSplit par Titre : les 58 Titres uniques sont splittés 80/20, "
+            "garantissant que le modele n'a jamais vu les Titres de test."
+        ),
+        "known_weaknesses"          : [
+            "ML seul : F1 faible car les Titres de test sont entierement nouveaux (generalisation zero-shot par Titre)",
+            "[CORRIGE v1.1] Communication : 'teams' retire de FORCE_RULES Microsoft, ajoute en SOFT_RULES Communication",
+            "[CORRIGE v1.1] Infrastructure : 'san' ajoute en FORCE_RULES Infrastructure",
+            "[CORRIGE v1.1] Securite : 'ids' + 'acces non autorise' ajoutes en FORCE_RULES Securite",
+        ],
+        "confidence_stats"          : {
+            "v1_0": "88.2% routage automatique a 66% de precision (seuil=0.40)",
+            "v1_1_target": "seuil releve 0.40->0.60 : ~70% routage auto a ~85% precision estimee",
+        },
     }
     with open(META_OUT, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)

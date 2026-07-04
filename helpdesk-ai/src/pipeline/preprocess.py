@@ -1,8 +1,8 @@
 """
 Stage DVC 1/4 — Prétraitement.
 
-Lit le CSV brut (latin-1), applique le nettoyage textuel,
-ajoute les colonnes dérivées, et sauvegarde un CSV propre (UTF-8).
+Lit le CSV brut (UTF-8 BOM — utf-8-sig), applique le nettoyage textuel,
+ajoute les colonnes dérivées, et sauvegarde un CSV propre (UTF-8 sans BOM).
 
 Usage :
     python src/pipeline/preprocess.py
