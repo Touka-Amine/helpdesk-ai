@@ -1,12 +1,12 @@
 {
   "model_name": "LinearSVC_calibré",
   "sklearn_version": "1.6.1",
-  "f1_macro_ml_seul": 0.3753,
-  "f1_macro_avec_heuristiques": 0.5673,
+  "f1_macro_ml_seul": 0.2708,
+  "f1_macro_avec_heuristiques": 0.685,
   "f1_macro_cv": null,
-  "accuracy_test": 0.5803,
-  "confidence_threshold": 0.60,
-  "confidence_threshold_v1": 0.40,
+  "accuracy_test": 0.8539,
+  "confidence_threshold": 0.6,
+  "confidence_threshold_v1": 0.4,
   "classes": [
     "Applicatifs",
     "Backup",
@@ -17,10 +17,10 @@
     "Système",
     "Sécurité"
   ],
-  "train_size": 1445,
-  "test_size": 355,
-  "unique_train": 902,
-  "unique_test": 231,
+  "train_size": 1444,
+  "test_size": 356,
+  "unique_train": 46,
+  "unique_test": 12,
   "dataset_note": "Corpus à 58 types de tickets récurrents ; split GroupShuffleSplit par Titre (46 train / 12 test) — aucun Titre de test vu à l'entraînement, évaluation généralisation stricte.",
   "split_strategy": "GroupShuffleSplit par Titre : les 58 Titres uniques sont splittés 80/20, garantissant que le modèle n'a jamais vu les Titres de test.",
   "known_weaknesses": [

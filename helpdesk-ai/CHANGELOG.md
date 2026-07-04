@@ -5,6 +5,29 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 10 — MLOps léger : pipeline DVC + MLflow (2026-07-04)
+
+#### Scripts pipeline (4 stages)
+- `Ajouté` : `src/pipeline/preprocess.py` — stage 1 : lit `HelpDesk1.csv` (UTF-8-sig),
+  applique `clean_text` / `build_text_for_rag` / `build_text_enriched`, sauvegarde en UTF-8.
+- `Ajouté` : `src/pipeline/split.py` — stage 2 : GroupShuffleSplit par Titre (anti-leakage),
+  sorties `train.csv` / `test.csv` / `rag.csv` (rag = tickets résolus du train uniquement).
+- `Ajouté` : `src/pipeline/train.py` — stage 3 : TF-IDF + CalibratedClassifierCV(LinearSVC),
+  évaluation avec heuristiques, log MLflow (params + métriques + artefacts).
+- `Ajouté` : `src/pipeline/rag_build.py` — stage 4 : ajuste `RAGEngine` lexical sur `rag.csv`,
+  sauvegarde `models/rag_engine.pkl`.
+
+#### DVC + MLflow
+- `Modifié` : `dvc.yaml` — 4 stages déclarés (`preprocess → split → train → rag_build`) ;
+  `dvc repro --dry` confirmé fonctionnel.
+- `Ajouté` : `metrics/ml_eval.json` — métriques DVC trackées : F1-macro heuristiques=0.685
+  (Infrastructure=0.79, Microsoft=0.97, Réseau=0.81, Système=1.0, Sécurité=0.53).
+- `Ajouté` : `mlruns/` — experiment MLflow `helpdesk-ai-classification` créé.
+
+#### Corrections annexes (découvertes lors du test pipeline)
+- `Corrigé` : `src/rag/engine.py` — caractères emoji `✅` dans les `print()` remplacés
+  par texte ASCII (incompatibilité console Windows cp1252).
+
 ### Phase 13 — Optimisation : plan d'amélioration expert (2026-07-04)
 
 #### Semaine 1 — Quick wins (FORCE_RULES + seuils)

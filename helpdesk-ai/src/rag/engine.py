@@ -42,7 +42,7 @@ class RAGEngine:
             self.knowledge_base["text_rag"]
         )
 
-        print("✅ RAG Engine fitted")
+        print("[RAG] Engine fitted")
         print(f"   Base de connaissance : {len(self.knowledge_base)} tickets")
         print(f"   Matrice TF-IDF       : {self.tfidf_matrix.shape}")
         return self
@@ -146,11 +146,11 @@ class RAGEngine:
 
     def save(self, path: str) -> None:
         joblib.dump(self, path)
-        print(f"✅ RAG Engine sauvegarde : {path}")
+        print(f"[RAG] Engine sauvegarde : {path}")
 
     @staticmethod
     def load(path: str) -> "RAGEngine":
         engine = joblib.load(path)
-        print(f"✅ RAG Engine charge : {path}")
+        print(f"[RAG] Engine charge : {path}")
         return engine
 

@@ -1,1 +1,65 @@
-stages: {}
+stages:
+
+  preprocess:
+    cmd: python src/pipeline/preprocess.py
+    deps:
+      - src/pipeline/preprocess.py
+      - src/data/preprocess.py
+      - data/raw/HelpDesk1.csv
+    params:
+      - params.yaml:
+          - data.raw_path
+          - data.processed_path
+          - nlp
+    outs:
+      - data/processed/HelpDesk1.csv
+
+  split:
+    cmd: python src/pipeline/split.py
+    deps:
+      - src/pipeline/split.py
+      - data/processed/HelpDesk1.csv
+    params:
+      - params.yaml:
+          - data.test_size
+          - data.random_state
+          - data.train_path
+          - data.test_path
+          - data.rag_path
+    outs:
+      - data/splits/train.csv
+      - data/splits/test.csv
+      - data/splits/rag.csv
+
+  train:
+    cmd: python src/pipeline/train.py
+    deps:
+      - src/pipeline/train.py
+      - src/data/preprocess.py
+      - src/models/heuristics.py
+      - data/splits/train.csv
+      - data/splits/test.csv
+    params:
+      - params.yaml:
+          - nlp
+          - ml.confidence_threshold
+          - data.random_state
+    outs:
+      - models/best_pipeline.pkl
+      - models/model_metadata.json
+    metrics:
+      - metrics/ml_eval.json:
+          cache: false
+
+  rag_build:
+    cmd: python src/pipeline/rag_build.py
+    deps:
+      - src/pipeline/rag_build.py
+      - src/rag/engine.py
+      - data/splits/rag.csv
+    params:
+      - params.yaml:
+          - rag.top_k
+          - rag.similarity_threshold
+    outs:
+      - models/rag_engine.pkl

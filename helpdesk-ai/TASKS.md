@@ -22,10 +22,17 @@
 - [ ] Re-train pipeline ML avec nouvelles données → benchmark F1 avant/après
 - [ ] Ré-évaluer RAGAS après enrichissement base RAG
 
-## 🔵 Prochaine phase — Phase 10 (MLOps léger)
-- [ ] Pipeline DVC complet (`dvc.yaml`) : stages preprocess → split → train → rag → eval
-- [ ] MLflow registry (model cards, log run, promote best model)
-- [ ] Monitoring minimal (drift sur confiance)
+## ✅ Terminé — Phase 10 (MLOps léger, 2026-07-04)
+- [x] `src/pipeline/preprocess.py` — stage 1 : raw → processed (UTF-8-sig)
+- [x] `src/pipeline/split.py` — stage 2 : GroupShuffleSplit anti-fuite par Titre
+- [x] `src/pipeline/train.py` — stage 3 : LinearSVC + MLflow logging
+- [x] `src/pipeline/rag_build.py` — stage 4 : RAGEngine lexical → `models/rag_engine.pkl`
+- [x] `dvc.yaml` — 4 stages déclarés ; `dvc repro --dry` OK
+- [x] `metrics/ml_eval.json` — F1-macro heuristiques=**0.685** (vs 0.567 avant corrections)
+- [x] MLflow runs dans `mlruns/` (experiment : `helpdesk-ai-classification`)
+- [ ] (optionnel) Monitoring drift sur confiance — reporté Phase 12
+
+## 🔵 Prochaine phase — Phase 11 (Déploiement Docker)
 
 ## ✅ Terminé — Phase 9 (Frontend connexion, 2026-07-04)
 - [x] `environment.ts` / `environment.development.ts` — `apiUrl` configuré
