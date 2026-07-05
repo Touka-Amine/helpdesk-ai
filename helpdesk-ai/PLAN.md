@@ -4,7 +4,7 @@
 > prévue ici. À chaque session : relire ce fichier → identifier la phase/tâche active → exécuter
 > **une seule** tâche → tester → mettre à jour ce fichier → cocher → résumer → proposer la suite.
 >
-> **Méta** — Dernière mise à jour : **2026-07-04** · Phase active : **Phase 12** (Phases 0–11 terminées)
+> **Méta** — Dernière mise à jour : **2026-07-05** · Phase active : **Phase 13** (Phases 0–12 terminées)
 > · Périmètre : **Cœur rehaussé (Must)** · Durée : **stage 6 mois** · Compute : **GPU local**.
 >
 > **Documents liés** : [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) ·
@@ -79,7 +79,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | 🔴 | RGPD / anonymisation | 0 % | — | Données personnelles non traitées | Phase 2 (reliquat). |
 | ✅ | MLOps (pipeline DVC, MLflow registry) | 100 % | F1-macro heuristiques 0.685 tracké | Model cards à enrichir | Phase 10 : 4 stages DVC + MLflow. |
 | ✅ | Docker / CI-CD / monitoring | 100 % | `docker compose up` opérationnel | Pas de scan de sécurité d'image | Phase 11 : 3 services + CI 3 jobs. |
-| 🟡 | Tests automatisés | 85 % | 41 tests unitaires + 18/18 tests d'intégration + test de charge + matrice exigences→résultats (couverture 74 % local / 22 % en CI) | Pas d'étude utilisateur ; couverture non vérifiée par la CI (best_pipeline.pkl gitignoré) | Phase 12 en cours ; matrice = [CADRAGE_SRS.md](CADRAGE_SRS.md) §5. |
+| ✅ | Tests automatisés + validation | 100 % | 41 tests unitaires + 18/18 tests d'intégration + test de charge + matrice exigences→résultats + étude utilisateur (couverture 74 % local / 22 % en CI) | Couverture non vérifiée par la CI (best_pipeline.pkl gitignoré) ; 2 régressions UX trouvées (R-15, R-16) | Phase 12 terminée (2026-07-05) ; matrice = [CADRAGE_SRS.md](CADRAGE_SRS.md) §5-6. |
 | 🔴 | Mémoire PFE | 10 % | — | — | Phase 14 (continu). |
 
 ---
@@ -423,7 +423,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [x] Pipeline CI/CD (lint, tests, build) — scan de sécurité d'image non fait (BACKLOG)
 - [x] Observabilité de base (healthchecks + logs stdout/stderr)
 
-### Phase 12 — Tests & validation (en cours)
+### Phase 12 — Tests & validation ✅ TERMINÉ (2026-07-05)
 - [x] Tests unitaires (NLP, RAG, services) — 41 tests : `test_preprocess.py`, `test_heuristics.py`, `test_rag_engine.py`, `test_hybrid_engine.py`
 - [x] Tests d'intégration end-to-end (Phase 8 : `test_api_integration.py`, **18/18 passent** — non branché en CI, cf. note plus haut)
 - [x] Test de charge (latence P95) — `scripts/load_test.py` + `metrics/load_test.json` : critère
@@ -433,8 +433,11 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [x] **Test manuel navigateur** (connexion client réelle) — a révélé et corrigé un **5ᵉ bug** :
       seeding utilisateurs cassé par incompatibilité `bcrypt`/`passlib` (aucun compte jamais créé
       en base) → `bcrypt==4.0.1` épinglé, résout aussi la dette technique des 4 tests auth skippés.
-- [ ] Matrice exigences → résultats
-- [ ] Étude utilisateur légère
+- [x] **Matrice exigences → résultats** (`CADRAGE_SRS.md` §5) — 9/17 EF, 5/14 ENF pleinement
+      atteints ; découverte critique R-14 (split de test sans exemples Backup/Communication)
+- [x] **Étude utilisateur légère** (`CADRAGE_SRS.md` §6) — golden path Client→Admin→Client
+      confirmé fonctionnel ; découverte R-15 (feedback client trompeur, à corriger avant démo
+      jury) et R-16 (pas d'auto-routage réel par confiance)
 
 ### Phase 13 — Optimisation
 - [ ] Optimiser la latence d'inférence
@@ -499,14 +502,14 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~80 %** (Phases 0–11 terminées, Phase 12 quasi terminée, Phase 13 partiellement avancée) |
-| **Phase actuelle** | Phase 12 — Tests & validation (en cours) |
-| **Tâche actuelle** | Tests unitaires (41) + intégration (18/18) + charge + matrice exigences→résultats faits ; reste : étude utilisateur légère |
-| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · Phase 9 (Frontend connecté) · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) |
-| **Tâches restantes** | Phase 12 (étude utilisateur) · Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 |
-| **Prochaine étape** | Phase 12 — étude utilisateur légère |
-| **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · split de test sans exemples Backup/Communication (R-14) · RGPD non traité · délai 6 mois · latence P95 non conforme sous charge (R-13, voir [RISKS.md](RISKS.md)) |
-| **Dette technique** | RGPD à faire (Phase 2 reliquat) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git) · pas de scan sécurité d'image Docker · LLM-as-a-Judge BACKLOG · EF-14 « génération LLM » en réalité template-based (à nuancer au mémoire) |
+| **Progression globale** | **~82 %** (Phases 0–11 terminées, **Phase 12 terminée**, Phase 13 partiellement avancée) |
+| **Phase actuelle** | Phase 12 — Tests & validation ✅ **terminée** (2026-07-05) |
+| **Tâche actuelle** | Aucune (Phase 12 close) — prochaine phase à démarrer : Phase 13 Semaine 3 (conditionnelle) ou Phase 14 (mémoire) |
+| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · Phase 9 (Frontend connecté) · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · **Phase 12 (tests, matrice exigences, étude utilisateur)** · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) |
+| **Tâches restantes** | Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 |
+| **Prochaine étape** | Décider : Phase 13 Semaine 3 (données) ou démarrer Phase 14 (mémoire PFE) — voir aussi corrections urgentes issues de l'étude utilisateur (R-15 feedback trompeur) |
+| **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · split de test sans exemples Backup/Communication (R-14) · feedback client trompeur (R-15) · pas d'auto-routage par confiance (R-16) · RGPD non traité · délai 6 mois · latence P95 non conforme sous charge (R-13, voir [RISKS.md](RISKS.md)) |
+| **Dette technique** | RGPD à faire (Phase 2 reliquat) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git) · pas de scan sécurité d'image Docker · LLM-as-a-Judge BACKLOG · EF-14 « génération LLM » en réalité template-based (à nuancer au mémoire) · seuil 0.40 obsolète codé en dur dans `tickets.py` · incohérence nommage `priorite`/`priorite_saisie` |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (LLM-as-a-Judge, QLoRA, hybrid search avancé, re-ranking, agents, K8s…) |
 
 > **Calcul de la progression** : moyenne pondérée de l'avancement des 15 phases par leur priorité.

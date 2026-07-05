@@ -1,9 +1,11 @@
 # TASKS.md — Tâches de la phase active
 
 > Tâches du sprint courant. Détail complet des checklists dans [PLAN.md](PLAN.md) (section 6).
-> Dernière mise à jour : **2026-07-05**. **Phase active : Phase 12 — Tests & validation.**
+> Dernière mise à jour : **2026-07-05**. **Phase active : Phase 13 — Optimisation** (Phase 12 close).
+> ⚠️ Avant Phase 13/14 : traiter **R-15** (feedback client trompeur, [RISKS.md](RISKS.md)) —
+> risque de démo devant jury.
 
-## 🟢 En cours — Phase 12 : Tests & validation
+## ✅ Terminé — Phase 12 : Tests & validation (2026-07-05)
 - [x] Tests unitaires NLP — `tests/test_preprocess.py` (16 tests : clean_text, simplify_*, build_text_*)
 - [x] Tests unitaires heuristiques — `tests/test_heuristics.py` (8 tests : FORCE/SOFT_RULES, word boundary)
 - [x] Tests unitaires RAG lexical — `tests/test_rag_engine.py` (8 tests : filtre catégorie, seuil, fallback, dédup)
@@ -49,7 +51,17 @@
       **R-14** dans [RISKS.md](RISKS.md) (Ouvert, P=Élevé/I=Élevé). Autre clarification actée :
       EF-14 (« génération LLM ») est en réalité template-based, pas un vrai appel LLM — à nuancer
       explicitement dans le mémoire. `TESTING.md` mis à jour (checkboxes reflètent l'état réel).
-- [ ] Étude utilisateur légère
+- [x] **Étude utilisateur légère** — [CADRAGE_SRS.md](CADRAGE_SRS.md) §6 : parcours golden path
+      (Client→Admin→Client) rejoué au niveau API (extension Chrome indisponible cette session)
+      + revue de code des templates Angular. Golden path EF-01/02/03/04/06/07/08 confirmé
+      fonctionnel de bout en bout. **2 découvertes ont corrigé des entrées trop optimistes de la
+      matrice §5** : EF-05 (aucun routage réel par confiance, tout ticket suit la même file
+      "En attente") et **EF-13 (feedback client trompeur : l'UI confirme "Merci pour votre
+      retour !" mais `submitFeedbackComment()` ne fait qu'un `console.log()`, rien n'est
+      persisté)**. Ajoutées comme risques **R-15** (feedback trompeur, Ouvert, I=Élevé — à
+      corriger avant démo jury) et **R-16** (pas d'auto-routage, Ouvert) dans
+      [RISKS.md](RISKS.md). 2 incohérences mineures notées (nommage `priorite`/`priorite_saisie`,
+      seuil 0.40 obsolète codé en dur dans `tickets.py`).
 
 ## 🟡 En pause — Phase 13 : Optimisation (plan d'amélioration expert)
 

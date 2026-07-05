@@ -5,6 +5,35 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 12 — Étude utilisateur légère (2026-07-05)
+
+- `Ajouté` : [CADRAGE_SRS.md](CADRAGE_SRS.md) §6 — parcours golden path (Client crée un ticket →
+  Admin traite et répond → Client consulte la résolution) rejoué contre l'application Docker
+  réellement déployée, chronométré. Extension Chrome indisponible cette session : parcours
+  rejoué au niveau API (`curl`) + revue de code des templates Angular pour juger l'ergonomie.
+  EF-01/02/03/04/06/07/08 confirmés fonctionnels de bout en bout ; validation des transitions de
+  statut testée (transition illégale correctement rejetée en 400).
+- `Corrigé` : **EF-05** (matrice §5) — l'étude a montré que `create_ticket()` fixe
+  `statut="En attente"` sans condition, quelle que soit la confiance (testé à 0.78 et 0.91) : il
+  n'existe **aucun routage automatique réel** par seuil de confiance, contrairement à ce que la
+  matrice affirmait ("mécanisme en place"). Le seuil et les indicateurs `auto_routed`/
+  `low_confidence` sont calculés mais ne pilotent aucune branche de workflow.
+- `Sécurité`/`Découvert` : **R-15** (nouveau risque, Ouvert, I=Élevé) — le bouton de feedback
+  client (👍/👎 + correction) affiche "Merci pour votre retour !" alors que
+  `submitFeedbackComment()` ne fait qu'un `console.log()` (TODO explicite dans le code source) :
+  rien n'est envoyé au serveur. L'utilisateur croit son avis enregistré ; il est perdu. **EF-13**
+  (matrice §5) corrigé en conséquence — plus grave qu'une simple absence de fonctionnalité.
+  À corriger avant toute démo devant jury.
+- `Découvert` : **R-16** (nouveau risque, Ouvert) — absence de routage différencié par confiance
+  (cf. correction EF-05 ci-dessus), décision de produit à prendre (assumer ou implémenter).
+- `Découvert` (mineur, non corrigé) : incohérence de nommage `TicketCreate.priorite` (entrée) vs
+  `TicketOut.priorite_saisie` (sortie) — un consommateur externe de l'API devinant le nom depuis
+  la réponse écrit silencieusement une valeur par défaut sans erreur (frontend Angular non
+  affecté, utilise le bon nom) ; et seuil `0.40` codé en dur dans `tickets.py`
+  (`approve_ticket`/`refresh_rag`), obsolète depuis le passage au seuil unique 0.60 en Phase 13.
+
+---
+
 ### Phase 12 — Matrice exigences → résultats (2026-07-05)
 
 - `Ajouté` : [CADRAGE_SRS.md](CADRAGE_SRS.md) §5 réécrite en matrice complète — 17 exigences

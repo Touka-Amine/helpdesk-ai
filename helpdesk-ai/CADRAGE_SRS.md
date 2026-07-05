@@ -136,7 +136,7 @@ Détail dans [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) (Ch. 2). Points clé
 | EF-02 | Création de ticket | Ticket persisté, statut initial « En attente » | Testé (`test_create_ticket_avec_auth`/`sans_auth`) | ✅ Atteint |
 | EF-03 | Classification automatique | Catégorie + confiance retournées | Testé (`test_predict_vpn`/`microsoft`) ; qualité du résultat → voir ENF-03/04 | ✅ Atteint (fonctionnel) |
 | EF-04 | Suggestion résolution (RAG) | Top-k avec sources/citations | RAG hybride actif (sémantique+lexical), citations numérotées, score moyen sémantique 0.69 (`metrics/rag_eval.json`) | ✅ Atteint |
-| EF-05 | Routage par seuil (HITL) | Cas < seuil → revue humaine | Mécanisme en place (seuil ML=0.60, `params.yaml`) ; couverture/précision réelles (H3 : ≥60 % à ≥95 %) **jamais mesurées empiriquement**, seulement estimées dans `model_metadata.json` (« ~85% precision estimee ») | 🟡 Partiel |
+| EF-05 | Routage par seuil (HITL) | Cas < seuil → revue humaine | ⚠️ **Vérifié par test manuel (étude utilisateur, §6)** : `create_ticket()` (`api/routers/tickets.py:46`) fixe `statut="En attente"` **sans condition**, pour tout ticket quel que soit son score de confiance (testé avec 0.78 et 0.91 : même statut que si confiance faible). Le seuil (0.60) et les indicateurs `auto_routed`/`low_confidence` sont bien calculés (`predictor.py`) mais **ne pilotent aucune branche de workflow** — ils ne servent qu'à décider si le RAG élargit sa recherche (`allow_fallback`). Il n'existe donc **aucun routage différencié réel** : tous les tickets suivent la même file de revue humaine, contrairement à ce que EF-05 énonce littéralement. H3 (couverture ≥60 % à ≥95 % de précision) reste une estimation jamais mesurée | 🟡 Partiel — la confiance est calculée et affichée, mais n'entraîne aucune automatisation de workflow |
 | EF-06 | Validation/correction agent | Catégorie finale + réponse + transition | `categorie_finale`, `commentaire_admin`, historisation, UI admin (Phase 9) | ✅ Atteint |
 | EF-07 | Journal d'audit | Chaque modification tracée | `TicketHistory` (champ, ancienne/nouvelle valeur, qui, quand) | ✅ Atteint |
 | EF-08 | Suivi côté client | Statut + solution visibles | Page détail client (Phase 9) | ✅ Atteint |
@@ -144,7 +144,7 @@ Détail dans [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) (Ch. 2). Points clé
 | EF-10 | Extraction d'entités | Entités affichées | Non implémenté (`equipement` = saisie utilisateur libre, aucune extraction NLP) | 🔴 Non fait |
 | EF-11 | Analyse priorité/urgence | Priorité suggérée | Non implémenté (`priorite_saisie` = saisie utilisateur uniquement) | 🔴 Non fait |
 | EF-12 | Analyse de sentiment | Indicateur de ton/urgence | Non implémenté | 🔴 Non fait |
-| EF-13 | Feedback utilisateur | Feedback persisté (👍/👎 + correction) | Non implémenté tel que spécifié : seuls `commentaire_client`/`commentaire_admin` (texte libre) existent, pas de mécanisme structuré exploitable pour ré-entraînement | 🔴 Non fait |
+| EF-13 | Feedback utilisateur | Feedback persisté (👍/👎 + correction) | ⚠️ **Trouvé en étude utilisateur (§6)** : l'UI client (`ticket-detail.html`/`.ts`) affiche bien des boutons 👍/👎 + un champ de correction, **et confirme "Merci pour votre retour !"** — mais `submitFeedbackComment()` ne fait qu'un `console.log()` (commentaire `// TODO: POST /api/v1/tickets/{id}/feedback quand l'endpoint sera créé`), rien n'est envoyé ni persisté. L'utilisateur croit son retour enregistré alors qu'il est perdu — plus trompeur qu'une simple absence de fonctionnalité | 🔴 Non fait — UI trompeuse (fausse confirmation), à corriger avant démo jury |
 | EF-14 | Génération LLM + citations | Réponse rédigée + sources, garde-fous | Citations implémentées, mais génération **template-based** (pas d'appel LLM réel) — `metrics/rag_eval.json` : Faithfulness=1.0/hallucination=0% *par construction* (rien n'est généré librement). ⚠️ À ne pas présenter comme « génération LLM » sans cette nuance | 🟡 Partiel — décision de périmètre à assumer explicitement |
 | EF-15 | Dashboard admin | KPIs (volumes, catégories, temps) | Service `dashboard/` dédié, conteneurisé (`docker-dashboard-1`), déployé | ✅ Atteint |
 | EF-16 | Intégration Power Automate (`/ingest`) | Endpoint fonctionnel et sécurisé | Réparé Phase 8, sécurisé par API key, 4 tests passent (`test_ingest_*`) | ✅ Atteint |
@@ -171,6 +171,65 @@ Détail dans [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) (Ch. 2). Points clé
 
 > Matrice à jour ; ré-exécuter les mesures ENF-01/03/04/05/10 si le split, le modèle ou le RAG
 > changent (Phase 13). Détail méthodologique du test de charge dans [TESTING.md](TESTING.md).
+
+---
+
+## 6. Étude utilisateur légère (Phase 12, 2026-07-05)
+
+### 6.1 Méthodologie et limite assumée
+Projet PFE solo, sans accès à de vrais utilisateurs externes à ce stade. Étude réalisée par
+l'auteur, endossant tour à tour les 3 personas (§2) sur le parcours cœur de métier (EF-01 à
+EF-08), contre l'application réellement déployée (Docker, `docker-api-1`/`docker-frontend-1`).
+**Limite technique de cette session** : l'outil de pilotage navigateur (extension Chrome) était
+indisponible (non connecté après plusieurs tentatives) — le parcours a donc été rejoué **au niveau
+API** (`curl`, chronométré) plutôt qu'en clics réels, complété par une **revue de code** des
+templates Angular (`ticket-detail.html`, `new-ticket.html`) pour juger de l'ergonomie réelle
+(libellés, états, messages). Cette méthode a un avantage inattendu : elle a permis de vérifier que
+le code affiché correspond à ce que l'API renvoie réellement, révélant des écarts invisibles à un
+simple clic (§6.3).
+
+### 6.2 Parcours testé (persona Client → Admin → Client)
+| Étape | Persona | Résultat | Temps |
+|---|---|---|---|
+| Login | Client | 200, JWT valide | 48 ms |
+| Création ticket (VPN) | Client | 200, catégorie *Réseau* prédite, confiance 0.78, solution RAG pertinente | 2,03 s |
+| Liste "mes tickets" | Client | 200, ticket visible avec statut "En attente" | 47 ms |
+| Liste globale | Admin | 200, ticket visible | 60 ms |
+| Transition "En attente"→"Prise en Charge" | Admin | 200 | — |
+| Transition "Prise en Charge"→"Résolu" + réponse | Admin | 200, historique loggé | — |
+| Transition invalide "Résolu"→"Prise en Charge" | Admin | **400 correctement rejeté**, message clair | — |
+| Consultation finale | Client | 200, statut "Résolu", réponse et date visibles | — |
+
+Golden path EF-01/02/03/04/06/07/08 **fonctionnellement confirmé de bout en bout**. Temps de
+création dominé par l'inférence (~2 s), cohérent avec R-13 (latence P95).
+
+### 6.3 Constats positifs
+- Formulaire client en langage naturel, non technique (« Quel est votre problème ? »,
+  « C'est urgent ? » avec choix 🙂/😟) — bonne adéquation à la persona *Client/Demandeur* (§2),
+  seulement 1 champ obligatoire.
+- Validation des transitions de statut robuste et lisible : rejet propre (400 + message explicite)
+  d'une transition illégale, formulaire admin qui désactive l'action et affiche
+  « Statut terminal — aucune transition possible » quand c'est pertinent.
+- Suggestions RAG cohérentes avec le contenu du ticket dans les deux essais (VPN → conseils VPN).
+- Historique d'audit lisible et correctement horodaté/attribué.
+
+### 6.4 Frictions et anomalies détectées
+| # | Constat | Sévérité | Détail |
+|---|---|---|---|
+| 1 | **Feedback client trompeur** | 🔴 Élevée | `ticket-detail.ts::submitFeedbackComment()` affiche « Merci pour votre retour ! » après un simple `console.log()` — rien n'est envoyé au serveur (`// TODO: POST .../feedback quand l'endpoint sera créé`). L'utilisateur croit son avis enregistré ; il est perdu. Voir EF-13 corrigé ci-dessus. À corriger avant toute démo devant jury (retirer le faux message ou implémenter l'endpoint). |
+| 2 | **Pas de routage différencié par confiance** | 🟡 Moyenne | Vérifié en pratique (§6.2) : tickets à confiance 0.78 et 0.91 suivent la même file "En attente" qu'un ticket à faible confiance. EF-05 corrigé ci-dessus. |
+| 3 | **Incohérence de nommage `priorite` / `priorite_saisie`** | 🟢 Faible | `TicketCreate.priorite` (entrée) vs `TicketOut.priorite_saisie` (sortie) désignent le même concept sous 2 noms différents. Un consommateur externe de l'API devinant le nom depuis la réponse (ex. via `/ingest` ou une future intégration) écrit silencieusement une valeur par défaut, sans erreur de validation. Le frontend Angular n'est pas affecté (utilise le bon nom). |
+| 4 | **Seuil de confiance obsolète dans `tickets.py`** | 🟢 Faible | `approve_ticket()`/`refresh_rag()` (`api/routers/tickets.py:123,195`) codent en dur `threshold = 0.40` (ancien seuil v1) pour décider du fallback RAG, alors que le seuil officiel est passé à 0.60 partout ailleurs (`params.yaml`, `predictor.py`, Phase 13). Incohérence, pas un bug bloquant. |
+
+### 6.5 Recommandations (proposées, non implémentées ici)
+1. Retirer le faux message de confirmation du feedback client ou implémenter l'endpoint
+   `POST /tickets/{id}/feedback` (EF-13) — priorité haute avant toute démo.
+2. Décider explicitement du comportement souhaité pour EF-05 : soit assumer qu'il n'y a pas
+   d'auto-routage (reformuler l'exigence dans le mémoire), soit l'implémenter (ex. statut
+   "Auto-résolu" si confiance ≥ 0.85 et catégorie stable).
+3. Aligner `tickets.py` sur le seuil unique 0.60 (`predictor.threshold`) au lieu de la valeur
+   0.40 codée en dur.
+4. Renommer `TicketCreate.priorite` en `priorite_saisie` (ou l'inverse) pour un contrat API cohérent.
 
 ---
 
