@@ -11,7 +11,7 @@
 | R-04 | **Hallucinations LLM** dans la génération RAG | Moyen | Élevé | Guardrails, citations obligatoires, Faithfulness (RAGAS), fallback sans génération | Ouvert |
 | R-05 | **Non-conformité RGPD** (données personnelles) | Moyen | Élevé | Anonymisation, registre de traitement, rétention (Phase 2) | Ouvert |
 | R-06 | **Délai 6 mois** insuffisant pour tout le périmètre | Moyen | Élevé | MoSCoW strict, backlog, une tâche à la fois, jalons mensuels | Ouvert |
-| R-07 | **Dette d'intégration front/back** (env vide, enum/modèle désalignés) | Élevé | Moyen | Contrat OpenAPI, Phase 9 dédiée | Ouvert |
+| R-07 | ~~Dette d'intégration front/back~~ (env vide, enum/modèle désalignés) | Élevé | Moyen | Corrigé Phase 9 (2026-07-04) : environment.ts, guards, contrat OpenAPI | **Clos** |
 | R-08 | ~~`/ingest` cassé~~ | Élevé | Faible | Corrigé Phase 8 (2026-07-03) | **Clos** |
 | R-09 | **Secrets exposés** (`SECRET_KEY=change-me`) | Moyen | Élevé | Gestion des secrets, `.env` hors git, rotation | Ouvert |
 | R-10 | **Coût/temps GPU** pour le fine-tuning | Faible | Moyen | LoRA (léger), GPU local, runs courts | Ouvert |

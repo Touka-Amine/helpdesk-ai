@@ -43,8 +43,8 @@ jobs:
       - name: Installer les dépendances
         run: pip install -r requirements.txt ruff
 
-      - name: Lint — ruff (src/ + api/ + tests/)
-        run: ruff check src/ api/ tests/ --ignore E501,E402
+      - name: Lint — ruff (src/ + api/ + tests/ + scripts/)
+        run: ruff check src/ api/ tests/ scripts/ --ignore E501,E402
 
       - name: Tests unitaires (pytest)
         # Exclut test_api_integration.py : nécessite models/best_pipeline.pkl,
