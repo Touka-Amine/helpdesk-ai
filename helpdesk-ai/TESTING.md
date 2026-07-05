@@ -1,7 +1,7 @@
 # TESTING.md — Stratégie et plan de tests
 
-> Squelette à enrichir (Phase 12). Source de vérité : [PLAN.md](PLAN.md). Dernière mise à jour :
-> *à la création*.
+> Source de vérité : [PLAN.md](PLAN.md). Dernière mise à jour : **2026-07-05** (Phase 12).
+> Résultats détaillés et traçabilité par exigence : [CADRAGE_SRS.md](CADRAGE_SRS.md) §5.
 
 ## 1. Pyramide de tests
 ```
@@ -19,33 +19,37 @@
 
 ## 3. Tests par couche
 
-### 3.1 Unitaires
-- [ ] `clean_text()` et `build_text_for_*` (cas accents, URLs, IP, vides)
-- [ ] Heuristiques (mots-clés → catégorie)
-- [ ] RAG : retrieval, seuils, fallback, déduplication
-- [ ] Schémas Pydantic (validation entrée/sortie)
+### 3.1 Unitaires (41 tests — `tests/test_*.py`)
+- [x] `clean_text()` et `build_text_for_*` (cas accents, URLs, IP, vides) — `test_preprocess.py` (16)
+- [x] Heuristiques (mots-clés → catégorie) — `test_heuristics.py` (8)
+- [x] RAG lexical : retrieval, seuils, fallback, déduplication — `test_rag_engine.py` (8)
+- [x] RAG hybride : fusion de scores, save/restore — `test_hybrid_engine.py` (9)
+- [ ] Schémas Pydantic (validation entrée/sortie) — pas de tests dédiés (couverts indirectement par les tests d'intégration)
 
-### 3.2 Intégration
-- [ ] `POST /tickets` → prédiction + RAG + persistance
-- [ ] Auth (register/login/JWT, RBAC)
-- [ ] Workflow d'approbation (transitions de statut valides/invalides)
-- [ ] Historique (`TicketHistory`)
-- [ ] `/ingest` (après correction)
+### 3.2 Intégration (18/18 tests — `test_api_integration.py`)
+- [x] `POST /tickets` → prédiction + RAG + persistance
+- [x] Auth (register/login/JWT, RBAC) — bloqué par bug bcrypt/passlib jusqu'au correctif Phase 12
+- [ ] Workflow d'approbation (transitions de statut valides/invalides) — pas de test dédié aux transitions
+- [ ] Historique (`TicketHistory`) — pas de test dédié
+- [x] `/ingest` (après correction) — 4 tests (API key, validation)
 
 ### 3.3 End-to-end
-- [ ] Création ticket (client) → validation (admin) → résolution → restitution (client)
+- [x] Test manuel navigateur (login client réel) — Phase 12, a révélé le bug bcrypt
+- [ ] Parcours complet automatisé création→validation→résolution→restitution — non automatisé, seulement manuel
 
 ### 3.4 Tests IA / modèle
-- [ ] Non-régression des métriques (F1-macro ≥ seuil)
-- [ ] Test de calibration (ECE sous seuil)
-- [ ] Tests RAG (RAGAS) sur jeu d'évaluation
+- [x] Métriques mesurées : F1-macro=0.685, rappel Sécurité=0.364 — ⚠️ non représentatif, voir R-14 dans [RISKS.md](RISKS.md) (split de test sans exemples Backup/Communication)
+- [ ] Test de calibration (ECE sous seuil) — non fait ; couverture/précision du seuil de routage restées à l'état d'estimation (EF-05)
+- [x] Tests RAG (RAGAS simplifié) sur jeu d'évaluation — `metrics/rag_eval.json` (Phase 7)
 
 ### 3.5 Performance
-- [ ] Latence prédiction P95 ≤ 300 ms
-- [ ] Latence RAG (avec génération) P95 ≤ 3 s
-- [ ] Débit cible sous charge
+- [x] Latence prédiction P95 ≤ 300 ms — **non atteint** (330ms séquentiel → 15s à c=20), cause identifiée, `scripts/load_test.py` + `metrics/load_test.json`
+- [ ] Latence RAG (avec génération) P95 ≤ 3 s — non isolable (génération template-based, pas de LLM externe)
+- [x] Débit sous charge — mesuré à 3 niveaux de concurrence (1/5/20), dégradation forte documentée
 
 ## 4. Critères de passage (gates)
-- Couverture unitaire cible : à définir (ex. ≥ 70 % sur `src/` et `api/services/`).
-- Toute exigence (SRS) a au moins un test associé (matrice de traçabilité).
-- Aucun test cassé avant de marquer une tâche « Terminé » (cf. DoD).
+- Couverture de tests : **74 % mesuré** (`pytest --cov=src --cov=api`, 59 tests) — cible ≥ 70 % **atteinte**.
+- Toute exigence (SRS) a au moins un test associé : voir matrice complète dans
+  [CADRAGE_SRS.md](CADRAGE_SRS.md) §5 — 9/17 EF et 6/14 ENF pleinement atteints, le reste
+  partiel/non fait/backlog (assumé, pas oublié).
+- Aucun test cassé avant de marquer une tâche « Terminé » (cf. DoD) — respecté tout au long de la Phase 12.

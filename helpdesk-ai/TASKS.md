@@ -1,7 +1,7 @@
 # TASKS.md — Tâches de la phase active
 
 > Tâches du sprint courant. Détail complet des checklists dans [PLAN.md](PLAN.md) (section 6).
-> Dernière mise à jour : **2026-07-04**. **Phase active : Phase 12 — Tests & validation.**
+> Dernière mise à jour : **2026-07-05**. **Phase active : Phase 12 — Tests & validation.**
 
 ## 🟢 En cours — Phase 12 : Tests & validation
 - [x] Tests unitaires NLP — `tests/test_preprocess.py` (16 tests : clean_text, simplify_*, build_text_*)
@@ -38,7 +38,16 @@
       (résout en `::1` IPv6 dans le conteneur) au lieu de `127.0.0.1` → Nginx (IPv4 only)
       jamais joignable, conteneur signalé "unhealthy" en permanence.
       **Optimisation renvoyée à la Phase 13** (augmenter workers, revoir pipeline d'inférence).
-- [ ] Matrice exigences → résultats
+- [x] **Matrice exigences → résultats** — [CADRAGE_SRS.md](CADRAGE_SRS.md) §5 : 17 EF + 14 ENF évalués
+      individuellement (9/17 EF atteints, 3 partiels, 4 non faits, 1 backlog ·
+      6/14 ENF atteints, 4 partiels, 4 non atteints). Mesures recalculées à neuf :
+      rappel *Sécurité* = **0.364** (cible ≥0.70), couverture de tests = **74 %** (cible ≥70 %, atteinte).
+      **Découverte critique en construisant la matrice** : `data/splits/test.csv` ne contient
+      **aucun exemple** des catégories *Backup* et *Communication* (0/356) — le F1-macro=0.685
+      rapporté n'est donc pas représentatif des 8 catégories du domaine. Ajouté comme risque
+      **R-14** dans [RISKS.md](RISKS.md) (Ouvert, P=Élevé/I=Élevé). Autre clarification actée :
+      EF-14 (« génération LLM ») est en réalité template-based, pas un vrai appel LLM — à nuancer
+      explicitement dans le mémoire. `TESTING.md` mis à jour (checkboxes reflètent l'état réel).
 - [ ] Étude utilisateur légère
 
 ## 🟡 En pause — Phase 13 : Optimisation (plan d'amélioration expert)

@@ -47,9 +47,9 @@ Architecture modulaire, pipeline reproductible (DVC), registre de modèles (MLfl
 ### 1.6 Critères de réussite (mesurables)
 | Critère | Cible | Mesuré (2026-07-05) |
 |---|---|---|
-| F1-macro classification (test dé-dupliqué) | ≥ 0.85 | 0.685 (heuristiques) — 🔴 non atteint |
-| Rappel classe *Sécurité* | ≥ 0.70 | — (à mesurer, Phase 12 matrice exigences) |
-| RAG : Context Recall | ≥ 0.80 | — (RAGAS simplifié, Phase 7) |
+| F1-macro classification (test dé-dupliqué) | ≥ 0.85 | 0.685 (heuristiques) — 🔴 non atteint ; ⚠️ mesure non représentative (split sans exemples Backup/Communication, voir R-14) |
+| Rappel classe *Sécurité* | ≥ 0.70 | 0.364 — 🔴 non atteint (matrice exigences, [CADRAGE_SRS.md](CADRAGE_SRS.md) §5) |
+| RAG : Context Recall | ≥ 0.80 | 0.028 — 🔴 non atteint (RAGAS simplifié, Phase 7) |
 | RAG : Faithfulness | ≥ 0.85 | 1.0 (template-based, Phase 7) — ✅ |
 | Latence prédiction P95 | ≤ 300 ms | 330 ms séquentiel, 15022 ms à 20 req. concurrentes — 🔴 non atteint (`metrics/load_test.json`, cause identifiée, optimisation Phase 13) |
 | Front ↔ back fonctionnel de bout en bout | Démo création→validation→résolution | ✅ Docker validé (Phase 11–12) |
@@ -79,7 +79,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | 🔴 | RGPD / anonymisation | 0 % | — | Données personnelles non traitées | Phase 2 (reliquat). |
 | ✅ | MLOps (pipeline DVC, MLflow registry) | 100 % | F1-macro heuristiques 0.685 tracké | Model cards à enrichir | Phase 10 : 4 stages DVC + MLflow. |
 | ✅ | Docker / CI-CD / monitoring | 100 % | `docker compose up` opérationnel | Pas de scan de sécurité d'image | Phase 11 : 3 services + CI 3 jobs. |
-| 🟡 | Tests automatisés | 55 % | 41 tests unitaires + 18/18 tests d'intégration (bug bcrypt corrigé) + test de charge | Pas de matrice exigences→résultats, pas d'étude utilisateur | Phase 12 en cours. |
+| 🟡 | Tests automatisés | 85 % | 41 tests unitaires + 18/18 tests d'intégration + test de charge + matrice exigences→résultats (couverture 74 %) | Pas d'étude utilisateur | Phase 12 en cours ; matrice = [CADRAGE_SRS.md](CADRAGE_SRS.md) §5. |
 | 🔴 | Mémoire PFE | 10 % | — | — | Phase 14 (continu). |
 
 ---
@@ -499,14 +499,14 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~78 %** (Phases 0–11 terminées, Phase 13 partiellement avancée) |
+| **Progression globale** | **~80 %** (Phases 0–11 terminées, Phase 12 quasi terminée, Phase 13 partiellement avancée) |
 | **Phase actuelle** | Phase 12 — Tests & validation (en cours) |
-| **Tâche actuelle** | Tests unitaires (41) + intégration (18/18) + charge écrits ; reste : matrice exigences→résultats, étude utilisateur |
+| **Tâche actuelle** | Tests unitaires (41) + intégration (18/18) + charge + matrice exigences→résultats faits ; reste : étude utilisateur légère |
 | **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · Phase 9 (Frontend connecté) · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) |
-| **Tâches restantes** | Phase 12 (matrice exigences, étude utilisateur) · Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 |
-| **Prochaine étape** | Phase 12 — matrice exigences→résultats |
-| **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · RGPD non traité · délai 6 mois · latence P95 non conforme sous charge (R-13, voir [RISKS.md](RISKS.md)) |
-| **Dette technique** | RGPD à faire (Phase 2 reliquat) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git) · pas de scan sécurité d'image Docker · LLM-as-a-Judge BACKLOG |
+| **Tâches restantes** | Phase 12 (étude utilisateur) · Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 |
+| **Prochaine étape** | Phase 12 — étude utilisateur légère |
+| **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · split de test sans exemples Backup/Communication (R-14) · RGPD non traité · délai 6 mois · latence P95 non conforme sous charge (R-13, voir [RISKS.md](RISKS.md)) |
+| **Dette technique** | RGPD à faire (Phase 2 reliquat) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git) · pas de scan sécurité d'image Docker · LLM-as-a-Judge BACKLOG · EF-14 « génération LLM » en réalité template-based (à nuancer au mémoire) |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (LLM-as-a-Judge, QLoRA, hybrid search avancé, re-ranking, agents, K8s…) |
 
 > **Calcul de la progression** : moyenne pondérée de l'avancement des 15 phases par leur priorité.

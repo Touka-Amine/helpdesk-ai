@@ -25,6 +25,9 @@ mlruns/
 # Jupyter checkpoints
 .ipynb_checkpoints/
 
+# pytest-cov
+.coverage
+
 # Frontend (Node / Angular)
 node_modules/
 frontend/node_modules/

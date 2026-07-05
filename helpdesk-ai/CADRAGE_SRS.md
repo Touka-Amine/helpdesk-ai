@@ -2,7 +2,8 @@
 
 > Document **exécutable** des exigences (Phase 1 du [PLAN.md](PLAN.md)). Version formelle et
 > traçable de la narration du [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) (Ch. 1–3).
-> Dernière mise à jour : **2026-06-26** · Statut : **v0.1 — première version à valider**.
+> Dernière mise à jour : **2026-07-05** · Statut : **v0.1** (sections 1–4 à valider) ·
+> section 5 (matrice exigences→résultats) mesurée en Phase 12.
 >
 > 🟠 **À valider par l'étudiant** : les éléments marqués 🟠 dépendent de décisions/contexte
 > (entreprise d'accueil, volumétrie réelle, date de soutenance) à confirmer.
@@ -120,20 +121,56 @@ Détail dans [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) (Ch. 2). Points clé
 
 ---
 
-## 5. Matrice de traçabilité (extrait)
+## 5. Matrice exigences → résultats (Phase 12, mesurée le 2026-07-05)
 
-| Exigence | Phase PLAN.md | Vérification (TESTING.md) |
-|---|---|---|
-| EF-03 / ENF-03, 04 | Phase 4–5 | Tests IA / non-régression métriques |
-| EF-04 / ENF-05 | Phase 6–7 | Évaluation RAGAS |
-| EF-05 / H3 | Phase 4 | Test de calibration + seuil |
-| EF-01,06,07,08 | Phase 8–9 | Tests d'intégration end-to-end |
-| EF-14 / ENF-06,08 | Phase 7–8 | Tests guardrails + panne LLM |
-| ENF-09 | Phase 2 | Audit RGPD |
-| ENF-11,12 | Phase 10–11 | CI : `dvc repro`, `docker-compose` |
-| ENF-01,02 | Phase 12 | Test de charge |
+> Remplace l'ancien extrait. Bilan : **9/17 EF atteints, 3 partiels, 4 non faits, 1 backlog** ·
+> **6/14 ENF atteints, 4 partiels, 4 non atteints**. Sources : `metrics/*.json`, `tests/`,
+> exécution `pytest --cov` du 2026-07-05. Risque PLAN.md Phase 12 explicitement anticipé
+> (« sur-interprétation liée à la redondance du corpus ») : voir ⚠️ ci-dessous, confirmé.
 
-> Matrice complète à maintenir au fil des phases (objectif : chaque EF/ENF couverte par ≥ 1 test).
+### Exigences fonctionnelles
+
+| ID | Exigence | Critère d'acceptation | Résultat mesuré | Statut |
+|---|---|---|---|---|
+| EF-01 | Authentification + rôles | Login JWT, accès restreint par rôle | Implémenté ; RBAC vérifié (`test_get_all_tickets_requires_admin` → 403 si non-admin) ; 18/18 tests d'intégration passent | ✅ Atteint |
+| EF-02 | Création de ticket | Ticket persisté, statut initial « En attente » | Testé (`test_create_ticket_avec_auth`/`sans_auth`) | ✅ Atteint |
+| EF-03 | Classification automatique | Catégorie + confiance retournées | Testé (`test_predict_vpn`/`microsoft`) ; qualité du résultat → voir ENF-03/04 | ✅ Atteint (fonctionnel) |
+| EF-04 | Suggestion résolution (RAG) | Top-k avec sources/citations | RAG hybride actif (sémantique+lexical), citations numérotées, score moyen sémantique 0.69 (`metrics/rag_eval.json`) | ✅ Atteint |
+| EF-05 | Routage par seuil (HITL) | Cas < seuil → revue humaine | Mécanisme en place (seuil ML=0.60, `params.yaml`) ; couverture/précision réelles (H3 : ≥60 % à ≥95 %) **jamais mesurées empiriquement**, seulement estimées dans `model_metadata.json` (« ~85% precision estimee ») | 🟡 Partiel |
+| EF-06 | Validation/correction agent | Catégorie finale + réponse + transition | `categorie_finale`, `commentaire_admin`, historisation, UI admin (Phase 9) | ✅ Atteint |
+| EF-07 | Journal d'audit | Chaque modification tracée | `TicketHistory` (champ, ancienne/nouvelle valeur, qui, quand) | ✅ Atteint |
+| EF-08 | Suivi côté client | Statut + solution visibles | Page détail client (Phase 9) | ✅ Atteint |
+| EF-09 | Résumé automatique | Résumé généré et affiché | Non implémenté | 🔴 Non fait |
+| EF-10 | Extraction d'entités | Entités affichées | Non implémenté (`equipement` = saisie utilisateur libre, aucune extraction NLP) | 🔴 Non fait |
+| EF-11 | Analyse priorité/urgence | Priorité suggérée | Non implémenté (`priorite_saisie` = saisie utilisateur uniquement) | 🔴 Non fait |
+| EF-12 | Analyse de sentiment | Indicateur de ton/urgence | Non implémenté | 🔴 Non fait |
+| EF-13 | Feedback utilisateur | Feedback persisté (👍/👎 + correction) | Non implémenté tel que spécifié : seuls `commentaire_client`/`commentaire_admin` (texte libre) existent, pas de mécanisme structuré exploitable pour ré-entraînement | 🔴 Non fait |
+| EF-14 | Génération LLM + citations | Réponse rédigée + sources, garde-fous | Citations implémentées, mais génération **template-based** (pas d'appel LLM réel) — `metrics/rag_eval.json` : Faithfulness=1.0/hallucination=0% *par construction* (rien n'est généré librement). ⚠️ À ne pas présenter comme « génération LLM » sans cette nuance | 🟡 Partiel — décision de périmètre à assumer explicitement |
+| EF-15 | Dashboard admin | KPIs (volumes, catégories, temps) | Service `dashboard/` dédié, conteneurisé (`docker-dashboard-1`), déployé | ✅ Atteint |
+| EF-16 | Intégration Power Automate (`/ingest`) | Endpoint fonctionnel et sécurisé | Réparé Phase 8, sécurisé par API key, 4 tests passent (`test_ingest_*`) | ✅ Atteint |
+| EF-17 | Notifications changement statut | — | Won't cette itération, assumé | ⚪ Backlog |
+
+### Exigences non-fonctionnelles
+
+| ID | Exigence | Cible | Résultat mesuré | Statut |
+|---|---|---|---|---|
+| ENF-01 | Latence prédiction P95 | ≤ 300 ms | 330 ms (c=1) → 1068 ms (c=5) → 15022 ms (c=20, 19% timeouts) — `metrics/load_test.json`. Cause identifiée (endpoint sync/CPU-bound, GIL, 2 workers) | 🔴 Non atteint — optimisation Phase 13 |
+| ENF-02 | Latence RAG+génération P95 | ≤ 3 s | Non isolée : génération template-based incluse dans `/predict`, pas de LLM externe séparé à mesurer distinctement | 🟡 Non mesuré isolément |
+| ENF-03 | F1-macro classification | ≥ 0.85 | **0.685** (heuristiques+ML) / 0.271 (ML seul) — `metrics/ml_eval.json`. ⚠️ **Mesure non représentative** : `data/splits/test.csv` (split anti-fuite GroupShuffleSplit par Titre, 46/12) ne contient **aucun exemple des catégories Backup et Communication** (0/356) — le F1-macro rapporté est calculé sur les classes réellement présentes, pas sur les 8 catégories du domaine | 🔴 Non atteint + fiabilité de la mesure à nuancer dans le mémoire |
+| ENF-04 | Rappel *Sécurité* | ≥ 0.70 | **0.364** (36,4 %), recalculé sur `models/best_pipeline.pkl` + `data/splits/test.csv` (33 exemples). Voir aussi la remarque ENF-03 sur la représentativité du test | 🔴 Non atteint |
+| ENF-05 | Context Recall / Faithfulness RAG | ≥ 0.80 / ≥ 0.85 | Context Recall = **0.028**, Faithfulness = 1.0 — `metrics/rag_eval.json`. Faithfulness=1.0 s'explique par la génération template-based (pas de génération libre → pas d'hallucination possible par construction), donc non comparable à un vrai score RAGAS sur LLM | 🔴 Non atteint (Context Recall) / 🟡 Faithfulness non représentatif |
+| ENF-06 | Dégradation gracieuse si LLM indispo | Repli sans génération | RAG sémantique → repli lexical automatique si FAISS indisponible (`predictor.py`, validé Phase 12 bug pyarrow) ; pas de LLM externe en prod donc le risque ne s'applique pas tel quel | ✅ Atteint (dans l'architecture actuelle) |
+| ENF-07 | JWT + RBAC + secrets non exposés | Aucun secret en clair | RBAC testé et fonctionnel ; mais `SECRET_KEY`/`INGEST_API_KEY` restent des placeholders en dur dans `api/config.py` (`change-this-in-production...`), à surcharger via `.env` — cf. [RISKS.md](RISKS.md) R-09 (Ouvert) | 🟡 Partiel |
+| ENF-08 | Protection injection de prompt | Entrées/sorties filtrées | Aucun test dédié ; risque limité en pratique tant qu'il n'y a pas d'appel LLM réel en production (génération template-based, EF-14) | 🟡 Non vérifié / risque latent si EF-14 évolue vers un vrai LLM |
+| ENF-09 | RGPD anonymisation | PII traitées | Non fait — reliquat Phase 2 toujours ouvert (`TASKS.md`) | 🔴 Non atteint |
+| ENF-10 | Couverture de tests | ≥ 70 % | **74 %** mesuré (`pytest --cov=src --cov=api`, 59 tests unitaires+intégration) | ✅ Atteint |
+| ENF-11 | Pipeline reproductible | `dvc repro` OK | Validé Phase 10 (`dvc repro --dry`, 4 stages) | ✅ Atteint |
+| ENF-12 | Déploiement conteneurisé | `docker-compose up` | Validé Phase 11-12 bout-en-bout (3 services healthy) | ✅ Atteint |
+| ENF-13 | Observabilité (logs + métriques IA) | Dashboards | Healthchecks + logs stdout/stderr (Docker), dashboard admin (EF-15) ; logs non structurés (pas de JSON logging) | 🟡 Partiel |
+| ENF-14 | Accessibilité RGAA/WCAG | Audit léger | Non audité | 🔴 Non fait |
+
+> Matrice à jour ; ré-exécuter les mesures ENF-01/03/04/05/10 si le split, le modèle ou le RAG
+> changent (Phase 13). Détail méthodologique du test de charge dans [TESTING.md](TESTING.md).
 
 ---
 

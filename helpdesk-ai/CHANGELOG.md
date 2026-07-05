@@ -5,6 +5,34 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 12 — Matrice exigences → résultats (2026-07-05)
+
+- `Ajouté` : [CADRAGE_SRS.md](CADRAGE_SRS.md) §5 réécrite en matrice complète — 17 exigences
+  fonctionnelles (EF) + 14 non-fonctionnelles (ENF) évaluées individuellement avec résultat mesuré
+  et statut, contre l'ancien "extrait" groupé par phase. Bilan : 9/17 EF atteints, 3 partiels,
+  4 non faits, 1 backlog assumé · 6/14 ENF atteints, 4 partiels, 4 non atteints.
+- `Ajouté` : `pytest-cov` dans `requirements.txt` — mesure de couverture (ENF-10) : **74 %**
+  (`src/` + `api/`, 59 tests), cible ≥70 % **atteinte**.
+- `Corrigé` : rappel de la classe *Sécurité* recalculé sur `models/best_pipeline.pkl` +
+  `data/splits/test.csv` : **0.364** (36,4 %), contre l'estimation "~20 %" documentée dans
+  `RISKS.md` depuis la Phase 1 (obsolète, antérieure aux corrections FORCE_RULES v1.1).
+- `Sécurité`/`Découvert` : **R-14** (nouveau risque, Ouvert, P/I=Élevé) — `data/splits/test.csv`
+  (split anti-fuite `GroupShuffleSplit` par Titre) ne contient **aucun exemple** des catégories
+  *Backup* et *Communication* (0/356 lignes). Le F1-macro=0.685 rapporté (ENF-03) est donc calculé
+  sur les classes réellement présentes dans le test, pas sur les 8 catégories du domaine —
+  risque de sur-interprétation explicitement anticipé par `PLAN.md` Phase 12, désormais confirmé
+  et documenté. Nécessite un split stratifié avant toute mesure F1-macro présentée comme fiable
+  au jury.
+- `Corrigé` : `TESTING.md` — le squelette de checklist était resté à 100 % non coché malgré
+  59 tests écrits et exécutés ; mis à jour pour refléter l'état réel (tests faits/manquants) et
+  renvoie vers la matrice `CADRAGE_SRS.md` §5.
+- `Clarifié` : EF-14 ("génération de réponse par LLM avec citations") repose en réalité sur une
+  génération **template-based** (citations numérotées, pas d'appel LLM) — Faithfulness=1.0 et
+  hallucination=0 % sont donc triviaux par construction, pas une preuve de fiabilité d'un vrai LLM.
+  À nuancer explicitement dans le mémoire pour ne pas survendre ce point au jury.
+
+---
+
 ### Phase 12 — Nettoyage : doublon `HelpDesk1.csv` à la racine (2026-07-05)
 
 - `Supprimé` : `helpdesk-ai/HelpDesk1.csv` — copie non suivie par git, identique octet pour octet
