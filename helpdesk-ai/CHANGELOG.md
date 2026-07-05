@@ -5,7 +5,52 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
-### Phase 12 — Tests & validation (2026-07-04, en cours)
+### Phase 12 — Test bout-en-bout Docker : 3 bugs de déploiement corrigés (2026-07-05)
+
+Premier lancement réel de `docker compose up --build` en conditions de connexion lente —
+a révélé des bugs invisibles en développement local (venv Windows).
+
+#### Bug 1 — RAG sémantique en fallback silencieux (dépendance manquante)
+- `Corrigé` : `docker/requirements-api.txt` — ajout de `pyarrow>=14.0.0`, requis par
+  `pandas.read_parquet()` dans `SemanticRAGEngine.load()`. Absent de l'image API car
+  installé seulement de façon transitive (via `streamlit`/`mlflow`) dans le venv de
+  développement, jamais déclaré explicitement.
+- `Corrigé` : `requirements.txt` — même ajout, pour ne pas dépendre d'une installation
+  transitive fragile en dehors de Docker.
+
+#### Bug 2 — Port 80 réservé par Windows
+- `Modifié` : `docker/docker-compose.yml` — le service `frontend` est remappé sur le port
+  hôte `8081` (`8081:80`) au lieu de `80:80`. Le port 80 est dans la plage d'exclusion
+  Hyper-V/WSL2 de Windows et/ou occupé par un service système (HTTP.sys), rendant le bind
+  impossible (`Ports are not available`).
+- `Modifié` : `CORS_ORIGINS` (docker-compose.yml) et `DEPLOYMENT.md` mis à jour en conséquence.
+
+#### Bug 3 — Noms de fichiers FAISS corrompus (mojibake Windows→Linux)
+- `Corrigé` : `src/rag/semantic_engine.py::save()` — les noms de fichiers d'index FAISS par
+  catégorie accentuée (ex. `index_cat_Réseau.faiss`) étaient mal encodés par l'API C++ de
+  FAISS sous Windows, produisant des fichiers physiques nommés en mojibake
+  (`index_cat_RÃ©seau.faiss`) alors que `metadata.json` référence le nom propre. Ce bug
+  était invisible en développement (écriture et lecture symétriquement corrompues sur la
+  même machine Windows) mais cassait totalement le chargement du RAG sémantique une fois
+  le dépôt cloné sous Linux (Docker) : `FileIOReader ... No such file or directory`, avec
+  fallback silencieux vers le RAG lexical. Fix : translittération ASCII via `unidecode()`
+  avant construction du nom de fichier — le nom de catégorie affiché (accentué) reste
+  inchangé partout ailleurs (metadata, logique applicative).
+- `Ajouté` : `src/pipeline/rag_semantic_build.py` — script de reconstruction du RAG
+  sémantique (miroir de `rag_build.py` pour le lexical), documenté comme processus manuel
+  (hors `dvc.yaml`, nécessite le modèle sentence-transformers).
+- `Corrigé` : artefacts `models/semantic_rag/` régénérés à partir des **1357 tickets**
+  actuels de `data/splits/rag.csv` (les anciens artefacts dataient d'avant la Phase 10 et
+  ne couvraient que 476 tickets — désynchronisés du RAG lexical).
+
+#### Validation
+- `docker compose up` (3 services) → tous healthy ; `GET /api/v1/health` → `rag_loaded: true` ;
+  `POST /api/v1/predict` → RAG **hybride** actif (1357 tickets, alpha=0.5) ; frontend et
+  dashboard répondent 200.
+
+---
+
+### Phase 12 — Tests & validation (2026-07-04)
 
 #### Tests unitaires (41 nouveaux tests)
 - `Ajouté` : `tests/test_heuristics.py` — 8 tests : FORCE_RULES (override, no-op si déjà

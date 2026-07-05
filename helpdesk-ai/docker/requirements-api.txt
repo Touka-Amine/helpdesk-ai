@@ -24,6 +24,7 @@ scikit-learn>=1.6.0
 nltk>=3.8.1
 unidecode>=1.3.7
 regex>=2023.12.25
+pyarrow>=14.0.0          # requis par pandas.read_parquet (SemanticRAGEngine.load)
 
 # RAG sémantique
 sentence-transformers>=2.2.2

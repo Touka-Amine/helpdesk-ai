@@ -20,6 +20,7 @@ import faiss
 import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer
+from unidecode import unidecode
 
 MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
 EMBED_DIM = 768
@@ -207,9 +208,14 @@ class SemanticRAGEngine:
         faiss.write_index(self._index, str(out / "index.faiss"))
 
         # Index par catégorie
+        # Nom de fichier translittéré en ASCII (unidecode) : les caractères accentués
+        # dans un chemin passé à faiss.write_index() sont mal encodés par l'API C++
+        # sous Windows (mojibake), rendant le fichier illisible une fois le dépôt
+        # cloné/checkouté sur Linux. Le nom de catégorie affiché reste inchangé
+        # (conservé tel quel comme clé de cat_meta et dans "categories").
         cat_meta = {}
         for cat, data in self._index_with_cat.items():
-            safe = cat.replace("/", "_").replace(" ", "_")
+            safe = unidecode(cat).replace("/", "_").replace(" ", "_")
             faiss.write_index(data["index"], str(out / f"index_cat_{safe}.faiss"))
             cat_meta[cat] = {"positions": data["positions"], "file": f"index_cat_{safe}.faiss"}
 

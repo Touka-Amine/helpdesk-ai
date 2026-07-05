@@ -74,7 +74,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | ✅ | Endpoint `/ingest` | Fonctionnel | Bonne | — | Réécrit Phase 8 : API key, ORM, validation Pydantic. |
 | ✅ | CamemBERT fine-tuné (LoRA) + benchmark | 100 % | F1=0.5685 | features enrichies | Phase 5 — à parité avec TF-IDF+heuristiques mais sans règles codées. Infrastructure/Sécurité à 0.00. |
 | ✅ | RAG sémantique (embeddings FR + FAISS) | 100 % | Score cosinus 0.93 vs 0.76 lexical (+0.17) | FAISS local | Phase 6 terminée. |
-| ✅ | RAG hybride (sémantique + lexical) | 100 % | score = 0.5×sém + 0.5×lex | Gain P@3/MRR à mesurer (notebook à ré-exécuter) | Phase 13 Semaine 2. |
+| ✅ | RAG hybride (sémantique + lexical) | 100 % | score = 0.5×sém + 0.5×lex | Gain P@3/MRR à mesurer (notebook à ré-exécuter) | Phase 13 Semaine 2. Validé bout-en-bout en Docker (Phase 12, 2026-07-05). |
 | ✅ | Évaluation RAG (RAGAS) + génération | 100 % | P@3 0.30 sém/0.42 lex, MRR 0.56/0.65 | RAGAS simplifié (template-based) | Phase 7 terminée. |
 | 🔴 | RGPD / anonymisation | 0 % | — | Données personnelles non traitées | Phase 2 (reliquat). |
 | ✅ | MLOps (pipeline DVC, MLflow registry) | 100 % | F1-macro heuristiques 0.685 tracké | Model cards à enrichir | Phase 10 : 4 stages DVC + MLflow. |

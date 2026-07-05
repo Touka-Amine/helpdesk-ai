@@ -10,18 +10,21 @@
 ```mermaid
 flowchart LR
   subgraph docker-compose
-    front["frontend :80\nAngular / Nginx"]
+    front["frontend :8081→80\nAngular / Nginx"]
     api["api :8000\nFastAPI / uvicorn"]
     dash["dashboard :8501\nStreamlit"]
     vol[(SQLite vol)]
   end
 
-  Navigateur -->|HTTP :80| front
+  Navigateur -->|HTTP :8081| front
   Navigateur -->|HTTP :8000| api
   front --> api
   dash --> api
   api --> vol
 ```
+
+> **Port hôte 8081 (pas 80)** : sur Windows, le port 80 est souvent réservé (plage
+> d'exclusion Hyper-V/WSL2 ou service système type IIS). 8081 évite ce conflit.
 
 > **Pas de Kubernetes** (ADR-005 — hors périmètre PFE). `docker compose` suffit pour la démo
 > et la soutenance.
@@ -33,7 +36,7 @@ flowchart LR
 | Service | Port | Image | Description |
 |---|---|---|---|
 | `api` | **8000** | `helpdesk-api:latest` | FastAPI + uvicorn (2 workers) |
-| `frontend` | **80** | `helpdesk-front:latest` | Angular build → Nginx |
+| `frontend` | **8081** → 80 | `helpdesk-front:latest` | Angular build → Nginx |
 | `dashboard` | **8501** | `helpdesk-dashboard:latest` | Streamlit |
 
 ---
@@ -59,7 +62,7 @@ cp .env.example .env
 docker compose -f docker/docker-compose.yml up --build
 
 # Accès :
-#   Frontend  → http://localhost
+#   Frontend  → http://localhost:8081
 #   API Swagger → http://localhost:8000/docs
 #   Dashboard → http://localhost:8501
 ```
@@ -112,7 +115,7 @@ Toutes les variables sont dans `.env` (copier depuis `.env.example`) :
 | `DB_URL` | URL SQLAlchemy | `sqlite:///./data/tickets.db` |
 | `CONFIDENCE_THRESHOLD` | Seuil auto-routage | `0.40` |
 | `ADMIN_EMAILS` | Emails admins (virgule) | — |
-| `CORS_ORIGINS` | Origines CORS (virgule) | `http://localhost,http://localhost:4200` |
+| `CORS_ORIGINS` | Origines CORS (virgule) | `http://localhost:8081,http://localhost:4200` |
 | `INGEST_API_KEY` | Clé API `/ingest` | *(à changer)* |
 
 ---

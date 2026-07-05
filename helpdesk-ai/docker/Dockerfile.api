@@ -18,6 +18,13 @@ WORKDIR /app
 
 # ── Dépendances Python (couche cachée) ────────────────────────────────────────
 COPY docker/requirements-api.txt requirements.txt
+
+# torch CPU-only en premier (~190 Mo) — pip installerait sinon la version CUDA
+# par défaut (~530 Mo, inutile ici : le conteneur n'a pas de GPU). C'est une
+# dépendance de sentence-transformers ; une fois satisfaite, l'étape suivante
+# ne la re-télécharge pas.
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ── Pré-téléchargement des données NLP (couche cachée) ────────────────────────

@@ -30,6 +30,7 @@ tinydb>=4.8.0                # NoSQL document store — tickets résolus archiv�
 # ── RAG sémantique ────────────────────────────────────────────────────────────
 sentence-transformers>=2.2.2    # paraphrase-multilingual-mpnet-base-v2 (768d)
 faiss-cpu>=1.7.4                # index vectoriel FAISS — retrieval sémantique
+pyarrow>=14.0.0                 # pandas.read_parquet (SemanticRAGEngine.load)
 
 # ── Sécurité / Auth ───────────────────────────────────────────────────────────
 python-jose>=3.3.0

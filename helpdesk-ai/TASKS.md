@@ -11,6 +11,11 @@
 - [x] Corrigé `tests/test_preprocess.py` cassé (`basic_clean` inexistant → `clean_text`)
 - [x] Corrigé 6 lints ruff préexistants (imports morts) + supprimé code mort `api/db/__init__.py::init_db` (bug F821 `User`/`pwd_ctx` non définis, jamais appelé — doublon mort de `api/db/database.py::init_db`)
 - [x] CI : `ci.yml` exécute désormais toute la suite unitaire (hors `test_api_integration.py`, qui nécessite `models/best_pipeline.pkl` absent du checkout car ignoré par git)
+- [x] **Test bout-en-bout via Docker réel** (`docker compose up`) — a révélé 3 bugs de déploiement corrigés :
+      1. `docker/requirements-api.txt` manquait `pyarrow` (requis par `pandas.read_parquet` dans `SemanticRAGEngine.load()`) → RAG tombait en fallback lexical silencieux
+      2. Port hôte `80` réservé par Windows (plage d'exclusion Hyper-V/WSL2 + service système) → `docker-compose.yml` frontend remappé sur `8081:80`
+      3. **Bug critique** `src/rag/semantic_engine.py::save()` : noms de fichiers FAISS par catégorie accentuée (`index_cat_Réseau.faiss`) mal encodés par l'API C++ FAISS sous Windows (mojibake `RÃ©seau`) — invisible sur Windows (écriture/lecture symétriquement corrompues) mais cassait tout sous Linux/Docker (`metadata.json` référence le nom propre, absent du disque). Corrigé avec `unidecode()` pour des noms de fichiers 100% ASCII. Artefacts `models/semantic_rag/` régénérés via nouveau script `src/pipeline/rag_semantic_build.py` avec les 1357 tickets actuels (au lieu de 476, obsolètes depuis Phase 10).
+      Validé : `docker compose up` → `GET /health` (rag_loaded=true), `/predict` → RAG hybride actif (1357 tickets), frontend + dashboard répondent 200.
 - [ ] Tests d'intégration end-to-end (existant Phase 8 : 14/18 passent, 4 skip bcrypt — non branché en CI, cf. ci-dessus)
 - [ ] Test de charge (latence P95)
 - [ ] Matrice exigences → résultats

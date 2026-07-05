@@ -5,9 +5,12 @@
 #   docker compose -f docker/docker-compose.yml up --build
 #
 # Services exposés :
-#   http://localhost      → Frontend Angular (Nginx)
+#   http://localhost:8081 → Frontend Angular (Nginx)
 #   http://localhost:8000 → API FastAPI (+ /docs pour Swagger)
 #   http://localhost:8501 → Dashboard Streamlit
+#
+# Note : port 80 non utilisé côté hôte — réservé par Windows (plage d'exclusion
+# Hyper-V/WSL2 + service système sur PID 4). 8081 choisi pour éviter tout conflit.
 # ──────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -26,7 +29,7 @@ services:
       # SQLite dans le volume (remplace la valeur du .env si présente)
       - DB_URL=sqlite:///./data/tickets.db
       # Accepter le frontend ET l'accès direct depuis le navigateur
-      - CORS_ORIGINS=http://localhost,http://localhost:4200,http://localhost:8000
+      - CORS_ORIGINS=http://localhost:8081,http://localhost:4200,http://localhost:8000
     volumes:
       # Persistance de la base SQLite entre les redémarrages
       - api-data:/app/data
@@ -47,7 +50,7 @@ services:
       dockerfile: docker/Dockerfile.front
     image: helpdesk-front:latest
     ports:
-      - "80:80"
+      - "8081:80"
     depends_on:
       api:
         condition: service_healthy
