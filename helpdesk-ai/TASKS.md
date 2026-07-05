@@ -17,7 +17,19 @@
       3. **Bug critique** `src/rag/semantic_engine.py::save()` : noms de fichiers FAISS par catégorie accentuée (`index_cat_Réseau.faiss`) mal encodés par l'API C++ FAISS sous Windows (mojibake `RÃ©seau`) — invisible sur Windows (écriture/lecture symétriquement corrompues) mais cassait tout sous Linux/Docker (`metadata.json` référence le nom propre, absent du disque). Corrigé avec `unidecode()` pour des noms de fichiers 100% ASCII. Artefacts `models/semantic_rag/` régénérés via nouveau script `src/pipeline/rag_semantic_build.py` avec les 1357 tickets actuels (au lieu de 476, obsolètes depuis Phase 10).
       Validé : `docker compose up` → `GET /health` (rag_loaded=true), `/predict` → RAG hybride actif (1357 tickets), frontend + dashboard répondent 200.
 - [ ] Tests d'intégration end-to-end (existant Phase 8 : 14/18 passent, 4 skip bcrypt — non branché en CI, cf. ci-dessus)
-- [ ] Test de charge (latence P95)
+- [x] **Test de charge (latence P95)** — `scripts/load_test.py`, résultats dans `metrics/load_test.json` :
+      | Concurrence | P95 | Erreurs |
+      |---|---|---|
+      | 1 (séquentiel) | 330 ms | 0% |
+      | 5 | 1068 ms | 0% |
+      | 20 | 15022 ms | 19% (timeouts) |
+      **Critère PFE (P95≤300ms) NON ATTEINT**, y compris en séquentiel (330ms, proche).
+      Cause : endpoint `/predict` synchrone + CPU-bound (encodage sentence-transformers,
+      `predict_proba`, recherche FAISS), limité par le GIL et 2 workers uvicorn seulement.
+      **4ᵉ bug corrigé au passage** : healthcheck `Dockerfile.front` utilisait `localhost`
+      (résout en `::1` IPv6 dans le conteneur) au lieu de `127.0.0.1` → Nginx (IPv4 only)
+      jamais joignable, conteneur signalé "unhealthy" en permanence.
+      **Optimisation renvoyée à la Phase 13** (augmenter workers, revoir pipeline d'inférence).
 - [ ] Matrice exigences → résultats
 - [ ] Étude utilisateur légère
 

@@ -1,0 +1,59 @@
+{
+  "endpoint": "POST /api/v1/predict",
+  "target_p95_ms": 300.0,
+  "environment": "Docker (helpdesk-api, 2 workers uvicorn, image helpdesk-api:latest)",
+  "scenarios": [
+    {
+      "label": "sequentiel (concurrence=1)",
+      "n_requests": 30,
+      "concurrency": 1,
+      "errors": 0,
+      "error_rate": 0.0,
+      "latency_ms": {
+        "min": 84.0,
+        "mean": 198.7,
+        "p50": 105.3,
+        "p95": 329.6,
+        "p99": 367.5,
+        "max": 1762.7
+      },
+      "target_p95_ms": 300.0,
+      "target_met": false
+    },
+    {
+      "label": "charge moderee (concurrence=5)",
+      "n_requests": 100,
+      "concurrency": 5,
+      "errors": 0,
+      "error_rate": 0.0,
+      "latency_ms": {
+        "min": 112.8,
+        "mean": 449.2,
+        "p50": 372.8,
+        "p95": 1067.6,
+        "p99": 1492.8,
+        "max": 1731.1
+      },
+      "target_p95_ms": 300.0,
+      "target_met": false
+    },
+    {
+      "label": "charge elevee (concurrence=20)",
+      "n_requests": 200,
+      "concurrency": 20,
+      "errors": 38,
+      "error_rate": 0.19,
+      "latency_ms": {
+        "min": 132.3,
+        "mean": 3883.8,
+        "p50": 1462.3,
+        "p95": 15022.3,
+        "p99": 15031.4,
+        "max": 15035.0
+      },
+      "target_p95_ms": 300.0,
+      "target_met": false
+    }
+  ],
+  "conclusion": "Critere PFE (P95<=300ms) NON ATTEINT dans les 3 scenarios, y compris sequentiel (P95=329.6ms, tres proche). Degradation forte avec la concurrence : P95 passe de 330ms (c=1) a 1068ms (c=5) a 15022ms (c=20), avec 19% d'erreurs (timeouts) a c=20. Cause identifiee : endpoint /predict synchrone (def, pas async def), CPU-bound (encodage sentence-transformers + predict_proba sklearn + recherche FAISS), limite par le GIL Python et seulement 2 workers uvicorn (Dockerfile.api). Optimisation (augmenter workers, revoir le pipeline d'inference) : Phase 13."
+}

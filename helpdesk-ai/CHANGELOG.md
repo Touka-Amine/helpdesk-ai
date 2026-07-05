@@ -5,6 +5,26 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 12 — Test de charge : critère P95 non atteint, cause identifiée (2026-07-05)
+
+- `Ajouté` : `scripts/load_test.py` — outil de test de charge autonome (requêtes concurrentes
+  via `ThreadPoolExecutor`, mesure P50/P95/P99, comparaison au critère PFE ≤300ms).
+- `Ajouté` : `metrics/load_test.json` — résultats de 3 scénarios (concurrence 1/5/20) contre
+  l'API Docker réelle. **Critère P95≤300ms non atteint** dans les 3 cas : 330ms (séquentiel,
+  proche) → 1068ms (concurrence 5) → 15022ms + 19% timeouts (concurrence 20). Cause
+  identifiée : endpoint `POST /api/v1/predict` synchrone (`def`, pas `async def`) et
+  CPU-bound (encodage sentence-transformers + `predict_proba` sklearn + recherche FAISS),
+  limité par le GIL Python et seulement 2 workers uvicorn (`Dockerfile.api`). Optimisation
+  (workers, pipeline d'inférence) renvoyée à la Phase 13, conformément à son périmètre.
+- `Corrigé` : `docker/Dockerfile.front` — healthcheck utilisait `wget http://localhost/`,
+  qui résout en `::1` (IPv6) dans le conteneur ; Nginx n'écoute qu'en IPv4 (`0.0.0.0:80`),
+  causant un échec systématique (`Connection refused`) et un statut "unhealthy" permanent
+  malgré un frontend fonctionnel. Remplacé par `http://127.0.0.1/`.
+- `Ajouté` : `requests>=2.31.0` dans `requirements.txt` — dépendance directe de
+  `scripts/load_test.py` (auparavant disponible seulement de façon transitive).
+
+---
+
 ### Phase 12 — Test bout-en-bout Docker : 3 bugs de déploiement corrigés (2026-07-05)
 
 Premier lancement réel de `docker compose up --build` en conditions de connexion lente —

@@ -12,11 +12,12 @@
 | R-05 | **Non-conformité RGPD** (données personnelles) | Moyen | Élevé | Anonymisation, registre de traitement, rétention (Phase 2) | Ouvert |
 | R-06 | **Délai 6 mois** insuffisant pour tout le périmètre | Moyen | Élevé | MoSCoW strict, backlog, une tâche à la fois, jalons mensuels | Ouvert |
 | R-07 | **Dette d'intégration front/back** (env vide, enum/modèle désalignés) | Élevé | Moyen | Contrat OpenAPI, Phase 9 dédiée | Ouvert |
-| R-08 | **`/ingest` cassé** | Élevé | Faible | Correction en Phase 8 | Ouvert |
+| R-08 | ~~`/ingest` cassé~~ | Élevé | Faible | Corrigé Phase 8 (2026-07-03) | **Clos** |
 | R-09 | **Secrets exposés** (`SECRET_KEY=change-me`) | Moyen | Élevé | Gestion des secrets, `.env` hors git, rotation | Ouvert |
 | R-10 | **Coût/temps GPU** pour le fine-tuning | Faible | Moyen | LoRA (léger), GPU local, runs courts | Ouvert |
 | R-11 | **Dérive documentaire** (PLAN.md non maintenu) | Moyen | Moyen | Étape 7 du workflow obligatoire à chaque tâche | Ouvert |
 | R-12 | **Panne de démo** à la soutenance | Faible | Élevé | Vidéo de secours, environnement figé Docker | Ouvert |
+| R-13 | **Latence P95 > 300ms sous charge concurrente** (mesuré : 330ms séquentiel → 15s à 20 requêtes simultanées, 19% timeouts) — endpoint `/predict` synchrone/CPU-bound limité par le GIL et 2 workers uvicorn | Élevé | Moyen | Mesuré en Phase 12 (`metrics/load_test.json`) ; optimisation (workers, pipeline async, cache) prévue Phase 13 | Ouvert |
 
 ---
 *Procédure : tout nouveau risque identifié en cours de tâche est ajouté ici + signalé dans le

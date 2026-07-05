@@ -45,16 +45,16 @@ Architecture modulaire, pipeline reproductible (DVC), registre de modèles (MLfl
 (sécurité, RGPD), conteneurisation Docker, CI/CD et observabilité IA.
 
 ### 1.6 Critères de réussite (mesurables)
-| Critère | Cible |
-|---|---|
-| F1-macro classification (test dé-dupliqué) | ≥ 0.85 |
-| Rappel classe *Sécurité* | ≥ 0.70 |
-| RAG : Context Recall | ≥ 0.80 |
-| RAG : Faithfulness | ≥ 0.85 |
-| Latence prédiction P95 | ≤ 300 ms |
-| Front ↔ back fonctionnel de bout en bout | Démo création→validation→résolution |
-| Conformité RGPD | Anonymisation + registre de traitement |
-| Mémoire + soutenance | Livrés dans les 6 mois |
+| Critère | Cible | Mesuré (2026-07-05) |
+|---|---|---|
+| F1-macro classification (test dé-dupliqué) | ≥ 0.85 | 0.685 (heuristiques) — 🔴 non atteint |
+| Rappel classe *Sécurité* | ≥ 0.70 | — (à mesurer, Phase 12 matrice exigences) |
+| RAG : Context Recall | ≥ 0.80 | — (RAGAS simplifié, Phase 7) |
+| RAG : Faithfulness | ≥ 0.85 | 1.0 (template-based, Phase 7) — ✅ |
+| Latence prédiction P95 | ≤ 300 ms | 330 ms séquentiel, 15022 ms à 20 req. concurrentes — 🔴 non atteint (`metrics/load_test.json`, cause identifiée, optimisation Phase 13) |
+| Front ↔ back fonctionnel de bout en bout | Démo création→validation→résolution | ✅ Docker validé (Phase 11–12) |
+| Conformité RGPD | Anonymisation + registre de traitement | 🔴 non fait (Phase 2 reliquat) |
+| Mémoire + soutenance | Livrés dans les 6 mois | En cours |
 
 ---
 
@@ -426,7 +426,10 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 ### Phase 12 — Tests & validation (en cours)
 - [x] Tests unitaires (NLP, RAG, services) — 41 tests : `test_preprocess.py`, `test_heuristics.py`, `test_rag_engine.py`, `test_hybrid_engine.py`
 - [x] Tests d'intégration end-to-end (Phase 8 : `test_api_integration.py`, 14/18 passent, 4 skip bcrypt — non branché en CI)
-- [ ] Test de charge (latence P95)
+- [x] Test de charge (latence P95) — `scripts/load_test.py` + `metrics/load_test.json` : critère
+      ≤300ms non atteint (330ms séquentiel → 15s à 20 req. concurrentes, 19% timeouts) ; cause
+      identifiée (endpoint synchrone/CPU-bound, GIL, 2 workers) ; optimisation → Phase 13.
+      A aussi révélé et corrigé un 4ᵉ bug de déploiement (healthcheck frontend `localhost`→IPv6).
 - [ ] Matrice exigences → résultats
 - [ ] Étude utilisateur légère
 
