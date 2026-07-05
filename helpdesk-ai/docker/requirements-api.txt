@@ -16,6 +16,7 @@ tinydb>=4.8.0
 # Auth
 python-jose>=3.3.0
 passlib[bcrypt]>=1.7.4
+bcrypt==4.0.1                # passlib 1.7.4 lit bcrypt.__about__.__version__, retire en bcrypt>=4.1
 
 # NLP / ML (inférence uniquement)
 pandas>=2.1.4

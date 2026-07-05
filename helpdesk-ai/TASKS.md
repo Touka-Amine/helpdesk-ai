@@ -16,7 +16,15 @@
       2. Port hôte `80` réservé par Windows (plage d'exclusion Hyper-V/WSL2 + service système) → `docker-compose.yml` frontend remappé sur `8081:80`
       3. **Bug critique** `src/rag/semantic_engine.py::save()` : noms de fichiers FAISS par catégorie accentuée (`index_cat_Réseau.faiss`) mal encodés par l'API C++ FAISS sous Windows (mojibake `RÃ©seau`) — invisible sur Windows (écriture/lecture symétriquement corrompues) mais cassait tout sous Linux/Docker (`metadata.json` référence le nom propre, absent du disque). Corrigé avec `unidecode()` pour des noms de fichiers 100% ASCII. Artefacts `models/semantic_rag/` régénérés via nouveau script `src/pipeline/rag_semantic_build.py` avec les 1357 tickets actuels (au lieu de 476, obsolètes depuis Phase 10).
       Validé : `docker compose up` → `GET /health` (rag_loaded=true), `/predict` → RAG hybride actif (1357 tickets), frontend + dashboard répondent 200.
-- [ ] Tests d'intégration end-to-end (existant Phase 8 : 14/18 passent, 4 skip bcrypt — non branché en CI, cf. ci-dessus)
+- [x] **Tests d'intégration end-to-end** (Phase 8 : `test_api_integration.py`) — **18/18 passent** (auparavant 14/18, 4 skip bcrypt). Voir bug bcrypt ci-dessous.
+- [x] **5ᵉ bug — auth cassée en conditions réelles** : test manuel de connexion client dans le navigateur (`http://localhost:8081`) → `"Email ou mot de passe incorrect"` pour les comptes seed. Logs conteneur : `AttributeError: module 'bcrypt' has no attribute '__about__'` → le seeding des utilisateurs (`_seed_users()`) échouait silencieusement à **chaque démarrage**, aucun compte (client/admin/système) n'était jamais créé en base. Cause : `passlib==1.7.4` lit `bcrypt.__about__.__version__`, supprimé depuis `bcrypt>=4.1`. Corrigé en épinglant `bcrypt==4.0.1` dans `requirements.txt` et `docker/requirements-api.txt`. Résout aussi la dette technique documentée (4 tests auth auparavant skippés → passent tous désormais).
+      Validé : `POST /auth/login` réussit pour `aminetoukabri@gmail.com` (client) et
+      `mohamedaminetoukabri089@gmail.com` (admin), tokens JWT corrects.
+      Note mineure (non bloquante) : `Dockerfile.api` lance `uvicorn --workers 2`, donc
+      `_seed_users()` s'exécute en parallèle dans les 2 processus au démarrage → un
+      avertissement bénin `UNIQUE constraint failed` apparaît dans les logs (l'un des deux
+      workers "perd" la course), rattrapé par le `try/except` existant sans conséquence sur
+      l'état final de la base.
 - [x] **Test de charge (latence P95)** — `scripts/load_test.py`, résultats dans `metrics/load_test.json` :
       | Concurrence | P95 | Erreurs |
       |---|---|---|
@@ -118,8 +126,8 @@
 ## ✅ Terminé — Phase 1 (SRS v0.1, 2026-06-26) · Phase 0 (gouvernance, 2026-06-26)
 
 ## 📌 Dette technique
-- Incompatibilité bcrypt 4.x + passlib 1.7.x → envisager `bcrypt<=3.2.2` ou migration argon2
-- Tests auth (register/login/tickets) skippés en TestClient — couverts en tests manuels uvicorn
+- ~~Incompatibilité bcrypt 4.x + passlib 1.7.x~~ **Corrigé Phase 12 (2026-07-05)** : `bcrypt==4.0.1` épinglé
+- ~~Tests auth skippés en TestClient~~ **Résolu** : 18/18 tests passent depuis le pin bcrypt
 - `helpdesk-ai/HelpDesk1.csv` en double — à traiter Phase 2 (DVC)
 
 ---

@@ -79,7 +79,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | 🔴 | RGPD / anonymisation | 0 % | — | Données personnelles non traitées | Phase 2 (reliquat). |
 | ✅ | MLOps (pipeline DVC, MLflow registry) | 100 % | F1-macro heuristiques 0.685 tracké | Model cards à enrichir | Phase 10 : 4 stages DVC + MLflow. |
 | ✅ | Docker / CI-CD / monitoring | 100 % | `docker compose up` opérationnel | Pas de scan de sécurité d'image | Phase 11 : 3 services + CI 3 jobs. |
-| 🟡 | Tests automatisés | 40 % | 41 tests unitaires + 18 tests d'intégration (14 passent, 4 skip bcrypt) | Pas de test de charge, pas de matrice exigences→résultats | Phase 12 en cours. |
+| 🟡 | Tests automatisés | 55 % | 41 tests unitaires + 18/18 tests d'intégration (bug bcrypt corrigé) + test de charge | Pas de matrice exigences→résultats, pas d'étude utilisateur | Phase 12 en cours. |
 | 🔴 | Mémoire PFE | 10 % | — | — | Phase 14 (continu). |
 
 ---
@@ -401,7 +401,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [x] Intégrer CamemBERT + RAG sémantique dans les services (`predictor.py` → SemanticRAGEngine FAISS, fallback lexical)
 - [x] Réparer et enregistrer `/ingest` (`api/routers/ingest.py` — auth API key, ORM, validation, utilisateur système)
 - [x] Refactor en couches (`ticket_service.py`, `rag_service.py`, `auth_middleware.py` remplis)
-- [x] Tests d'intégration API (`tests/test_api_integration.py` — 14/18 passent, 4 skippés bcrypt)
+- [x] Tests d'intégration API (`tests/test_api_integration.py` — 18/18 passent depuis correctif bcrypt Phase 12)
 
 ### Phase 9 — Frontend
 - [ ] Configurer `environment.ts`
@@ -425,11 +425,14 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 
 ### Phase 12 — Tests & validation (en cours)
 - [x] Tests unitaires (NLP, RAG, services) — 41 tests : `test_preprocess.py`, `test_heuristics.py`, `test_rag_engine.py`, `test_hybrid_engine.py`
-- [x] Tests d'intégration end-to-end (Phase 8 : `test_api_integration.py`, 14/18 passent, 4 skip bcrypt — non branché en CI)
+- [x] Tests d'intégration end-to-end (Phase 8 : `test_api_integration.py`, **18/18 passent** — non branché en CI, cf. note plus haut)
 - [x] Test de charge (latence P95) — `scripts/load_test.py` + `metrics/load_test.json` : critère
       ≤300ms non atteint (330ms séquentiel → 15s à 20 req. concurrentes, 19% timeouts) ; cause
       identifiée (endpoint synchrone/CPU-bound, GIL, 2 workers) ; optimisation → Phase 13.
       A aussi révélé et corrigé un 4ᵉ bug de déploiement (healthcheck frontend `localhost`→IPv6).
+- [x] **Test manuel navigateur** (connexion client réelle) — a révélé et corrigé un **5ᵉ bug** :
+      seeding utilisateurs cassé par incompatibilité `bcrypt`/`passlib` (aucun compte jamais créé
+      en base) → `bcrypt==4.0.1` épinglé, résout aussi la dette technique des 4 tests auth skippés.
 - [ ] Matrice exigences → résultats
 - [ ] Étude utilisateur légère
 
@@ -498,12 +501,12 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 |---|---|
 | **Progression globale** | **~78 %** (Phases 0–11 terminées, Phase 13 partiellement avancée) |
 | **Phase actuelle** | Phase 12 — Tests & validation (en cours) |
-| **Tâche actuelle** | Tests unitaires NLP/RAG écrits (41 tests) ; reste : test de charge, matrice exigences→résultats, étude utilisateur |
+| **Tâche actuelle** | Tests unitaires (41) + intégration (18/18) + charge écrits ; reste : matrice exigences→résultats, étude utilisateur |
 | **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · Phase 9 (Frontend connecté) · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) |
-| **Tâches restantes** | Phase 12 (suite) · Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 |
-| **Prochaine étape** | Phase 12 — test de charge (latence P95) puis matrice exigences→résultats |
-| **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · RGPD non traité · délai 6 mois · bcrypt 4.x + passlib 1.7.x incompatibles dans venv (voir [RISKS.md](RISKS.md)) |
-| **Dette technique** | RGPD à faire (Phase 2 reliquat) · Tests auth skippés en TestClient (bcrypt) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git) · LLM-as-a-Judge BACKLOG |
+| **Tâches restantes** | Phase 12 (matrice exigences, étude utilisateur) · Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 |
+| **Prochaine étape** | Phase 12 — matrice exigences→résultats |
+| **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · RGPD non traité · délai 6 mois · latence P95 non conforme sous charge (R-13, voir [RISKS.md](RISKS.md)) |
+| **Dette technique** | RGPD à faire (Phase 2 reliquat) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git) · pas de scan sécurité d'image Docker · LLM-as-a-Judge BACKLOG |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (LLM-as-a-Judge, QLoRA, hybrid search avancé, re-ranking, agents, K8s…) |
 
 > **Calcul de la progression** : moyenne pondérée de l'avancement des 15 phases par leur priorité.

@@ -5,6 +5,26 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 12 — Authentification cassée en Docker : incompatibilité bcrypt/passlib (2026-07-05)
+
+Test manuel de connexion client dans le navigateur (`http://localhost:8081`) → échec avec
+les identifiants seed documentés. Logs du conteneur API :
+`AttributeError: module 'bcrypt' has no attribute '__about__'`.
+
+- `Corrigé` : `requirements.txt` et `docker/requirements-api.txt` — épinglé `bcrypt==4.0.1`.
+  `passlib==1.7.4` (dernière release, non maintenue depuis 2020) lit
+  `bcrypt.__about__.__version__` pour détecter la version du backend ; cet attribut a été
+  retiré à partir de `bcrypt>=4.1`. Sans ce pin, `passlib[bcrypt]>=1.7.4` installe la
+  dernière version de `bcrypt` (5.0.0 constaté), rendant **tout hachage de mot de passe
+  défaillant** : `_seed_users()` échouait silencieusement à chaque démarrage du conteneur
+  (aucun compte démo/admin/système jamais créé en base), et l'inscription via `/auth/register`
+  aurait échoué de la même façon pour tout nouvel utilisateur.
+- `Résolu` : dette technique documentée de longue date (4 tests d'authentification skippés
+  dans `test_api_integration.py` faute de bcrypt fonctionnel dans l'environnement de test).
+  **18/18 tests passent désormais** (contre 14/18 + 4 skip auparavant).
+
+---
+
 ### Phase 12 — Test de charge : critère P95 non atteint, cause identifiée (2026-07-05)
 
 - `Ajouté` : `scripts/load_test.py` — outil de test de charge autonome (requêtes concurrentes
