@@ -5,6 +5,15 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Phase 12 — Nettoyage : doublon `HelpDesk1.csv` à la racine (2026-07-05)
+
+- `Supprimé` : `helpdesk-ai/HelpDesk1.csv` — copie non suivie par git, identique octet pour octet
+  à `data/raw/HelpDesk1.csv` (donnée gérée par DVC, `data/raw/*` gitignoré). Dette technique
+  notée depuis la Phase 0, traitée par anticipation plutôt qu'en Phase 2 : rien ne pointait sur
+  cette copie en priorité (`notebooks/data_quality_report.py` teste `data/raw/` en premier).
+
+---
+
 ### Phase 12 — Authentification cassée en Docker : incompatibilité bcrypt/passlib (2026-07-05)
 
 Test manuel de connexion client dans le navigateur (`http://localhost:8081`) → échec avec

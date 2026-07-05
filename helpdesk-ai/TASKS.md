@@ -128,7 +128,7 @@
 ## 📌 Dette technique
 - ~~Incompatibilité bcrypt 4.x + passlib 1.7.x~~ **Corrigé Phase 12 (2026-07-05)** : `bcrypt==4.0.1` épinglé
 - ~~Tests auth skippés en TestClient~~ **Résolu** : 18/18 tests passent depuis le pin bcrypt
-- `helpdesk-ai/HelpDesk1.csv` en double — à traiter Phase 2 (DVC)
+- ~~`helpdesk-ai/HelpDesk1.csv` en double~~ **Supprimé (2026-07-05)** : identique octet pour octet à `data/raw/HelpDesk1.csv` (géré par DVC) ; aucune référence de code ne pointait dessus en premier choix (fallback inutilisé dans `notebooks/data_quality_report.py`)
 
 ---
 *Règle : une seule grosse tâche à la fois. Cocher ici + dans PLAN.md + journaliser dans
