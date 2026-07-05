@@ -10,9 +10,13 @@
 - `Ajouté` : [CADRAGE_SRS.md](CADRAGE_SRS.md) §5 réécrite en matrice complète — 17 exigences
   fonctionnelles (EF) + 14 non-fonctionnelles (ENF) évaluées individuellement avec résultat mesuré
   et statut, contre l'ancien "extrait" groupé par phase. Bilan : 9/17 EF atteints, 3 partiels,
-  4 non faits, 1 backlog assumé · 6/14 ENF atteints, 4 partiels, 4 non atteints.
-- `Ajouté` : `pytest-cov` dans `requirements.txt` — mesure de couverture (ENF-10) : **74 %**
-  (`src/` + `api/`, 59 tests), cible ≥70 % **atteinte**.
+  4 non faits, 1 backlog assumé · 5/14 ENF atteints, 5 partiels, 4 non atteints.
+- `Ajouté` : `pytest-cov` dans `requirements.txt` — mesure de couverture (ENF-10) : **74 % en
+  local** (`src/` + `api/`, 59 tests, cible ≥70 % atteinte) mais **22 % seulement reproductible
+  en CI** (41 tests unitaires : `test_api_integration.py` exclu car `models/best_pipeline.pkl`
+  est gitignoré, absent d'un clone frais). Trouvé en auto-révision de cette même tâche : le
+  premier chiffre annoncé (74 %, "✅ Atteint") ne l'était qu'en local, pas vérifiable par la CI
+  telle que configurée — corrigé en 🟡 Partiel dans la matrice et `TESTING.md`.
 - `Corrigé` : rappel de la classe *Sécurité* recalculé sur `models/best_pipeline.pkl` +
   `data/splits/test.csv` : **0.364** (36,4 %), contre l'estimation "~20 %" documentée dans
   `RISKS.md` depuis la Phase 1 (obsolète, antérieure aux corrections FORCE_RULES v1.1).

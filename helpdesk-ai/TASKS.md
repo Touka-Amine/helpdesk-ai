@@ -40,8 +40,9 @@
       **Optimisation renvoyée à la Phase 13** (augmenter workers, revoir pipeline d'inférence).
 - [x] **Matrice exigences → résultats** — [CADRAGE_SRS.md](CADRAGE_SRS.md) §5 : 17 EF + 14 ENF évalués
       individuellement (9/17 EF atteints, 3 partiels, 4 non faits, 1 backlog ·
-      6/14 ENF atteints, 4 partiels, 4 non atteints). Mesures recalculées à neuf :
-      rappel *Sécurité* = **0.364** (cible ≥0.70), couverture de tests = **74 %** (cible ≥70 %, atteinte).
+      5/14 ENF atteints, 5 partiels, 4 non atteints). Mesures recalculées à neuf :
+      rappel *Sécurité* = **0.364** (cible ≥0.70), couverture de tests = **74 % en local mais
+      22 % seulement en CI** (`test_api_integration.py` exclu, `best_pipeline.pkl` gitignoré).
       **Découverte critique en construisant la matrice** : `data/splits/test.csv` ne contient
       **aucun exemple** des catégories *Backup* et *Communication* (0/356) — le F1-macro=0.685
       rapporté n'est donc pas représentatif des 8 catégories du domaine. Ajouté comme risque

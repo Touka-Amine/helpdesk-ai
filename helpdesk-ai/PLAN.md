@@ -79,7 +79,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | 🔴 | RGPD / anonymisation | 0 % | — | Données personnelles non traitées | Phase 2 (reliquat). |
 | ✅ | MLOps (pipeline DVC, MLflow registry) | 100 % | F1-macro heuristiques 0.685 tracké | Model cards à enrichir | Phase 10 : 4 stages DVC + MLflow. |
 | ✅ | Docker / CI-CD / monitoring | 100 % | `docker compose up` opérationnel | Pas de scan de sécurité d'image | Phase 11 : 3 services + CI 3 jobs. |
-| 🟡 | Tests automatisés | 85 % | 41 tests unitaires + 18/18 tests d'intégration + test de charge + matrice exigences→résultats (couverture 74 %) | Pas d'étude utilisateur | Phase 12 en cours ; matrice = [CADRAGE_SRS.md](CADRAGE_SRS.md) §5. |
+| 🟡 | Tests automatisés | 85 % | 41 tests unitaires + 18/18 tests d'intégration + test de charge + matrice exigences→résultats (couverture 74 % local / 22 % en CI) | Pas d'étude utilisateur ; couverture non vérifiée par la CI (best_pipeline.pkl gitignoré) | Phase 12 en cours ; matrice = [CADRAGE_SRS.md](CADRAGE_SRS.md) §5. |
 | 🔴 | Mémoire PFE | 10 % | — | — | Phase 14 (continu). |
 
 ---

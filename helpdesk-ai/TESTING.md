@@ -48,8 +48,11 @@
 - [x] Débit sous charge — mesuré à 3 niveaux de concurrence (1/5/20), dégradation forte documentée
 
 ## 4. Critères de passage (gates)
-- Couverture de tests : **74 % mesuré** (`pytest --cov=src --cov=api`, 59 tests) — cible ≥ 70 % **atteinte**.
+- Couverture de tests : **74 % en local** (`pytest --cov=src --cov=api`, 59 tests, cible ≥ 70 %
+  atteinte) mais **22 % seulement reproductible en CI** (41 tests unitaires : `test_api_integration.py`
+  exclu car `models/best_pipeline.pkl` est gitignoré et absent d'un clone frais). Le gate n'est
+  donc pas encore vérifié automatiquement par la CI telle que configurée aujourd'hui.
 - Toute exigence (SRS) a au moins un test associé : voir matrice complète dans
-  [CADRAGE_SRS.md](CADRAGE_SRS.md) §5 — 9/17 EF et 6/14 ENF pleinement atteints, le reste
+  [CADRAGE_SRS.md](CADRAGE_SRS.md) §5 — 9/17 EF et 5/14 ENF pleinement atteints, le reste
   partiel/non fait/backlog (assumé, pas oublié).
 - Aucun test cassé avant de marquer une tâche « Terminé » (cf. DoD) — respecté tout au long de la Phase 12.

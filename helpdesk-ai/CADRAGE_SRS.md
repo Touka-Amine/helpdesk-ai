@@ -124,7 +124,7 @@ Détail dans [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) (Ch. 2). Points clé
 ## 5. Matrice exigences → résultats (Phase 12, mesurée le 2026-07-05)
 
 > Remplace l'ancien extrait. Bilan : **9/17 EF atteints, 3 partiels, 4 non faits, 1 backlog** ·
-> **6/14 ENF atteints, 4 partiels, 4 non atteints**. Sources : `metrics/*.json`, `tests/`,
+> **5/14 ENF atteints, 5 partiels, 4 non atteints**. Sources : `metrics/*.json`, `tests/`,
 > exécution `pytest --cov` du 2026-07-05. Risque PLAN.md Phase 12 explicitement anticipé
 > (« sur-interprétation liée à la redondance du corpus ») : voir ⚠️ ci-dessous, confirmé.
 
@@ -163,7 +163,7 @@ Détail dans [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) (Ch. 2). Points clé
 | ENF-07 | JWT + RBAC + secrets non exposés | Aucun secret en clair | RBAC testé et fonctionnel ; mais `SECRET_KEY`/`INGEST_API_KEY` restent des placeholders en dur dans `api/config.py` (`change-this-in-production...`), à surcharger via `.env` — cf. [RISKS.md](RISKS.md) R-09 (Ouvert) | 🟡 Partiel |
 | ENF-08 | Protection injection de prompt | Entrées/sorties filtrées | Aucun test dédié ; risque limité en pratique tant qu'il n'y a pas d'appel LLM réel en production (génération template-based, EF-14) | 🟡 Non vérifié / risque latent si EF-14 évolue vers un vrai LLM |
 | ENF-09 | RGPD anonymisation | PII traitées | Non fait — reliquat Phase 2 toujours ouvert (`TASKS.md`) | 🔴 Non atteint |
-| ENF-10 | Couverture de tests | ≥ 70 % | **74 %** mesuré (`pytest --cov=src --cov=api`, 59 tests unitaires+intégration) | ✅ Atteint |
+| ENF-10 | Couverture de tests | ≥ 70 % | **74 %** en local (59 tests, nécessite `models/best_pipeline.pkl` gitignoré, absent d'un clone frais) mais **22 % seulement en CI** (41 tests unitaires, `test_api_integration.py` exclu faute du `.pkl`) — la cible n'est vérifiée qu'en local, pas par la CI telle qu'actuellement configurée | 🟡 Partiel — atteint en local, non vérifiable en CI |
 | ENF-11 | Pipeline reproductible | `dvc repro` OK | Validé Phase 10 (`dvc repro --dry`, 4 stages) | ✅ Atteint |
 | ENF-12 | Déploiement conteneurisé | `docker-compose up` | Validé Phase 11-12 bout-en-bout (3 services healthy) | ✅ Atteint |
 | ENF-13 | Observabilité (logs + métriques IA) | Dashboards | Healthchecks + logs stdout/stderr (Docker), dashboard admin (EF-15) ; logs non structurés (pas de JSON logging) | 🟡 Partiel |
