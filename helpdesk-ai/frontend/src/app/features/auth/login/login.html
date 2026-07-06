@@ -1,41 +1,108 @@
-<div class="login-wrapper">
-  <div class="login-card">
-    <div class="login-logo">
-      <span class="logo-icon">🎫</span>
-      <h1>Helpdesk<span class="logo-ai">AI</span></h1>
-    </div>
-    <h2>Connexion</h2>
-
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="field">
-        <label for="email">Adresse e-mail</label>
-        <input id="email" type="email" formControlName="email"
-               placeholder="votre@email.com" autocomplete="email" />
-        @if (form.get('email')?.touched && form.get('email')?.invalid) {
-          <span class="field-error">Email invalide.</span>
-        }
-      </div>
-
-      <div class="field">
-        <label for="password">Mot de passe</label>
-        <input id="password" type="password" formControlName="password"
-               placeholder="••••••••" autocomplete="current-password" />
-        @if (form.get('password')?.touched && form.get('password')?.invalid) {
-          <span class="field-error">Mot de passe requis.</span>
-        }
-      </div>
-
-      @if (errorMsg()) {
-        <div class="alert-error">{{ errorMsg() }}</div>
-      }
-
-      <button type="submit" class="btn-primary" [disabled]="loading()">
-        @if (loading()) { Connexion… } @else { Se connecter }
-      </button>
-    </form>
-
-    <p class="footer-link">
-      Pas encore de compte ? <a routerLink="/auth/register">Créer un compte</a>
-    </p>
+<div class="relative flex items-center justify-center min-h-screen bg-surface overflow-hidden px-4">
+  <!-- Décor -->
+  <div class="fixed inset-0 pointer-events-none z-0">
+    <div class="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-primary-container opacity-[0.03] blur-[120px] rounded-full"></div>
+    <div class="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-tertiary-container opacity-[0.03] blur-[120px] rounded-full"></div>
   </div>
+
+  <main class="relative z-10 w-full max-w-md">
+    <!-- Logo -->
+    <div class="flex flex-col items-center mb-stack-lg">
+      <div class="w-12 h-12 bg-primary-container rounded-xl flex items-center justify-center shadow-md mb-stack-md">
+        <span class="material-symbols-outlined text-on-primary-container text-[32px]" style="font-variation-settings: 'FILL' 1">support_agent</span>
+      </div>
+      <h1 class="font-headline-md text-headline-md text-primary tracking-tight">Helpdesk AI</h1>
+      <p class="font-body-md text-body-md text-on-surface-variant mt-1">Console d'Administration</p>
+    </div>
+
+    <!-- Carte de connexion -->
+    <div class="bg-surface-container-lowest border border-surface-variant rounded-xl shadow-sm p-stack-lg">
+      <div class="mb-stack-lg">
+        <h2 class="font-headline-sm text-headline-sm text-on-surface">Connexion</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">Veuillez entrer vos identifiants pour continuer.</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-stack-md">
+        <!-- Email -->
+        <div class="flex flex-col space-y-stack-sm">
+          <label class="font-label-md text-label-md text-on-surface-variant" for="email">Adresse e-mail</label>
+          <div class="relative group">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">mail</span>
+            <input
+              id="email" type="email" formControlName="email" autocomplete="email"
+              placeholder="nom@entreprise.fr"
+              class="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary-container/20 focus:border-primary transition-all" />
+          </div>
+          @if (form.get('email')?.touched && form.get('email')?.invalid) {
+            <span class="text-label-sm text-error">Email invalide.</span>
+          }
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="flex flex-col space-y-stack-sm">
+          <div class="flex justify-between items-center">
+            <label class="font-label-md text-label-md text-on-surface-variant" for="password">Mot de passe</label>
+            <span class="font-label-md text-label-md text-outline cursor-not-allowed" title="Bientôt disponible">Oublié ?</span>
+          </div>
+          <div class="relative group">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+            <input
+              [type]="showPassword() ? 'text' : 'password'" id="password" formControlName="password" autocomplete="current-password"
+              placeholder="••••••••"
+              class="w-full pl-10 pr-10 py-3 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary-container/20 focus:border-primary transition-all" />
+            <button type="button" (click)="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant transition-colors">
+              <span class="material-symbols-outlined">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          @if (form.get('password')?.touched && form.get('password')?.invalid) {
+            <span class="text-label-sm text-error">Mot de passe requis.</span>
+          }
+        </div>
+
+        @if (errorMsg()) {
+          <div class="text-body-md text-error bg-error-container/40 rounded-lg px-3 py-2">{{ errorMsg() }}</div>
+        }
+
+        <!-- Bouton -->
+        <button type="submit" [disabled]="loading()"
+          class="w-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm py-3.5 rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed">
+          @if (loading()) {
+            <span>Connexion…</span>
+          } @else {
+            <span>Se connecter</span>
+            <span class="material-symbols-outlined text-[20px]">login</span>
+          }
+        </button>
+      </form>
+
+      <!-- SSO — pas encore implementé côté backend, désactivé volontairement -->
+      <div class="relative my-stack-lg">
+        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-surface-variant"></div></div>
+        <div class="relative flex justify-center text-label-md"><span class="px-2 bg-surface-container-lowest text-outline">Bientôt disponible</span></div>
+      </div>
+      <button type="button" disabled title="Authentification Microsoft 365 — bientôt disponible"
+        class="w-full border border-outline-variant bg-surface text-on-surface font-body-md text-body-md py-3 rounded-lg flex items-center justify-center space-x-3 opacity-50 cursor-not-allowed">
+        <span class="material-symbols-outlined text-[20px]">badge</span>
+        <span>Authentification Microsoft 365</span>
+      </button>
+    </div>
+
+    <p class="text-center mt-stack-lg font-body-md text-body-md text-on-surface-variant">
+      Nouveau sur Helpdesk AI ?
+      <a routerLink="/auth/register" class="text-primary font-semibold hover:underline">Créer un compte</a>
+    </p>
+
+    <!-- Teaser IA (décoratif) -->
+    <div class="mt-12 p-stack-md bg-surface-container-high rounded-xl border-l-4 border-primary flex items-start space-x-stack-md">
+      <div class="p-2 bg-primary-container rounded-lg">
+        <span class="material-symbols-outlined text-on-primary-container text-[18px]" style="font-variation-settings: 'FILL' 1">auto_awesome</span>
+      </div>
+      <div>
+        <p class="font-label-md text-label-md text-primary uppercase tracking-wider mb-1">IA Copilote</p>
+        <p class="font-body-md text-body-md text-on-surface-variant leading-tight italic">
+          « Connectez-vous pour voir comment l'IA a déjà trié vos tickets prioritaires aujourd'hui. »
+        </p>
+      </div>
+    </div>
+  </main>
 </div>

@@ -18,8 +18,13 @@ export class Login {
   private auth    = inject(AuthService);
   private router  = inject(Router);
 
-  loading  = signal(false);
-  errorMsg = signal<string | null>(null);
+  loading      = signal(false);
+  errorMsg     = signal<string | null>(null);
+  showPassword = signal(false);
+
+  togglePassword(): void {
+    this.showPassword.update((v) => !v);
+  }
 
   form = this.fb.group({
     email:    ['', [Validators.required, Validators.email]],
