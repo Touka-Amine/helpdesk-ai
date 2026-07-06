@@ -1,48 +1,92 @@
-<div class="simple-form-wrapper">
-  <div class="simple-form-header">
-    <p class="simple-title">Besoin d'aide ?</p>
-    <p class="simple-subtitle">Décrivez votre problème simplement, on s'occupe du reste.</p>
-  </div>
+<div class="flex items-start justify-center">
+  <main class="w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/40 overflow-hidden">
+    <header class="px-container-padding py-stack-lg border-b border-outline-variant/40">
+      <h1 class="font-headline-md text-headline-md text-primary">Nouveau ticket</h1>
+      <p class="font-body-md text-body-md text-on-surface-variant mt-1">Décrivez votre problème simplement, avec vos propres mots.</p>
+    </header>
 
-  <form [formGroup]="form" (ngSubmit)="submit()" class="simple-form">
-    <div class="field-group">
-      <label>Quel est votre problème ? <span class="required">*</span></label>
-      <input type="text" formControlName="titre" placeholder="Ex : Mon imprimante ne marche plus" />
-      @if (form.get('titre')?.hasError('required') && form.get('titre')?.touched) {
-        <span class="field-error">Merci de décrire votre problème.</span>
-      }
-    </div>
-
-    <div class="field-group">
-      <label>Pouvez-vous nous en dire un peu plus ?</label>
-      <textarea formControlName="actions" rows="3" placeholder="Ex : ça affiche « hors ligne » depuis ce matin..."></textarea>
-    </div>
-
-    <div class="field-group">
-      <label>C'est urgent ?</label>
-      <div class="urgence-choice">
-        <div
-          class="urgence-option"
-          [class.selected]="form.get('priorite')?.value === 'Modéré'"
-          (click)="form.patchValue({ priorite: 'Modéré' })"
-        >🙂 Pas urgent</div>
-        <div
-          class="urgence-option urgent"
-          [class.selected]="form.get('priorite')?.value === 'Urgent'"
-          (click)="form.patchValue({ priorite: 'Urgent' })"
-        >😟 Ça bloque mon travail</div>
+    <form [formGroup]="form" (ngSubmit)="submit()" class="px-container-padding py-stack-lg flex flex-col gap-stack-lg">
+      <!-- Titre -->
+      <div class="flex flex-col gap-stack-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant" for="titre">
+          Quel est votre problème ? <span class="text-error">*</span>
+        </label>
+        <input id="titre" type="text" formControlName="titre" placeholder="Ex : Mon imprimante ne répond plus"
+          class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-lg font-body-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+        @if (form.get('titre')?.hasError('required') && form.get('titre')?.touched) {
+          <span class="text-label-sm font-label-sm text-error">Merci de décrire votre problème.</span>
+        }
       </div>
-    </div>
 
-    @if (errorMsg()) {
-      <div class="alert error">{{ errorMsg() }}</div>
-    }
-    @if (successMsg()) {
-      <div class="alert success">{{ successMsg() }}</div>
-    }
+      <!-- Équipement -->
+      <div class="flex flex-col gap-stack-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant">
+          Ça concerne quoi ? <span class="font-body-md text-body-md text-on-surface-variant/60">(optionnel)</span>
+        </label>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-stack-sm">
+          @for (opt of equipements; track opt.label) {
+            <button type="button" (click)="selectChip('equipement', opt.value)"
+              class="flex flex-col items-center gap-1 p-stack-md rounded-xl border transition-all text-center"
+              [ngClass]="form.get('equipement')?.value === opt.value
+                ? 'border-primary bg-surface-container-low ring-2 ring-primary'
+                : 'border-outline-variant hover:border-primary/50 bg-surface-container-low'">
+              <span class="material-symbols-outlined text-primary">{{ opt.icon }}</span>
+              <span class="font-label-sm text-label-sm text-on-surface">{{ opt.label }}</span>
+            </button>
+          }
+        </div>
+      </div>
 
-    <button type="submit" class="submit-btn" [disabled]="submitting()">
-      <i class="ti ti-send"></i> {{ submitting() ? 'Envoi...' : 'Envoyer ma demande' }}
-    </button>
-  </form>
+      <!-- Depuis quand -->
+      <div class="flex flex-col gap-stack-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant">
+          Depuis quand ? <span class="font-body-md text-body-md text-on-surface-variant/60">(optionnel)</span>
+        </label>
+        <div class="grid grid-cols-3 gap-stack-sm">
+          @for (opt of delais; track opt.label) {
+            <button type="button" (click)="selectChip('depuisQuand', opt.value)"
+              class="flex flex-col items-center gap-1 p-stack-md rounded-xl border transition-all text-center"
+              [ngClass]="form.get('depuisQuand')?.value === opt.value
+                ? 'border-primary bg-surface-container-low ring-2 ring-primary'
+                : 'border-outline-variant hover:border-primary/50 bg-surface-container-low'">
+              <span class="material-symbols-outlined text-primary">{{ opt.icon }}</span>
+              <span class="font-label-sm text-label-sm text-on-surface">{{ opt.label }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Détails -->
+      <div class="flex flex-col gap-stack-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant" for="details">
+          Voulez-vous ajouter des détails ? <span class="font-body-md text-body-md text-on-surface-variant/60">(optionnel)</span>
+        </label>
+        <textarea id="details" formControlName="details" rows="3" placeholder="Ex : ça affiche « hors ligne » depuis ce matin..."
+          class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-lg font-body-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none"></textarea>
+      </div>
+
+      @if (errorMsg()) {
+        <div class="text-body-md font-body-md text-error bg-error-container/40 rounded-lg px-3 py-2">{{ errorMsg() }}</div>
+      }
+      @if (successMsg()) {
+        <div class="text-body-md font-body-md text-green-700 bg-green-100 rounded-lg px-3 py-2">{{ successMsg() }}</div>
+      }
+
+      <footer class="flex items-center justify-end gap-stack-md pt-stack-md border-t border-outline-variant/40">
+        <button type="button" (click)="cancel()"
+          class="px-6 py-3 font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-highest rounded-lg transition-colors">
+          Annuler
+        </button>
+        <button type="submit" [disabled]="submitting()"
+          class="px-6 py-3 bg-primary text-on-primary font-label-md text-label-md rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+          @if (submitting()) {
+            <span>Envoi…</span>
+          } @else {
+            <span>Envoyer ma demande</span>
+            <span class="material-symbols-outlined text-[18px]">send</span>
+          }
+        </button>
+      </footer>
+    </form>
+  </main>
 </div>
