@@ -33,6 +33,10 @@ export class TicketApiService {
     return this.http.get<Ticket>(`${this.base}/${ticketId}`);
   }
 
+  submitFeedback(ticketId: number, vote: 'up' | 'down', comment: string = '') {
+    return this.http.post<Ticket>(`${this.base}/${ticketId}/feedback`, { vote, comment });
+  }
+
   // --- Espace admin ---
   getAllTickets() {
     return this.http.get<Ticket[]>(`${this.base}/admin/all`);

@@ -30,6 +30,8 @@ def ticket_to_dict(ticket: Ticket) -> dict:
         "commentaire_client" : getattr(ticket, "commentaire_client", "") or "",
         "commentaire_interne": getattr(ticket, "commentaire_admin", "") or "",
         "classification"     : "",
+        "feedback_vote"      : getattr(ticket, "feedback_vote", None),
+        "feedback_comment"   : getattr(ticket, "feedback_comment", "") or "",
     }
 
 

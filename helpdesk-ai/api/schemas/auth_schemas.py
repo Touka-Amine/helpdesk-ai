@@ -25,6 +25,12 @@ class UserOut(BaseModel):
     created_at: datetime | None = None
 
 
+class UserUpdate(BaseModel):
+    nom: str | None = None
+    prenom: str | None = None
+    filiale: str | None = None
+
+
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"

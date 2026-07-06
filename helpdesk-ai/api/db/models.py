@@ -42,6 +42,8 @@ class Ticket(Base):
     knowledge_rag = Column(Text, default="")
     commentaire_client = Column(Text, default="")
     commentaire_admin = Column(Text, default="")
+    feedback_vote = Column(String, nullable=True)
+    feedback_comment = Column(Text, default="")
     created_at = Column(DateTime, default=datetime.utcnow)
     resolved_at = Column(DateTime, nullable=True)
 

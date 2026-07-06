@@ -35,6 +35,8 @@ def _migrate_columns() -> None:
         "equipement"       : "TEXT",
         "commentaire_client": "TEXT",
         "commentaire_admin": "TEXT",
+        "feedback_vote"    : "TEXT",
+        "feedback_comment" : "TEXT",
         "solution_rag"     : "TEXT",
         "knowledge_rag"    : "TEXT",
         "resolved_at"      : "TEXT",

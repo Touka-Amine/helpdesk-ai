@@ -32,6 +32,14 @@ export class AuthService {
     return this.userSignal();
   }
 
+  updateLocalUser(patch: Partial<AuthUser>): void {
+    const current = this.userSignal();
+    if (!current) return;
+    const updated = { ...current, ...patch };
+    localStorage.setItem('user', JSON.stringify(updated));
+    this.userSignal.set(updated);
+  }
+
   getToken(): string | null {
     return localStorage.getItem('access_token');
   }

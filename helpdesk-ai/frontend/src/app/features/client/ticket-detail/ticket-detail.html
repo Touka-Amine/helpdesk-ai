@@ -1,139 +1,199 @@
 @if (loading()) {
-  <div class="loading">Chargement…</div>
+  <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Chargement…</p>
 } @else if (error()) {
-  <div class="error-box">{{ error() }}</div>
+  <p class="text-body-md font-body-md text-error text-center py-stack-lg">{{ error() }}</p>
 } @else if (ticket(); as t) {
-  <div class="detail-page">
-
-    <!-- En-tête -->
-    <div class="detail-header">
-      <button class="btn-back" (click)="goBack()">← Mes tickets</button>
-      <div class="header-right">
-        <span class="statut-badge"
-              [style.color]="statutCfg[t.statut]?.color"
-              [style.background]="statutCfg[t.statut]?.bg">
-          {{ statutCfg[t.statut]?.label ?? t.statut }}
-        </span>
-        <span class="ticket-id">#{{ t.id }}</span>
-      </div>
-    </div>
-
-    <h1 class="ticket-titre">{{ t.titre }}</h1>
-    <p class="ticket-meta">
-      Soumis le {{ formatDate(t.created_at) }}
-      @if (t.filiale) { · <strong>{{ t.filiale }}</strong> }
-      @if (t.priorite_saisie) { · Priorité : <strong>{{ t.priorite_saisie }}</strong> }
-    </p>
-
-    <!-- Description -->
-    <section class="card">
-      <h3 class="card-title">Description du problème</h3>
-      <p class="description-text">{{ t.description }}</p>
-    </section>
-
-    <!-- Classification IA -->
-    <section class="card">
-      <h3 class="card-title">Classification IA</h3>
-      <div class="classify-grid">
-        <div class="classify-item">
-          <span class="label">Catégorie</span>
-          <span class="value cat-badge">{{ t.categorie_finale || t.categorie_predite || '—' }}</span>
-        </div>
-        <div class="classify-item">
-          <span class="label">Confiance</span>
-          @if (confiance() != null) {
-            <div class="conf-bar-wrap">
-              <div class="conf-bar" [style.width.%]="confiance()"
-                   [style.background]="confianceColor()"></div>
+  <div class="flex flex-col lg:flex-row gap-gutter">
+    <!-- Colonne principale -->
+    <div class="flex-1 space-y-gutter min-w-0">
+      <!-- En-tête -->
+      <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-container-padding shadow-sm">
+        <div class="flex justify-between items-start mb-stack-lg gap-gutter">
+          <div class="space-y-stack-sm min-w-0">
+            <div class="flex items-center gap-3 flex-wrap">
+              <span class="px-3 py-1 rounded-full text-label-md font-label-md"
+                [style.background]="statutCfg[t.statut]?.bg" [style.color]="statutCfg[t.statut]?.color">
+                {{ statutCfg[t.statut]?.label ?? t.statut }}
+              </span>
+              <span class="text-label-sm font-label-sm text-outline uppercase tracking-wider">
+                #{{ t.id.toString().padStart(4, '0') }} · Créé le {{ formatDate(t.created_at) }}
+              </span>
             </div>
-            <span class="conf-pct" [style.color]="confianceColor()">{{ confiance() }}%</span>
-          } @else {
-            <span class="value">—</span>
-          }
+            <h1 class="font-headline-md text-headline-md text-on-surface">{{ t.titre }}</h1>
+            @if (t.filiale || t.priorite_saisie) {
+              <p class="font-label-sm text-label-sm text-on-surface-variant">
+                @if (t.filiale) { {{ t.filiale }} }
+                @if (t.filiale && t.priorite_saisie) { · }
+                @if (t.priorite_saisie) { Priorité : {{ t.priorite_saisie }} }
+              </p>
+            }
+          </div>
+          <button (click)="goBack()"
+            class="text-primary hover:bg-primary/10 px-4 py-2 rounded-lg transition-colors font-label-md text-label-md flex items-center gap-2 shrink-0">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            Mes tickets
+          </button>
         </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-stack-lg mb-stack-lg">
+          <div class="bg-surface-container p-stack-md rounded-lg border border-outline-variant/30">
+            <p class="text-label-sm font-label-sm text-outline mb-1">Catégorie identifiée par l'IA</p>
+            <div class="flex items-center gap-2 text-primary font-semibold">
+              <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+              <span class="font-body-md text-body-md">{{ t.categorie_finale || t.categorie_predite || '—' }}</span>
+            </div>
+          </div>
+          <div class="bg-surface-container p-stack-md rounded-lg border border-outline-variant/30">
+            <p class="text-label-sm font-label-sm text-outline mb-1">Confiance de l'IA</p>
+            @if (confiance() != null) {
+              <div class="space-y-1">
+                <div class="flex justify-between items-center text-label-md font-label-md">
+                  <span class="text-on-surface font-bold">{{ confiance() }}%</span>
+                </div>
+                <div class="w-full bg-outline-variant/40 h-1.5 rounded-full overflow-hidden">
+                  <div class="h-full transition-all duration-500" [style.width.%]="confiance()" [style.background]="confianceColor()"></div>
+                </div>
+              </div>
+            } @else {
+              <span class="font-body-md text-body-md text-on-surface-variant">—</span>
+            }
+          </div>
+        </div>
+
         @if (confiance() != null && confiance()! < 40) {
-          <p class="low-conf-warn">
-            ⚠️ Confiance faible — un agent IT vérifiera la classification manuellement.
+          <p class="text-label-sm font-label-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-stack-md">
+            ⚠️ Confiance faible — vérifiez que cette catégorie correspond bien à votre problème.
           </p>
         }
-      </div>
-    </section>
 
-    <!-- Solution RAG -->
-    @if (t.solution_rag) {
-      <section class="card rag-card">
-        <h3 class="card-title">💡 Solution suggérée</h3>
-        <p class="rag-solution">{{ t.solution_rag }}</p>
-
-        @if (t.knowledge_rag) {
-          <details class="rag-source">
-            <summary>Voir la source de connaissance</summary>
-            <blockquote class="rag-knowledge">{{ t.knowledge_rag }}</blockquote>
-          </details>
-        }
-      </section>
-    }
-
-    <!-- Réponse IT -->
-    @if (t.commentaire_client) {
-      <section class="card response-card">
-        <h3 class="card-title">💬 Réponse de l'équipe IT</h3>
-        <p>{{ t.commentaire_client }}</p>
-      </section>
-    }
-
-    <!-- Résolution -->
-    @if (t.date_resolution) {
-      <div class="resolved-banner">
-        ✅ Résolu le {{ formatDate(t.date_resolution) }}
-      </div>
-    }
-
-    <!-- Feedback utilisateur -->
-    @if (t.statut === 'Résolu' && !feedbackSent()) {
-      <section class="card feedback-card">
-        <h3 class="card-title">La solution vous a-t-elle aidé ?</h3>
-        <div class="feedback-btns">
-          <button class="btn-feedback up" [class.active]="feedback() === 'up'"
-                  (click)="sendFeedback('up')">👍 Oui</button>
-          <button class="btn-feedback down" [class.active]="feedback() === 'down'"
-                  (click)="sendFeedback('down')">👎 Non</button>
+        <div class="space-y-stack-sm">
+          <h4 class="font-label-md text-label-md text-outline">Description du problème</h4>
+          <p class="font-body-md text-body-md text-on-surface leading-relaxed whitespace-pre-line">{{ t.description }}</p>
         </div>
-        @if (showFeedbackForm()) {
-          <div class="feedback-comment">
-            <label>Précisez le problème (optionnel)</label>
-            <textarea rows="3" [value]="feedbackComment()"
-                      (input)="feedbackComment.set($any($event.target).value)"
-                      placeholder="La solution proposée ne correspond pas à mon problème…"></textarea>
-            <button class="btn-submit-fb" (click)="submitFeedbackComment()">Envoyer</button>
+      </section>
+
+      <!-- Solution IA -->
+      @if (t.solution_rag) {
+        <section class="bg-surface-container-lowest border-l-4 border-primary rounded-xl overflow-hidden shadow-sm">
+          <div class="p-container-padding space-y-stack-lg">
+            <div class="flex items-center gap-3 text-primary">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+              <h3 class="font-headline-sm text-headline-sm">Solution suggérée par l'IA</h3>
+            </div>
+            <p class="font-body-md text-body-md text-on-surface leading-relaxed">{{ t.solution_rag }}</p>
+
+            @if (t.knowledge_rag) {
+              <details class="group border border-outline-variant/40 rounded-lg overflow-hidden">
+                <summary class="flex items-center justify-between p-stack-md bg-surface-container cursor-pointer hover:bg-surface-container-high transition-colors list-none">
+                  <span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+                    <span class="material-symbols-outlined text-outline text-[18px]">menu_book</span>
+                    Voir la source
+                  </span>
+                  <span class="material-symbols-outlined text-outline group-open:rotate-180 transition-transform text-[18px]">expand_more</span>
+                </summary>
+                <div class="p-stack-md bg-surface-container-lowest border-t border-outline-variant/40">
+                  <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">{{ t.knowledge_rag }}</p>
+                </div>
+              </details>
+            }
+
+            <div class="p-3 bg-primary/5 rounded-lg flex gap-3 items-start border border-primary/10">
+              <span class="material-symbols-outlined text-primary text-[20px]">info</span>
+              <p class="text-label-sm font-label-sm text-primary leading-tight">
+                Cette réponse a été générée automatiquement. Un agent IT valide chaque ticket avant traitement.
+              </p>
+            </div>
           </div>
-        }
-      </section>
-    }
-    @if (feedbackSent()) {
-      <div class="feedback-thanks">Merci pour votre retour !</div>
-    }
+        </section>
+      }
 
-    <!-- Historique -->
-    @if (history().length) {
-      <section class="card">
-        <h3 class="card-title">Historique des modifications</h3>
-        <ul class="history-list">
-          @for (h of history(); track h.id) {
-            <li class="history-item">
-              <span class="hist-date">{{ formatDate(h.timestamp) }}</span>
-              <span class="hist-champ">{{ h.champ }}</span>
-              @if (h.ancienne_valeur) {
-                <span class="hist-old">{{ h.ancienne_valeur }}</span>
-                <span class="hist-arrow">→</span>
+      <!-- Feedback : dépend uniquement du statut, pas de la présence d'une solution RAG -->
+      @if (t.statut === 'Résolu') {
+        <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-container-padding shadow-sm">
+          @if (t.feedback_vote) {
+            <p class="font-label-md text-label-md text-on-surface flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">
+                {{ t.feedback_vote === 'up' ? 'thumb_up' : 'thumb_down' }}
+              </span>
+              Merci, votre retour a bien été enregistré.
+            </p>
+          } @else {
+            <div class="flex flex-col gap-stack-md">
+              <p class="font-label-md text-label-md text-on-surface">Cette réponse vous a-t-elle aidé ?</p>
+              <div class="flex gap-stack-md items-center">
+                <button (click)="selectFeedback('up')"
+                  class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border rounded-full transition-all text-label-md"
+                  [ngClass]="feedbackDraft() === 'up' ? 'border-primary text-primary' : 'border-outline-variant hover:border-primary hover:text-primary'">
+                  <span class="material-symbols-outlined text-[20px]">thumb_up</span>
+                  Oui, c'est utile
+                </button>
+                <button (click)="selectFeedback('down')"
+                  class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border rounded-full transition-all text-label-md"
+                  [ngClass]="feedbackDraft() === 'down' ? 'border-error text-error' : 'border-outline-variant hover:border-error hover:text-error'">
+                  <span class="material-symbols-outlined text-[20px]">thumb_down</span>
+                  Non
+                </button>
+              </div>
+
+              @if (showFeedbackForm()) {
+                <textarea [value]="feedbackComment()" (input)="feedbackComment.set($any($event.target).value)"
+                  class="w-full rounded-lg border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary outline-none text-body-md font-body-md h-20 resize-none p-stack-sm"
+                  placeholder="Un commentaire optionnel ?"></textarea>
+                <div class="flex justify-end">
+                  <button (click)="submitFeedback()" [disabled]="submittingFeedback()"
+                    class="bg-primary text-on-primary px-6 py-2 rounded-lg font-label-md text-label-md shadow-sm active:scale-95 transition-all disabled:opacity-60">
+                    {{ submittingFeedback() ? 'Envoi…' : 'Envoyer le feedback' }}
+                  </button>
+                </div>
               }
-              <span class="hist-new">{{ h.nouvelle_valeur }}</span>
-              <span class="hist-par">{{ h.par }}</span>
-            </li>
+            </div>
           }
-        </ul>
-      </section>
-    }
+        </section>
+      }
 
+      <!-- Réponse IT -->
+      @if (t.commentaire_client) {
+        <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-container-padding shadow-sm">
+          <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">💬 Réponse de l'équipe IT</h3>
+          <p class="font-body-md text-body-md text-on-surface leading-relaxed">{{ t.commentaire_client }}</p>
+        </section>
+      }
+
+      @if (t.date_resolution) {
+        <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl px-container-padding py-stack-md font-label-md text-label-md">
+          ✅ Résolu le {{ formatDate(t.date_resolution) }}
+        </div>
+      }
+    </div>
+
+    <!-- Colonne latérale -->
+    <aside class="w-full lg:w-[320px] shrink-0 space-y-gutter">
+      @if (history().length) {
+        <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+          <h4 class="font-label-md text-label-md text-outline mb-stack-lg uppercase tracking-wider">Historique</h4>
+          <div class="relative space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-outline-variant/30">
+            @for (h of history(); track h.id) {
+              <div class="relative pl-8">
+                <div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center z-10">
+                  <span class="material-symbols-outlined text-on-secondary-container text-[14px]">history</span>
+                </div>
+                <p class="text-label-sm font-label-sm text-outline">{{ formatDate(h.timestamp) }} · {{ h.par }}</p>
+                <p class="font-body-md text-body-md text-on-surface">
+                  {{ h.champ }}
+                  @if (h.ancienne_valeur) { : {{ h.ancienne_valeur }} → }
+                  {{ h.nouvelle_valeur }}
+                </p>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <button (click)="printTicket()"
+        class="w-full bg-surface-container-lowest border border-outline-variant hover:bg-surface-container transition-colors py-3 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">print</span>
+        Imprimer le ticket
+      </button>
+    </aside>
   </div>
 }

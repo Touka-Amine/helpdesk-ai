@@ -28,6 +28,8 @@ export interface Ticket {
   commentaire_client: string;
   commentaire_interne: string;
   classification: string;
+  feedback_vote: 'up' | 'down' | null;
+  feedback_comment: string;
 }
 
 export interface CreateTicketRequest {

@@ -21,10 +21,10 @@ export class TicketDetailClient implements OnInit {
   loading = signal(true);
   error   = signal<string | null>(null);
 
-  feedback        = signal<'up' | 'down' | null>(null);
-  feedbackSent    = signal(false);
-  showFeedbackForm = signal(false);
-  feedbackComment = signal('');
+  feedbackDraft       = signal<'up' | 'down' | null>(null);
+  showFeedbackForm    = signal(false);
+  feedbackComment     = signal('');
+  submittingFeedback  = signal(false);
 
   statutCfg = STATUT_CFG;
 
@@ -59,20 +59,27 @@ export class TicketDetailClient implements OnInit {
     });
   }
 
-  sendFeedback(vote: 'up' | 'down'): void {
-    this.feedback.set(vote);
-    if (vote === 'down') {
-      this.showFeedbackForm.set(true);
-    } else {
-      this.feedbackSent.set(true);
-    }
+  selectFeedback(vote: 'up' | 'down'): void {
+    this.feedbackDraft.set(vote);
+    this.showFeedbackForm.set(true);
   }
 
-  submitFeedbackComment(): void {
-    // TODO: POST /api/v1/tickets/{id}/feedback quand l'endpoint sera créé
-    console.log('Feedback:', this.feedback(), '|', this.feedbackComment());
-    this.showFeedbackForm.set(false);
-    this.feedbackSent.set(true);
+  submitFeedback(): void {
+    const t = this.ticket();
+    const vote = this.feedbackDraft();
+    if (!t || !vote) return;
+
+    this.submittingFeedback.set(true);
+    this.ticketApi.submitFeedback(t.id, vote, this.feedbackComment().trim()).subscribe({
+      next: (updated) => {
+        this.ticket.set(updated);
+        this.submittingFeedback.set(false);
+        this.showFeedbackForm.set(false);
+      },
+      error: () => {
+        this.submittingFeedback.set(false);
+      },
+    });
   }
 
   formatDate(iso: string | null): string {
@@ -81,6 +88,10 @@ export class TicketDetailClient implements OnInit {
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
     });
+  }
+
+  printTicket(): void {
+    window.print();
   }
 
   goBack(): void {

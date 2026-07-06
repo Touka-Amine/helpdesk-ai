@@ -1,55 +1,145 @@
-<div class="profile-wrapper">
-  <div class="avatar-section">
-    <div class="avatar-circle">
-      @if (photoUrl()) {
-        <img [src]="photoUrl()" alt="Photo de profil" />
-      } @else {
-        {{ initials() }}
-      }
+@if (loading()) {
+  <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Chargement…</p>
+} @else {
+  <div class="max-w-5xl mx-auto">
+    <div class="mb-stack-lg">
+      <h1 class="font-headline-md text-headline-md text-on-surface">Paramètres du profil</h1>
+      <p class="font-body-md text-body-md text-on-surface-variant mt-1">Gérez vos informations personnelles.</p>
     </div>
-    <div>
-      <label class="change-photo-btn">
-        <i class="ti ti-camera"></i> Changer la photo
-        <input type="file" accept="image/png, image/jpeg" hidden (change)="onPhotoSelected($event)" />
-      </label>
-      <div class="photo-hint">JPG ou PNG, 2 Mo max</div>
+
+    <div class="grid grid-cols-12 gap-gutter">
+      <!-- Informations personnelles -->
+      <form [formGroup]="form" (ngSubmit)="save()"
+        class="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-stack-lg shadow-sm">
+        <div class="flex items-center gap-base mb-stack-lg">
+          <span class="material-symbols-outlined text-primary">person</span>
+          <h3 class="font-headline-sm text-headline-sm text-on-surface">Informations personnelles</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-stack-lg">
+          <div class="space-y-stack-sm">
+            <label class="font-label-md text-label-md text-on-surface-variant">Prénom</label>
+            <input type="text" formControlName="prenom"
+              class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+          </div>
+          <div class="space-y-stack-sm">
+            <label class="font-label-md text-label-md text-on-surface-variant">Nom</label>
+            <input type="text" formControlName="nom"
+              class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+          </div>
+          <div class="space-y-stack-sm">
+            <label class="font-label-md text-label-md text-on-surface-variant">Adresse e-mail</label>
+            <input type="email" [value]="email()" disabled
+              class="w-full bg-surface-container border border-outline-variant rounded-lg px-4 py-2.5 text-body-md font-body-md text-on-surface-variant cursor-not-allowed" />
+            <p class="font-label-sm text-label-sm text-outline">La modification de l'e-mail n'est pas encore disponible.</p>
+          </div>
+          <div class="space-y-stack-sm">
+            <label class="font-label-md text-label-md text-on-surface-variant">Filiale</label>
+            <select formControlName="filiale"
+              class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 text-body-md font-body-md focus:ring-2 focus:ring-primary outline-none appearance-none">
+              @for (f of filiales; track f) {
+                <option [value]="f">{{ f }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        @if (saveMsg()) {
+          <div class="mt-stack-lg text-body-md font-body-md text-green-700 bg-green-100 rounded-lg px-3 py-2">{{ saveMsg() }}</div>
+        }
+
+        <div class="flex justify-end mt-stack-lg">
+          <button type="submit" [disabled]="saving()"
+            class="px-stack-lg py-2.5 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:opacity-90 active:scale-95 transition-all disabled:opacity-60">
+            {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+
+      <!-- Avatar -->
+      <div class="col-span-12 lg:col-span-4 bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-stack-lg shadow-sm flex flex-col items-center text-center">
+        <div class="w-32 h-32 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-headline-md font-headline-md mb-stack-md">
+          {{ initials() }}
+        </div>
+        <h4 class="font-headline-sm text-headline-sm text-on-surface">{{ form.get('prenom')?.value }} {{ form.get('nom')?.value }}</h4>
+        <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Client</p>
+        <button type="button" disabled title="Bientôt disponible"
+          class="mt-stack-lg px-4 py-2 border border-outline-variant rounded-lg text-on-surface-variant/50 font-label-md text-label-md cursor-not-allowed flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+          Changer la photo
+        </button>
+      </div>
+
+      <!-- Mot de passe (bientôt disponible) -->
+      <div class="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-stack-lg shadow-sm">
+        <div class="flex items-center justify-between mb-stack-lg">
+          <div class="flex items-center gap-base">
+            <span class="material-symbols-outlined text-primary">lock</span>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Changer le mot de passe</h3>
+          </div>
+          <span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">Bientôt disponible</span>
+        </div>
+        <div class="space-y-stack-md max-w-lg opacity-60">
+          <div class="space-y-stack-sm">
+            <label class="font-label-md text-label-md text-on-surface-variant">Mot de passe actuel</label>
+            <input disabled type="password" placeholder="••••••••••••"
+              class="w-full bg-surface-container border border-outline-variant rounded-lg px-4 py-2.5 text-body-md font-body-md cursor-not-allowed" />
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+            <div class="space-y-stack-sm">
+              <label class="font-label-md text-label-md text-on-surface-variant">Nouveau mot de passe</label>
+              <input disabled type="password" placeholder="••••••••••••"
+                class="w-full bg-surface-container border border-outline-variant rounded-lg px-4 py-2.5 text-body-md font-body-md cursor-not-allowed" />
+            </div>
+            <div class="space-y-stack-sm">
+              <label class="font-label-md text-label-md text-on-surface-variant">Confirmer le mot de passe</label>
+              <input disabled type="password" placeholder="••••••••••••"
+                class="w-full bg-surface-container border border-outline-variant rounded-lg px-4 py-2.5 text-body-md font-body-md cursor-not-allowed" />
+            </div>
+          </div>
+          <button disabled class="px-stack-lg py-2.5 bg-outline-variant text-on-surface-variant rounded-lg font-label-md text-label-md cursor-not-allowed">
+            Mettre à jour le mot de passe
+          </button>
+        </div>
+      </div>
+
+      <!-- Notifications (bientôt disponible) -->
+      <div class="col-span-12 lg:col-span-4 bg-surface-container-lowest rounded-xl border border-outline-variant/40 p-stack-lg shadow-sm">
+        <div class="flex items-center justify-between mb-stack-md">
+          <div class="flex items-center gap-base">
+            <span class="material-symbols-outlined text-primary">notifications_active</span>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Notifications</h3>
+          </div>
+        </div>
+        <span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full inline-block mb-stack-md">Bientôt disponible</span>
+        <div class="space-y-gutter opacity-60">
+          <div class="flex items-center justify-between">
+            <p class="font-label-md text-label-md text-on-surface">Email de nouveau ticket</p>
+            <input disabled type="checkbox" class="w-10 h-5 rounded-full bg-outline-variant appearance-none cursor-not-allowed" />
+          </div>
+          <div class="flex items-center justify-between">
+            <p class="font-label-md text-label-md text-on-surface">Résumé hebdomadaire</p>
+            <input disabled type="checkbox" class="w-10 h-5 rounded-full bg-outline-variant appearance-none cursor-not-allowed" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone de danger (bientôt disponible) -->
+      <div class="col-span-12 bg-error-container/10 border border-error/20 rounded-xl p-stack-lg">
+        <div class="flex items-center justify-between mb-stack-md">
+          <div class="flex items-center gap-base">
+            <span class="material-symbols-outlined text-error">warning</span>
+            <h3 class="font-headline-sm text-headline-sm text-error">Zone de danger</h3>
+          </div>
+          <span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">Bientôt disponible</span>
+        </div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-gutter">
+          <p class="font-body-md text-body-md text-on-surface-variant">La suppression de compte n'est pas encore disponible.</p>
+          <button disabled
+            class="px-stack-lg py-2.5 bg-outline-variant text-on-surface-variant rounded-lg font-label-md text-label-md cursor-not-allowed whitespace-nowrap">
+            Supprimer le compte
+          </button>
+        </div>
+      </div>
     </div>
   </div>
-
-  <form [formGroup]="form" (ngSubmit)="save()" class="profile-form">
-    <div class="field-group">
-      <label>Nom complet</label>
-      <input type="text" formControlName="nom" />
-    </div>
-
-    <div class="field-group">
-      <label><i class="ti ti-mail"></i> Email</label>
-      <input type="email" formControlName="email" />
-      @if (form.get('email')?.hasError('email')) {
-        <span class="field-error">Email invalide.</span>
-      }
-    </div>
-
-    <div class="field-group">
-      <label><i class="ti ti-phone"></i> Numéro de téléphone</label>
-      <input type="tel" formControlName="telephone" placeholder="+216 XX XXX XXX" />
-    </div>
-
-    <div class="field-group">
-      <label><i class="ti ti-building"></i> Filiale</label>
-      <select formControlName="filiale">
-        @for (f of filiales; track f) {
-          <option [value]="f">{{ f }}</option>
-        }
-      </select>
-    </div>
-
-    @if (saveMsg()) {
-      <div class="alert success">{{ saveMsg() }}</div>
-    }
-
-    <button type="submit" class="submit-btn" [disabled]="saving()">
-      {{ saving() ? 'Enregistrement...' : 'Enregistrer les modifications' }}
-    </button>
-  </form>
-</div>
+}

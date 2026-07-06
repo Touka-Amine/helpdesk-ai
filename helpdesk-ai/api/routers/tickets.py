@@ -7,7 +7,7 @@ from api.db.database import get_db
 from api.db.models import Ticket, User, TicketHistory
 from api.db.nosql_store import archive_resolved_ticket, get_stats as nosql_stats, get_all_resolved
 from api.routers.auth import get_current_user, require_admin
-from api.schemas.ticket_schemas import ApproveRequest, TicketCreate, TicketOut
+from api.schemas.ticket_schemas import ApproveRequest, FeedbackRequest, TicketCreate, TicketOut
 from api.services.ai_service import predict_and_recommend, recommend_for_category
 from api.services.ticket_service import ticket_to_dict, log_ticket_history
 
@@ -87,6 +87,28 @@ def get_my_ticket_detail(
     )
     if not ticket:
         raise HTTPException(404, "Ticket introuvable")
+    return ticket_to_dict(ticket)
+
+
+@router.post("/{ticket_id}/feedback")
+def submit_feedback(
+    ticket_id: int,
+    data: FeedbackRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    ticket = (
+        db.query(Ticket)
+        .filter(Ticket.id == ticket_id, Ticket.user_id == user.id)
+        .first()
+    )
+    if not ticket:
+        raise HTTPException(404, "Ticket introuvable")
+
+    ticket.feedback_vote = data.vote
+    ticket.feedback_comment = data.comment or ""
+    db.commit()
+    db.refresh(ticket)
     return ticket_to_dict(ticket)
 
 

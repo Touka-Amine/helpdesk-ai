@@ -1,46 +1,110 @@
-<div class="page-header">
-  <p class="page-subtitle">Suivez l'avancement de vos demandes.</p>
-</div>
+<div class="flex flex-col gap-stack-lg">
+  <!-- En-tête + filtres -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-gutter">
+    <div>
+      <h1 class="font-headline-md text-headline-md text-on-surface">Mes tickets</h1>
+      <p class="font-body-md text-body-md text-on-surface-variant mt-1">Gérez et suivez l'avancement de vos demandes de support.</p>
+    </div>
+    <div class="flex gap-stack-md">
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+        <input type="text" [(ngModel)]="searchFilter" placeholder="Rechercher par titre ou numéro..."
+          class="pl-9 pr-3 py-2 w-56 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+      </div>
+      <select [(ngModel)]="statutFilter"
+        class="px-3 py-2 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+        @for (s of statutOptions; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </div>
+  </div>
 
-<div class="filters-bar">
-  <div class="filter-select">
-    <i class="ti ti-filter"></i>
-    <select [(ngModel)]="statutFilter">
-      @for (s of statutOptions; track s) {
-        <option [value]="s">{{ s }}</option>
+  <!-- Statistiques -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+    <div class="bg-surface-container-lowest p-gutter rounded-xl shadow-sm border border-outline-variant/40">
+      <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total tickets</p>
+      <h3 class="font-display-lg text-display-lg text-primary mt-2">{{ totalCount() }}</h3>
+      <p class="text-label-sm font-label-sm text-on-surface-variant mt-1">{{ cetteSemaineCount() }} cette semaine</p>
+    </div>
+    <div class="bg-surface-container-lowest p-gutter rounded-xl shadow-sm border border-outline-variant/40 border-l-4 border-l-primary-container">
+      <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">En attente</p>
+      <h3 class="font-display-lg text-display-lg text-on-surface mt-2">{{ enAttenteCount() }}</h3>
+    </div>
+    <div class="bg-surface-container-lowest p-gutter rounded-xl shadow-sm border border-outline-variant/40">
+      <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Résolu</p>
+      <h3 class="font-display-lg text-display-lg text-on-surface mt-2">{{ resoluCount() }}</h3>
+      @if (tauxResolution() !== null) {
+        <p class="text-label-sm font-label-sm text-green-600 font-semibold mt-1">{{ tauxResolution() }}% de taux de résolution</p>
       }
-    </select>
+    </div>
+    <div class="bg-primary-container p-gutter rounded-xl shadow-md flex flex-col justify-between overflow-hidden relative">
+      <p class="font-label-sm text-label-sm text-on-primary-container uppercase tracking-wider relative z-10">Délai moyen de résolution</p>
+      <h3 class="font-headline-sm text-headline-sm text-on-primary mt-2 relative z-10">
+        @if (delaiMoyenHeures() !== null) {
+          {{ delaiMoyenHeures() }} h
+        } @else {
+          —
+        }
+      </h3>
+      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl"></div>
+    </div>
   </div>
-  <div class="search-box">
-    <i class="ti ti-search"></i>
-    <input type="text" [(ngModel)]="searchFilter" placeholder="Rechercher par titre ou numéro..." />
-  </div>
-</div>
 
-<div class="ot-count">{{ filtered().length }} ticket(s)</div>
-
-@if (loading()) {
-  <div class="skeleton" *ngFor="let i of [1,2,3]"></div>
-} @else if (filtered().length === 0) {
-  <div class="ot-empty">Aucun ticket ne correspond à votre recherche.</div>
-} @else {
-  <div class="ticket-list">
-    @for (t of filtered(); track t.id) {
-      <div class="ticket-card">
-        <div class="ticket-info">
-          <div class="ticket-title">#{{ t.id.toString().padStart(4, '0') }} — {{ t.titre }}</div>
-          <div class="ticket-meta">
-            <span><i class="ti ti-building"></i>{{ t.filiale || '—' }}</span>
-            <span><i class="ti ti-calendar"></i>{{ formatDateShort(t.created_at) }}</span>
-          </div>
-        </div>
-        <div class="ticket-actions">
-          <span class="status-badge" [ngClass]="'status-' + t.statut.toLowerCase().replace(' ', '-')">
-            {{ statutCfg[t.statut].label }}
-          </span>
-          <button class="detail-btn" (click)="goToDetail(t.id)">Détails</button>
-        </div>
+  <!-- Liste -->
+  <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/40 overflow-hidden">
+    @if (loading()) {
+      <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Chargement…</p>
+    } @else if (error()) {
+      <p class="text-body-md font-body-md text-error text-center py-stack-lg">{{ error() }}</p>
+    } @else if (filtered().length === 0) {
+      <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Aucun ticket ne correspond à votre recherche.</p>
+    } @else {
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container text-on-surface-variant border-b border-outline-variant/40">
+            <th class="px-container-padding py-4 font-label-md text-label-sm">ID</th>
+            <th class="px-gutter py-4 font-label-md text-label-sm">TITRE</th>
+            <th class="px-gutter py-4 font-label-md text-label-sm">STATUT</th>
+            <th class="px-gutter py-4 font-label-md text-label-sm">DATE</th>
+            <th class="px-container-padding py-4 font-label-md text-label-sm text-right">ACTION</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/30">
+          @for (t of filtered(); track t.id) {
+            <tr class="hover:bg-surface-container-low transition-colors group cursor-pointer" (click)="goToDetail(t.id)">
+              <td class="px-container-padding py-4 font-body-md text-body-md text-on-surface-variant">#{{ t.id.toString().padStart(4, '0') }}</td>
+              <td class="px-gutter py-4">
+                <div class="flex flex-col">
+                  <span class="font-body-md text-body-md font-semibold text-on-surface">{{ t.titre }}</span>
+                  <span class="text-label-sm font-label-sm text-on-surface-variant">Catégorie : {{ t.categorie_finale || t.categorie_predite || '—' }}</span>
+                </div>
+              </td>
+              <td class="px-gutter py-4">
+                <span class="px-3 py-1 rounded-full text-label-sm font-label-sm uppercase tracking-tight" [ngClass]="statutBadgeClass(t.statut)">
+                  {{ statutCfg[t.statut].label }}
+                </span>
+              </td>
+              <td class="px-gutter py-4 font-body-md text-body-md text-on-surface-variant">{{ formatDateTime(t.created_at) }}</td>
+              <td class="px-container-padding py-4 text-right">
+                <button class="text-primary opacity-0 group-hover:opacity-100 transition-opacity font-bold text-[13px]">Détails</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <div class="px-container-padding py-4 bg-surface-container-lowest border-t border-outline-variant/40">
+        <p class="text-label-sm font-label-sm text-on-surface-variant">{{ filtered().length }} ticket(s)</p>
       </div>
     }
   </div>
-}
+</div>
+
+<!-- Bouton d'action flottant -->
+<button (click)="goToNewTicket()"
+  class="fixed right-8 bottom-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all group z-50">
+  <span class="material-symbols-outlined text-[28px]">add</span>
+  <span class="absolute right-16 bg-on-surface text-surface text-label-sm font-label-sm px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md">
+    Créer un ticket
+  </span>
+</button>

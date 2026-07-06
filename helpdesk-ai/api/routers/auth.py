@@ -7,7 +7,7 @@ from api.config import settings
 from api.db.database import get_db
 from api.db.models import User
 from api.middleware.auth_middleware import check_login_rate_limit
-from api.schemas.auth_schemas import TokenOut, UserCreate, UserOut
+from api.schemas.auth_schemas import TokenOut, UserCreate, UserOut, UserUpdate
 from api.services.auth_service import create_token, decode_token, hash_password, verify_password
 
 
@@ -77,3 +77,25 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != "admin":
         raise HTTPException(403, "Acces reserve aux admins")
     return current_user
+
+
+@router.get("/me", response_model=UserOut)
+def get_me(user: User = Depends(get_current_user)):
+    return user
+
+
+@router.patch("/me", response_model=UserOut)
+def update_me(
+    data: UserUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    if data.nom is not None:
+        user.nom = data.nom
+    if data.prenom is not None:
+        user.prenom = data.prenom
+    if data.filiale is not None:
+        user.filiale = data.filiale
+    db.commit()
+    db.refresh(user)
+    return user

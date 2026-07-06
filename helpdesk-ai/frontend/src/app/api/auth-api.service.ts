@@ -22,4 +22,12 @@ export class AuthApiService {
       headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
     });
   }
+
+  getMe() {
+    return this.http.get<AuthUser>(`${this.base}/me`);
+  }
+
+  updateMe(payload: { nom?: string; prenom?: string; filiale?: string }) {
+    return this.http.patch<AuthUser>(`${this.base}/me`, payload);
+  }
 }

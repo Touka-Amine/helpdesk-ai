@@ -44,6 +44,13 @@ class TicketOut(BaseModel):
     commentaire_client: str = ""
     commentaire_interne: str = ""
     classification: str = "Demande"
+    feedback_vote: Optional[str] = None
+    feedback_comment: str = ""
+
+
+class FeedbackRequest(BaseModel):
+    vote: str = Field(..., pattern="^(up|down)$")
+    comment: str = ""
 
 
 class ApproveRequest(BaseModel):
