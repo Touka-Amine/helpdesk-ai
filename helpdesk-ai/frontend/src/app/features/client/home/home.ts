@@ -2,14 +2,27 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TicketApiService } from '../../../api/ticket-api.service';
-import { Ticket, STATUT_CFG } from '../../../models/ticket.models';
+import { AuthService } from '../../../core/services/auth.service';
+import { Ticket, Statut, STATUT_CFG } from '../../../models/ticket.models';
 
-interface AiStats {
-  autoRoutedPercent: number;
-  avgConfidence: number;
-  autoRoutedCount: number;
-  totalCount: number;
-}
+const CATEGORY_ICONS: Record<string, string> = {
+  Réseau: 'wifi',
+  Sécurité: 'security',
+  Applicatifs: 'apps',
+  Backup: 'backup',
+  Communication: 'forum',
+  Infrastructure: 'dns',
+  Microsoft: 'window',
+  Système: 'settings',
+};
+
+const STATUT_BADGE_CLASSES: Record<Statut, string> = {
+  'En attente': 'bg-amber-100 text-amber-700',
+  'Prise en Charge': 'bg-blue-100 text-blue-700',
+  Résolu: 'bg-green-100 text-green-700',
+  Rejeté: 'bg-red-100 text-red-700',
+  Problème: 'bg-purple-100 text-purple-700',
+};
 
 @Component({
   selector: 'app-home',
@@ -20,24 +33,22 @@ interface AiStats {
 })
 export class Home implements OnInit {
   private ticketApi = inject(TicketApiService);
+  private auth = inject(AuthService);
   private router = inject(Router);
 
   tickets = signal<Ticket[]>([]);
   loading = signal(true);
   statutCfg = STATUT_CFG;
 
+  userFirstName = computed(() => this.auth.currentUser()?.prenom ?? '');
   totalCount = computed(() => this.tickets().length);
-  enCoursCount = computed(() => this.tickets().filter(t => t.statut === 'Prise en Charge').length);
-  resoluCount = computed(() => this.tickets().filter(t => t.statut === 'Résolu').length);
   recentTickets = computed(() => this.tickets().slice(0, 3));
 
-  // ⚠️ Mock — à remplacer par un vrai appel à /predict ou un endpoint de stats agrégées
-  // une fois que l'API expose ces métriques par utilisateur.
-  aiStats = signal<AiStats>({
-    autoRoutedPercent: 82,
-    avgConfidence: 0.76,
-    autoRoutedCount: 14,
-    totalCount: 17,
+  avgConfidencePercent = computed(() => {
+    const withConf = this.tickets().filter((t) => t.confiance != null);
+    if (withConf.length === 0) return null;
+    const sum = withConf.reduce((acc, t) => acc + (t.confiance as number), 0);
+    return Math.round((sum / withConf.length) * 100);
   });
 
   ngOnInit(): void {
@@ -67,8 +78,30 @@ export class Home implements OnInit {
     this.router.navigate(['/client/tickets', id]);
   }
 
+  categoryIcon(t: Ticket): string {
+    const cat = t.categorie_finale || t.categorie_predite;
+    return CATEGORY_ICONS[cat] ?? 'confirmation_number';
+  }
+
+  statutBadgeClass(s: Statut): string {
+    return STATUT_BADGE_CLASSES[s];
+  }
+
   formatDateShort(iso: string): string {
     const d = new Date(iso);
     return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  timeAgo(iso: string): string {
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const min = Math.floor(diffMs / 60000);
+    if (min < 1) return "à l'instant";
+    if (min < 60) return `il y a ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `il y a ${h} h`;
+    const d = Math.floor(h / 24);
+    if (d === 1) return 'hier';
+    if (d < 7) return `il y a ${d} jours`;
+    return this.formatDateShort(iso);
   }
 }
