@@ -19,9 +19,14 @@ export class Register {
   private auth    = inject(AuthService);
   private router  = inject(Router);
 
-  loading  = signal(false);
-  errorMsg = signal<string | null>(null);
-  filiales = FILIALES;
+  loading      = signal(false);
+  errorMsg     = signal<string | null>(null);
+  showPassword = signal(false);
+  filiales     = FILIALES;
+
+  togglePassword(): void {
+    this.showPassword.update((v) => !v);
+  }
 
   form = this.fb.group({
     nom:      ['', Validators.required],
