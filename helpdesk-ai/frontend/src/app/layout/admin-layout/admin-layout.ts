@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterModule, Router } from '@angular/router';
+import { RouterOutlet, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { TicketApiService } from '../../api/ticket-api.service';
@@ -14,7 +14,6 @@ import { TicketApiService } from '../../api/ticket-api.service';
 export class AdminLayout implements OnInit {
   private authService = inject(AuthService);
   private ticketApi = inject(TicketApiService);
-  private router = inject(Router);
 
   user = this.authService.currentUser();
   pendingCount = signal(0);

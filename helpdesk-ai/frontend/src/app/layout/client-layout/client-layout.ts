@@ -2,7 +2,6 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
-import { Router } from '@angular/router';
 
 interface Notification {
   id: number;
@@ -19,7 +18,6 @@ interface Notification {
 })
 export class ClientLayout {
   private authService = inject(AuthService);
-  private router = inject(Router);
 
   user = this.authService.currentUser();
   notifOpen = signal(false);
@@ -41,6 +39,5 @@ export class ClientLayout {
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }
