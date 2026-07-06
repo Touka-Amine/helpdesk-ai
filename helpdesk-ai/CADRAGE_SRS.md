@@ -123,7 +123,8 @@ Détail dans [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) (Ch. 2). Points clé
 
 ## 5. Matrice exigences → résultats (Phase 12, mesurée le 2026-07-05)
 
-> Remplace l'ancien extrait. Bilan : **9/17 EF atteints, 3 partiels, 4 non faits, 1 backlog** ·
+> Remplace l'ancien extrait. Bilan (2026-07-06) : **10/17 EF atteints, 3 partiels, 3 non faits, 1 backlog**
+> (EF-13 corrigé — feedback client réellement persisté) ·
 > **5/14 ENF atteints, 5 partiels, 4 non atteints**. Sources : `metrics/*.json`, `tests/`,
 > exécution `pytest --cov` du 2026-07-05. Risque PLAN.md Phase 12 explicitement anticipé
 > (« sur-interprétation liée à la redondance du corpus ») : voir ⚠️ ci-dessous, confirmé.
@@ -144,7 +145,7 @@ Détail dans [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) (Ch. 2). Points clé
 | EF-10 | Extraction d'entités | Entités affichées | Non implémenté (`equipement` = saisie utilisateur libre, aucune extraction NLP) | 🔴 Non fait |
 | EF-11 | Analyse priorité/urgence | Priorité suggérée | Non implémenté (`priorite_saisie` = saisie utilisateur uniquement) | 🔴 Non fait |
 | EF-12 | Analyse de sentiment | Indicateur de ton/urgence | Non implémenté | 🔴 Non fait |
-| EF-13 | Feedback utilisateur | Feedback persisté (👍/👎 + correction) | ⚠️ **Trouvé en étude utilisateur (§6)** : l'UI client (`ticket-detail.html`/`.ts`) affiche bien des boutons 👍/👎 + un champ de correction, **et confirme "Merci pour votre retour !"** — mais `submitFeedbackComment()` ne fait qu'un `console.log()` (commentaire `// TODO: POST /api/v1/tickets/{id}/feedback quand l'endpoint sera créé`), rien n'est envoyé ni persisté. L'utilisateur croit son retour enregistré alors qu'il est perdu — plus trompeur qu'une simple absence de fonctionnalité | 🔴 Non fait — UI trompeuse (fausse confirmation), à corriger avant démo jury |
+| EF-13 | Feedback utilisateur | Feedback persisté (👍/👎 + correction) | ✅ **Corrigé (2026-07-06)** : `POST /tickets/{id}/feedback` implémenté (`api/routers/tickets.py`), persiste `feedback_vote`/`feedback_comment` sur le ticket (colonnes ajoutées via migration additive `_migrate_columns`). `ticket-detail.ts` (client) appelle réellement l'endpoint et n'affiche "Merci, votre retour a bien été enregistré" qu'après réponse serveur ; l'état persiste après rechargement complet (vérifié : vote 👍 + commentaire soumis via l'UI, relus à l'identique via un appel API indépendant après reload) | ✅ Atteint |
 | EF-14 | Génération LLM + citations | Réponse rédigée + sources, garde-fous | Citations implémentées, mais génération **template-based** (pas d'appel LLM réel) — `metrics/rag_eval.json` : Faithfulness=1.0/hallucination=0% *par construction* (rien n'est généré librement). ⚠️ À ne pas présenter comme « génération LLM » sans cette nuance | 🟡 Partiel — décision de périmètre à assumer explicitement |
 | EF-15 | Dashboard admin | KPIs (volumes, catégories, temps) | Service `dashboard/` dédié, conteneurisé (`docker-dashboard-1`), déployé | ✅ Atteint |
 | EF-16 | Intégration Power Automate (`/ingest`) | Endpoint fonctionnel et sécurisé | Réparé Phase 8, sécurisé par API key, 4 tests passent (`test_ingest_*`) | ✅ Atteint |
@@ -216,14 +217,14 @@ création dominé par l'inférence (~2 s), cohérent avec R-13 (latence P95).
 ### 6.4 Frictions et anomalies détectées
 | # | Constat | Sévérité | Détail |
 |---|---|---|---|
-| 1 | **Feedback client trompeur** | 🔴 Élevée | `ticket-detail.ts::submitFeedbackComment()` affiche « Merci pour votre retour ! » après un simple `console.log()` — rien n'est envoyé au serveur (`// TODO: POST .../feedback quand l'endpoint sera créé`). L'utilisateur croit son avis enregistré ; il est perdu. Voir EF-13 corrigé ci-dessus. À corriger avant toute démo devant jury (retirer le faux message ou implémenter l'endpoint). |
+| 1 | ~~**Feedback client trompeur**~~ | 🔴 Élevée | `ticket-detail.ts::submitFeedbackComment()` affichait « Merci pour votre retour ! » après un simple `console.log()` — rien n'était envoyé au serveur. **✅ Corrigé le 2026-07-06** : `POST /tickets/{id}/feedback` implémenté et branché (voir EF-13). |
 | 2 | **Pas de routage différencié par confiance** | 🟡 Moyenne | Vérifié en pratique (§6.2) : tickets à confiance 0.78 et 0.91 suivent la même file "En attente" qu'un ticket à faible confiance. EF-05 corrigé ci-dessus. |
 | 3 | **Incohérence de nommage `priorite` / `priorite_saisie`** | 🟢 Faible | `TicketCreate.priorite` (entrée) vs `TicketOut.priorite_saisie` (sortie) désignent le même concept sous 2 noms différents. Un consommateur externe de l'API devinant le nom depuis la réponse (ex. via `/ingest` ou une future intégration) écrit silencieusement une valeur par défaut, sans erreur de validation. Le frontend Angular n'est pas affecté (utilise le bon nom). |
 | 4 | **Seuil de confiance obsolète dans `tickets.py`** | 🟢 Faible | `approve_ticket()`/`refresh_rag()` (`api/routers/tickets.py:123,195`) codent en dur `threshold = 0.40` (ancien seuil v1) pour décider du fallback RAG, alors que le seuil officiel est passé à 0.60 partout ailleurs (`params.yaml`, `predictor.py`, Phase 13). Incohérence, pas un bug bloquant. |
 
 ### 6.5 Recommandations (proposées, non implémentées ici)
-1. Retirer le faux message de confirmation du feedback client ou implémenter l'endpoint
-   `POST /tickets/{id}/feedback` (EF-13) — priorité haute avant toute démo.
+1. ~~Retirer le faux message de confirmation du feedback client ou implémenter l'endpoint
+   `POST /tickets/{id}/feedback` (EF-13)~~ — **fait le 2026-07-06**.
 2. Décider explicitement du comportement souhaité pour EF-05 : soit assumer qu'il n'y a pas
    d'auto-routage (reformuler l'exigence dans le mémoire), soit l'implémenter (ex. statut
    "Auto-résolu" si confiance ≥ 0.85 et catégorie stable).

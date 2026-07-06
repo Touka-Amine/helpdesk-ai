@@ -5,6 +5,25 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Refonte frontend (Stitch) — Mes Tickets, Détail Ticket, Mon Profil (2026-07-06)
+
+- `Ajouté` : `POST /tickets/{id}/feedback` — persiste le vote 👍/👎 + commentaire client
+  (`Ticket.feedback_vote`/`feedback_comment`, migration additive `_migrate_columns`).
+  **Corrige R-15 / EF-13** : le frontend affichait un faux message de confirmation sans rien
+  envoyer au serveur. Vérifié par relecture API indépendante après rechargement complet.
+- `Ajouté` : `GET`/`PATCH /auth/me` — lecture/édition réelle de nom/prénom/filiale de
+  l'utilisateur connecté depuis l'écran Mon Profil (auparavant simulé par un `setTimeout`).
+  Mot de passe, upload photo, préférences de notification, suppression de compte : aucun
+  endpoint (décision explicite, hors périmètre "minimum utile" de cette itération) — affichés
+  mais désactivés et marqués « Bientôt disponible ».
+- `Modifié` : écrans client **Mes Tickets**, **Détail du Ticket**, **Mon Profil** redessinés
+  (design Stitch, Tailwind). KPI de la liste de tickets (total/en attente/résolu, taux de
+  résolution, délai moyen de résolution) calculés depuis les vraies données au lieu des valeurs
+  fabriquées de la maquette ("92% satisfaction", carte "Suggestion AI" citant un faux ticket).
+- `Corrigé` : bug trouvé en testant en direct — le formulaire de feedback était imbriqué dans
+  la carte "Solution IA" (`@if (t.solution_rag)`), donc invisible pour un ticket résolu dont la
+  recommandation RAG est vide. Le feedback dépend désormais uniquement du statut `Résolu`.
+
 ### Phase 12 — Étude utilisateur légère (2026-07-05)
 
 - `Ajouté` : [CADRAGE_SRS.md](CADRAGE_SRS.md) §6 — parcours golden path (Client crée un ticket →
