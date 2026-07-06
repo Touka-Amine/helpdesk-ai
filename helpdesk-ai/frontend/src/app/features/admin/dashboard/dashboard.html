@@ -1,53 +1,113 @@
-<div class="dashboard-page">
-  <div class="page-header">
-    <div class="page-title">Tableau de bord</div>
-    <div class="page-subtitle">Vue d'ensemble des tickets et des prédictions IA.</div>
+@if (loading()) {
+  <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Chargement…</p>
+} @else {
+  <div class="space-y-gutter">
+    <!-- En-tête -->
+    <div class="flex justify-between items-end">
+      <div>
+        <h2 class="font-display-lg text-display-lg text-on-surface">Tableau de bord</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-1">Analyse temps réel de la performance du support IT.</p>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+      <div class="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/40 shadow-sm">
+        <div class="flex items-center justify-between mb-stack-md">
+          <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total Tickets</span>
+          <span class="material-symbols-outlined text-primary">confirmation_number</span>
+        </div>
+        <p class="font-display-lg text-display-lg text-on-surface">{{ totalCount() }}</p>
+      </div>
+
+      <div class="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/40 shadow-sm">
+        <div class="flex items-center justify-between mb-stack-md">
+          <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">En attente</span>
+          <span class="material-symbols-outlined text-amber-600">hourglass_top</span>
+        </div>
+        <p class="font-display-lg text-display-lg text-on-surface">{{ enAttenteCount() }}</p>
+        <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">nécessitent une approbation</p>
+      </div>
+
+      <div class="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/40 shadow-sm">
+        <div class="flex items-center justify-between mb-stack-md">
+          <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Temps résolution moy.</span>
+          <span class="material-symbols-outlined text-tertiary">timer</span>
+        </div>
+        <p class="font-display-lg text-display-lg text-on-surface">{{ delaiMoyenLabel() }}</p>
+      </div>
+
+      <div class="bg-surface-container-lowest p-stack-lg rounded-xl border-l-4 border-primary shadow-sm">
+        <div class="flex items-center justify-between mb-stack-md">
+          <span class="font-label-md text-label-md text-primary font-bold uppercase tracking-wider">Confiance IA moy.</span>
+          <span class="material-symbols-outlined text-primary">psychology</span>
+        </div>
+        @if (confianceMoyenne() != null) {
+          <p class="font-display-lg text-display-lg text-on-surface">{{ confianceMoyenne() }}%</p>
+        } @else {
+          <p class="font-display-lg text-display-lg text-on-surface-variant">—</p>
+        }
+      </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+      <div class="lg:col-span-2 bg-surface-container-lowest p-container-padding rounded-xl border border-outline-variant/40 shadow-sm">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-lg">Volume des tickets (14 derniers jours)</h3>
+        <div class="h-64 relative">
+          <canvas baseChart [data]="volumeChartData()" [options]="chartOptionsLine" type="line"></canvas>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest p-container-padding rounded-xl border border-outline-variant/40 shadow-sm">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-lg">Répartition par statut</h3>
+        <div class="h-56 relative">
+          <canvas baseChart [data]="statutChartData()" [options]="chartOptionsDoughnut" type="doughnut"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+      <div class="bg-surface-container-lowest p-container-padding rounded-xl border border-outline-variant/40 shadow-sm">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-lg">Répartition par catégorie</h3>
+        <div class="h-64 relative">
+          <canvas baseChart [data]="categorieChartData()" [options]="chartOptionsBar" type="bar"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 shadow-sm overflow-hidden flex flex-col">
+        <div class="p-container-padding border-b border-outline-variant/40 flex justify-between items-center">
+          <h3 class="font-headline-sm text-headline-sm text-on-surface">Tickets en attente les plus anciens</h3>
+        </div>
+        <div class="flex-1 overflow-auto">
+          @if (ticketsPrioritaires().length === 0) {
+            <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Aucun ticket en attente.</p>
+          } @else {
+            <table class="w-full text-left">
+              <thead class="bg-surface-container-low text-on-surface-variant">
+                <tr>
+                  <th class="px-gutter py-3 font-label-md text-label-md uppercase tracking-wider">ID</th>
+                  <th class="px-gutter py-3 font-label-md text-label-md uppercase tracking-wider">Sujet</th>
+                  <th class="px-gutter py-3 font-label-md text-label-md uppercase tracking-wider">Attente</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-outline-variant/30">
+                @for (t of ticketsPrioritaires(); track t.id) {
+                  <tr (click)="goToTicket(t.id)" class="hover:bg-surface-container-low transition-colors cursor-pointer">
+                    <td class="px-gutter py-4 font-label-md text-label-md font-bold text-primary">#{{ t.id.toString().padStart(4,'0') }}</td>
+                    <td class="px-gutter py-4">
+                      <p class="font-body-md text-body-md font-semibold text-on-surface">{{ t.titre }}</p>
+                      <p class="font-label-sm text-label-sm text-on-surface-variant">{{ t.categorie_finale || t.categorie_predite || 'Non classé' }}</p>
+                    </td>
+                    <td class="px-gutter py-4">
+                      <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[11px] font-bold rounded-full">{{ timeAgo(t.created_at) }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      </div>
+    </div>
   </div>
-
-  @if (loading()) {
-    <div class="loading-text">Chargement...</div>
-  } @else {
-
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-label">Total tickets</div><div class="stat-value">{{ totalCount() }}</div></div>
-      <div class="stat-card"><div class="stat-label">En attente</div><div class="stat-value amber">{{ enAttenteCount() }}</div></div>
-      <div class="stat-card"><div class="stat-label">En cours</div><div class="stat-value blue">{{ enCoursCount() }}</div></div>
-      <div class="stat-card"><div class="stat-label">Résolus</div><div class="stat-value green">{{ resoluCount() }}</div></div>
-      <div class="stat-card"><div class="stat-label">Rejetés</div><div class="stat-value red">{{ rejeteCount() }}</div></div>
-    </div>
-
-    <div class="section-title">Métriques IA</div>
-    <div class="ai-metrics-row">
-      <div class="ai-card">
-        <div class="stat-label">Confiance moyenne</div>
-        <div class="stat-value orange">{{ avgConfidence() }}%</div>
-      </div>
-      <div class="ai-card">
-        <div class="stat-label">À valider</div>
-        <div class="stat-value green">{{ aValiderCount() }}</div>
-        <div class="ai-note">confiance ≥ 40%</div>
-      </div>
-      <div class="ai-card">
-        <div class="stat-label">Révision urgente</div>
-        <div class="stat-value red">{{ revisionUrgenteCount() }}</div>
-        <div class="ai-note">confiance &lt; 40%</div>
-      </div>
-    </div>
-
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="section-title">Distribution par statut</div>
-        <div class="chart-wrapper">
-          <canvas baseChart [data]="statutChartData()" [options]="chartOptions" type="bar"></canvas>
-        </div>
-      </div>
-      <div class="chart-card">
-        <div class="section-title">Distribution par catégorie</div>
-        <div class="chart-wrapper">
-          <canvas baseChart [data]="categorieChartData" [options]="chartOptions" type="bar"></canvas>
-        </div>
-      </div>
-    </div>
-
-  }
-</div>
+}

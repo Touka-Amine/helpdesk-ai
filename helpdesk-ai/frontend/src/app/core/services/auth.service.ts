@@ -15,10 +15,15 @@ export class AuthService {
       prenom: response.prenom,
       role: response.role,
       filiale: response.filiale,
+      first_login: response.first_login,
     };
     localStorage.setItem('access_token', response.access_token);
     localStorage.setItem('user', JSON.stringify(user));
     this.userSignal.set(user);
+  }
+
+  needsPasswordChange(): boolean {
+    return !!this.currentUser()?.first_login;
   }
 
   logout(): void {

@@ -12,6 +12,8 @@ export type Statut =
 /** Correspond à ticket_to_dict() dans api/services/ticket_service.py */
 export interface Ticket {
   id: number;
+  demandeur_nom: string;
+  demandeur_email: string;
   titre: string;
   description: string;
   priorite_saisie: string;

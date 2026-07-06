@@ -12,8 +12,11 @@ def ticket_to_dict(ticket: Ticket) -> dict:
     """Sérialise un ticket ORM vers un dict JSON-compatible."""
     cat_predite = getattr(ticket, "categorie_predite", "") or ""
     cat_finale  = getattr(ticket, "categorie_finale", "") or cat_predite
+    demandeur = getattr(ticket, "user", None)
     return {
         "id"                 : ticket.id,
+        "demandeur_nom"      : f"{demandeur.prenom} {demandeur.nom}".strip() if demandeur else "",
+        "demandeur_email"    : demandeur.email if demandeur else "",
         "titre"              : ticket.titre,
         "description"        : ticket.description,
         "priorite_saisie"    : ticket.priorite_saisie or "",

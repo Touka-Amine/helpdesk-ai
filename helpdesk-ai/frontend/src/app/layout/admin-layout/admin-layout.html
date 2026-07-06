@@ -1,43 +1,87 @@
-<div class="layout-shell">
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <span class="logo-h">Helpdesk</span> <span class="logo-ai">AI</span>
-      <div class="sidebar-role">Admin · IT Support</div>
+<div class="flex min-h-screen bg-background">
+  <aside class="w-60 shrink-0 bg-surface-container-lowest border-r border-outline-variant/40 flex flex-col py-stack-lg">
+    <div class="px-gutter mb-stack-lg">
+      <h1 class="font-headline-sm text-headline-sm font-bold text-primary">Helpdesk AI</h1>
+      <p class="font-label-sm text-label-sm text-on-surface-variant mt-1 truncate">{{ user?.prenom }} {{ user?.nom }}</p>
+      <p class="font-label-sm text-label-sm text-on-surface-variant/70">Admin · IT Support</p>
     </div>
 
-    <nav class="sidebar-nav">
-      <a routerLink="/admin/dashboard" routerLinkActive="active-link" class="nav-item">
-        <i class="ti ti-layout-dashboard"></i><span>Tableau de bord</span>
-      </a>
-      <a routerLink="/admin/approval-queue" routerLinkActive="active-link" class="nav-item">
-        <i class="ti ti-checklist"></i><span>File d'approbation</span>
-        @if (pendingCount() > 0) {
-          <span class="nav-badge">{{ pendingCount() }}</span>
-        }
-      </a>
-      <a routerLink="/admin/tickets" routerLinkActive="active-link" class="nav-item">
-        <i class="ti ti-list"></i><span>Tous les tickets</span>
-      </a>
-      <a routerLink="/admin/notifications" routerLinkActive="active-link" class="nav-item">
-        <i class="ti ti-bell"></i><span>Notifications</span>
-      </a>
-      <a routerLink="/admin/users" routerLinkActive="active-link" class="nav-item">
-        <i class="ti ti-users"></i><span>Utilisateurs</span>
-      </a>
+    <nav class="flex-grow px-2">
+      <ul class="space-y-1">
+        <li>
+          <a routerLink="/admin/dashboard" routerLinkActive="text-primary font-bold border-r-4 border-primary bg-surface-container-low"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span class="font-body-md text-body-md">Tableau de bord</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/approval-queue" routerLinkActive="text-primary font-bold border-r-4 border-primary bg-surface-container-low"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined">checklist</span>
+            <span class="font-body-md text-body-md flex-1">File d'approbation</span>
+            @if (pendingCount() > 0) {
+              <span class="bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded-full">{{ pendingCount() }}</span>
+            }
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/tickets" routerLinkActive="text-primary font-bold border-r-4 border-primary bg-surface-container-low"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined">confirmation_number</span>
+            <span class="font-body-md text-body-md">Tous les tickets</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/users" routerLinkActive="text-primary font-bold border-r-4 border-primary bg-surface-container-low"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined">group</span>
+            <span class="font-body-md text-body-md">Utilisateurs</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/monitoring" routerLinkActive="text-primary font-bold border-r-4 border-primary bg-surface-container-low"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined">analytics</span>
+            <span class="font-body-md text-body-md">Monitoring IA</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/notifications" routerLinkActive="text-primary font-bold border-r-4 border-primary bg-surface-container-low"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined">notifications</span>
+            <span class="font-body-md text-body-md">Notifications</span>
+          </a>
+        </li>
+      </ul>
     </nav>
 
-    <button class="logout-btn" (click)="logout()">
-      <i class="ti ti-logout"></i><span>Déconnexion</span>
-    </button>
+    <div class="px-gutter pt-gutter mt-auto border-t border-outline-variant/40">
+      <button (click)="logout()"
+        class="w-full flex items-center justify-center gap-2 py-3 border border-outline-variant rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined text-[18px]">logout</span>
+        Déconnexion
+      </button>
+    </div>
   </aside>
 
-  <div class="layout-main">
-    <header class="topbar">
-      <span class="topbar-title">{{ pageTitle() }}</span>
-      <div class="topbar-right">
-        <div class="avatar">{{ initials() }}</div>
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="h-16 flex items-center justify-end gap-stack-md px-container-padding bg-surface-container-lowest border-b border-outline-variant/40 sticky top-0 z-40">
+      <button class="p-2 text-on-surface-variant/50 cursor-not-allowed" disabled title="Bientôt disponible">
+        <span class="material-symbols-outlined">help</span>
+      </button>
+
+      <a routerLink="/admin/notifications" class="p-2 text-on-surface-variant hover:text-primary transition-colors relative" aria-label="Notifications">
+        <span class="material-symbols-outlined">notifications</span>
+      </a>
+
+      <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-md text-label-md">
+        {{ initials() }}
       </div>
     </header>
-    <main class="layout-content"><router-outlet /></main>
+
+    <main class="flex-1 p-container-padding overflow-y-auto">
+      <router-outlet />
+    </main>
   </div>
 </div>

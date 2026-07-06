@@ -3,6 +3,11 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { LoginResponse, RegisterRequest, AuthUser } from '../models/auth.models';
 
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthApiService {
   private readonly base = `${environment.apiUrl}/auth`;
@@ -29,5 +34,9 @@ export class AuthApiService {
 
   updateMe(payload: { nom?: string; prenom?: string; filiale?: string }) {
     return this.http.patch<AuthUser>(`${this.base}/me`, payload);
+  }
+
+  changePassword(payload: ChangePasswordRequest) {
+    return this.http.post<{ message: string }>(`${this.base}/change-password`, payload);
   }
 }

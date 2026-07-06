@@ -1,0 +1,116 @@
+<div class="space-y-gutter">
+  <div>
+    <h2 class="font-headline-md text-headline-md text-on-surface">Monitoring IA : santé du modèle</h2>
+    <p class="text-on-surface-variant font-body-md mt-1">Métriques réelles issues des tickets traités et du modèle entraîné.</p>
+  </div>
+
+  @if (loading()) {
+    <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Chargement…</p>
+  } @else {
+    <!-- KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+      <div class="bg-surface-container-lowest border border-outline-variant/40 p-gutter rounded-xl">
+        <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-base">Confiance moyenne (tickets réels)</p>
+        @if (confianceMoyenne() != null) {
+          <p class="font-display-lg text-display-lg text-primary">{{ confianceMoyenne() }}%</p>
+        } @else {
+          <p class="font-display-lg text-display-lg text-on-surface-variant">—</p>
+        }
+      </div>
+      <div class="bg-surface-container-lowest border border-outline-variant/40 p-gutter rounded-xl">
+        <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-base">Taux de correction manuelle</p>
+        @if (tauxCorrectionManuelle() != null) {
+          <p class="font-display-lg text-display-lg text-on-surface">{{ tauxCorrectionManuelle() }}%</p>
+          <p class="text-on-surface-variant font-label-sm mt-base">catégorie modifiée par un admin</p>
+        } @else {
+          <p class="font-display-lg text-display-lg text-on-surface-variant">—</p>
+        }
+      </div>
+      <div class="bg-error-container/20 border border-error/20 p-gutter rounded-xl">
+        <p class="font-label-md text-error uppercase tracking-wider mb-base">Tickets à faible confiance</p>
+        <p class="font-display-lg text-display-lg text-error">{{ ticketsFaibleConfiance().length }}</p>
+        <p class="text-on-error-container font-label-md mt-base">confiance &lt; 40%</p>
+      </div>
+    </div>
+
+    <!-- Performance du modèle entraîné -->
+    @if (modelInfo(); as m) {
+      <div class="bg-surface-container-lowest border border-outline-variant/40 p-gutter rounded-xl">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-lg">Performance du modèle entraîné ({{ m.model_name }})</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-stack-lg">
+          <div>
+            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">F1-macro (avec heuristiques)</p>
+            <p class="font-headline-md text-headline-md text-on-surface">{{ (m.f1_macro_avec_heuristiques * 100).toFixed(1) }}%</p>
+          </div>
+          <div>
+            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Accuracy (test)</p>
+            <p class="font-headline-md text-headline-md text-on-surface">{{ (m.accuracy_test * 100).toFixed(1) }}%</p>
+          </div>
+          <div>
+            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Seuil de confiance</p>
+            <p class="font-headline-md text-headline-md text-on-surface">{{ (m.confidence_threshold * 100).toFixed(0) }}%</p>
+          </div>
+          <div>
+            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Catégories</p>
+            <p class="font-headline-md text-headline-md text-on-surface">{{ m.classes.length }}</p>
+          </div>
+        </div>
+        <p class="text-label-sm font-label-sm text-on-surface-variant mt-stack-lg italic">{{ m.dataset_note }}</p>
+      </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+      <!-- Confiance moyenne par catégorie -->
+      <div class="bg-surface-container-lowest border border-outline-variant/40 p-gutter rounded-xl">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-lg">Confiance moyenne par catégorie</h3>
+        <div class="h-64 relative">
+          <canvas baseChart [data]="confianceParCategorie()" [options]="chartOptionsBar" type="bar"></canvas>
+        </div>
+      </div>
+
+      <!-- Tickets à faible confiance -->
+      <div class="bg-surface-container-lowest border border-outline-variant/40 overflow-hidden rounded-xl flex flex-col">
+        <div class="p-gutter border-b border-outline-variant/40">
+          <h3 class="font-headline-sm text-headline-sm text-on-surface">Tickets à faible confiance</h3>
+        </div>
+        <div class="flex-1 overflow-auto max-h-64">
+          @if (ticketsFaibleConfiance().length === 0) {
+            <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Aucun ticket à faible confiance.</p>
+          } @else {
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-surface-container-low text-label-md text-on-surface-variant">
+                  <th class="p-gutter font-semibold">Ticket</th>
+                  <th class="p-gutter font-semibold">Catégorie</th>
+                  <th class="p-gutter font-semibold">Confiance</th>
+                </tr>
+              </thead>
+              <tbody class="text-body-md divide-y divide-outline-variant/30">
+                @for (t of ticketsFaibleConfiance().slice(0, 10); track t.id) {
+                  <tr (click)="goToTicket(t.id)" class="hover:bg-surface-container-low transition-colors cursor-pointer">
+                    <td class="p-gutter text-on-surface font-medium">#{{ t.id.toString().padStart(4,'0') }} — {{ t.titre }}</td>
+                    <td class="p-gutter text-on-surface-variant">{{ t.categorie_finale || t.categorie_predite || '—' }}</td>
+                    <td class="p-gutter">
+                      <span class="flex items-center gap-2 text-error font-bold">{{ confPct(t.confiance) }}%</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (modelInfo()?.known_weaknesses?.length) {
+      <div class="bg-surface-container-lowest border border-outline-variant/40 p-gutter rounded-xl">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Limites connues du modèle</h3>
+        <ul class="list-disc pl-5 space-y-1">
+          @for (w of modelInfo()!.known_weaknesses; track w) {
+            <li class="font-body-md text-body-md text-on-surface-variant">{{ w }}</li>
+          }
+        </ul>
+      </div>
+    }
+  }
+</div>

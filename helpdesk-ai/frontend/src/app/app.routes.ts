@@ -5,6 +5,7 @@ import { AdminLayout } from './layout/admin-layout/admin-layout';
 
 import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
+import { ChangePassword } from './features/auth/change-password/change-password';
 
 import { Home } from './features/client/home/home';
 import { NewTicket } from './features/client/new-ticket/new-ticket';
@@ -18,8 +19,9 @@ import { TicketDetail } from './features/admin/ticket-detail/ticket-detail';
 import { ApprovalQueue } from './features/admin/approval-queue/approval-queue';
 import { Notifications } from './features/admin/notifications/notifications';
 import { Users } from './features/admin/users/users';
+import { Monitoring } from './features/admin/monitoring/monitoring';
 
-import { authGuard } from './core/guards/auth.guard';
+import { authGuard, authGuardNoPasswordCheck } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
@@ -28,6 +30,7 @@ export const routes: Routes = [
   // ── Auth ──────────────────────────────────────────────────────────────────
   { path: 'auth/login',    component: Login },
   { path: 'auth/register', component: Register },
+  { path: 'auth/change-password', component: ChangePassword, canActivate: [authGuardNoPasswordCheck] },
 
   // ── Espace client (auth requise) ──────────────────────────────────────────
   {
@@ -56,6 +59,7 @@ export const routes: Routes = [
       { path: 'tickets/:id',    component: TicketDetail },
       { path: 'notifications',  component: Notifications },
       { path: 'users',          component: Users },
+      { path: 'monitoring',     component: Monitoring },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

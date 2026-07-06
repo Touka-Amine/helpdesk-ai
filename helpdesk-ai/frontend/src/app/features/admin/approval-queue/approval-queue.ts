@@ -23,10 +23,8 @@ export class ApprovalQueue implements OnInit {
   messageClient = signal('');
   noteInterne = signal('');
 
-  // ⚠️ Filtre sur le statut "en attente" — vérifie le libellé exact utilisé
-  // dans ton backend (Statut peut être 'Ouvert', 'En attente', etc.)
   pendingTickets = computed(() =>
-    this.allTickets().filter(t => t.statut === ('En attente' as Statut) || t.statut === ('Ouvert' as Statut))
+    this.allTickets().filter(t => t.statut === 'En attente')
   );
 
   ngOnInit(): void {
@@ -58,27 +56,32 @@ export class ApprovalQueue implements OnInit {
     this.noteInterne.set('');
   }
 
-  // ⚠️ Mock — confidence/category/rag_suggestion ne sont pas encore dans
-  // l'interface Ticket (models/ticket.models.ts). À ajouter une fois confirmés
-  // contre /tickets/admin/all et /predict côté backend.
   getConfidence(t: Ticket): number {
-    return (t as any).confidence ?? 0.5;
+    return t.confiance ?? 0;
   }
   getCategory(t: Ticket): string {
-    return (t as any).category ?? 'Non classé';
+    return t.categorie_finale || t.categorie_predite || 'Non classé';
   }
   getRagSuggestion(t: Ticket): string {
-    return (t as any).rag_suggestion ?? 'Aucune suggestion disponible pour ce ticket.';
+    return t.solution_rag || 'Aucune suggestion disponible pour ce ticket.';
   }
 
   isAutoRouted(t: Ticket): boolean {
     return this.getConfidence(t) >= 0.40;
   }
 
+  timeAgo(iso: string): string {
+    const diffMin = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (diffMin < 60) return `${diffMin} min`;
+    const diffH = Math.round(diffMin / 60);
+    if (diffH < 24) return `${diffH} h`;
+    return `${Math.round(diffH / 24)} j`;
+  }
+
   approve(): void {
     const t = this.selectedTicket();
     if (!t) return;
-    this.submit(t, 'Validé' as Statut);
+    this.submit(t, 'Prise en Charge' as Statut);
   }
 
   reject(): void {

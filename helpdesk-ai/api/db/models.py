@@ -18,6 +18,7 @@ class User(Base):
     role = Column(String, default="client")
     filiale = Column(String, default="")
     is_active = Column(Boolean, default=True)
+    first_login = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     tickets = relationship("Ticket", back_populates="user", foreign_keys="Ticket.user_id")

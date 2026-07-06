@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.config import settings
 from api.db.database import init_db
 from api.predictor import predictor
+from api.routers.admin import router as admin_router
 from api.routers.auth import router as auth_router
 from api.routers.ingest import router as ingest_router
 from api.routers.tickets import router as tickets_router
@@ -61,6 +62,7 @@ V1 = "/api/v1"
 app.include_router(auth_router,    prefix=V1)
 app.include_router(tickets_router, prefix=V1)
 app.include_router(ingest_router,  prefix=V1)
+app.include_router(admin_router,   prefix=V1)
 
 
 # ── Racine ────────────────────────────────────────────────────────────────────

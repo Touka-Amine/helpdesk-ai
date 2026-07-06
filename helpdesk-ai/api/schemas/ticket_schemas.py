@@ -28,6 +28,8 @@ class TicketCreate(BaseModel):
 
 class TicketOut(BaseModel):
     id: int
+    demandeur_nom: str = ""
+    demandeur_email: str = ""
     titre: str
     description: str
     priorite_saisie: str

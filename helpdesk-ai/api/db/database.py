@@ -44,6 +44,15 @@ def _migrate_columns() -> None:
     for column, column_type in expected.items():
         if column not in existing:
             con.execute(f"ALTER TABLE tickets ADD COLUMN {column} {column_type}")
+
+    existing_users = {row[1] for row in con.execute("PRAGMA table_info(users)").fetchall()}
+    expected_users = {
+        "first_login": "BOOLEAN DEFAULT 0",
+    }
+    for column, column_type in expected_users.items():
+        if column not in existing_users:
+            con.execute(f"ALTER TABLE users ADD COLUMN {column} {column_type}")
+
     con.commit()
     con.close()
 

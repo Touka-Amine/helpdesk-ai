@@ -5,6 +5,47 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Refonte frontend (Stitch) — écrans admin + gestion des utilisateurs (2026-07-06)
+
+- `Ajouté` : module **gestion des utilisateurs** (`api/routers/admin.py`, jusque-là un scaffold
+  vide et non enregistré dans `main.py`) : `GET/POST /admin/users` (création admin-only avec
+  génération d'un mot de passe temporaire aléatoire, ex. `Oiq@4083`), `PATCH /admin/users/{id}`
+  (changement de rôle admin/client, activation/désactivation, auto-désactivation bloquée).
+  `User.first_login` (nouvelle colonne, migration additive) force le changement de mot de passe
+  à la première connexion via `POST /auth/change-password` ; les guards Angular
+  (`authGuard`/`adminGuard`) redirigent vers un nouvel écran `/auth/change-password` tant que
+  `first_login=true`. Flux vérifié de bout en bout (création → login avec mdp temporaire →
+  redirection forcée → changement → accès débloqué).
+- `Ajouté` : `GET /admin/model-info` — expose les métriques réelles du modèle entraîné
+  (`models/model_metadata.json` : F1-macro, accuracy, seuil, limites connues) pour l'écran
+  Monitoring IA.
+- `Ajouté` : écran **Monitoring IA** (nouveau, aucun équivalent avant) — confiance moyenne réelle,
+  taux de correction manuelle (catégorie finale ≠ catégorie prédite), tickets à faible confiance,
+  confiance moyenne par catégorie, métriques du modèle entraîné. Les métriques fabriquées de la
+  maquette Stitch (latence RAG P95, alertes de dérive, heatmap de correction par sous-catégorie)
+  ont été abandonnées faute d'infrastructure de monitoring réelle.
+- `Ajouté` : écran **Notifications** (composant vide auparavant) — flux d'activité dérivé des
+  vraies données (tickets en attente >24h, file d'approbation, retours clients récents, nouveaux
+  comptes) plutôt qu'une table de notifications persistées (non implémentée, hors périmètre).
+- `Modifié` : écrans **Dashboard**, **File d'approbation**, **Tous les tickets** (composant vide
+  auparavant), **Traitement du ticket**, **Gestion des utilisateurs**, et le **shell admin-layout**
+  redessinés (Tailwind, thème Stitch clair). Fabrications de la maquette supprimées (agents
+  fictifs, SLA inventés, insights IA non branchés, "1 284 utilisateurs") au profit de données
+  réelles (`ticket.confiance`, `categorie_finale`, `demandeur_nom`/`demandeur_email` — nouveaux
+  champs ajoutés à `ticket_to_dict()` — comptages réels).
+- `Corrigé` (bug préexistant, trouvé en testant "Traitement du ticket" en direct) :
+  `GET /tickets/{id}` filtrait par `Ticket.user_id == user.id` même pour un admin, donc tout
+  ticket appartenant à un autre utilisateur renvoyait 404 "Ticket introuvable" — la page admin de
+  traitement de ticket était cassée pour la quasi-totalité des tickets. Un admin peut désormais
+  consulter n'importe quel ticket.
+- `Corrigé` (bug préexistant dans `approval-queue.ts`) : le bouton "Valider" envoyait le statut
+  `"Validé"`, absent de `VALID_STATUSES` et non permis depuis `"En attente"` — chaque validation
+  échouait avec une 400. Transition corrigée vers `"Prise en Charge"` (vérifié en direct : le
+  ticket disparaît bien de la file après validation).
+- `Corrigé` : badge de rôle "Admin" invisible dans l'écran Utilisateurs — `bg-primary` +
+  `bg-opacity-10` (syntaxe Tailwind v3) associés à `text-primary` produisaient un texte de la même
+  couleur que le fond en Tailwind v4 ; remplacé par la syntaxe d'opacité `bg-primary/10`.
+
 ### Refonte frontend (Stitch) — Mes Tickets, Détail Ticket, Mon Profil (2026-07-06)
 
 - `Ajouté` : `POST /tickets/{id}/feedback` — persiste le vote 👍/👎 + commentaire client

@@ -1,96 +1,109 @@
-<div class="approval-page">
-  <div class="page-header">
-    <div class="page-title">File d'approbation</div>
-    <div class="page-subtitle">{{ pendingTickets().length }} ticket(s) en attente de validation</div>
+<div class="space-y-gutter">
+  <div>
+    <h2 class="font-display-lg text-display-lg text-on-surface">File d'approbation</h2>
+    <p class="font-body-md text-body-md text-on-surface-variant mt-1">{{ pendingTickets().length }} ticket(s) en attente de validation</p>
   </div>
 
   @if (loading()) {
-    <div class="loading-text">Chargement...</div>
+    <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Chargement…</p>
   } @else if (error()) {
-    <div class="error-text">{{ error() }}</div>
+    <p class="text-body-md font-body-md text-error text-center py-stack-lg">{{ error() }}</p>
   } @else if (pendingTickets().length === 0) {
-    <div class="empty-state">Aucun ticket en attente d'approbation.</div>
+    <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Aucun ticket en attente d'approbation.</p>
   } @else {
+    <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-gutter items-start">
 
-    <div class="approval-layout">
-
-      <div class="queue-list">
+      <!-- Liste -->
+      <div class="flex flex-col gap-2">
         @for (t of pendingTickets(); track t.id) {
-          <div
-            class="queue-item"
-            [class.active]="selectedTicket()?.id === t.id"
-            (click)="selectTicket(t)"
-          >
-            <div class="queue-item-title">#{{ t.id.toString().padStart(4, '0') }} — {{ t.titre }}</div>
-            <div class="queue-item-meta">
-              <span class="confidence-badge" [class.low]="getConfidence(t) < 0.40">
-                Confiance {{ (getConfidence(t) * 100).toFixed(0) }}%
-              </span>
-            </div>
-          </div>
+          <button type="button" (click)="selectTicket(t)"
+            class="text-left bg-surface-container-lowest border rounded-lg p-stack-md transition-colors"
+            [class.border-primary]="selectedTicket()?.id === t.id"
+            [class.bg-primary]="selectedTicket()?.id === t.id"
+            [class.bg-opacity-5]="selectedTicket()?.id === t.id"
+            [class.border-outline-variant]="selectedTicket()?.id !== t.id">
+            <p class="font-body-md text-body-md font-semibold text-on-surface">#{{ t.id.toString().padStart(4,'0') }} — {{ t.titre }}</p>
+            <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">{{ t.demandeur_nom || '—' }} · en attente depuis {{ timeAgo(t.created_at) }}</p>
+            <span class="inline-block mt-2 px-2 py-0.5 rounded-full text-[11px] font-bold"
+              [class.bg-green-100]="getConfidence(t) >= 0.40" [class.text-green-700]="getConfidence(t) >= 0.40"
+              [class.bg-red-100]="getConfidence(t) < 0.40" [class.text-red-700]="getConfidence(t) < 0.40">
+              Confiance {{ (getConfidence(t) * 100).toFixed(0) }}%
+            </span>
+          </button>
         }
       </div>
 
-      @if (selectedTicket()) {
-        <div class="detail-panel">
+      <!-- Détail -->
+      @if (selectedTicket(); as t) {
+        <div class="flex flex-col gap-gutter">
 
-          <div class="detail-card">
-            <div class="detail-label">Résumé ticket</div>
-            <div class="detail-title">{{ selectedTicket()!.titre }}</div>
-            <div class="detail-text">{{ selectedTicket()!.description }}</div>
-            <div class="detail-tags">
-              <span class="tag"><i class="ti ti-building"></i>{{ selectedTicket()!.filiale || '—' }}</span>
+          <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+            <p class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-1">Résumé ticket</p>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">{{ t.titre }}</h3>
+            <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">{{ t.description }}</p>
+            <div class="mt-stack-md flex gap-stack-md flex-wrap font-label-sm text-label-sm text-on-surface-variant">
+              <span>👤 {{ t.demandeur_nom || '—' }}</span>
+              <span>🏢 {{ t.filiale || '—' }}</span>
             </div>
           </div>
 
-          <div class="detail-card">
-            <div class="detail-label">Résultat ML</div>
-            <div class="ml-row"><span>Catégorie</span><span class="ml-value">{{ getCategory(selectedTicket()!) }}</span></div>
-            <div class="ml-row"><span>Confiance</span><span class="ml-value" [class.green]="getConfidence(selectedTicket()!) >= 0.40" [class.red]="getConfidence(selectedTicket()!) < 0.40">{{ (getConfidence(selectedTicket()!) * 100).toFixed(0) }}%</span></div>
-            <div class="ml-row">
-              <span>Routage</span>
-              <span class="status-badge" [class.green]="isAutoRouted(selectedTicket()!)" [class.amber]="!isAutoRouted(selectedTicket()!)">
-                {{ isAutoRouted(selectedTicket()!) ? 'Auto (≥0.40)' : 'Révision requise' }}
+          <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+            <p class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-stack-md">Résultat ML</p>
+            <div class="flex justify-between items-center py-1">
+              <span class="font-body-md text-body-md text-on-surface-variant">Catégorie</span>
+              <span class="font-label-md text-label-md font-bold text-on-surface">{{ getCategory(t) }}</span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span class="font-body-md text-body-md text-on-surface-variant">Confiance</span>
+              <span class="font-label-md text-label-md font-bold" [class.text-green-700]="getConfidence(t) >= 0.40" [class.text-red-700]="getConfidence(t) < 0.40">
+                {{ (getConfidence(t) * 100).toFixed(0) }}%
+              </span>
+            </div>
+            <div class="flex justify-between items-center py-1">
+              <span class="font-body-md text-body-md text-on-surface-variant">Routage</span>
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-bold"
+                [class.bg-green-100]="isAutoRouted(t)" [class.text-green-700]="isAutoRouted(t)"
+                [class.bg-amber-100]="!isAutoRouted(t)" [class.text-amber-700]="!isAutoRouted(t)">
+                {{ isAutoRouted(t) ? 'Auto (≥0.40)' : 'Révision requise' }}
               </span>
             </div>
           </div>
 
-          <div class="detail-card">
-            <div class="detail-label-row">
-              <span class="detail-label">Suggestion RAG</span>
-              <span class="refresh-link" (click)="refreshRag()"><i class="ti ti-refresh"></i> Rafraîchir</span>
+          <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+            <div class="flex justify-between items-center mb-stack-md">
+              <p class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Suggestion RAG</p>
+              <button (click)="refreshRag()" class="text-primary font-label-sm text-label-sm hover:underline flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">refresh</span> Rafraîchir
+              </button>
             </div>
-            <div class="detail-text">{{ getRagSuggestion(selectedTicket()!) }}</div>
+            <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">{{ getRagSuggestion(t) }}</p>
           </div>
 
-          <div class="decision-card">
-            <div class="detail-label orange">Décision</div>
+          <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+            <p class="font-label-md text-label-md text-primary font-bold uppercase tracking-wider mb-stack-md">Décision</p>
 
-            <label class="field-label">Message au client</label>
-            <textarea
-              [(ngModel)]="messageClient"
-              rows="2"
-              placeholder="Ex : Votre problème a été résolu, merci de vérifier..."
-            ></textarea>
+            <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Message au client</label>
+            <textarea [(ngModel)]="messageClient" rows="2" placeholder="Ex : Votre problème a été résolu, merci de vérifier..."
+              class="w-full rounded-lg border border-outline-variant bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none text-body-md font-body-md p-stack-sm resize-none mb-stack-md"></textarea>
 
-            <label class="field-label">Note interne</label>
-            <textarea
-              [(ngModel)]="noteInterne"
-              rows="2"
-              placeholder="Note visible uniquement par l'équipe IT..."
-            ></textarea>
+            <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Note interne</label>
+            <textarea [(ngModel)]="noteInterne" rows="2" placeholder="Note visible uniquement par l'équipe IT..."
+              class="w-full rounded-lg border border-outline-variant bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none text-body-md font-body-md p-stack-sm resize-none"></textarea>
 
-            <div class="decision-actions">
-              <button class="btn-reject" [disabled]="submitting()" (click)="reject()">Rejeter</button>
-              <button class="btn-approve" [disabled]="submitting()" (click)="approve()">
-                {{ submitting() ? 'Envoi...' : 'Valider' }}
+            <div class="flex justify-end gap-stack-md mt-stack-lg">
+              <button [disabled]="submitting()" (click)="reject()"
+                class="px-4 py-2 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors disabled:opacity-50">
+                Rejeter
+              </button>
+              <button [disabled]="submitting()" (click)="approve()"
+                class="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md shadow-sm hover:opacity-90 transition-all disabled:opacity-50">
+                {{ submitting() ? 'Envoi…' : 'Valider' }}
               </button>
             </div>
           </div>
 
         </div>
       }
-
     </div>
   }
 </div>

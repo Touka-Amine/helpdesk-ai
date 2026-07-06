@@ -80,11 +80,10 @@ def get_my_ticket_detail(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    ticket = (
-        db.query(Ticket)
-        .filter(Ticket.id == ticket_id, Ticket.user_id == user.id)
-        .first()
-    )
+    query = db.query(Ticket).filter(Ticket.id == ticket_id)
+    if user.role != "admin":
+        query = query.filter(Ticket.user_id == user.id)
+    ticket = query.first()
     if not ticket:
         raise HTTPException(404, "Ticket introuvable")
     return ticket_to_dict(ticket)

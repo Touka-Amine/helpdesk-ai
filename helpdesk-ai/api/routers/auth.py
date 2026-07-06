@@ -7,7 +7,7 @@ from api.config import settings
 from api.db.database import get_db
 from api.db.models import User
 from api.middleware.auth_middleware import check_login_rate_limit
-from api.schemas.auth_schemas import TokenOut, UserCreate, UserOut, UserUpdate
+from api.schemas.auth_schemas import ChangePasswordRequest, TokenOut, UserCreate, UserOut, UserUpdate
 from api.services.auth_service import create_token, decode_token, hash_password, verify_password
 
 
@@ -56,6 +56,7 @@ def login(
         "prenom": user.prenom,
         "user_id": user.id,
         "filiale": user.filiale or "",
+        "first_login": bool(user.first_login),
     }
 
 
@@ -99,3 +100,17 @@ def update_me(
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.post("/change-password")
+def change_password(
+    data: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    if not verify_password(data.current_password, user.hashed_password):
+        raise HTTPException(400, "Mot de passe actuel incorrect")
+    user.hashed_password = hash_password(data.new_password)
+    user.first_login = False
+    db.commit()
+    return {"message": "Mot de passe mis à jour"}
