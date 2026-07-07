@@ -5,6 +5,16 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Corrigé (2026-07-07)
+
+- `client-layout.ts` : la déconnexion côté client redirigeait vers `client/my-tickets` au lieu de
+  la page de login. Cause : `logout()` appelait `router.navigate(['/login'])` (route inexistante,
+  préfixe `auth/` manquant) juste après que `AuthService.logout()` ait déjà navigué correctement
+  vers `/auth/login` — l'appel redondant tombait sur le wildcard `**` qui redirige vers
+  `client/my-tickets`. Supprimé l'appel redondant (le service gère déjà la navigation) ; nettoyé
+  au passage une injection `Router` inutilisée dans `admin-layout.ts`. Vérifié en direct pour les
+  deux rôles.
+
 ### Refonte frontend (Stitch) — écrans admin + gestion des utilisateurs (2026-07-06)
 
 - `Ajouté` : module **gestion des utilisateurs** (`api/routers/admin.py`, jusque-là un scaffold

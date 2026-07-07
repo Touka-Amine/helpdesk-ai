@@ -1,40 +1,46 @@
 # PROJECT_STATUS.md — Avancement global
 
 > Résumé concis. **Source de vérité : [PLAN.md](PLAN.md)** (section 10 — Tableau de bord).
-> Dernière mise à jour : **2026-07-03** (clôture Phase 8 — Backend API v1.1).
+> Dernière mise à jour : **2026-07-07** (Phase 9 complétée rétroactivement, Phase 12 close).
 
 ## Bandeau
 
 | | |
 |---|---|
-| **Phase active** | Phase 9 — Frontend (connexion + finalisation) |
-| **Progression globale** | ~52 % (Phases 0–1, 3–8 terminées) |
+| **Phase active** | Phase 13 — Optimisation (Phases 0–12 terminées) |
+| **Progression globale** | ~84 % |
 | **Périmètre** | Cœur rehaussé (Must) |
 | **Durée** | Stage 6 mois · GPU local |
-| **Prochaine étape** | Phase 9 : `environment.ts` + page détail + guards + affichage sources RAG |
+| **Prochaine étape** | Décider : Phase 13 Semaine 3 (données réelles) ou Phase 14 (mémoire PFE) |
 
 ## ✅ Terminé
 - EDA + preprocessing (notebooks 01–02) + features enrichies (`text_enriched`)
-- Baseline ML TF-IDF (F1-macro honnête 0.38 seul / 0.57 avec heuristiques, split anti-fuite) — *référence*
-- **CamemBERT-base + LoRA — F1-macro 0.5685** (à parité avec TF-IDF+heuristiques, sans règles codées)
-- Benchmark externe public (Tobi-Bueck : TYPE F1=0.83 / QUEUE F1=0.48)
-- RAG lexical (TF-IDF + cosinus) — *conservé comme fallback*
-- **RAG sémantique FAISS** — `paraphrase-multilingual-mpnet-base-v2`, score cosinus **0.93 vs 0.76** lexical (+0.17)
-- **Évaluation RAG (Phase 7)** — P@3=0.30 sém/0.42 lex, MRR=0.56/0.65, **Score moyen 0.69 sém vs 0.18 lex** ; RAGAS : Answer Relevancy=0.58, Faithfulness=1.0 ; génération template avec citations
-- **Backend API v1.1 (Phase 8)** — `/api/v1` versionné · CORS+rate limiting · SemanticRAG intégré · `/ingest` réparé (API key) · couches services remplies · 14 tests intégration verts
-- Backend cœur (auth, tickets, approbation, historique) + NoSQL TinyDB
-- Documentation (cahier des charges, workflow)
-- Système de pilotage documentaire (11 fichiers)
+- Baseline ML TF-IDF + heuristiques (F1-macro **0.685**, référence de comparaison)
+- **CamemBERT-base + LoRA — F1-macro 0.5685** (à parité avec la baseline, sans règles codées)
+- RAG lexical (conservé comme fallback) + **RAG sémantique FAISS** (score cosinus 0.93 vs 0.76, +0.17)
+- **RAG hybride** (0.5×sémantique + 0.5×lexical, Phase 13 Semaine 2)
+- **Évaluation RAG (RAGAS, Phase 7)** — P@3=0.30 sém/0.42 lex, MRR=0.56/0.65, AR=0.58, Faithfulness=1.0
+- **Backend API v1.1 (Phase 8)** — `/api/v1` versionné, CORS+rate limiting, SemanticRAG intégré, `/ingest` réparé, couches services remplies
+- **Frontend connecté (Phase 9)** — auth JWT, guards, intercepteur, pages détail, feedback persisté
+- **Refonte des 15 écrans (design Stitch) + module gestion des comptes** (2026-07-06/07) : CRUD
+  utilisateurs admin-only, mot de passe temporaire auto-généré, `first_login` forcé, 3 bugs
+  préexistants corrigés (ticket 404 admin, statut d'approbation invalide, badge invisible),
+  bugfix redirection logout client
+- **MLOps léger (Phase 10)** — pipeline DVC (4 stages) + MLflow registry
+- **Déploiement Docker (Phase 11)** — 3 services, CI/CD (lint, tests, build), healthchecks
+- **Tests & validation (Phase 12)** — 41 tests unitaires, 18/18 tests d'intégration, test de
+  charge, matrice exigences→résultats, étude utilisateur légère (5 bugs de déploiement/auth trouvés et corrigés)
+- Documentation (cahier des charges, workflow, système de pilotage 11 fichiers)
 
 ## 🟡 En cours
-- Frontend Angular (non connecté au backend)
-- Couches backend services/repositories/middleware (vides)
+- Phase 13 (Optimisation) — Semaines 1–2 terminées (heuristiques + RAG hybride), Semaine 3
+  (données réelles) conditionnelle
+- Phase 14 (mémoire PFE) — ~15 %, à intensifier
 
 ## 🔴 À faire (prioritaire)
-- **Phase 8** : durcissement sécurité API + intégration CamemBERT + RAG sémantique + fix `/ingest`
-- Phase 2 (reliquat) : RGPD / anonymisation + pipeline DVC
-- Phase 9 : connexion frontend ↔ backend
-- Phases 10–15 : MLOps, déploiement, tests, doc, soutenance
+- Phase 2 (reliquat) : RGPD / anonymisation
+- Phase 13 : optimiser la latence P95 (R-13, non conforme sous charge)
+- Phases 14–15 : mémoire PFE, préparation soutenance
 
 ## Avancement par phase
 | Phase | Avancement |
@@ -43,15 +49,15 @@
 | 1 Cadrage & SRS | ✅ 100 % (SRS v0.1) |
 | 2 Data & RGPD | 🟡 ~45 % (diagnostic qualité + features enrichies faits, RGPD à faire) |
 | 3 EDA | ✅ ~90 % (consolidé + benchmark externe) |
-| 4 ML baseline | ✅ 100 % (multi-modèles + heuristiques, F1 honnête 0.57) |
+| 4 ML baseline | ✅ 100 % (multi-modèles + heuristiques, F1=0.685) |
 | 5 Fine-Tuning | ✅ 100 % (CamemBERT LoRA, F1=0.5685) |
 | 6 RAG sémantique | ✅ 100 % (FAISS + paraphrase-multilingual, score 0.93) |
-| 7 Éval RAG | ✅ 100 % (P@3=0.30 sém, MRR=0.56, AR=0.58, Faith=1.0 ; génération template) |
+| 7 Éval RAG | ✅ 100 % (P@3=0.30 sém, MRR=0.56, AR=0.58, Faith=1.0) |
 | 8 Backend | ✅ 100 % (API v1.1 : /api/v1, sécurité, SemanticRAG, /ingest, services, tests) |
-| 9 Frontend | 🟡 ~65 % |
-| 10 MLOps | 🔴 ~5 % |
-| 11 Déploiement | 🔴 0 % |
-| 12 Tests | 🔴 0 % |
-| 13 Optimisation | 🔴 0 % |
+| 9 Frontend | ✅ 100 % (connexion + 15 écrans Stitch + gestion des comptes, 2026-07-06) |
+| 10 MLOps | ✅ 100 % (DVC 4 stages + MLflow) |
+| 11 Déploiement | ✅ 100 % (Docker 3 services + CI/CD) |
+| 12 Tests | ✅ 100 % (unitaires, intégration, charge, matrice exigences, étude utilisateur) |
+| 13 Optimisation | 🟡 ~65 % (Semaines 1–2 faites, Semaine 3 conditionnelle) |
 | 14 Doc/mémoire | 🟡 ~15 % |
 | 15 Soutenance | 🔴 0 % |

@@ -4,7 +4,8 @@
 > prévue ici. À chaque session : relire ce fichier → identifier la phase/tâche active → exécuter
 > **une seule** tâche → tester → mettre à jour ce fichier → cocher → résumer → proposer la suite.
 >
-> **Méta** — Dernière mise à jour : **2026-07-05** · Phase active : **Phase 13** (Phases 0–12 terminées)
+> **Méta** — Dernière mise à jour : **2026-07-07** · Phase active : **Phase 13** (Phases 0–12
+> terminées, Phase 9 complétée rétroactivement le 2026-07-06 avec la refonte Stitch)
 > · Périmètre : **Cœur rehaussé (Must)** · Durée : **stage 6 mois** · Compute : **GPU local**.
 >
 > **Documents liés** : [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) ·
@@ -69,7 +70,8 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | ✅ | RAG lexical (`src/rag/engine.py`) | 100 % | Bonne (fallback) | — | Conservé comme fallback du RAG hybride (Phase 13). |
 | ✅ | Backend cœur (auth JWT, tickets, approbation, historique) | 100 % | Bonne | Couches services/repos minces mais fonctionnelles | Durci Phase 8 (CORS, rate limiting, OpenAPI /api/v1). |
 | ✅ | Documentation (cahier des charges, workflow) | 85 % | Très bonne | — | Base solide pour le mémoire. |
-| ✅ | Frontend Angular 21 | 100 % | Bonne | — | Connecté au backend (Phase 9) : auth, guards, pages détail, intercepteur JWT. |
+| ✅ | Frontend Angular 21 | 100 % | Bonne | — | Connecté au backend (Phase 9) : auth, guards, pages détail, intercepteur JWT. Les 15 écrans redessinés (design Stitch, thème clair) avec données réelles (2026-07-06). |
+| ✅ | Gestion des comptes / utilisateurs (admin) | 100 % | Bonne | — | CRUD admin-only (`api/routers/admin.py`), mot de passe temporaire auto-généré, `first_login` forcé via guards Angular jusqu'au changement de mot de passe (2026-07-06). |
 | ✅ | Couches `services/`, `db/repositories/`, `middleware/` | 90 % | Bonne | Code mort supprimé (`api/db/__init__.py`, Phase 12) | Rate limiting via dépendance FastAPI. |
 | ✅ | Endpoint `/ingest` | Fonctionnel | Bonne | — | Réécrit Phase 8 : API key, ORM, validation Pydantic. |
 | ✅ | CamemBERT fine-tuné (LoRA) + benchmark | 100 % | F1=0.5685 | features enrichies | Phase 5 — à parité avec TF-IDF+heuristiques mais sans règles codées. Infrastructure/Sécurité à 0.00. |
@@ -403,13 +405,15 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [x] Refactor en couches (`ticket_service.py`, `rag_service.py`, `auth_middleware.py` remplis)
 - [x] Tests d'intégration API (`tests/test_api_integration.py` — 18/18 passent depuis correctif bcrypt Phase 12)
 
-### Phase 9 — Frontend
-- [ ] Configurer `environment.ts`
-- [ ] Aligner enum statuts + modèle `Ticket` sur le backend
-- [ ] Créer la page de détail ticket (+ routes)
-- [ ] Ajouter les guards d'auth/rôles + intercepteur HTTP
-- [ ] Afficher confiance + sources RAG (citations cliquables)
-- [ ] Capturer le feedback utilisateur (👍/👎 + correction)
+### Phase 9 — Frontend ✅ (terminée 2026-07-06)
+- [x] Configurer `environment.ts`
+- [x] Aligner enum statuts + modèle `Ticket` sur le backend
+- [x] Créer la page de détail ticket (+ routes)
+- [x] Ajouter les guards d'auth/rôles + intercepteur HTTP
+- [x] Afficher confiance + sources RAG (citations cliquables)
+- [x] Capturer le feedback utilisateur (👍/👎 + correction) — persisté via `POST /tickets/{id}/feedback` (corrige R-15/EF-13)
+- [x] Refonte des 15 écrans (client + admin) via maquettes Stitch, fabrications retirées au profit de données réelles
+- [x] Module gestion des comptes : CRUD admin-only, mot de passe temporaire, `first_login` obligatoire
 
 ### Phase 10 — MLOps
 - [ ] Compléter le pipeline DVC de bout en bout
@@ -502,13 +506,13 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~82 %** (Phases 0–11 terminées, **Phase 12 terminée**, Phase 13 partiellement avancée) |
-| **Phase actuelle** | Phase 12 — Tests & validation ✅ **terminée** (2026-07-05) |
-| **Tâche actuelle** | Aucune (Phase 12 close) — prochaine phase à démarrer : Phase 13 Semaine 3 (conditionnelle) ou Phase 14 (mémoire) |
-| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · Phase 9 (Frontend connecté) · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · **Phase 12 (tests, matrice exigences, étude utilisateur)** · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) |
+| **Progression globale** | **~84 %** (Phases 0–12 terminées, **Phase 9 complétée rétroactivement** avec la refonte Stitch, Phase 13 partiellement avancée) |
+| **Phase actuelle** | Phase 9 — Frontend ✅ **terminée** (2026-07-06) · Phase 12 — Tests & validation ✅ **terminée** (2026-07-05) |
+| **Tâche actuelle** | Aucune — prochaine phase à démarrer : Phase 13 Semaine 3 (conditionnelle) ou Phase 14 (mémoire) |
+| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · **Phase 9 (Frontend connecté + 15 écrans redessinés Stitch + module gestion des comptes, 2026-07-06)** · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · Phase 12 (tests, matrice exigences, étude utilisateur) · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) |
 | **Tâches restantes** | Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 |
-| **Prochaine étape** | Décider : Phase 13 Semaine 3 (données) ou démarrer Phase 14 (mémoire PFE) — voir aussi corrections urgentes issues de l'étude utilisateur (R-15 feedback trompeur) |
-| **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · split de test sans exemples Backup/Communication (R-14) · feedback client trompeur (R-15) · pas d'auto-routage par confiance (R-16) · RGPD non traité · délai 6 mois · latence P95 non conforme sous charge (R-13, voir [RISKS.md](RISKS.md)) |
+| **Prochaine étape** | Décider : Phase 13 Semaine 3 (données) ou démarrer Phase 14 (mémoire PFE) |
+| **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · split de test sans exemples Backup/Communication (R-14) · pas d'auto-routage par confiance (R-16) · RGPD non traité · délai 6 mois · latence P95 non conforme sous charge (R-13, voir [RISKS.md](RISKS.md)) — *R-15 (feedback client trompeur) clos le 2026-07-06* |
 | **Dette technique** | RGPD à faire (Phase 2 reliquat) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git) · pas de scan sécurité d'image Docker · LLM-as-a-Judge BACKLOG · EF-14 « génération LLM » en réalité template-based (à nuancer au mémoire) · seuil 0.40 obsolète codé en dur dans `tickets.py` · incohérence nommage `priorite`/`priorite_saisie` |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (LLM-as-a-Judge, QLoRA, hybrid search avancé, re-ranking, agents, K8s…) |
 

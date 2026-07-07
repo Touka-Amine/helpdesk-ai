@@ -1,9 +1,25 @@
 # TASKS.md — Tâches de la phase active
 
 > Tâches du sprint courant. Détail complet des checklists dans [PLAN.md](PLAN.md) (section 6).
-> Dernière mise à jour : **2026-07-05**. **Phase active : Phase 13 — Optimisation** (Phase 12 close).
-> ⚠️ Avant Phase 13/14 : traiter **R-15** (feedback client trompeur, [RISKS.md](RISKS.md)) —
-> risque de démo devant jury.
+> Dernière mise à jour : **2026-07-07**. **Phase active : Phase 13 — Optimisation** (Phases 9 et 12 closes).
+
+## ✅ Terminé — Phase 9 : Frontend — refonte Stitch + gestion des comptes (2026-07-06/07)
+- [x] Refonte des 15 écrans (client + admin) via maquettes Stitch — thème clair Tailwind,
+      fabrications de la maquette systématiquement remplacées par des données réelles (voir
+      détail dans [CHANGELOG.md](CHANGELOG.md))
+- [x] Module **gestion des comptes** (spécification produit fournie) : `api/routers/admin.py`
+      réécrit (CRUD admin-only, mot de passe temporaire auto-généré), `User.first_login`
+      (migration additive) + guards Angular forçant `/auth/change-password` tant que le mot de
+      passe temporaire n'a pas été changé — vérifié en direct (création → login → redirection
+      forcée → changement → accès débloqué)
+- [x] `POST /tickets/{id}/feedback` persisté (corrige **R-15/EF-13**, feedback client trompeur)
+- [x] 3 bugs préexistants trouvés et corrigés en testant en direct : admin `GET /tickets/{id}`
+      404 pour les tickets d'autrui, `approve()` envoyait un statut invalide (`Validé`), badge de
+      rôle invisible (syntaxe opacité Tailwind v3 vs v4)
+- [x] **Bugfix** : déconnexion client redirigeait vers `client/my-tickets` au lieu de
+      `/auth/login` — `client-layout.ts` appelait un `router.navigate(['/login'])` redondant et
+      mal typé après que `AuthService.logout()` ait déjà navigué correctement ; supprimé, guards
+      client et admin revérifiés en direct
 
 ## ✅ Terminé — Phase 12 : Tests & validation (2026-07-05)
 - [x] Tests unitaires NLP — `tests/test_preprocess.py` (16 tests : clean_text, simplify_*, build_text_*)
