@@ -25,7 +25,7 @@ import { authGuard, authGuardNoPasswordCheck } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'client/my-tickets', pathMatch: 'full' },
+  { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   { path: 'auth/login',    component: Login },
@@ -64,5 +64,5 @@ export const routes: Routes = [
     ],
   },
 
-  { path: '**', redirectTo: 'client/my-tickets' },
+  { path: '**', redirectTo: 'auth/login' },
 ];

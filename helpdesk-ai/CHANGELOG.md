@@ -5,6 +5,34 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Ajouté / Corrigé (2026-07-16)
+
+- `Ajouté` : **sidebar noire** (admin + client) — identité visuelle propre, indépendante du thème
+  clair/sombre de l'app.
+- `Ajouté` : **mode sombre** (`ThemeService`, `frontend/src/app/core/services/theme.service.ts`) —
+  bouton bascule dans la sidebar, persisté en `localStorage`, défaut basé sur
+  `prefers-color-scheme` au premier lancement. Surcharge des variables CSS `@theme` (Tailwind v4)
+  sous une classe `.dark` sur `<html>` : tous les écrans existants (bg-background, text-on-surface,
+  bg-primary...) basculent automatiquement, sans toucher aux 15 templates.
+- `Modifié` : formulaire **Nouveau ticket** (client) entièrement reconstruit selon la spécification
+  fournie (portage d'un prototype Streamlit) — sélecteur d'exemples pré-remplis (Outlook, VPN,
+  imprimante), questions guidées (depuis quand / message d'erreur / actions tentées), sélecteur de
+  filiale. Description composée automatiquement à partir des réponses, `priorite: "Modéré"` envoyé
+  explicitement. Vérifié en direct : création réelle d'un ticket via `POST /tickets/` avec
+  classification IA (catégorie, confiance, suggestion RAG) retournée par le backend.
+- `Corrigé` : la route racine (`''`) et le wildcard (`**`) redirigeaient vers `client/my-tickets`
+  sans vérifier l'authentification — au démarrage (`npm start`), un visiteur non connecté
+  atterrissait directement dans l'espace client. Les deux redirigent désormais vers `auth/login`.
+  Le composant `Login` redirige immédiatement vers l'espace du bon rôle si une session valide
+  existe déjà (`ngOnInit`), évitant de forcer une reconnexion inutile.
+- `Ajouté` : **expiration de session par inactivité** (`AuthService`, 20 minutes sans interaction
+  souris/clavier/scroll/tactile) — déconnexion automatique + redirection vers `/auth/login`, timer
+  réarmé sur `setSession()` ainsi qu'au démarrage de l'app si une session existante est détectée
+  (survit au rechargement de page).
+- `Ajouté` : `authInterceptor` déconnecte désormais automatiquement l'utilisateur sur toute réponse
+  API `401` (couvre l'expiration réelle du JWT côté backend, 8h, indépendamment du timer
+  d'inactivité côté client). Vérifié en direct avec un token corrompu.
+
 ### Corrigé (2026-07-07)
 
 - `client-layout.ts` : la déconnexion côté client redirigeait vers `client/my-tickets` au lieu de

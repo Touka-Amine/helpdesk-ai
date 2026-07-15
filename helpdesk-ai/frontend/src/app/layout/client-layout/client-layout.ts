@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 interface Notification {
   id: number;
@@ -18,6 +19,7 @@ interface Notification {
 })
 export class ClientLayout {
   private authService = inject(AuthService);
+  theme = inject(ThemeService);
 
   user = this.authService.currentUser();
   notifOpen = signal(false);

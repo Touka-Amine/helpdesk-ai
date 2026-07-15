@@ -1,68 +1,79 @@
 <div class="flex items-start justify-center">
   <main class="w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/40 overflow-hidden">
     <header class="px-container-padding py-stack-lg border-b border-outline-variant/40">
-      <h1 class="font-headline-md text-headline-md text-primary">Nouveau ticket</h1>
-      <p class="font-body-md text-body-md text-on-surface-variant mt-1">Décrivez votre problème simplement, avec vos propres mots.</p>
+      <h1 class="font-headline-md text-headline-md text-primary">Déclarer un problème</h1>
+      <p class="font-body-md text-body-md text-on-surface-variant mt-1">Répondez aux petites questions ci-dessous, c'est très simple.</p>
     </header>
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="px-container-padding py-stack-lg flex flex-col gap-stack-lg">
+      <!-- Exemple -->
+      <div class="flex flex-col gap-stack-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant" for="exemple">
+          S'inspirer d'un exemple <span class="font-body-md text-body-md text-on-surface-variant/60">(optionnel)</span>
+        </label>
+        <select id="exemple" formControlName="exemple" (change)="appliquerExemple($any($event.target).value)"
+          class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-lg font-body-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+          @for (ex of exemples; track ex.label) {
+            <option [value]="ex.label">{{ ex.label }}</option>
+          }
+        </select>
+      </div>
+
+      <hr class="border-outline-variant/40" />
+
       <!-- Titre -->
       <div class="flex flex-col gap-stack-sm">
         <label class="font-label-md text-label-md text-on-surface-variant" for="titre">
-          Quel est votre problème ? <span class="text-error">*</span>
+          Quel est le problème ? <span class="text-error">*</span>
         </label>
-        <input id="titre" type="text" formControlName="titre" placeholder="Ex : Mon imprimante ne répond plus"
+        <input id="titre" type="text" formControlName="titre" placeholder="Ex : Impossible d'imprimer, VPN coupé..." maxlength="150"
           class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-lg font-body-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
         @if (form.get('titre')?.hasError('required') && form.get('titre')?.touched) {
           <span class="text-label-sm font-label-sm text-error">Merci de décrire votre problème.</span>
         }
-      </div>
-
-      <!-- Équipement -->
-      <div class="flex flex-col gap-stack-sm">
-        <label class="font-label-md text-label-md text-on-surface-variant">
-          Ça concerne quoi ? <span class="font-body-md text-body-md text-on-surface-variant/60">(optionnel)</span>
-        </label>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-stack-sm">
-          @for (opt of equipements; track opt.label) {
-            <button type="button" (click)="selectChip('equipement', opt.value)"
-              class="flex flex-col items-center gap-1 p-stack-md rounded-xl border transition-all text-center"
-              [ngClass]="form.get('equipement')?.value === opt.value
-                ? 'border-primary bg-surface-container-low ring-2 ring-primary'
-                : 'border-outline-variant hover:border-primary/50 bg-surface-container-low'">
-              <span class="material-symbols-outlined text-primary">{{ opt.icon }}</span>
-              <span class="font-label-sm text-label-sm text-on-surface">{{ opt.label }}</span>
-            </button>
-          }
-        </div>
+        @if (form.get('titre')?.hasError('minlength') && form.get('titre')?.touched) {
+          <span class="text-label-sm font-label-sm text-error">Au moins 5 caractères.</span>
+        }
       </div>
 
       <!-- Depuis quand -->
       <div class="flex flex-col gap-stack-sm">
-        <label class="font-label-md text-label-md text-on-surface-variant">
+        <label class="font-label-md text-label-md text-on-surface-variant" for="quand">
           Depuis quand ? <span class="font-body-md text-body-md text-on-surface-variant/60">(optionnel)</span>
         </label>
-        <div class="grid grid-cols-3 gap-stack-sm">
-          @for (opt of delais; track opt.label) {
-            <button type="button" (click)="selectChip('depuisQuand', opt.value)"
-              class="flex flex-col items-center gap-1 p-stack-md rounded-xl border transition-all text-center"
-              [ngClass]="form.get('depuisQuand')?.value === opt.value
-                ? 'border-primary bg-surface-container-low ring-2 ring-primary'
-                : 'border-outline-variant hover:border-primary/50 bg-surface-container-low'">
-              <span class="material-symbols-outlined text-primary">{{ opt.icon }}</span>
-              <span class="font-label-sm text-label-sm text-on-surface">{{ opt.label }}</span>
-            </button>
-          }
-        </div>
+        <input id="quand" type="text" formControlName="quand" placeholder="Ex : Ce matin, hier après-midi..."
+          class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-lg font-body-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
       </div>
 
-      <!-- Détails -->
+      <!-- Message d'erreur -->
       <div class="flex flex-col gap-stack-sm">
-        <label class="font-label-md text-label-md text-on-surface-variant" for="details">
-          Voulez-vous ajouter des détails ? <span class="font-body-md text-body-md text-on-surface-variant/60">(optionnel)</span>
+        <label class="font-label-md text-label-md text-on-surface-variant" for="message">
+          Quel message d'erreur voyez-vous ? <span class="font-body-md text-body-md text-on-surface-variant/60">(optionnel)</span>
         </label>
-        <textarea id="details" formControlName="details" rows="3" placeholder="Ex : ça affiche « hors ligne » depuis ce matin..."
+        <input id="message" type="text" formControlName="message" placeholder="Ex : « Code d'erreur 0x80070005 »"
+          class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-lg font-body-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" />
+      </div>
+
+      <!-- Actions deja tentees -->
+      <div class="flex flex-col gap-stack-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant" for="actions">
+          Qu'avez-vous déjà essayé ? <span class="font-body-md text-body-md text-on-surface-variant/60">(optionnel)</span>
+        </label>
+        <textarea id="actions" formControlName="actions" rows="3" placeholder="Ex : Redémarré l'ordinateur, vérifié les câbles, réinstallé le logiciel..."
           class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-lg font-body-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none"></textarea>
+      </div>
+
+      <!-- Filiale -->
+      <div class="flex flex-col gap-stack-sm">
+        <label class="font-label-md text-label-md text-on-surface-variant" for="filiale">
+          Filiale <span class="text-error">*</span>
+        </label>
+        <select id="filiale" formControlName="filiale"
+          class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-lg font-body-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+          @for (f of filiales; track f) {
+            <option [value]="f">{{ f }}</option>
+          }
+        </select>
       </div>
 
       @if (errorMsg()) {
@@ -82,7 +93,7 @@
           @if (submitting()) {
             <span>Envoi…</span>
           } @else {
-            <span>Envoyer ma demande</span>
+            <span>Envoyer mon problème</span>
             <span class="material-symbols-outlined text-[18px]">send</span>
           }
         </button>

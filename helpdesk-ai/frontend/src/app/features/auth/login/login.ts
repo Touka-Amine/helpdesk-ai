@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -12,7 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login {
+export class Login implements OnInit {
   private fb      = inject(FormBuilder);
   private authApi = inject(AuthApiService);
   private auth    = inject(AuthService);
@@ -21,6 +21,14 @@ export class Login {
   loading      = signal(false);
   errorMsg     = signal<string | null>(null);
   showPassword = signal(false);
+
+  ngOnInit(): void {
+    // Session deja valide (token present, pas de changement de mdp requis) :
+    // on saute l'ecran de login et on redirige directement selon le role.
+    if (this.auth.isAuthenticated() && !this.auth.needsPasswordChange()) {
+      this.redirectByRole();
+    }
+  }
 
   togglePassword(): void {
     this.showPassword.update((v) => !v);
@@ -42,7 +50,11 @@ export class Login {
       next: (res) => {
         this.auth.setSession(res);
         this.loading.set(false);
-        this.router.navigate(res.role === 'admin' ? ['/admin/dashboard'] : ['/client/my-tickets']);
+        if (res.first_login) {
+          this.router.navigate(['/auth/change-password']);
+        } else {
+          this.redirectByRole();
+        }
       },
       error: (err) => {
         this.loading.set(false);
@@ -53,5 +65,9 @@ export class Login {
         );
       },
     });
+  }
+
+  private redirectByRole(): void {
+    this.router.navigate(this.auth.isAdmin() ? ['/admin/dashboard'] : ['/client/my-tickets']);
   }
 }

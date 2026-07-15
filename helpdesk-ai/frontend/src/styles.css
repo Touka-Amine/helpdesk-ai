@@ -74,6 +74,44 @@
   --spacing-container-padding: 24px;
 }
 
+/* Mode sombre — surcharge des variables de couleur du theme quand <html> porte
+   la classe .dark (pilote par ThemeService). Les classes Tailwind (bg-background,
+   text-on-surface, bg-primary...) restent inchangees partout dans l'app : elles
+   lisent ces variables, donc les surcharger ici suffit a assombrir tous les ecrans. */
+.dark {
+  --color-primary: #c3bfff;
+  --color-on-primary: #2f27a0;
+  --color-primary-container: #4f46e5;
+  --color-on-primary-container: #e3e0ff;
+  --color-secondary: #bfc6dc;
+  --color-on-secondary: #29314a;
+  --color-secondary-container: #404862;
+  --color-on-secondary-container: #dae2fd;
+  --color-tertiary: #d6bbfa;
+  --color-on-tertiary: #3b0e78;
+  --color-tertiary-container: #6f3dd9;
+  --color-on-tertiary-container: #ecdcff;
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+  --color-background: #131318;
+  --color-on-background: #e5e1e9;
+  --color-surface: #131318;
+  --color-surface-dim: #131318;
+  --color-surface-bright: #38383f;
+  --color-surface-container-lowest: #0d0d12;
+  --color-surface-container-low: #1b1b21;
+  --color-surface-container: #1f1f26;
+  --color-surface-container-high: #292930;
+  --color-surface-container-highest: #34343b;
+  --color-surface-variant: #46464f;
+  --color-on-surface: #e5e1e9;
+  --color-on-surface-variant: #c8c5d0;
+  --color-outline: #928f9a;
+  --color-outline-variant: #46464f;
+}
+
 html, body {
   margin: 0;
   padding: 0;

@@ -4,8 +4,10 @@
 > prévue ici. À chaque session : relire ce fichier → identifier la phase/tâche active → exécuter
 > **une seule** tâche → tester → mettre à jour ce fichier → cocher → résumer → proposer la suite.
 >
-> **Méta** — Dernière mise à jour : **2026-07-07** · Phase active : **Phase 13** (Phases 0–12
-> terminées, Phase 9 complétée rétroactivement le 2026-07-06 avec la refonte Stitch)
+> **Méta** — Dernière mise à jour : **2026-07-16** · Phase active : **Phase 13** (Phases 0–12
+> terminées, Phase 9 complétée rétroactivement le 2026-07-06 avec la refonte Stitch, corrections
+> UX complémentaires le 2026-07-16 : sidebar noire, mode sombre, formulaire ticket, routing,
+> expiration de session — voir [CHANGELOG.md](CHANGELOG.md))
 > · Périmètre : **Cœur rehaussé (Must)** · Durée : **stage 6 mois** · Compute : **GPU local**.
 >
 > **Documents liés** : [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) ·

@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router'; // <-- 1. On importe le routeur
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -10,4 +11,5 @@ import { RouterOutlet } from '@angular/router'; // <-- 1. On importe le routeur
 })
 export class App {
   title = 'frontend';
+  private theme = inject(ThemeService);
 }

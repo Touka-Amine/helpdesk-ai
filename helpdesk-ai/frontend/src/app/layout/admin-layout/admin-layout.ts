@@ -3,6 +3,7 @@ import { RouterOutlet, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { TicketApiService } from '../../api/ticket-api.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -14,6 +15,7 @@ import { TicketApiService } from '../../api/ticket-api.service';
 export class AdminLayout implements OnInit {
   private authService = inject(AuthService);
   private ticketApi = inject(TicketApiService);
+  theme = inject(ThemeService);
 
   user = this.authService.currentUser();
   pendingCount = signal(0);

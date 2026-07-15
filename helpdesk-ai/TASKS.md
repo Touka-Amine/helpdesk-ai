@@ -1,7 +1,13 @@
 # TASKS.md — Tâches de la phase active
 
 > Tâches du sprint courant. Détail complet des checklists dans [PLAN.md](PLAN.md) (section 6).
-> Dernière mise à jour : **2026-07-07**. **Phase active : Phase 13 — Optimisation** (Phases 9 et 12 closes).
+> Dernière mise à jour : **2026-07-16**. **Phase active : Phase 13 — Optimisation** (Phases 9 et 12 closes).
+
+## ✅ Terminé — Corrections UX post-Phase 9 (2026-07-16)
+- [x] Sidebar noire (admin + client) + mode sombre app entière (`ThemeService`, toggle persisté)
+- [x] Formulaire Nouveau ticket (client) reconstruit selon spec produit (exemples pré-remplis + questions guidées)
+- [x] Routing racine/wildcard → `auth/login` (au lieu de `client/my-tickets` sans verif d'auth) ; login redirige immédiatement par rôle si session déjà valide
+- [x] Expiration de session par inactivité (20 min) + déconnexion automatique sur 401 backend
 
 ## ✅ Terminé — Phase 9 : Frontend — refonte Stitch + gestion des comptes (2026-07-06/07)
 - [x] Refonte des 15 écrans (client + admin) via maquettes Stitch — thème clair Tailwind,

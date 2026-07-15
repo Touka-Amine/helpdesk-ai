@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TicketApiService } from '../../../api/ticket-api.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { CreateTicketRequest } from '../../../models/ticket.models';
+import { CreateTicketRequest, FILIALES } from '../../../models/ticket.models';
 
-interface ChipOption {
-  value: string;
+interface Exemple {
   label: string;
-  icon: string;
+  titre: string;
+  quand: string;
+  message: string;
+  actions: string;
 }
 
 @Component({
@@ -22,43 +23,65 @@ interface ChipOption {
 export class NewTicket {
   private fb = inject(FormBuilder);
   private ticketApi = inject(TicketApiService);
-  private auth = inject(AuthService);
   private router = inject(Router);
 
+  filiales = FILIALES;
   submitting = signal(false);
   errorMsg = signal<string | null>(null);
   successMsg = signal<string | null>(null);
 
-  // Options simples, sans jargon : servent a la fois a guider l'utilisateur
-  // et a enrichir le texte envoye au modele de classification.
-  equipements: ChipOption[] = [
-    { value: 'Ordinateur ou portable', label: 'Ordinateur / portable', icon: 'computer' },
-    { value: 'Imprimante', label: 'Imprimante', icon: 'print' },
-    { value: 'Téléphone ou mobile', label: 'Téléphone / mobile', icon: 'smartphone' },
-    { value: 'Logiciel ou application', label: 'Logiciel / application', icon: 'apps' },
-    { value: 'Réseau, Wifi ou VPN', label: 'Réseau / Wifi / VPN', icon: 'wifi' },
-    { value: '', label: 'Autre / je ne sais pas', icon: 'help' },
-  ];
-
-  delais: ChipOption[] = [
-    { value: "À l'instant", label: "À l'instant", icon: 'bolt' },
-    { value: "Depuis aujourd'hui", label: "Depuis aujourd'hui", icon: 'today' },
-    { value: 'Depuis plusieurs jours', label: 'Depuis plusieurs jours', icon: 'date_range' },
+  // Exemples adaptes au format questions, pour aider les utilisateurs peu a l'aise
+  // avec la redaction d'un ticket a comprendre ce qui est attendu dans chaque champ.
+  exemples: Exemple[] = [
+    { label: '— Saisie libre —', titre: '', quand: '', message: '', actions: '' },
+    {
+      label: "Outlook ne s'ouvre plus",
+      titre: "Impossible d'ouvrir Outlook",
+      quand: 'Ce matin, vers 9h',
+      message: '« Outlook ne peut pas se connecter au serveur »',
+      actions: "J'ai redémarré mon ordinateur, mais rien n'a changé.",
+    },
+    {
+      label: 'VPN ne se connecte pas',
+      titre: 'Problème de connexion VPN',
+      quand: 'Depuis hier soir 18h',
+      message: "« Échec d'authentification »",
+      actions: "J'ai ressaisi mon mot de passe, redémarré la box, testé en 4G.",
+    },
+    {
+      label: 'Imprimante bloquée',
+      titre: "L'imprimante du bureau ne répond plus",
+      quand: 'Depuis ce matin 8h30',
+      message: '« Hors ligne »',
+      actions: "J'ai éteint et rallumé l'imprimante, vérifié les câbles.",
+    },
   ];
 
   form = this.fb.group({
-    titre: ['', [Validators.required, Validators.minLength(3)]],
-    equipement: [''],
-    depuisQuand: [''],
-    details: [''],
+    exemple: [this.exemples[0].label],
+    titre: ['', [Validators.required, Validators.minLength(5)]],
+    quand: [''],
+    message: [''],
+    actions: [''],
+    filiale: [FILIALES[0], Validators.required],
   });
+
+  appliquerExemple(label: string): void {
+    const ex = this.exemples.find((e) => e.label === label) ?? this.exemples[0];
+    this.form.patchValue({
+      titre: ex.titre,
+      quand: ex.quand,
+      message: ex.message,
+      actions: ex.actions,
+    });
+  }
 
   submit(): void {
     this.errorMsg.set(null);
     this.successMsg.set(null);
 
     if (this.form.invalid) {
-      this.errorMsg.set('Merci de décrire votre problème.');
+      this.errorMsg.set('Merci de décrire le problème en au moins 5 caractères.');
       this.form.markAllAsTouched();
       return;
     }
@@ -67,49 +90,46 @@ export class NewTicket {
     const payload: CreateTicketRequest = {
       titre: (v.titre ?? '').trim(),
       description: this.composeDescription(),
-      filiale: this.auth.currentUser()?.filiale ?? '',
-      equipement: v.equipement || '',
+      priorite: 'Modéré',
+      filiale: v.filiale ?? '',
+      equipement: '',
     };
 
     this.submitting.set(true);
     this.ticketApi.createTicket(payload).subscribe({
       next: () => {
         this.submitting.set(false);
-        this.successMsg.set('Votre demande a bien été envoyée !');
-        this.form.reset({ titre: '', equipement: '', depuisQuand: '', details: '' });
+        this.successMsg.set("Ticket envoyé avec succès ! L'équipe IT vous répondra rapidement.");
+        this.resetForm();
         setTimeout(() => this.router.navigate(['/client/my-tickets']), 1200);
       },
       error: (err: any) => {
         this.submitting.set(false);
-        this.errorMsg.set(`Une erreur est survenue (${err.status}). Veuillez réessayer.`);
+        this.errorMsg.set(`Erreur ${err.status}. Veuillez réessayer.`);
       },
     });
-  }
-
-  selectChip(control: 'equipement' | 'depuisQuand', value: string): void {
-    const current = this.form.get(control)?.value;
-    this.form.patchValue({ [control]: current === value ? '' : value });
   }
 
   cancel(): void {
     this.router.navigate(['/client/home']);
   }
 
-  /**
-   * Compose une description en français naturel à partir des réponses guidées,
-   * pour donner au modèle un texte proche de ce qu'il voit à l'entraînement
-   * plutôt que des paires clé/valeur brutes.
-   */
   private composeDescription(): string {
     const v = this.form.value;
-    const parts: string[] = [];
+    const quand = (v.quand ?? '').trim() || 'Non précisé';
+    const message = (v.message ?? '').trim() || 'Aucun message indiqué';
+    const actions = (v.actions ?? '').trim() || 'Aucune action indiquée';
+    return `Depuis quand ? ${quand}\nMessage d'erreur : ${message}\nActions déjà tentées : ${actions}`;
+  }
 
-    const details = (v.details ?? '').trim();
-    if (details) parts.push(details);
-
-    if (v.equipement) parts.push(`Équipement concerné : ${v.equipement}.`);
-    if (v.depuisQuand) parts.push(`${v.depuisQuand}.`);
-
-    return parts.length > 0 ? parts.join(' ') : 'Aucun détail supplémentaire fourni.';
+  private resetForm(): void {
+    this.form.reset({
+      exemple: this.exemples[0].label,
+      titre: '',
+      quand: '',
+      message: '',
+      actions: '',
+      filiale: FILIALES[0],
+    });
   }
 }
