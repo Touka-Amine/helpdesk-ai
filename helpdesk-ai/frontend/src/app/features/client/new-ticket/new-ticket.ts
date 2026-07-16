@@ -33,7 +33,6 @@ export class NewTicket {
   // Exemples adaptes au format questions, pour aider les utilisateurs peu a l'aise
   // avec la redaction d'un ticket a comprendre ce qui est attendu dans chaque champ.
   exemples: Exemple[] = [
-    { label: '— Saisie libre —', titre: '', quand: '', message: '', actions: '' },
     {
       label: "Outlook ne s'ouvre plus",
       titre: "Impossible d'ouvrir Outlook",
@@ -58,7 +57,7 @@ export class NewTicket {
   ];
 
   form = this.fb.group({
-    exemple: [this.exemples[0].label],
+    exemple: [''],
     titre: ['', [Validators.required, Validators.minLength(5)]],
     quand: [''],
     message: [''],
@@ -67,7 +66,8 @@ export class NewTicket {
   });
 
   appliquerExemple(label: string): void {
-    const ex = this.exemples.find((e) => e.label === label) ?? this.exemples[0];
+    const ex = this.exemples.find((e) => e.label === label);
+    if (!ex) return;
     this.form.patchValue({
       titre: ex.titre,
       quand: ex.quand,
@@ -136,7 +136,7 @@ export class NewTicket {
 
   private resetForm(): void {
     this.form.reset({
-      exemple: this.exemples[0].label,
+      exemple: '',
       titre: '',
       quand: '',
       message: '',
