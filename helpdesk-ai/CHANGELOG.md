@@ -5,6 +5,24 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Corrigé / Modifié (2026-07-16, suite)
+
+- `Corrigé` : `new-ticket.ts::composeDescription()` injectait un texte de substitution
+  ("Non précisé", "Aucun message indiqué", "Aucune action indiquée") pour chaque question laissée
+  vide — or `predict_and_recommend()` (`api/services/ai_service.py`) classe le ticket à partir de
+  **la seule `description`** (le titre n'est pas lu à cette étape). Résultat observé : un ticket
+  avec toutes les questions vides envoyait ce texte de remplissage tel quel au classifieur, qui le
+  catégorisait avec une confiance trompeuse (78 %) puis restreignait le RAG à cette catégorie
+  probablement erronée — d'où une suggestion hors-sujet (ticket "problème de connexion" → solution
+  à propos d'un ERP). Les questions vides sont désormais simplement omises de la description
+  envoyée à l'API, au lieu d'être remplacées par un texte générique.
+- `Modifié` : le panneau technique **"Solution suggérée par l'IA"** (texte de résolution + source
+  RAG) n'est plus affiché au client — ce contenu est écrit pour un agent IT et suppose des
+  connaissances techniques que l'utilisateur final n'a pas. Remplacé par un panneau **"Suivi de
+  votre demande"** en langage simple, dérivé du statut du ticket (`ticket-detail.ts`/`.html`
+  côté client). Le panneau RAG technique reste inchangé côté admin (`features/admin/ticket-detail`)
+  où il sert d'aide à la décision basée sur l'historique, comme prévu.
+
 ### Ajouté / Corrigé (2026-07-16)
 
 - `Ajouté` : **sidebar noire** (admin + client) — identité visuelle propre, indépendante du thème

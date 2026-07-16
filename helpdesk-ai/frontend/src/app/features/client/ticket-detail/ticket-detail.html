@@ -72,36 +72,14 @@
         </div>
       </section>
 
-      <!-- Solution IA -->
-      @if (t.solution_rag) {
+      <!-- Suivi de la demande (pas de contenu IA technique : reserve aux admins) -->
+      @if (t.statut !== 'Résolu') {
         <section class="bg-surface-container-lowest border-l-4 border-primary rounded-xl overflow-hidden shadow-sm">
-          <div class="p-container-padding space-y-stack-lg">
-            <div class="flex items-center gap-3 text-primary">
-              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
-              <h3 class="font-headline-sm text-headline-sm">Solution suggérée par l'IA</h3>
-            </div>
-            <p class="font-body-md text-body-md text-on-surface leading-relaxed">{{ t.solution_rag }}</p>
-
-            @if (t.knowledge_rag) {
-              <details class="group border border-outline-variant/40 rounded-lg overflow-hidden">
-                <summary class="flex items-center justify-between p-stack-md bg-surface-container cursor-pointer hover:bg-surface-container-high transition-colors list-none">
-                  <span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
-                    <span class="material-symbols-outlined text-outline text-[18px]">menu_book</span>
-                    Voir la source
-                  </span>
-                  <span class="material-symbols-outlined text-outline group-open:rotate-180 transition-transform text-[18px]">expand_more</span>
-                </summary>
-                <div class="p-stack-md bg-surface-container-lowest border-t border-outline-variant/40">
-                  <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">{{ t.knowledge_rag }}</p>
-                </div>
-              </details>
-            }
-
-            <div class="p-3 bg-primary/5 rounded-lg flex gap-3 items-start border border-primary/10">
-              <span class="material-symbols-outlined text-primary text-[20px]">info</span>
-              <p class="text-label-sm font-label-sm text-primary leading-tight">
-                Cette réponse a été générée automatiquement. Un agent IT valide chaque ticket avant traitement.
-              </p>
+          <div class="p-container-padding flex gap-stack-md items-start">
+            <span class="material-symbols-outlined text-primary text-[28px]">{{ suiviIcon() }}</span>
+            <div class="space-y-1">
+              <h3 class="font-headline-sm text-headline-sm text-on-surface">Suivi de votre demande</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">{{ suiviMessage() }}</p>
             </div>
           </div>
         </section>

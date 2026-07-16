@@ -114,12 +114,24 @@ export class NewTicket {
     this.router.navigate(['/client/home']);
   }
 
+  // N'injecte que les reponses reellement fournies : un champ laisse vide ne doit
+  // pas se traduire par un texte "Non precise" envoye tel quel au classifieur IA,
+  // qui ne lit que ce champ description (pas le titre) pour predire la categorie.
   private composeDescription(): string {
     const v = this.form.value;
-    const quand = (v.quand ?? '').trim() || 'Non précisé';
-    const message = (v.message ?? '').trim() || 'Aucun message indiqué';
-    const actions = (v.actions ?? '').trim() || 'Aucune action indiquée';
-    return `Depuis quand ? ${quand}\nMessage d'erreur : ${message}\nActions déjà tentées : ${actions}`;
+    const parts: string[] = [];
+
+    const quand = (v.quand ?? '').trim();
+    const message = (v.message ?? '').trim();
+    const actions = (v.actions ?? '').trim();
+    if (quand) parts.push(`Depuis quand ? ${quand}`);
+    if (message) parts.push(`Message d'erreur : ${message}`);
+    if (actions) parts.push(`Actions déjà tentées : ${actions}`);
+
+    if (parts.length === 0) {
+      return `${(v.titre ?? '').trim()}. Aucun détail complémentaire fourni par l'utilisateur.`;
+    }
+    return parts.join('\n');
   }
 
   private resetForm(): void {

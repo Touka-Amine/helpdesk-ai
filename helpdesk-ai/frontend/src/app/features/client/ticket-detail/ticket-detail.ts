@@ -41,6 +41,34 @@ export class TicketDetailClient implements OnInit {
     return '#dc2626';
   });
 
+  // La solution RAG (texte technique destine a un agent IT) n'est pas affichee au
+  // client, qui n'a pas les connaissances pour l'interpreter. On lui montre a la
+  // place un message de suivi simple, base sur le statut.
+  suiviMessage = computed(() => {
+    switch (this.ticket()?.statut) {
+      case 'En attente':
+        return "Votre demande a bien été reçue et automatiquement classée. Un technicien va l'examiner très prochainement.";
+      case 'Prise en Charge':
+        return 'Votre demande est en cours de traitement par notre équipe IT.';
+      case 'Problème':
+        return 'Un point de blocage a été identifié sur votre demande, notre équipe IT y travaille activement.';
+      case 'Rejeté':
+        return 'Cette demande a été clôturée par notre équipe IT.';
+      default:
+        return 'Votre demande a bien été reçue.';
+    }
+  });
+
+  suiviIcon = computed(() => {
+    switch (this.ticket()?.statut) {
+      case 'En attente': return 'schedule';
+      case 'Prise en Charge': return 'build';
+      case 'Problème': return 'report';
+      case 'Rejeté': return 'block';
+      default: return 'info';
+    }
+  });
+
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.ticketApi.getMyTicketDetail(id).subscribe({
