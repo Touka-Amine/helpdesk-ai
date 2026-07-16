@@ -36,3 +36,6 @@ mlruns/
 .DS_Store
 Thumbs.db
 *.swp
+
+# Config locale Claude Code (permissions/session propres a la machine)
+.claude/settings.local.json
