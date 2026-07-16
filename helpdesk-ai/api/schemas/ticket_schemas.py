@@ -41,6 +41,7 @@ class TicketOut(BaseModel):
     confiance: Optional[float] = None
     solution_rag: str = ""
     knowledge_rag: str = ""
+    rag_score: Optional[float] = None
     created_at: Optional[str | datetime] = None
     date_resolution: Optional[str | datetime] = None
     commentaire_client: str = ""

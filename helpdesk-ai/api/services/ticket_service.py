@@ -27,6 +27,7 @@ def ticket_to_dict(ticket: Ticket) -> dict:
         "confiance"          : getattr(ticket, "confiance", None),
         "solution_rag"       : getattr(ticket, "solution_rag", "") or "",
         "knowledge_rag"      : getattr(ticket, "knowledge_rag", "") or "",
+        "rag_score"          : getattr(ticket, "rag_score", None),
         "statut"             : ticket.statut or "En attente",
         "created_at"         : ticket.created_at,
         "date_resolution"    : getattr(ticket, "resolved_at", None),

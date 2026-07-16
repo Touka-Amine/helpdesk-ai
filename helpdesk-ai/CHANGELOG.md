@@ -5,7 +5,36 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
-### Corrigé / Modifié (2026-07-16, suite)
+### Ajouté / Corrigé (2026-07-16, boucle admin → base de connaissances RAG)
+
+- `Ajouté` : détection de « cas nouveau » — le score de similarité de la meilleure suggestion RAG
+  (`rag_score`, déjà calculé par `HybridRAGEngine` mais jusque-là jamais transmis à l'API) est
+  désormais persisté sur le ticket (nouvelle colonne `Ticket.rag_score`, migration additive) et
+  exposé via `TicketOut`. Sous 0.50 (`NOVELTY_THRESHOLD`, même seuil que
+  `HybridRAGEngine.similarity_threshold`), l'écran admin affiche « Nouveau type de problème » à la
+  place de la suggestion RAG, et le champ **Solution appliquée** (renommage de « Note interne »)
+  devient obligatoire avant de pouvoir passer le ticket à *Résolu* — vérifié côté serveur
+  (`PATCH /tickets/{id}/approve` renvoie 400 si absent) et côté client (message inline). Au-dessus
+  du seuil, comportement inchangé (suggestion affichée, champ facultatif).
+- `Modifié` : `archive_resolved_ticket()` (base de connaissances TinyDB qui alimente le RAG)
+  enregistre désormais la solution **réellement appliquée par l'admin**
+  (`commentaire_interne`/`commentaire_admin`) en priorité, et ne retombe sur la proposition IA
+  d'origine (`solution_rag`, jamais validée humainement) que si l'admin n'a rien saisi. Vérifié en
+  direct : un ticket "nouveau" archive la solution tapée par l'admin ; un ticket "connu" résolu
+  sans note archive la suggestion IA telle quelle.
+- `Corrigé` (bug préexistant, aggravé par le point précédent) : `_migrate_columns()` n'était pas
+  tolérante aux 2 workers uvicorn démarrant en parallèle (`Dockerfile.api`, `--workers 2`) — les
+  deux tentaient `ALTER TABLE ADD COLUMN` simultanément, le perdant plantait avec
+  `duplicate column name` non intercepté (contrairement à `_seed_users()` qui a déjà un
+  `try/except`). Invisible jusqu'ici car aucune migration n'avait été ajoutée depuis le fix bcrypt
+  (Phase 12) ; révélé par l'ajout de `rag_score`. Chaque `ALTER TABLE` est maintenant tolérant à
+  l'erreur `duplicate column name`.
+- `Corrigé` : `ticket-detail.ts` (client et admin) lisait `route.snapshot.paramMap` une seule fois
+  dans `ngOnInit()` — en changeant de ticket sans rechargement complet (même route, id différent),
+  Angular réutilise le composant sans relancer `ngOnInit`, donc le ticket précédemment affiché
+  restait visible (statut, description, historique) malgré l'URL à jour. Remplacé par un abonnement
+  à `route.paramMap` (observable), qui recharge les données à chaque changement d'id.
+- `Corrigé` : `new-ticket.ts::composeDescription()` injectait un texte de substitution
 
 - `Corrigé` : `new-ticket.ts::composeDescription()` injectait un texte de substitution
   ("Non précisé", "Aucun message indiqué", "Aucune action indiquée") pour chaque question laissée

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -7,6 +7,9 @@ import {
   Ticket, STATUT_CFG, TicketHistoryEntry,
   Statut, ApproveTicketRequest,
 } from '../../../models/ticket.models';
+
+// Meme seuil que NOVELTY_THRESHOLD cote backend (api/routers/tickets.py)
+const NOVELTY_THRESHOLD = 0.5;
 
 const TRANSITIONS: Record<Statut, Statut[]> = {
   'En attente':      ['Prise en Charge', 'Rejeté'],
@@ -39,6 +42,13 @@ export class TicketDetail implements OnInit {
   statutCfg = STATUT_CFG;
   availableStatuts = signal<Statut[]>([]);
 
+  // Aucun cas historique proche : la solution appliquee devient obligatoire
+  // avant de resoudre, car c'est elle qui alimentera la base de connaissances.
+  isNovelCase = computed(() => {
+    const s = this.ticket()?.rag_score;
+    return s == null || s < NOVELTY_THRESHOLD;
+  });
+
   form = this.fb.group({
     statut:            ['', Validators.required],
     categorie_finale:  [''],
@@ -47,7 +57,21 @@ export class TicketDetail implements OnInit {
   });
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    // route.paramMap (observable) plutot que route.snapshot : la navigation d'un
+    // ticket vers un autre reutilise le meme composant (meme route), donc un
+    // snapshot lu une seule fois au demarrage laisserait afficher le ticket
+    // precedent tant que la page n'est pas rechargee manuellement.
+    this.route.paramMap.subscribe((params) => {
+      const id = Number(params.get('id'));
+      this.loadTicket(id);
+    });
+  }
+
+  private loadTicket(id: number): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.success.set(null);
+    this.history.set([]);
     this.ticketApi.getMyTicketDetail(id).subscribe({
       next: (t) => {
         this.ticket.set(t);
@@ -73,10 +97,18 @@ export class TicketDetail implements OnInit {
 
   save(): void {
     if (this.form.invalid || !this.ticket()) return;
-    this.saving.set(true);
     this.error.set(null);
     this.success.set(null);
     const v = this.form.value;
+
+    if (v.statut === 'Résolu' && this.isNovelCase() && !(v.commentaire_interne ?? '').trim()) {
+      this.error.set(
+        "Aucun cas similaire connu pour ce ticket : décrivez la solution appliquée dans « Solution appliquée » avant de le marquer comme résolu.",
+      );
+      return;
+    }
+
+    this.saving.set(true);
     const payload: ApproveTicketRequest = {
       statut: v.statut as Statut,
       categorie_finale: v.categorie_finale ?? undefined,
@@ -101,7 +133,7 @@ export class TicketDetail implements OnInit {
     if (!this.ticket()) return;
     this.ticketApi.refreshRag(this.ticket()!.id).subscribe({
       next: (updated: any) => {
-        this.ticket.update(t => t ? { ...t, solution_rag: updated.solution_rag, knowledge_rag: updated.knowledge_rag } : t);
+        this.ticket.update(t => t ? { ...t, solution_rag: updated.solution_rag, knowledge_rag: updated.knowledge_rag, rag_score: updated.rag_score } : t);
         this.success.set('Recommandation RAG rafraîchie.');
       },
       error: () => this.error.set('Erreur lors du rafraîchissement RAG.'),

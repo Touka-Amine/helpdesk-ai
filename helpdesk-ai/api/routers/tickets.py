@@ -11,6 +11,10 @@ from api.schemas.ticket_schemas import ApproveRequest, FeedbackRequest, TicketCr
 from api.services.ai_service import predict_and_recommend, recommend_for_category
 from api.services.ticket_service import ticket_to_dict, log_ticket_history
 
+# Sous ce score de similarité RAG, on considère qu'aucun cas historique proche
+# n'existe ("nouveau type de problème") — même seuil que HybridRAGEngine (predictor.py).
+NOVELTY_THRESHOLD = 0.50
+
 # Statuts valides et transitions permises
 VALID_STATUSES = ["En attente", "Prise en Charge", "Résolu", "Rejeté", "Problème"]
 STATUS_TRANSITIONS = {
@@ -46,6 +50,7 @@ def create_ticket(
         statut="En attente",
         solution_rag=pred.get("solution", ""),
         knowledge_rag=pred.get("knowledge", ""),
+        rag_score=pred.get("rag_score"),
         created_at=datetime.now(timezone.utc),
     )
     db.add(ticket)
@@ -130,10 +135,22 @@ def approve_ticket(
     current_status = ticket.statut or "En attente"
     if new_status not in STATUS_TRANSITIONS.get(current_status, []):
         raise HTTPException(
-            400, 
+            400,
             f"Transition non permise: {current_status} → {new_status}. "
             f"Transitions permises depuis {current_status}: {STATUS_TRANSITIONS.get(current_status, [])}"
         )
+
+    # Cas "nouveau" (aucune correspondance RAG fiable) : la solution appliquée par
+    # l'admin devient obligatoire avant de clore le ticket, car c'est elle qui
+    # alimentera la base de connaissances pour les prochains tickets similaires.
+    if new_status == "Résolu" and (ticket.rag_score is None or ticket.rag_score < NOVELTY_THRESHOLD):
+        solution_saisie = (body.commentaire_interne if body.commentaire_interne is not None else ticket.commentaire_admin) or ""
+        if not solution_saisie.strip():
+            raise HTTPException(
+                400,
+                "Aucun cas similaire connu pour ce ticket : merci de décrire la solution appliquée "
+                "(champ « Solution appliquée ») avant de le marquer comme résolu.",
+            )
 
     # Log du changement de statut
     log_ticket_history(db, ticket.id, admin.id, "statut", ticket.statut, new_status)
@@ -155,6 +172,7 @@ def approve_ticket(
         )
         ticket.solution_rag = rec.get("solution", "")
         ticket.knowledge_rag = rec.get("knowledge", "")
+        ticket.rag_score = rec.get("rag_score")
         log_ticket_history(db, ticket.id, admin.id, "solution_rag", None, "(mise à jour)")
     elif ticket.confiance is not None and ticket.confiance < threshold:
         rec = recommend_for_category(
@@ -165,6 +183,7 @@ def approve_ticket(
         )
         ticket.solution_rag = rec.get("solution", "")
         ticket.knowledge_rag = rec.get("knowledge", "")
+        ticket.rag_score = rec.get("rag_score")
     
     # Commentaires client (réponse IT)
     if body.commentaire_client or body.commentaire:
@@ -185,13 +204,16 @@ def approve_ticket(
     # Marquer comme résolu + archiver dans TinyDB
     if new_status == "Résolu":
         ticket.resolved_at = datetime.now(timezone.utc)
+        # La base de connaissances est alimentée en priorité par la solution
+        # reellement appliquee par l'admin (commentaire_admin) — verifiee humainement —
+        # et seulement en repli par la suggestion IA d'origine (jamais validee).
         archive_resolved_ticket(
             ticket_id          = ticket.id,
             titre              = ticket.titre,
             description        = ticket.description,
             categorie          = ticket.categorie_finale or ticket.categorie_predite or "",
             confiance          = ticket.confiance,
-            solution           = ticket.solution_rag or "",
+            solution           = ticket.commentaire_admin or ticket.solution_rag or "",
             knowledge          = ticket.knowledge_rag or "",
             filiale            = ticket.filiale or "",
             equipement         = ticket.equipement or "",
@@ -229,6 +251,7 @@ def refresh_rag(
     old_solution = ticket.solution_rag
     ticket.solution_rag = rec.get("solution", "")
     ticket.knowledge_rag = rec.get("knowledge", "")
+    ticket.rag_score = rec.get("rag_score")
     log_ticket_history(db, ticket.id, admin.id, "solution_rag", old_solution[:50] if old_solution else None, "(MAJ RAG)")
     db.commit()
     return {
@@ -236,6 +259,7 @@ def refresh_rag(
         "id": ticket_id,
         "solution_rag": ticket.solution_rag,
         "knowledge_rag": ticket.knowledge_rag,
+        "rag_score": ticket.rag_score,
     }
 
 

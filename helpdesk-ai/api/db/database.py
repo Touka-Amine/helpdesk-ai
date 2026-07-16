@@ -40,10 +40,11 @@ def _migrate_columns() -> None:
         "solution_rag"     : "TEXT",
         "knowledge_rag"    : "TEXT",
         "resolved_at"      : "TEXT",
+        "rag_score"        : "REAL",
     }
     for column, column_type in expected.items():
         if column not in existing:
-            con.execute(f"ALTER TABLE tickets ADD COLUMN {column} {column_type}")
+            _add_column_if_missing(con, "tickets", column, column_type)
 
     existing_users = {row[1] for row in con.execute("PRAGMA table_info(users)").fetchall()}
     expected_users = {
@@ -51,10 +52,25 @@ def _migrate_columns() -> None:
     }
     for column, column_type in expected_users.items():
         if column not in existing_users:
-            con.execute(f"ALTER TABLE users ADD COLUMN {column} {column_type}")
+            _add_column_if_missing(con, "users", column, column_type)
 
     con.commit()
     con.close()
+
+
+def _add_column_if_missing(con: sqlite3.Connection, table: str, column: str, column_type: str) -> None:
+    """
+    ALTER TABLE tolerant aux courses entre workers uvicorn concurrents (--workers 2) :
+    chaque worker relit PRAGMA table_info et ne tente l'ALTER que si la colonne
+    manque encore, mais deux workers peuvent passer ce test simultanement avant
+    que l'un des deux n'ait commit — le "duplicate column name" resultant est donc
+    attendu et ignore plutot que de faire planter le worker au demarrage.
+    """
+    try:
+        con.execute(f"ALTER TABLE {table} ADD COLUMN {column} {column_type}")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" not in str(e):
+            raise
 
 
 def _seed_users() -> None:

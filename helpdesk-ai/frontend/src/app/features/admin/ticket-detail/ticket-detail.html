@@ -56,16 +56,31 @@
           </div>
         </section>
 
-        @if (t.solution_rag) {
-          <section class="bg-surface-container-lowest border-l-4 border-primary rounded-xl p-stack-lg shadow-sm">
-            <div class="flex justify-between items-center mb-stack-md">
-              <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+        <section class="bg-surface-container-lowest border-l-4 rounded-xl p-stack-lg shadow-sm" [class.border-primary]="!isNovelCase()" [class.border-amber-500]="isNovelCase()">
+          <div class="flex justify-between items-center mb-stack-md">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+              @if (isNovelCase()) {
+                <span class="material-symbols-outlined text-amber-600">fiber_new</span> Nouveau type de problème
+              } @else {
                 <span class="material-symbols-outlined text-primary">smart_toy</span> Solution suggérée (RAG)
-              </h3>
-              <button (click)="refreshRag()" class="text-primary font-label-sm text-label-sm hover:underline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[16px]">refresh</span> Rafraîchir
-              </button>
-            </div>
+              }
+            </h3>
+            <button (click)="refreshRag()" class="text-primary font-label-sm text-label-sm hover:underline flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px]">refresh</span> Rafraîchir
+            </button>
+          </div>
+
+          @if (isNovelCase()) {
+            <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+              @if (t.rag_score != null) {
+                Aucun cas similaire connu dans la base de connaissances (score {{ (t.rag_score * 100).toFixed(0) }}%).
+              } @else {
+                Aucun cas similaire connu dans la base de connaissances.
+              }
+              Décrivez la solution appliquée dans « Solution appliquée » ci-contre : elle sera
+              enregistrée et proposée automatiquement pour les prochains tickets semblables.
+            </p>
+          } @else {
             <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">{{ t.solution_rag }}</p>
             @if (t.knowledge_rag) {
               <details class="mt-stack-md">
@@ -73,8 +88,8 @@
                 <blockquote class="border-l-2 border-outline-variant pl-3 mt-2 text-label-sm font-label-sm text-on-surface-variant whitespace-pre-line">{{ t.knowledge_rag }}</blockquote>
               </details>
             }
-          </section>
-        }
+          }
+        </section>
 
         @if (history().length) {
           <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
@@ -138,9 +153,12 @@
 
             <div>
               <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1 flex items-center gap-1">
-                Note interne <span class="material-symbols-outlined text-[16px] text-outline" title="Visible uniquement par les admins">lock</span>
+                Solution appliquée
+                @if (isNovelCase() && form.get('statut')?.value === 'Résolu') { <span class="text-error">*</span> }
+                <span class="material-symbols-outlined text-[16px] text-outline" title="Jamais visible par le client — alimente la base de connaissances RAG">lock</span>
               </label>
-              <textarea rows="2" formControlName="commentaire_interne" placeholder="Note pour l'équipe IT…"
+              <p class="text-label-sm font-label-sm text-on-surface-variant/70 mb-1">Ce que vous avez réellement fait pour résoudre le problème — sert à répondre automatiquement aux prochains tickets similaires.</p>
+              <textarea rows="2" formControlName="commentaire_interne" placeholder="Ex : redémarrage du service X, réinitialisation du mot de passe AD…"
                 class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"></textarea>
             </div>
 

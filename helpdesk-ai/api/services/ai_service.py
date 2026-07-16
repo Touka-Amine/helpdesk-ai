@@ -48,6 +48,7 @@ def recommend_for_category(
         "categorie"      : categorie,
         "solution"       : recommendations[0]["resolution"] if recommendations else "",
         "knowledge"      : recommendations[0]["knowledge"]  if recommendations else "",
+        "rag_score"      : recommendations[0]["score"]      if recommendations else None,
         "recommendations": recommendations,
     }
 
@@ -108,5 +109,6 @@ def predict_and_recommend(titre: str, description: str) -> dict:
         "heuristic_rule"   : h["heuristic_rule"],
         "solution"         : recommendations[0]["resolution"] if recommendations else "",
         "knowledge"        : recommendations[0]["knowledge"]  if recommendations else "",
+        "rag_score"        : recommendations[0]["score"]      if recommendations else None,
         "recommendations"  : recommendations,
     }

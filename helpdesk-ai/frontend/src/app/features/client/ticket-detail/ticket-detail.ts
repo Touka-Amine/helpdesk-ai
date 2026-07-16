@@ -70,7 +70,22 @@ export class TicketDetailClient implements OnInit {
   });
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    // route.paramMap (observable) plutot que route.snapshot : naviguer d'un ticket
+    // a un autre reutilise le meme composant, un snapshot fige laisserait le
+    // ticket precedent affiche tant que la page n'est pas rechargee.
+    this.route.paramMap.subscribe((params) => {
+      const id = Number(params.get('id'));
+      this.loadTicket(id);
+    });
+  }
+
+  private loadTicket(id: number): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.feedbackDraft.set(null);
+    this.showFeedbackForm.set(false);
+    this.feedbackComment.set('');
+    this.history.set([]);
     this.ticketApi.getMyTicketDetail(id).subscribe({
       next: (t) => {
         this.ticket.set(t);

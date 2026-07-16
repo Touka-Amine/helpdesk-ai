@@ -3,6 +3,19 @@
 > Tâches du sprint courant. Détail complet des checklists dans [PLAN.md](PLAN.md) (section 6).
 > Dernière mise à jour : **2026-07-16**. **Phase active : Phase 13 — Optimisation** (Phases 9 et 12 closes).
 
+## ✅ Terminé — Boucle admin → base de connaissances RAG (2026-07-16)
+- [x] `rag_score` persisté sur le ticket + exposé par l'API (jusque-là calculé mais jamais transmis)
+- [x] Détection de « cas nouveau » (score < 0.50) : écran admin affiche « Nouveau type de problème »,
+      champ « Solution appliquée » obligatoire avant *Résolu* (validé serveur + client)
+- [x] `archive_resolved_ticket()` utilise la solution réellement tapée par l'admin en priorité
+      (repli sur la suggestion IA non validée seulement si l'admin n'a rien saisi)
+- [x] Bug préexistant corrigé : migration `ALTER TABLE` non tolérante aux 2 workers uvicorn
+      concurrents (`duplicate column name` non intercepté, révélé par l'ajout de `rag_score`)
+- [x] Bug préexistant corrigé : `ticket-detail.ts` (client+admin) ne rafraîchissait pas les données
+      en changeant de ticket sans rechargement complet (`route.snapshot` → `route.paramMap`)
+- [x] Vérifié en direct (curl + navigateur) : cas nouveau bloqué sans solution puis résolu et
+      archivé avec la vraie solution ; cas connu résolu librement et archivé avec la suggestion IA
+
 ## ✅ Terminé — Corrections UX post-Phase 9 (2026-07-16)
 - [x] Sidebar noire (admin + client) + mode sombre app entière (`ThemeService`, toggle persisté)
 - [x] Formulaire Nouveau ticket (client) reconstruit selon spec produit (exemples pré-remplis + questions guidées)

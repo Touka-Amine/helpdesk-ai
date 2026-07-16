@@ -41,6 +41,7 @@ class Ticket(Base):
     statut = Column(String, default="En attente")
     solution_rag = Column(Text, default="")
     knowledge_rag = Column(Text, default="")
+    rag_score = Column(Float, nullable=True)
     commentaire_client = Column(Text, default="")
     commentaire_admin = Column(Text, default="")
     feedback_vote = Column(String, nullable=True)

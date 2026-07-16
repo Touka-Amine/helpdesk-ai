@@ -25,6 +25,7 @@ export interface Ticket {
   confiance: number | null;
   solution_rag: string;
   knowledge_rag: string;
+  rag_score: number | null;
   created_at: string;
   date_resolution: string | null;
   commentaire_client: string;
