@@ -139,7 +139,11 @@ def approve_ticket(
         raise HTTPException(400, f"Statut invalide. Statuts permis: {VALID_STATUSES}")
     
     current_status = ticket.statut or "En attente"
-    if new_status not in STATUS_TRANSITIONS.get(current_status, []):
+    # Un statut inchange n'est pas une "transition" a valider : un ticket deja clos
+    # (Resolu/Rejete, sans transition sortante possible) doit rester modifiable
+    # (categorie, priorite, classification, solution appliquee...) sans etre bloque
+    # par la validation de transition, qui ne s'applique qu'a un vrai changement.
+    if new_status != current_status and new_status not in STATUS_TRANSITIONS.get(current_status, []):
         raise HTTPException(
             400,
             f"Transition non permise: {current_status} → {new_status}. "
@@ -234,12 +238,18 @@ def approve_ticket(
     
     # Marquer comme résolu + archiver dans ChromaDB (base de connaissances vectorielle)
     if new_status == "Résolu":
-        ticket.resolved_at = datetime.now(timezone.utc)
+        # resolved_at ne doit etre fixe qu'une seule fois — un admin qui corrige plus
+        # tard le texte de sa solution sur un ticket deja resolu ne doit pas voir son
+        # "Temps ecoule" repartir de zero.
+        if not ticket.resolved_at:
+            ticket.resolved_at = datetime.now(timezone.utc)
         # La base de connaissances est alimentée en priorité par la solution
         # reellement appliquee par l'admin (commentaire_admin) — verifiee humainement —
         # et seulement en repli par la suggestion IA d'origine (jamais validee).
         # En tache de fond : le calcul de l'embedding (sentence-transformers) ne doit
         # jamais retarder la reponse HTTP a l'admin qui vient de cliquer "Enregistrer".
+        # Re-archive (upsert) aussi sur une correction ulterieure : la base de
+        # connaissances doit refleter la derniere version de la solution.
         background_tasks.add_task(
             archive_resolved_ticket,
             ticket_id          = ticket.id,
