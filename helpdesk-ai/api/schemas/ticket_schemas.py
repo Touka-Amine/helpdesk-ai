@@ -28,11 +28,14 @@ class TicketCreate(BaseModel):
 
 class TicketOut(BaseModel):
     id: int
+    cid: str = ""
     demandeur_nom: str = ""
     demandeur_email: str = ""
     titre: str
     description: str
     priorite_saisie: str
+    priorite_predite: str = ""
+    priorite_finale: Optional[str] = None
     filiale: str = ""
     equipement: str = ""
     statut: str
@@ -44,9 +47,13 @@ class TicketOut(BaseModel):
     rag_score: Optional[float] = None
     created_at: Optional[str | datetime] = None
     date_resolution: Optional[str | datetime] = None
+    temps_ecoule: Optional[str] = None
     commentaire_client: str = ""
     commentaire_interne: str = ""
     classification: str = "Demande"
+    classification_predite: str = "Demande"
+    classification_finale: Optional[str] = None
+    assigne_a: Optional[str] = None
     feedback_vote: Optional[str] = None
     feedback_comment: str = ""
 
@@ -59,6 +66,9 @@ class FeedbackRequest(BaseModel):
 class ApproveRequest(BaseModel):
     statut: str
     categorie_finale: Optional[str] = None
+    priorite_finale: Optional[str] = None
+    classification_finale: Optional[str] = None
+    assigne_a: Optional[str] = None
     commentaire: Optional[str] = None
     commentaire_client: Optional[str] = None
     commentaire_interne: Optional[str] = None

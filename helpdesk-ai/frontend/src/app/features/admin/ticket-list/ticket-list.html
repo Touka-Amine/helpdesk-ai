@@ -66,31 +66,40 @@
         <table class="w-full text-left border-collapse">
           <thead class="bg-surface-container-low border-b border-outline-variant/40">
             <tr>
-              <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">ID</th>
-              <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Sujet / Demandeur</th>
-              <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Statut</th>
-              <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Catégorie</th>
-              <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Date</th>
-              <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Statut</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Titre</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Demandeur</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Classification</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Catégorie</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Temps écoulé</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">CID</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Filiale</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Priorité</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Assigné à</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Résolution/Motif</th>
+              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-outline-variant/30">
             @for (t of filtered(); track t.id) {
-              <tr class="hover:bg-surface-container-low transition-colors group">
-                <td class="px-6 py-4 font-label-md text-label-md text-on-surface-variant">#{{ t.id.toString().padStart(4,'0') }}</td>
-                <td class="px-6 py-4">
-                  <p class="font-body-md text-body-md text-on-surface font-semibold">{{ t.titre }}</p>
-                  <p class="text-[12px] text-on-surface-variant">{{ t.demandeur_nom || '—' }}</p>
-                </td>
-                <td class="px-6 py-4">
-                  <span class="px-3 py-1 rounded-full font-label-sm text-label-sm" [style.background]="statutCfg[t.statut]?.bg" [style.color]="statutCfg[t.statut]?.color">
+              <tr class="hover:bg-surface-container-low transition-colors group cursor-pointer" (click)="goToDetail(t.id)">
+                <td class="px-4 py-4">
+                  <span class="px-3 py-1 rounded-full font-label-sm text-label-sm whitespace-nowrap" [style.background]="statutCfg[t.statut]?.bg" [style.color]="statutCfg[t.statut]?.color">
                     {{ statutCfg[t.statut]?.label ?? t.statut }}
                   </span>
                 </td>
-                <td class="px-6 py-4 text-body-md text-on-surface-variant">{{ t.categorie_finale || t.categorie_predite || '—' }}</td>
-                <td class="px-6 py-4 text-body-md text-on-surface-variant">{{ formatDate(t.created_at) }}</td>
-                <td class="px-6 py-4 text-right">
-                  <button (click)="goToDetail(t.id)" class="p-2 hover:bg-surface-container-high rounded-full transition-colors group-hover:text-primary">
+                <td class="px-4 py-4 font-body-md text-body-md text-on-surface font-semibold max-w-[220px] truncate">{{ t.titre }}</td>
+                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.demandeur_nom || '—' }}</td>
+                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.classification_finale || t.classification_predite || '—' }}</td>
+                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.categorie_finale || t.categorie_predite || '—' }}</td>
+                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.temps_ecoule || '—' }}</td>
+                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.cid }}</td>
+                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.filiale || '—' }}</td>
+                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.priorite_finale || t.priorite_predite || '—' }}</td>
+                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.assigne_a || '—' }}</td>
+                <td class="px-4 py-4 text-body-md text-on-surface-variant max-w-[220px] truncate">{{ t.commentaire_interne || '—' }}</td>
+                <td class="px-4 py-4 text-right">
+                  <button (click)="goToDetail(t.id); $event.stopPropagation()" class="p-2 hover:bg-surface-container-high rounded-full transition-colors group-hover:text-primary">
                     <span class="material-symbols-outlined text-[20px]">visibility</span>
                   </button>
                 </td>

@@ -41,6 +41,9 @@ def _migrate_columns() -> None:
         "knowledge_rag"    : "TEXT",
         "resolved_at"      : "TEXT",
         "rag_score"        : "REAL",
+        "priorite_finale"  : "TEXT",
+        "classification_finale": "TEXT",
+        "assigne_a"        : "TEXT",
     }
     for column, column_type in expected.items():
         if column not in existing:

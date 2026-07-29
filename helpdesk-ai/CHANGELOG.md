@@ -5,6 +5,35 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Ajouté / Modifié (2026-07-29, refonte du workflow de traitement des tickets)
+
+- `Ajouté` : nouveaux champs `Ticket.priorite_finale`, `Ticket.classification_finale`,
+  `Ticket.assigne_a` (migration additive `_add_column_if_missing`), exposés dans `TicketOut` aux
+  côtés des valeurs de départ (`priorite_predite` = priorité saisie par le client,
+  `classification_predite` = valeur par défaut « Demande » — **aucun modèle dédié n'existe pour ces
+  deux champs**, contrairement à la catégorie qui reste la seule vraie prédiction ML ; l'admin les
+  confirme ou corrige via des listes déroulantes plutôt que du texte libre).
+- `Ajouté` : panneau **« Résultat ML »** (admin, `ticket-detail`) regroupant catégorie, priorité,
+  classification et confiance en un seul bloc, au lieu de la seule catégorie affichée jusque-là.
+- `Ajouté` : écran de clôture en 2 temps côté admin — bouton **« Suivant »** fait passer de la revue
+  (classification IA + suggestion RAG) à un écran de clôture dédié (catégorie/priorité/classification
+  finales en `<select>`, réponse au client, solution appliquée, bouton Enregistrer).
+- `Ajouté` : **message automatique au client** dès le passage à *Prise en Charge* (aucune saisie
+  admin requise à ce stade) et **auto-assignation** du ticket à l'admin qui le prend en charge
+  (`assigne_a`), si non déjà assigné.
+- `Modifié` : `STATUS_TRANSITIONS` (`api/routers/tickets.py`) — *Rejeté* est désormais atteignable
+  depuis *Prise en Charge* et *Problème* (pas seulement depuis *En attente*), pour permettre le flux
+  En attente → Prise en Charge → Problème → (Résolu | Rejeté).
+- `Ajouté` : liste des tickets admin reformatée avec les colonnes STATUT / Titre / Demandeur /
+  Classification / Catégorie / Temps écoulé / CID / Filiale / Priorité / Assigné à /
+  Résolution-Motif — alignées sur le schéma du corpus d'entraînement (`data/raw/HelpDesk1.csv`) pour
+  faciliter un futur export vers le pipeline DVC. `CID` et `Temps écoulé` calculés par
+  `ticket_service.ticket_to_dict()`.
+- Vérifié en direct (Docker rebuild + `npm start`) : cycle complet sur un ticket réel — prise en
+  charge (message auto + auto-assignation confirmés via API), passage à Résolu avec correction
+  manuelle de la priorité (Modéré → Urgent) et de la catégorie, persistance confirmée en base et
+  dans l'historique (`ticket_history`), affichage correct dans la liste.
+
 ### Ajouté / Corrigé (2026-07-16, boucle admin → base de connaissances RAG)
 
 - `Ajouté` : détection de « cas nouveau » — le score de similarité de la meilleure suggestion RAG

@@ -19,11 +19,16 @@ NOVELTY_THRESHOLD = 0.50
 VALID_STATUSES = ["En attente", "Prise en Charge", "Résolu", "Rejeté", "Problème"]
 STATUS_TRANSITIONS = {
     "En attente": ["Prise en Charge", "Rejeté"],
-    "Prise en Charge": ["Résolu", "Problème", "En attente"],
-    "Problème": ["Prise en Charge", "Résolu"],
+    "Prise en Charge": ["Résolu", "Problème", "Rejeté", "En attente"],
+    "Problème": ["Prise en Charge", "Résolu", "Rejeté"],
     "Résolu": [],
     "Rejeté": [],
 }
+
+# Message automatique envoyé au client des que l'admin prend le ticket en charge —
+# remplace la saisie manuelle d'un message a ce stade (le client est juste informe
+# que sa demande est traitee ; le vrai message personnalise vient a la resolution).
+AUTO_MESSAGE_PRISE_EN_CHARGE = "Votre ticket est en cours de traitement par notre équipe IT. Nous revenons vers vous rapidement."
 
 
 router = APIRouter(prefix="/tickets", tags=["Tickets"])
@@ -155,7 +160,28 @@ def approve_ticket(
     # Log du changement de statut
     log_ticket_history(db, ticket.id, admin.id, "statut", ticket.statut, new_status)
     ticket.statut = new_status
-    
+
+    # Priorité finale (corrigée par l'admin si mal évaluée au départ)
+    if body.priorite_finale and body.priorite_finale != ticket.priorite_finale:
+        log_ticket_history(db, ticket.id, admin.id, "priorite_finale", ticket.priorite_finale, body.priorite_finale)
+        ticket.priorite_finale = body.priorite_finale
+
+    # Classification finale (Demande / Incident / Problème / Changement)
+    if body.classification_finale and body.classification_finale != ticket.classification_finale:
+        log_ticket_history(db, ticket.id, admin.id, "classification_finale", ticket.classification_finale, body.classification_finale)
+        ticket.classification_finale = body.classification_finale
+
+    # Assignation — explicite si fournie, sinon auto-assignation a l'admin qui
+    # prend le ticket en charge (s'il n'est pas deja assigne a quelqu'un).
+    if body.assigne_a:
+        if body.assigne_a != ticket.assigne_a:
+            log_ticket_history(db, ticket.id, admin.id, "assigne_a", ticket.assigne_a, body.assigne_a)
+            ticket.assigne_a = body.assigne_a
+    elif new_status == "Prise en Charge" and not ticket.assigne_a:
+        nom_admin = f"{admin.prenom} {admin.nom}".strip() or admin.email
+        log_ticket_history(db, ticket.id, admin.id, "assigne_a", None, nom_admin)
+        ticket.assigne_a = nom_admin
+
     # Gestion de la catégorie
     previous_category = ticket.categorie_finale or ticket.categorie_predite or ""
     threshold = 0.40
@@ -185,12 +211,16 @@ def approve_ticket(
         ticket.knowledge_rag = rec.get("knowledge", "")
         ticket.rag_score = rec.get("rag_score")
     
-    # Commentaires client (réponse IT)
+    # Commentaires client (réponse IT) — a la prise en charge, un message standard
+    # est envoye automatiquement si l'admin n'en a pas saisi un lui-meme.
     if body.commentaire_client or body.commentaire:
         old_comment = ticket.commentaire_client
         new_comment = body.commentaire_client or body.commentaire or ""
         ticket.commentaire_client = new_comment
         log_ticket_history(db, ticket.id, admin.id, "commentaire_client", old_comment, new_comment[:100])
+    elif new_status == "Prise en Charge" and not ticket.commentaire_client:
+        ticket.commentaire_client = AUTO_MESSAGE_PRISE_EN_CHARGE
+        log_ticket_history(db, ticket.id, admin.id, "commentaire_client", None, AUTO_MESSAGE_PRISE_EN_CHARGE)
     
     # Commentaires admin (notes internes)
     if hasattr(ticket, "commentaire_admin"):

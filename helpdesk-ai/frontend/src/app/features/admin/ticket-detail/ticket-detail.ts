@@ -6,18 +6,23 @@ import { TicketApiService } from '../../../api/ticket-api.service';
 import {
   Ticket, STATUT_CFG, TicketHistoryEntry,
   Statut, ApproveTicketRequest,
+  PRIORITE_OPTIONS, CLASSIFICATION_OPTIONS, CATEGORIE_OPTIONS,
 } from '../../../models/ticket.models';
 
 // Meme seuil que NOVELTY_THRESHOLD cote backend (api/routers/tickets.py)
 const NOVELTY_THRESHOLD = 0.5;
 
+// Alignees sur STATUS_TRANSITIONS dans api/routers/tickets.py
 const TRANSITIONS: Record<Statut, Statut[]> = {
   'En attente':      ['Prise en Charge', 'Rejeté'],
-  'Prise en Charge': ['Résolu', 'Problème', 'En attente'],
-  'Problème':        ['Prise en Charge', 'Résolu'],
+  'Prise en Charge': ['Résolu', 'Problème', 'Rejeté', 'En attente'],
+  'Problème':        ['Prise en Charge', 'Résolu', 'Rejeté'],
   'Résolu':          [],
   'Rejeté':          [],
 };
+
+// Message auto envoye au client a la prise en charge (api/routers/tickets.py:AUTO_MESSAGE_PRISE_EN_CHARGE)
+const AUTO_MESSAGE_PRISE_EN_CHARGE = "Votre ticket est en cours de traitement par notre équipe IT. Nous revenons vers vous rapidement.";
 
 @Component({
   selector: 'app-ticket-detail',
@@ -42,6 +47,13 @@ export class TicketDetail implements OnInit {
   statutCfg = STATUT_CFG;
   availableStatuts = signal<Statut[]>([]);
 
+  prioriteOptions = PRIORITE_OPTIONS;
+  classificationOptions = CLASSIFICATION_OPTIONS;
+  categorieOptions = CATEGORIE_OPTIONS;
+
+  // Ecran en 2 temps : revue (classification IA + RAG) -> cloture (champs finaux + enregistrement)
+  step = signal<'revue' | 'cloture'>('revue');
+
   // Aucun cas historique proche : la solution appliquee devient obligatoire
   // avant de resoudre, car c'est elle qui alimentera la base de connaissances.
   isNovelCase = computed(() => {
@@ -50,8 +62,10 @@ export class TicketDetail implements OnInit {
   });
 
   form = this.fb.group({
-    statut:            ['', Validators.required],
-    categorie_finale:  [''],
+    statut:                ['', Validators.required],
+    categorie_finale:      [''],
+    priorite_finale:       [''],
+    classification_finale: [''],
     commentaire_client:    [''],
     commentaire_interne:   [''],
   });
@@ -76,9 +90,12 @@ export class TicketDetail implements OnInit {
       next: (t) => {
         this.ticket.set(t);
         this.loading.set(false);
+        this.step.set('revue');
         this.form.patchValue({
           statut: t.statut,
-          categorie_finale: t.categorie_finale,
+          categorie_finale: t.categorie_finale || t.categorie_predite,
+          priorite_finale: t.priorite_finale || t.priorite_predite,
+          classification_finale: t.classification_finale || t.classification_predite,
           commentaire_client: t.commentaire_client,
           commentaire_interne: t.commentaire_interne,
         });
@@ -93,6 +110,22 @@ export class TicketDetail implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  /** Etape 1 -> 2 : passe a l'ecran de cloture. Pre-remplit le message client
+   *  automatique si le nouveau statut est "Prise en Charge" et qu'aucun message
+   *  n'a encore ete saisi (le backend fait de meme si ce champ arrive vide). */
+  goToClosure(): void {
+    if (!this.form.get('statut')?.value) return;
+    const v = this.form.value;
+    if (v.statut === 'Prise en Charge' && !(v.commentaire_client ?? '').trim()) {
+      this.form.patchValue({ commentaire_client: AUTO_MESSAGE_PRISE_EN_CHARGE });
+    }
+    this.step.set('cloture');
+  }
+
+  backToReview(): void {
+    this.step.set('revue');
   }
 
   save(): void {
@@ -112,6 +145,8 @@ export class TicketDetail implements OnInit {
     const payload: ApproveTicketRequest = {
       statut: v.statut as Statut,
       categorie_finale: v.categorie_finale ?? undefined,
+      priorite_finale: v.priorite_finale ?? undefined,
+      classification_finale: v.classification_finale ?? undefined,
       commentaire_client: v.commentaire_client ?? undefined,
       commentaire_interne: v.commentaire_interne ?? undefined,
     };
@@ -119,7 +154,14 @@ export class TicketDetail implements OnInit {
       next: () => {
         this.saving.set(false);
         this.success.set('Ticket mis à jour avec succès.');
-        this.ticket.update(t => t ? { ...t, statut: payload.statut } : t);
+        this.step.set('revue');
+        this.ticket.update(t => t ? {
+          ...t,
+          statut: payload.statut,
+          categorie_finale: payload.categorie_finale ?? t.categorie_finale,
+          priorite_finale: payload.priorite_finale ?? t.priorite_finale,
+          classification_finale: payload.classification_finale ?? t.classification_finale,
+        } : t);
         this.availableStatuts.set(TRANSITIONS[payload.statut] ?? []);
       },
       error: (err) => {
@@ -150,6 +192,11 @@ export class TicketDetail implements OnInit {
 
   confPct(c: number | null): number {
     return c != null ? Math.round(c * 100) : 0;
+  }
+
+  statutLabel(s: string | null | undefined): string {
+    if (!s) return '';
+    return this.statutCfg[s as Statut]?.label ?? s;
   }
 
   confianceColor(c: number | null): string {

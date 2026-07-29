@@ -36,14 +36,18 @@
         </section>
 
         <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
-          <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Classification IA</h3>
+          <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Résultat ML</h3>
           <div class="flex items-center gap-stack-md mb-stack-sm">
-            <span class="font-label-sm text-label-sm text-on-surface-variant min-w-[140px]">Catégorie prédite</span>
-            <span class="px-2 py-1 rounded-lg bg-blue-100 text-blue-800 text-[12px] font-semibold">{{ t.categorie_predite || '—' }}</span>
+            <span class="font-label-sm text-label-sm text-on-surface-variant min-w-[140px]">Catégorie</span>
+            <span class="px-2 py-1 rounded-lg bg-blue-100 text-blue-800 text-[12px] font-semibold">{{ t.categorie_finale || t.categorie_predite || '—' }}</span>
           </div>
           <div class="flex items-center gap-stack-md mb-stack-sm">
-            <span class="font-label-sm text-label-sm text-on-surface-variant min-w-[140px]">Catégorie finale</span>
-            <span class="px-2 py-1 rounded-lg bg-green-100 text-green-800 text-[12px] font-semibold">{{ t.categorie_finale || t.categorie_predite || '—' }}</span>
+            <span class="font-label-sm text-label-sm text-on-surface-variant min-w-[140px]">Priorité</span>
+            <span class="px-2 py-1 rounded-lg bg-amber-100 text-amber-800 text-[12px] font-semibold">{{ t.priorite_finale || t.priorite_predite || '—' }}</span>
+          </div>
+          <div class="flex items-center gap-stack-md mb-stack-sm">
+            <span class="font-label-sm text-label-sm text-on-surface-variant min-w-[140px]">Classification</span>
+            <span class="px-2 py-1 rounded-lg bg-violet-100 text-violet-800 text-[12px] font-semibold">{{ t.classification_finale || t.classification_predite || '—' }}</span>
           </div>
           <div class="flex items-center gap-stack-md">
             <span class="font-label-sm text-label-sm text-on-surface-variant min-w-[140px]">Confiance</span>
@@ -122,57 +126,101 @@
         </section>
 
         <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm sticky top-4">
-          <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-lg">Traitement du ticket</h3>
-
           <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-stack-md">
 
-            <div>
-              <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Nouveau statut</label>
-              <select formControlName="statut" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none">
-                <option [value]="t.statut">{{ statutCfg[t.statut]?.label ?? t.statut }} (actuel)</option>
-                @for (s of availableStatuts(); track s) {
-                  <option [value]="s">{{ statutCfg[s]?.label ?? s }}</option>
+            @if (step() === 'revue') {
+              <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-sm">Traitement du ticket</h3>
+
+              <div>
+                <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Nouveau statut</label>
+                <select formControlName="statut" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                  <option [value]="t.statut">{{ statutCfg[t.statut]?.label ?? t.statut }} (actuel)</option>
+                  @for (s of availableStatuts(); track s) {
+                    <option [value]="s">{{ statutCfg[s]?.label ?? s }}</option>
+                  }
+                </select>
+                @if (!availableStatuts().length) {
+                  <span class="text-label-sm font-label-sm text-outline">Statut terminal — aucune transition possible.</span>
                 }
-              </select>
-              @if (!availableStatuts().length) {
-                <span class="text-label-sm font-label-sm text-outline">Statut terminal — aucune transition possible.</span>
+                @if (form.get('statut')?.value === 'Prise en Charge') {
+                  <p class="text-label-sm font-label-sm text-on-surface-variant/70 mt-1">Un message automatique informera le client que son ticket est pris en charge.</p>
+                }
+              </div>
+
+              <button type="button" (click)="goToClosure()" [disabled]="!availableStatuts().length"
+                class="w-full py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md shadow-sm hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                Suivant <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
+            }
+
+            @if (step() === 'cloture') {
+              <div class="flex items-center gap-2 mb-stack-sm">
+                <button type="button" (click)="backToReview()" class="text-primary hover:bg-surface-container-high rounded-full p-1 -ml-1">
+                  <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                </button>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface">Clôture du ticket</h3>
+              </div>
+
+              <p class="text-label-sm font-label-sm text-on-surface-variant bg-surface-container-high rounded-lg px-3 py-2">
+                Nouveau statut : actuellement « {{ statutLabel(form.get('statut')?.value ?? t.statut) }} » — pas encore résolu
+              </p>
+
+              <div>
+                <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Catégorie finale <span class="text-outline">(correction si besoin)</span></label>
+                <select formControlName="categorie_finale" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                  @for (c of categorieOptions; track c) {
+                    <option [value]="c">{{ c }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Priorité finale <span class="text-outline">(correction si besoin)</span></label>
+                <select formControlName="priorite_finale" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                  @for (p of prioriteOptions; track p) {
+                    <option [value]="p">{{ p }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Classification finale <span class="text-outline">(correction si besoin)</span></label>
+                <select formControlName="classification_finale" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                  @for (c of classificationOptions; track c) {
+                    <option [value]="c">{{ c }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Réponse au client</label>
+                <textarea rows="3" formControlName="commentaire_client" placeholder="Message visible par le client…"
+                  class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"></textarea>
+              </div>
+
+              <div>
+                <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1 flex items-center gap-1">
+                  Solution appliquée
+                  @if (isNovelCase() && form.get('statut')?.value === 'Résolu') { <span class="text-error">*</span> }
+                  <span class="material-symbols-outlined text-[16px] text-outline" title="Jamais visible par le client — alimente la base de connaissances RAG">lock</span>
+                </label>
+                <p class="text-label-sm font-label-sm text-on-surface-variant/70 mb-1">Ce que vous avez réellement fait pour résoudre le problème — sert à répondre automatiquement aux prochains tickets similaires.</p>
+                <textarea rows="2" formControlName="commentaire_interne" placeholder="Ex : redémarrage du service X, réinitialisation du mot de passe AD…"
+                  class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"></textarea>
+              </div>
+
+              @if (error()) {
+                <div class="text-body-md font-body-md text-error bg-error-container/40 rounded-lg px-3 py-2">{{ error() }}</div>
               }
-            </div>
+              @if (success()) {
+                <div class="text-body-md font-body-md text-green-800 bg-green-100 rounded-lg px-3 py-2">{{ success() }}</div>
+              }
 
-            <div>
-              <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Catégorie finale <span class="text-outline">(correction si besoin)</span></label>
-              <input type="text" formControlName="categorie_finale" placeholder="{{ t.categorie_predite || 'Catégorie' }}"
-                class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-            </div>
-
-            <div>
-              <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Réponse au client</label>
-              <textarea rows="3" formControlName="commentaire_client" placeholder="Message visible par le client…"
-                class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"></textarea>
-            </div>
-
-            <div>
-              <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1 flex items-center gap-1">
-                Solution appliquée
-                @if (isNovelCase() && form.get('statut')?.value === 'Résolu') { <span class="text-error">*</span> }
-                <span class="material-symbols-outlined text-[16px] text-outline" title="Jamais visible par le client — alimente la base de connaissances RAG">lock</span>
-              </label>
-              <p class="text-label-sm font-label-sm text-on-surface-variant/70 mb-1">Ce que vous avez réellement fait pour résoudre le problème — sert à répondre automatiquement aux prochains tickets similaires.</p>
-              <textarea rows="2" formControlName="commentaire_interne" placeholder="Ex : redémarrage du service X, réinitialisation du mot de passe AD…"
-                class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"></textarea>
-            </div>
-
-            @if (error()) {
-              <div class="text-body-md font-body-md text-error bg-error-container/40 rounded-lg px-3 py-2">{{ error() }}</div>
+              <button type="submit" [disabled]="saving()"
+                class="w-full py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md shadow-sm hover:opacity-90 transition-all disabled:opacity-50">
+                {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+              </button>
             }
-            @if (success()) {
-              <div class="text-body-md font-body-md text-green-800 bg-green-100 rounded-lg px-3 py-2">{{ success() }}</div>
-            }
-
-            <button type="submit" [disabled]="saving() || !availableStatuts().length"
-              class="w-full py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md shadow-sm hover:opacity-90 transition-all disabled:opacity-50">
-              {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
-            </button>
           </form>
         </section>
       </div>

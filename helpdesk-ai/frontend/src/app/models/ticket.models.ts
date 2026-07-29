@@ -9,14 +9,25 @@ export type Statut =
   | 'Rejeté'
   | 'Problème';
 
+/** Listes de choix pour les champs finaux corrigibles par l'admin (écran de clôture) */
+export const PRIORITE_OPTIONS = ['Faible', 'Modéré', 'Urgent', 'Critique'];
+export const CLASSIFICATION_OPTIONS = ['Demande', 'Incident', 'Problème', 'Changement'];
+export const CATEGORIE_OPTIONS = [
+  'Applicatifs', 'Backup', 'Communication', 'Infrastructure',
+  'Microsoft', 'Réseau', 'Système', 'Sécurité',
+];
+
 /** Correspond à ticket_to_dict() dans api/services/ticket_service.py */
 export interface Ticket {
   id: number;
+  cid: string;
   demandeur_nom: string;
   demandeur_email: string;
   titre: string;
   description: string;
   priorite_saisie: string;
+  priorite_predite: string;
+  priorite_finale: string | null;
   filiale: string;
   equipement: string;
   statut: Statut;
@@ -28,9 +39,13 @@ export interface Ticket {
   rag_score: number | null;
   created_at: string;
   date_resolution: string | null;
+  temps_ecoule: string | null;
   commentaire_client: string;
   commentaire_interne: string;
   classification: string;
+  classification_predite: string;
+  classification_finale: string | null;
+  assigne_a: string | null;
   feedback_vote: 'up' | 'down' | null;
   feedback_comment: string;
 }
@@ -47,6 +62,9 @@ export interface CreateTicketRequest {
 export interface ApproveTicketRequest {
   statut: Statut;
   categorie_finale?: string;
+  priorite_finale?: string;
+  classification_finale?: string;
+  assigne_a?: string;
   commentaire?: string;
   commentaire_client?: string;
   commentaire_interne?: string;
