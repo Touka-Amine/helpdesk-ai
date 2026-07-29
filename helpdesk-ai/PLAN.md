@@ -4,10 +4,15 @@
 > prévue ici. À chaque session : relire ce fichier → identifier la phase/tâche active → exécuter
 > **une seule** tâche → tester → mettre à jour ce fichier → cocher → résumer → proposer la suite.
 >
-> **Méta** — Dernière mise à jour : **2026-07-16** · Phase active : **Phase 13** (Phases 0–12
+> **Méta** — Dernière mise à jour : **2026-07-29** · Phase active : **Phase 13** (Phases 0–12
 > terminées, Phase 9 complétée rétroactivement le 2026-07-06 avec la refonte Stitch, corrections
 > UX complémentaires le 2026-07-16 : sidebar noire, mode sombre, formulaire ticket, routing,
-> expiration de session — voir [CHANGELOG.md](CHANGELOG.md))
+> expiration de session. Depuis, hors découpage strict des phases ML — boucle de feedback RAG
+> (`rag_score`, détection de cas nouveau, archivage validé par l'admin), refonte complète du
+> workflow de traitement des tickets (file d'approbation simplifiée, écran de clôture en 2 étapes,
+> édition possible après clôture), et migration infrastructure SQLite→PostgreSQL /
+> TinyDB→ChromaDB (ADR-004, ADR-006) — le RAG est maintenant interrogé en direct sur les
+> résolutions admin, pas seulement archivé. Voir [CHANGELOG.md](CHANGELOG.md) pour le détail daté.
 > · Périmètre : **Cœur rehaussé (Must)** · Durée : **stage 6 mois** · Compute : **GPU local**.
 >
 > **Documents liés** : [CAHIER_DES_CHARGES.md](CAHIER_DES_CHARGES.md) ·
@@ -508,14 +513,14 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~84 %** (Phases 0–12 terminées, **Phase 9 complétée rétroactivement** avec la refonte Stitch, Phase 13 partiellement avancée) |
-| **Phase actuelle** | Phase 9 — Frontend ✅ **terminée** (2026-07-06) · Phase 12 — Tests & validation ✅ **terminée** (2026-07-05) |
-| **Tâche actuelle** | Aucune — prochaine phase à démarrer : Phase 13 Semaine 3 (conditionnelle) ou Phase 14 (mémoire) |
-| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · **Phase 9 (Frontend connecté + 15 écrans redessinés Stitch + module gestion des comptes, 2026-07-06)** · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · Phase 12 (tests, matrice exigences, étude utilisateur) · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) |
+| **Progression globale** | **~86 %** (Phases 0–12 terminées, Phase 9 complétée rétroactivement, Phase 13 partiellement avancée + travaux d'ingénierie hors-phases significatifs — voir ci-dessous) |
+| **Phase actuelle** | Phase 9 — Frontend ✅ **terminée** (2026-07-06) · Phase 12 — Tests & validation ✅ **terminée** (2026-07-05) · travaux 2026-07-16→29 hors découpage strict (UX + boucle RAG + workflow tickets + infra) |
+| **Tâche actuelle** | Aucune — prochaine étape à décider : Phase 13 Semaine 3 (données réelles, conditionnelle) ou Phase 14 (mémoire PFE) |
+| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · **Phase 9 (Frontend connecté + 15 écrans redessinés Stitch + module gestion des comptes, 2026-07-06)** · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · Phase 12 (tests, matrice exigences, étude utilisateur) · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) · **Boucle de feedback RAG** (`rag_score`, détection cas nouveau, archivage validé admin, 2026-07-16) · **Refonte workflow tickets** (file d'approbation simplifiée, écran de clôture en 2 étapes avec catégorie/priorité/classification/statut regroupés, édition post-clôture, 2026-07-29) · **Migration PostgreSQL + ChromaDB** (ADR-004, ADR-006 — RAG interrogé en direct sur les résolutions admin, 2026-07-29) |
 | **Tâches restantes** | Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 |
 | **Prochaine étape** | Décider : Phase 13 Semaine 3 (données) ou démarrer Phase 14 (mémoire PFE) |
 | **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · split de test sans exemples Backup/Communication (R-14) · pas d'auto-routage par confiance (R-16) · RGPD non traité · délai 6 mois · latence P95 non conforme sous charge (R-13, voir [RISKS.md](RISKS.md)) — *R-15 (feedback client trompeur) clos le 2026-07-06* |
-| **Dette technique** | RGPD à faire (Phase 2 reliquat) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git) · pas de scan sécurité d'image Docker · LLM-as-a-Judge BACKLOG · EF-14 « génération LLM » en réalité template-based (à nuancer au mémoire) · seuil 0.40 obsolète codé en dur dans `tickets.py` · incohérence nommage `priorite`/`priorite_saisie` |
+| **Dette technique** | RGPD à faire (Phase 2 reliquat) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git) · pas de scan sécurité d'image Docker · LLM-as-a-Judge BACKLOG · EF-14 « génération LLM » en réalité template-based (à nuancer au mémoire) · seuil 0.40 (routage bas niveau) et 0.50 (`NOVELTY_THRESHOLD`) codés en dur dans `tickets.py` · incohérence nommage `priorite`/`priorite_saisie` · priorité/classification affichées comme « Résultat ML » ne sont pas de vraies prédictions entraînées (valeurs de départ confirmées par l'admin — à nuancer au mémoire, même logique qu'EF-14) |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (LLM-as-a-Judge, QLoRA, hybrid search avancé, re-ranking, agents, K8s…) |
 
 > **Calcul de la progression** : moyenne pondérée de l'avancement des 15 phases par leur priorité.

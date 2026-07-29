@@ -1,7 +1,52 @@
 # TASKS.md — Tâches de la phase active
 
 > Tâches du sprint courant. Détail complet des checklists dans [PLAN.md](PLAN.md) (section 6).
-> Dernière mise à jour : **2026-07-16**. **Phase active : Phase 13 — Optimisation** (Phases 9 et 12 closes).
+> Dernière mise à jour : **2026-07-29**. **Phase active : Phase 13 — Optimisation** (Phases 9 et 12 closes).
+
+## ✅ Terminé — Migration PostgreSQL + ChromaDB (2026-07-29, ADR-004 / ADR-006)
+- [x] Base opérationnelle SQLite → PostgreSQL : service dédié dans `docker-compose.yml`,
+      `DB_URL` par défaut mis à jour, migration de colonnes rendue agnostique SQLite/Postgres
+      (`sqlalchemy.inspect()`/`text()` au lieu de `sqlite3` en dur)
+- [x] Base de connaissances TinyDB → ChromaDB (`api/db/vector_store.py` remplace
+      `api/db/nosql_store.py`) — mode embarqué, archivage en `BackgroundTasks` à la résolution
+- [x] RAG interrogé **en direct** sur les résolutions admin (`query_similar()` fusionné aux
+      résultats statiques dans `ai_service.py`) — contrairement à TinyDB, jamais relu par le RAG
+      malgré le texte affiché à l'admin qui le promettait
+- [x] Bug découvert et corrigé en vérification : course entre les 2 workers uvicorn sur
+      `Base.metadata.create_all()` avec une base Postgres neuve (`duplicate key ... users_id_seq`)
+- [x] Bug découvert et corrigé en vérification : collection Chroma mise en cache par processus —
+      un worker ne voyait pas les écritures faites par l'autre (staleness inter-processus)
+- [x] Vérifié en direct : cycle ticket → résolution détaillée → archivage Chroma confirmé
+      (`/tickets/resolved/stats`) → ticket similaire suivant recevant la vraie solution admin
+      (score 0.78) plutôt que la suggestion statique générique
+- [x] Documentation mise à jour : ARCHITECTURE.md, DECISIONS.md (ADR-004 clos, ADR-006 ajouté),
+      DEPLOYMENT.md, RAPPORT_TEMPLATE.md, BACKLOG.md
+
+## ✅ Terminé — Refonte du workflow de traitement des tickets (2026-07-29)
+- [x] Résultat ML unifié (catégorie + priorité + classification + confiance) sur un seul panneau,
+      au lieu de la seule catégorie affichée jusque-là
+- [x] Transitions de statut : `Rejeté` atteignable depuis `Prise en Charge` et `Problème` (pas
+      seulement depuis `En attente`)
+- [x] Message client automatique à la prise en charge + auto-assignation de l'admin
+- [x] File d'approbation : popup de décision (message client/note interne/Valider/Rejeter) retiré,
+      remplacé par un clic simple → prise en charge automatique → redirection directe vers le détail
+- [x] Écran de détail admin restructuré en 2 étapes : revue (classification + RAG, pas de statut
+      visible) puis clôture (statut + catégorie/priorité/classification finales + solution, tous
+      regroupés et modifiables ensemble)
+- [x] Consigne « Solution appliquée » renforcée (diagnostic + action détaillés) — texte qui
+      alimente directement ChromaDB
+- [x] Liste des tickets admin reformatée sur le schéma du corpus d'entraînement (STATUT/Titre/
+      Demandeur/Classification/Catégorie/Temps écoulé/CID/Filiale/Priorité/Assigné à/
+      Résolution-Motif)
+- [x] Bug découvert et corrigé en vérification : un ticket Résolu/Rejeté ne pouvait plus jamais
+      être modifié (la validation de transition rejetait `new_status == current_status`) —
+      contredisait l'exigence explicite que chaque ticket reste éditable après clôture
+
+## ✅ Terminé — Login redessiné + retrait teaser IA (2026-07-16)
+- [x] Page de login en deux colonnes : logo OneTech B.S. recréé en CSS/SVG (pas d'asset image
+      fourni), formulaire de connexion inchangé à droite
+- [x] Teaser « IA Copilote » décoratif retiré (contenu marketing non représentatif du produit)
+- [x] Option « Saisie libre » retirée du sélecteur d'exemples du formulaire Nouveau ticket
 
 ## ✅ Terminé — Boucle admin → base de connaissances RAG (2026-07-16)
 - [x] `rag_score` persisté sur le ticket + exposé par l'API (jusque-là calculé mais jamais transmis)

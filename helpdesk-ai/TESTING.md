@@ -2,6 +2,11 @@
 
 > Source de vérité : [PLAN.md](PLAN.md). Dernière mise à jour : **2026-07-05** (Phase 12).
 > Résultats détaillés et traçabilité par exigence : [CADRAGE_SRS.md](CADRAGE_SRS.md) §5.
+>
+> ⚠️ Les fonctionnalités ajoutées entre le 2026-07-16 et le 2026-07-29 (boucle RAG live,
+> refonte du workflow de traitement des tickets, migration PostgreSQL/ChromaDB) n'ont **aucun
+> test automatisé** — vérifiées uniquement en direct (curl + navigateur). Voir R-18 dans
+> [RISKS.md](RISKS.md).
 
 ## 1. Pyramide de tests
 ```

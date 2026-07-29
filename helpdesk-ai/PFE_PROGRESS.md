@@ -13,7 +13,7 @@
 | 3 | Analyse & spécification des besoins | 1 | 🟡 | EF/ENF + traçabilité dans `CADRAGE_SRS.md` |
 | 4 | Conception & architecture | — | 🟡 | S'appuie sur [ARCHITECTURE.md](ARCHITECTURE.md) |
 | 5 | Données & gouvernance | 2 | 🔴 | RGPD, qualité, DVC |
-| 6 | Modélisation IA (NLP) | 3,4,5 | 🟡 | Baseline faite, CamemBERT à venir |
+| 6 | Modélisation IA (NLP) | 3,4,5 | 🔴 | Baseline (F1=0,685) et CamemBERT+LoRA (F1=0,569) tous deux terminés côté code — chapitre pas encore rédigé |
 | 7 | Système RAG | 6,7 | 🔴 | Sémantique + RAGAS |
 | 8 | LLM, fine-tuning & prompting | 5,7 | 🔴 | LoRA, prompts, guardrails |
 | 9 | MLOps & LLMOps | 10 | 🔴 | DVC, MLflow, monitoring |

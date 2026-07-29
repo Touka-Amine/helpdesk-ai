@@ -1,197 +1,203 @@
-# 🎫 Workflow des Tickets - Documentation
+# Workflow des tickets — documentation
 
-## Flux de Statuts
+> Dernière mise à jour : **2026-07-29**. Décrit le comportement réel du code
+> (`api/routers/tickets.py`, `frontend/.../admin/approval-queue`, `.../admin/ticket-detail`).
+
+## Flux de statuts
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│  Nouveau Ticket (Client)                                   │
-│  ↓                                                          │
-│  [En attente] ← Initial status                             │
-│  ↓                                                          │
-│  Admin ouvre le ticket                                     │
-│  ↓                                                          │
-│  [Prise en Charge] ← Admin assigned                        │
-│  ↓                                                          │
-│  ┌────────────────────────────────────┐                    │
-│  │ Traitement du problème par l'IT    │                    │
-│  ├────────────────────────────────────┤                    │
-│  │ ✅ Résolu        → [Résolu]        │                    │
-│  │ ❌ Rejeté         → [Rejeté]        │                    │
-│  │ ⚠️  Compliqué     → [Problème]      │                    │
-│  │    ↓              → retour à       │                    │
-│  │                     [Prise en      │                    │
-│  │                      Charge]       │                    │
-│  └────────────────────────────────────┘                    │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+│                                                               │
+│  Nouveau ticket (client)                                     │
+│  ↓                                                            │
+│  [En attente] ← statut initial                                │
+│  ↓ (clic dans la file d'approbation → transition automatique) │
+│  [Prise en Charge]                                             │
+│  ↓                                                             │
+│  ┌──────────────────────────────────────────┐                │
+│  │ Traitement (écran de clôture)             │                │
+│  ├──────────────────────────────────────────┤                │
+│  │ ✅ Résolu    → [Résolu]     (terminal)     │                │
+│  │ ❌ Rejeté     → [Rejeté]     (terminal)     │                │
+│  │ ⚠️  Problème  → [Problème]                  │                │
+│  │    ↓ → Prise en Charge, Résolu ou Rejeté   │                │
+│  └──────────────────────────────────────────┘                │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-## Statuts Disponibles
+## Statuts disponibles
 
-| Statut | Icône | Description | Transitions Permises |
-|--------|-------|-------------|----------------------|
-| **En attente** | ⏳ | Ticket créé, en attente d'assignment | → Prise en Charge, Rejeté |
-| **Prise en Charge** | 🔧 | Admin traite le ticket | → Résolu, Problème, En attente |
-| **Problème** | ⚠️ | Problème complexe / long | → Prise en Charge, Résolu |
-| **Résolu** | ✅ | Ticket résolu | (terminal) |
-| **Rejeté** | ❌ | Ticket rejeté | (terminal) |
+| Statut | Description | Transitions permises |
+|---|---|---|
+| **En attente** | Ticket créé, pas encore ouvert par un admin | → Prise en Charge, Rejeté |
+| **Prise en Charge** | Un admin traite le ticket | → Résolu, Problème, Rejeté, En attente |
+| **Problème** | Cas complexe, remis en traitement | → Prise en Charge, Résolu, Rejeté |
+| **Résolu** | Clos, solution appliquée | *(terminal — mais reste éditable, voir plus bas)* |
+| **Rejeté** | Clos, non valide | *(terminal — mais reste éditable, voir plus bas)* |
 
-## Amélioration du Workflow
+`Résolu`/`Rejeté` n'ont aucune transition **sortante**, mais un ticket dans ces statuts
+reste **modifiable** (catégorie, priorité, classification, solution appliquée) : la
+validation de transition n'exige un changement d'état permis que si le statut envoyé
+diffère réellement du statut actuel (`api/routers/tickets.py::approve_ticket`).
 
-### 1️⃣ Initiation du Ticket
-- Client soumet un ticket (titre, description, équipement, filiale)
-- Statut: **En attente**
-- Système: Prédiction ML + Heuristiques + RAG en arrière-plan
+## Réception d'un ticket — file d'approbation
 
-### 2️⃣ Approbation par l'Admin
-- Admin voit le ticket dans la file d'attente
-- Admin change le statut à **Prise en Charge**
-- Admin peut:
-  - Corriger la catégorie ML
-  - Ajouter des commentaires (réponse IT)
-  - Actualiser la solution RAG
+`frontend/.../admin/approval-queue` liste les tickets **En attente**. Il n'y a **pas**
+de formulaire de décision sur cet écran (message client / note interne / boutons
+Valider-Rejeter ont été retirés) : un **simple clic** sur un ticket déclenche
+automatiquement :
 
-### 3️⃣ Résolution ou Escalade
-- **Résolu**: Ticket fermé avec solution
-  - `resolved_at` est enregistré
-  - Client voit la solution via l'interface
-- **Problème**: Ticket escaladé pour analyse approfondie
-  - Retour à "Prise en Charge" pour rétenter
-- **Rejeté**: Ticket invalide / dupliqué
+1. `PATCH /tickets/{id}/approve` avec `{"statut": "Prise en Charge"}`
+2. Un message client standard est envoyé automatiquement (`AUTO_MESSAGE_PRISE_EN_CHARGE`)
+   si aucun message n'est fourni
+3. Le ticket est auto-assigné à l'admin qui vient de cliquer (`assigne_a`), s'il n'était
+   pas déjà assigné
+4. Redirection directe vers `/admin/tickets/{id}` — tout le traitement se fait sur cet
+   écran, pas dans un popup dupliqué
 
-### 4️⃣ Suivi Client
-- Client voir la **timeline** de progression
-- Client voir l'**historique** de tous les changements
-- Client voir la **solution proposée** dès qu'elle est disponible
+## Traitement du ticket — écran en 2 étapes
 
-## API Endpoints
+`frontend/.../admin/ticket-detail` (`TicketDetail`, signal `step`) :
 
-### Tickets Client
+### Étape 1 — Revue (`step() === 'revue'`)
+- **Résultat ML** : catégorie, priorité, classification et confiance affichés ensemble
+  (seule la catégorie est une vraie prédiction ML ; priorité/classification sont des
+  valeurs de départ — saisie client / défaut « Demande » — que l'admin confirme ou
+  corrige, pas des sorties d'un modèle entraîné dédié)
+- **Suggestion RAG** :
+  - si `rag_score ≥ 0.50` (`NOVELTY_THRESHOLD`) : solution suggérée, avec source
+  - sinon : panneau « Nouveau type de problème » — message explicite qu'aucun cas
+    similaire n'est connu, invite à décrire la solution appliquée
+- Pas de sélecteur de statut ici (il a été déplacé à l'étape 2 — voir plus bas pour la
+  raison)
+- Bouton **Suivant** → passe à l'étape de clôture
 
+### Étape 2 — Clôture (`step() === 'cloture'`)
+- **Nouveau statut** (`<select>`, statut actuel + transitions permises)
+- **Catégorie finale**, **Priorité finale**, **Classification finale** — trois `<select>`
+  pré-remplis par la prédiction/valeur de départ, modifiables par l'admin
+- **Réponse au client** — pré-remplie avec le message automatique si le statut choisi est
+  « Prise en Charge » et qu'aucun message n'a encore été saisi
+- **Solution appliquée** (`commentaire_admin` en base) — jamais visible par le client,
+  alimente ChromaDB. Obligatoire si le ticket est un « cas nouveau » et que le statut visé
+  est « Résolu » (`400` sinon, côté serveur et côté client)
+- Bouton **Enregistrer** → `PATCH /tickets/{id}/approve`
+
+Les trois champs finaux et le statut sont regroupés **au même endroit**, à l'étape de
+clôture — pas demandés en amont de la revue de la classification IA.
+
+## Base de connaissances RAG — ChromaDB
+
+Quand un ticket passe à **Résolu** (première fois ou correction ultérieure) :
+
+1. `resolved_at` est fixé **une seule fois** (une correction plus tard ne réinitialise
+   pas le « temps écoulé »)
+2. `archive_resolved_ticket()` est planifiée en **tâche de fond** (`BackgroundTasks`,
+   `api/db/vector_store.py`) — embedding `[titre + description + solution appliquée]`,
+   stocké dans ChromaDB (mode embarqué, `data/chroma/`)
+3. Cette collection est **interrogée en direct** à chaque nouvelle recommandation
+   (`query_similar()` dans `api/services/ai_service.py`, fusionnée avec les résultats
+   statiques FAISS/TF-IDF, tri par score décroissant) — une solution saisie par un admin
+   devient donc exploitable par le RAG **dès le ticket suivant**, sans réentraînement ni
+   redémarrage du serveur
+
+## Endpoints API
+
+### Tickets — client
 ```
 POST   /tickets/                    # Créer un ticket
-GET    /tickets/me                   # Lister mes tickets
-GET    /tickets/{id}                 # Détail d'un ticket
-GET    /tickets/{id}/history         # Historique du ticket
+GET    /tickets/me                  # Lister mes tickets
+GET    /tickets/{id}                # Détail d'un ticket
+GET    /tickets/{id}/history        # Historique du ticket
 ```
 
-### Tickets Admin
-
+### Tickets — admin
 ```
-GET    /tickets/admin/all            # Lister tous les tickets
-PATCH  /tickets/{id}/approve         # Approuver/modifier un ticket
-POST   /tickets/{id}/refresh-rag     # Actualiser la solution RAG
+GET    /tickets/admin/all           # Lister tous les tickets
+PATCH  /tickets/{id}/approve        # Changer statut / catégorie / priorité /
+                                     # classification / commentaires
+POST   /tickets/{id}/refresh-rag    # Recalculer la suggestion RAG
+GET    /tickets/resolved/stats      # KPIs (ChromaDB) — total, par catégorie, par filiale
+GET    /tickets/resolved/archive    # Tickets résolus archivés (ChromaDB)
 ```
 
-## Structures de Données
+## Modèle de données (`api/db/models.py::Ticket`)
 
-### Ticket Model
 ```python
 class Ticket:
     id: int
     titre: str
     description: str
-    statut: str                    # En attente, Prise en Charge, Résolu, Rejeté, Problème
-    categorie_predite: str         # Catégorie ML brute
-    categorie_finale: str          # Catégorie finale (après admin correction)
-    confiance: float               # Confiance de la prédiction
-    solution_rag: str              # Solution proposée via RAG
-    commentaire_client: str        # Réponse IT pour le client
-    commentaire_admin: str         # Notes internes de l'IT
+    statut: str                     # En attente, Prise en Charge, Résolu, Rejeté, Problème
+    categorie_predite: str          # Prédiction ML brute
+    categorie_finale: str           # Corrigée par l'admin si besoin
+    priorite_saisie: str            # Déclarée par le client à la création
+    priorite_finale: str            # Confirmée/corrigée par l'admin
+    classification_finale: str      # Demande / Incident / Problème / Changement
+    confiance: float
+    rag_score: float | None         # Score de la meilleure suggestion RAG (seuil 0.50)
+    solution_rag: str               # Suggestion RAG (statique ou live ChromaDB)
+    knowledge_rag: str
+    commentaire_client: str         # Message visible par le client
+    commentaire_admin: str          # "Solution appliquée" — jamais visible client, alimente ChromaDB
+    assigne_a: str | None           # Admin en charge (auto-assigné à la prise en charge)
     created_at: datetime
-    resolved_at: datetime          # Set quand statut = "Résolu"
+    resolved_at: datetime | None    # Fixé une seule fois, à la première résolution
 ```
 
-### TicketHistory Model
+### TicketHistory
 ```python
 class TicketHistory:
     id: int
     ticket_id: int
-    champ_modifie: str             # Quel champ a changé
-    ancienne_valeur: str           # Ancienne valeur
-    nouvelle_valeur: str           # Nouvelle valeur
-    changed_by: int                # Admin ID
+    champ_modifie: str
+    ancienne_valeur: str | None
+    nouvelle_valeur: str | None
+    changed_by: int | None          # Admin ID (None = système)
     timestamp: datetime
 ```
 
-## Interface Client - Détail Ticket
+## Bonnes pratiques
 
-### Sections Affichées:
-1. **📋 Progression** - Timeline visuelle des statuts
-2. **📝 Votre demande** - Description du ticket
-3. **💡 Solution proposée** - Réponse de l'IT (ou "en attente")
-4. **📊 Historique** - Tous les changements avec timestamps
-5. **ℹ️ Informations** - Classification AI, confiance, dates
+✅ **À faire :**
+- Décrire la solution appliquée avec précision (diagnostic + action) — ce texte devient
+  la base de connaissances RAG pour les prochains tickets similaires
+- Vérifier l'historique avant de modifier un ticket déjà traité par un autre admin
+- Utiliser « Problème » pour les cas nécessitant plus d'analyse plutôt que de forcer un
+  « Résolu » prématuré
 
-### Actions Disponibles:
-- Retour à la liste de mes tickets
-- Consultation de l'historique complet
-- Suivi en temps réel du statut
+❌ **À éviter :**
+- Marquer « Résolu » sans solution détaillée sur un cas nouveau (bloqué côté serveur de
+  toute façon)
+- Laisser le message client vide à la prise en charge (le message automatique s'en charge,
+  mais un message personnalisé reste préférable pour les cas complexes)
 
-## Interface Admin - Approval Queue (existant)
-
-### Sections Affichées:
-1. **Model Proposal** - Classification AI + confiance
-2. **RAG Solution** - Solution proposée par RAG
-3. **IT Decision** - Form pour approuver/modifier
-   - Changer le statut
-   - Corriger la catégorie
-   - Ajouter la réponse IT (commentaire_client)
-   - Ajouter les notes internes (commentaire_admin)
-4. **Refresh RAG** - Bouton pour re-calculer la solution
-
-## Bonnes Pratiques
-
-✅ **DO:**
-- Toujours changer le statut en "Prise en Charge" quand vous commencez à traiter
-- Ajouter un commentaire client avant de marquer comme "Résolu"
-- Utiliser "Problème" pour les tickets complexes nécessitant plus d'analyse
-- Vérifier l'historique pour comprendre les changements précédents
-
-❌ **DON'T:**
-- Passer directement de "En attente" à "Résolu" sans review
-- Modifier plusieurs statuts rapidement
-- Oublier d'ajouter un commentaire de résolution
-
-## Exemple: Workflow Complet
+## Exemple — cycle complet
 
 ```
-1. [Client] Crée ticket "VPN ne fonctionne pas"
-   → Statut: En attente
-   → Catégorie ML: Microsoft (MAUVAISE)
-   → Solution RAG: "Réinstaller Office"
+1. [Client] Crée un ticket "Sage refuse de s'ouvrir, licence invalide"
+   → Statut : En attente
+   → Catégorie ML : Applicatifs (79% confiance)
+   → rag_score : 0.48 → « Nouveau type de problème » (aucun cas similaire)
 
-2. [Admin] Ouvre l'approval queue
-   → Voit: VPN → Microsoft avec 25% confiance
-   → Correction: Catégorie finale = Réseau
-   → Refresh RAG: Nouvelle solution = "Vérifier les identifiants VPN"
+2. [Admin] Clique sur le ticket dans la file d'approbation
+   → Statut passe automatiquement à Prise en Charge
+   → Message client auto envoyé, admin auto-assigné
+   → Redirection directe vers /admin/tickets/{id}
 
-3. [Admin] Approuve avec changements
-   → Statut: Prise en Charge
-   → Commentaire client: "Pouvez-vous vérifier vos identifiants VPN?"
-   → Commentaire admin: "VPN corrected from Microsoft to Réseau"
-   → TicketHistory enregistre tous les changements
+3. [Admin] Étape Revue : constate qu'aucune suggestion n'existe, clique Suivant
 
-4. [Client] Voit le ticket
-   → Timeline: En attente → Prise en Charge ✅
-   → Historique: Catégorie changée, solution actualisée
-   → Solution: "Vérifier les identifiants VPN"
+4. [Admin] Étape Clôture :
+   → Statut = Résolu
+   → Catégorie/Priorité/Classification finales confirmées
+   → Solution appliquée (obligatoire, cas nouveau) : diagnostic + action détaillés
+   → Enregistrer
 
-5. [Client] Résout le problème et signale
-   → Statut: Résolu
-   → resolved_at: now
+5. [Backend] resolved_at fixé, embedding calculé en tâche de fond, archivé dans ChromaDB
 
-6. [Admin] Marque comme résolu dans l'interface
-   → Confirmation visible pour le client
+6. [Client suivant] Ticket similaire créé
+   → rag_score : 0.80 (le cas n'est plus "nouveau")
+   → Suggestion RAG = la solution réellement appliquée à l'étape 4, pas une suggestion
+     générique
 ```
-
-## Monitoring & Logs
-
-Chaque changement est enregistré dans `TicketHistory`:
-- Qui l'a fait (admin ID)
-- Quand (timestamp)
-- Quel champ a changé
-- Ancienne vs nouvelle valeur
-
-Utilisez `/tickets/{id}/history` pour auditer les modifications.

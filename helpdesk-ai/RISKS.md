@@ -1,7 +1,7 @@
 # RISKS.md — Registre des risques
 
 > Probabilité (P) et Impact (I) : Faible / Moyen / Élevé. Source de vérité : [PLAN.md](PLAN.md).
-> Dernière mise à jour : *à la création*.
+> Dernière mise à jour : **2026-07-29**.
 
 | ID | Risque | P | I | Mitigation | Statut |
 |---|---|---|---|---|---|
@@ -13,7 +13,7 @@
 | R-06 | **Délai 6 mois** insuffisant pour tout le périmètre | Moyen | Élevé | MoSCoW strict, backlog, une tâche à la fois, jalons mensuels | Ouvert |
 | R-07 | ~~Dette d'intégration front/back~~ (env vide, enum/modèle désalignés) | Élevé | Moyen | Corrigé Phase 9 (2026-07-04) : environment.ts, guards, contrat OpenAPI | **Clos** |
 | R-08 | ~~`/ingest` cassé~~ | Élevé | Faible | Corrigé Phase 8 (2026-07-03) | **Clos** |
-| R-09 | **Secrets exposés** (`SECRET_KEY=change-me`) | Moyen | Élevé | Gestion des secrets, `.env` hors git, rotation | Ouvert |
+| R-09 | **Secrets exposés** (`SECRET_KEY=change-me` ; depuis 2026-07-29, `POSTGRES_PASSWORD=helpdesk` par défaut dans `docker-compose.yml`/`.env.example` — mêmes identifiants faibles, périmètre élargi) | Moyen | Élevé | Gestion des secrets, `.env` hors git, rotation | Ouvert |
 | R-10 | **Coût/temps GPU** pour le fine-tuning | Faible | Moyen | LoRA (léger), GPU local, runs courts | Ouvert |
 | R-11 | **Dérive documentaire** (PLAN.md non maintenu) | Moyen | Moyen | Étape 7 du workflow obligatoire à chaque tâche | Ouvert |
 | R-12 | **Panne de démo** à la soutenance | Faible | Élevé | Vidéo de secours, environnement figé Docker | Ouvert |
@@ -21,6 +21,8 @@
 | R-14 | **Split de test non représentatif** : `data/splits/test.csv` (GroupShuffleSplit anti-fuite par Titre, 46 train/12 test Titres) ne contient **aucun exemple** des catégories *Backup* et *Communication* (0/356) — le F1-macro rapporté (ENF-03, 0.685) est calculé sur les classes réellement présentes, pas sur les 8 catégories du domaine ; risque de sur-interprétation déjà anticipé par PLAN.md Phase 12 (« sur-interprétation liée à la redondance du corpus ») | Élevé | Élevé | Découvert en construisant la matrice exigences→résultats (Phase 12, `CADRAGE_SRS.md` §5) ; nécessite un split stratifié (ex. `StratifiedGroupKFold`) ou plus de Titres uniques par catégorie rare avant de pouvoir mesurer un F1-macro fiable sur les 8 classes | Ouvert |
 | R-15 | ~~**Feedback client trompeur**~~ : le bouton 👍/👎 + correction affichait « Merci pour votre retour ! » sans rien envoyer au serveur | Moyen | Élevé | Corrigé (2026-07-06) : `POST /tickets/{id}/feedback` implémenté et branché sur `ticket-detail.ts` (client), persistance vérifiée par relecture API indépendante après rechargement complet | **Clos** |
 | R-16 | **Aucun routage différencié par confiance** (EF-05) : `create_ticket()` fixe `statut="En attente"` sans condition pour tout ticket, vérifié en pratique avec des confiances de 0.78 et 0.91 (même traitement qu'un ticket peu fiable) — le seuil et les indicateurs `auto_routed`/`low_confidence` sont calculés mais ne pilotent aucune automatisation de workflow | Faible | Moyen | Découvert en étude utilisateur légère (Phase 12, `CADRAGE_SRS.md` §6.4) ; décision de produit à prendre : assumer l'absence d'auto-routage (reformuler EF-05 au mémoire) ou l'implémenter | Ouvert |
+| R-17 | ~~**Courses multi-processus non gérées lors de la migration PostgreSQL/ChromaDB**~~ : (a) `Base.metadata.create_all()` non tolérant à 2 workers uvicorn créant les tables simultanément sur une base Postgres neuve (`duplicate key ... users_id_seq`) ; (b) collection ChromaDB mise en cache par processus — un worker ne voyait pas les écritures faites par l'autre (RAG live retournant la suggestion générique au lieu de la solution admin réellement archivée) | Élevé | Élevé | Trouvés et corrigés en vérification live (2026-07-29), pas en test automatisé — `api/db/database.py::_create_tables()` et `api/db/vector_store.py::_get_collection()` ; reproduit et confirmé résolu par test manuel (curl) sur base vide | **Clos** |
+| R-18 | **Couverture de test automatisée absente sur les fonctionnalités 2026-07-16→29** (boucle RAG live, refonte workflow tickets, migration PostgreSQL/ChromaDB) — toute la vérification de cette période a été manuelle (curl + navigateur), aucun test ajouté à `tests/test_*.py` | Moyen | Moyen | À couvrir avant la soutenance si le temps le permet — au minimum un test d'intégration sur `approve_ticket()` (transitions + édition post-clôture) et un test sur `vector_store.query_similar()` | Ouvert |
 
 ---
 *Procédure : tout nouveau risque identifié en cours de tâche est ajouté ici + signalé dans le

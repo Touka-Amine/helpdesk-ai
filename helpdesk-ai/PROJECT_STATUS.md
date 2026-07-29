@@ -1,14 +1,15 @@
 # PROJECT_STATUS.md — Avancement global
 
 > Résumé concis. **Source de vérité : [PLAN.md](PLAN.md)** (section 10 — Tableau de bord).
-> Dernière mise à jour : **2026-07-07** (Phase 9 complétée rétroactivement, Phase 12 close).
+> Dernière mise à jour : **2026-07-29** (boucle RAG, refonte workflow tickets, migration
+> PostgreSQL/ChromaDB — voir [CHANGELOG.md](CHANGELOG.md) pour le détail daté).
 
 ## Bandeau
 
 | | |
 |---|---|
-| **Phase active** | Phase 13 — Optimisation (Phases 0–12 terminées) |
-| **Progression globale** | ~84 % |
+| **Phase active** | Phase 13 — Optimisation (Phases 0–12 terminées) + travaux d'ingénierie hors-phases (RAG live, workflow tickets, infra) |
+| **Progression globale** | ~86 % |
 | **Périmètre** | Cœur rehaussé (Must) |
 | **Durée** | Stage 6 mois · GPU local |
 | **Prochaine étape** | Décider : Phase 13 Semaine 3 (données réelles) ou Phase 14 (mémoire PFE) |
@@ -31,6 +32,27 @@
 - **Tests & validation (Phase 12)** — 41 tests unitaires, 18/18 tests d'intégration, test de
   charge, matrice exigences→résultats, étude utilisateur légère (5 bugs de déploiement/auth trouvés et corrigés)
 - Documentation (cahier des charges, workflow, système de pilotage 11 fichiers)
+- **UX complémentaire (2026-07-16)** — sidebar noire + mode sombre (admin/client), formulaire
+  Nouveau ticket reconstruit (exemples guidés), fix routing racine→login, expiration de session
+  par inactivité
+- **Boucle de feedback RAG (2026-07-16)** — détection de « cas nouveau » (`rag_score`, seuil
+  0.50), solution appliquée par l'admin rendue obligatoire sur les cas nouveaux avant résolution,
+  archive alimentée en priorité par la solution réelle (pas la suggestion IA non validée), panneau
+  RAG technique masqué côté client (remplacé par un suivi en langage simple)
+- **Login redessiné (2026-07-16)** — logo OneTech B.S. recréé en CSS/SVG, mise en page deux
+  colonnes, teaser IA décoratif retiré
+- **Refonte du workflow de traitement des tickets (2026-07-29)** — file d'approbation : popup de
+  décision retiré, remplacé par un clic simple (prise en charge automatique + redirection directe) ;
+  écran de détail admin restructuré en 2 étapes (revue puis clôture), statut regroupé avec
+  catégorie/priorité/classification finales à la clôture plutôt que demandé en amont ; ticket
+  résolu/rejeté reste éditable après coup (bug de blocage trouvé et corrigé en vérification)
+- **Migration infrastructure PostgreSQL + ChromaDB (2026-07-29, ADR-004 / ADR-006)** — base
+  opérationnelle SQLite→PostgreSQL (2 bugs de course entre workers uvicorn trouvés et corrigés
+  en vérification, sur `CREATE TABLE` et sur la fraîcheur inter-processus de la collection
+  vectorielle) ; TinyDB→ChromaDB avec une différence de fond : la base de connaissances est
+  désormais **interrogée en direct** par le RAG à chaque recommandation (`query_similar()`),
+  alors que TinyDB n'était qu'un journal jamais relu — vérifié en direct : une solution admin
+  devient la suggestion proposée dès le ticket similaire suivant
 
 ## 🟡 En cours
 - Phase 13 (Optimisation) — Semaines 1–2 terminées (heuristiques + RAG hybride), Semaine 3
