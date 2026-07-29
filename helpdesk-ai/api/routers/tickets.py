@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
 from api.db.models import Ticket, User, TicketHistory
-from api.db.nosql_store import archive_resolved_ticket, get_stats as nosql_stats, get_all_resolved
+from api.db.vector_store import archive_resolved_ticket, get_stats as vector_stats, get_all_resolved
 from api.routers.auth import get_current_user, require_admin
 from api.schemas.ticket_schemas import ApproveRequest, FeedbackRequest, TicketCreate, TicketOut
 from api.services.ai_service import predict_and_recommend, recommend_for_category
@@ -125,6 +125,7 @@ def submit_feedback(
 def approve_ticket(
     ticket_id: int,
     body: ApproveRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
 ):
@@ -231,13 +232,16 @@ def approve_ticket(
     
     ticket.approved_by = str(admin.id)
     
-    # Marquer comme résolu + archiver dans TinyDB
+    # Marquer comme résolu + archiver dans ChromaDB (base de connaissances vectorielle)
     if new_status == "Résolu":
         ticket.resolved_at = datetime.now(timezone.utc)
         # La base de connaissances est alimentée en priorité par la solution
         # reellement appliquee par l'admin (commentaire_admin) — verifiee humainement —
         # et seulement en repli par la suggestion IA d'origine (jamais validee).
-        archive_resolved_ticket(
+        # En tache de fond : le calcul de l'embedding (sentence-transformers) ne doit
+        # jamais retarder la reponse HTTP a l'admin qui vient de cliquer "Enregistrer".
+        background_tasks.add_task(
+            archive_resolved_ticket,
             ticket_id          = ticket.id,
             titre              = ticket.titre,
             description        = ticket.description,
@@ -337,15 +341,15 @@ def get_ticket_history(
     ]
 
 
-# ── Endpoints NoSQL (TinyDB) ───────────────────────────────────────────────────
+# ── Endpoints base de connaissances vectorielle (ChromaDB) ──────────────────────
 
 @router.get("/resolved/stats")
 def get_resolved_stats(_: User = Depends(require_admin)):
     """
-    KPIs agrégés des tickets résolus archivés dans TinyDB.
+    KPIs agrégés des tickets résolus archivés dans ChromaDB.
     Retourne : total, répartition par catégorie, par filiale.
     """
-    return nosql_stats()
+    return vector_stats()
 
 
 @router.get("/resolved/archive")
@@ -354,7 +358,7 @@ def get_resolved_archive(
     _: User = Depends(require_admin),
 ):
     """
-    Liste des tickets résolus archivés dans TinyDB (les plus récents en premier).
+    Liste des tickets résolus archivés dans ChromaDB (les plus récents en premier).
     Constitue la mémoire institutionnelle des résolutions approuvées.
     """
     docs = get_all_resolved(limit=limit)

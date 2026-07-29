@@ -12,8 +12,8 @@ flowchart TB
   front -->|REST /api/v1| api[API FastAPI]
   api --> ml[Service NLP\nCamemBERT + baseline]
   api --> rag[Service RAG sémantique]
-  api --> db[(BDD\nSQLite -> PostgreSQL)]
-  rag --> vdb[(Base vectorielle\nQdrant/Chroma/pgvector)]
+  api --> db[(BDD\nPostgreSQL)]
+  rag --> vdb[(Base vectorielle\nChromaDB)]
   rag --> llm[LLM de génération\n+ guardrails]
   ml -.-> mlflow[(MLflow Registry)]
   subgraph MLOps
@@ -29,7 +29,7 @@ flowchart TB
 | API | Contrat REST, auth, orchestration | ✅🟡 | `api/` |
 | Service NLP | Classification, résumé, NER, priorité, sentiment | ✅🔴 | `api/services/ai_service.py`, `src/models/` |
 | Service RAG | Retrieval sémantique + génération | 🔴 | `src/rag/` (à refondre) |
-| Base vectorielle | Index des embeddings | 🔴 | infra |
+| Base vectorielle | Index des embeddings (ChromaDB) | ✅ | `api/db/vector_store.py` |
 | BDD | Tickets, users, historique, feedback | ✅ | `api/db/` |
 | MLOps | Reproductibilité, registre | 🔴 | `dvc.yaml`, `mlruns/` |
 | Sécurité | JWT, RBAC, secrets | 🟡 | `api/services/auth_service.py`, middleware |
@@ -75,10 +75,10 @@ classDiagram
 | Frontend | Angular 21, Angular Material, Chart.js, RxJS |
 | API | FastAPI, Pydantic v2, Uvicorn |
 | NLP/ML | scikit-learn, imbalanced-learn, NLTK, HuggingFace Transformers, PEFT/LoRA |
-| RAG | sentence-transformers (FR), base vectorielle (ADR-004), RAGAS |
+| RAG | sentence-transformers (FR), ChromaDB (base vectorielle, ADR-004), RAGAS |
 | Données | pandas, DVC |
 | MLOps | DVC, MLflow |
-| Persistance | SQLAlchemy, SQLite → PostgreSQL |
+| Persistance | SQLAlchemy, PostgreSQL |
 | Sécurité | python-jose (JWT), passlib/bcrypt |
 | Déploiement | Docker, docker-compose, GitHub Actions |
 

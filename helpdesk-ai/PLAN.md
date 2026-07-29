@@ -96,7 +96,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 |---|---|---|
 | Frontend | 🟡 | Angular 21, Material, Chart.js |
 | Backend / API | ✅🟡 | FastAPI, Pydantic, OpenAPI |
-| Base de données | ✅ | SQLite (dev) → PostgreSQL (cible) |
+| Base de données | ✅ | PostgreSQL (+ ChromaDB pour la base de connaissances RAG) |
 | Pipeline NLP | ✅🔴 | NLTK, scikit-learn, HuggingFace Transformers |
 | Pipeline ML (baseline) | ✅ | TF-IDF + LogisticRegression + SMOTE |
 | Pipeline Fine-Tuning | 🔴 | CamemBERT + PEFT/LoRA (GPU local) |

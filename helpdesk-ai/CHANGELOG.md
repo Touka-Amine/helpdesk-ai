@@ -5,6 +5,41 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Ajouté / Modifié (2026-07-29, migration SQLite→PostgreSQL et TinyDB→ChromaDB)
+
+- `Modifié` : base opérationnelle **SQLite → PostgreSQL** (ADR-006). Nouveau service
+  `postgres` dans `docker/docker-compose.yml` (image `postgres:16-alpine`, volume
+  `postgres-data`, healthcheck), `api` en dépend (`depends_on: condition: service_healthy`).
+  `api/config.py::DB_URL` pointe désormais vers `postgresql+psycopg2://...` par défaut ;
+  `sqlite:///...` reste utilisable hors Docker via `.env` (le code de migration de colonnes
+  reste compatible avec les deux moteurs).
+- `Corrigé` (bug découvert pendant la vérification de cette tâche) : `Base.metadata.create_all()`
+  n'était pas tolérant à la course entre les 2 workers uvicorn démarrant en parallèle sur une
+  base PostgreSQL neuve — les deux tentaient de créer les tables simultanément et l'un des deux
+  plantait sur `duplicate key ... users_id_seq` (contrainte d'unicité de séquence PostgreSQL).
+  Même classe de bug que le fix `_add_column_if_missing()` de Phase antérieure, appliquée cette
+  fois à la création de table elle-même (`api/db/database.py::_create_tables()`).
+- `Ajouté` : base de connaissances vectorielle **TinyDB → ChromaDB** (ADR-004).
+  `api/db/nosql_store.py` supprimé, remplacé par `api/db/vector_store.py` (mode embarqué,
+  `PersistentClient`, stocké dans `data/chroma/`). Contrairement à TinyDB — un simple journal
+  jamais relu par le RAG, malgré le texte affiché à l'admin qui promettait le contraire —
+  cette collection est **interrogée en direct à chaque recommandation**
+  (`query_similar()`, appelée depuis `api/services/ai_service.py`) : une solution saisie par
+  un admin devient exploitable par le RAG dès le ticket suivant, sans réentraînement ni
+  redémarrage.
+- `Modifié` : `approve_ticket()` archive désormais la résolution via `BackgroundTasks` (le
+  calcul de l'embedding sentence-transformers ne bloque plus la réponse HTTP).
+- `Corrigé` (bug découvert pendant la vérification de cette tâche) : la collection Chroma
+  était mise en cache par processus — avec 2 workers uvicorn (2 process séparés), le worker
+  qui traitait un nouveau ticket ne voyait pas l'archive écrite par l'autre worker. Corrigé en
+  ré-ouvrant la collection à chaque appel (`_get_collection()`) plutôt qu'en la mettant en
+  cache globalement ; seul le modèle d'embedding (coûteux à recharger) reste mis en cache.
+- Vérifié en direct (build Docker, base Postgres et Chroma vides) : cycle complet ticket →
+  résolution avec solution détaillée → archivage Chroma confirmé (`/tickets/resolved/stats`) →
+  second ticket similaire recevant la solution réellement appliquée par l'admin (score 0.78)
+  plutôt que la suggestion statique générique — la boucle de feedback continu fonctionne
+  réellement, pas seulement dans le texte de l'interface.
+
 ### Corrigé (2026-07-29, ajustements suite à retour utilisateur sur le workflow tickets)
 
 - `Modifié` : **file d'approbation** (`approval-queue.ts`/`.html`) — le panneau de décision intégré

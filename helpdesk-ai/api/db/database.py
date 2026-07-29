@@ -1,8 +1,6 @@
 """Database connection helpers."""
 
-import sqlite3
-
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker
 
 from api.config import settings
@@ -16,19 +14,33 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db() -> None:
     """Initialise la base de données : création des tables + migrations + seed."""
-    Base.metadata.create_all(bind=engine)
+    _create_tables()
     _migrate_columns()
     _seed_users()
 
 
+def _create_tables() -> None:
+    """
+    Base.metadata.create_all() tolerant aux courses entre workers uvicorn concurrents
+    (--workers 2) : sous PostgreSQL, deux workers demarrant simultanement sur une base
+    neuve peuvent tous deux constater qu'une table n'existe pas encore et tenter sa
+    creation (avec la sequence SERIAL associee) — le perdant echoue alors sur une
+    contrainte d'unicite deja posee par l'autre. Meme classe de course que
+    _add_column_if_missing() ci-dessous, a l'etape CREATE TABLE plutot que ALTER TABLE.
+    """
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        msg = str(e).lower()
+        if "already exists" not in msg and "duplicate key" not in msg:
+            raise
+
+
 def _migrate_columns() -> None:
-    """Ajoute les colonnes manquantes (ALTER TABLE) sans casser la DB existante."""
-    if not settings.DB_URL.startswith("sqlite:///"):
-        return
-    db_path = settings.DB_URL.replace("sqlite:///", "", 1)
-    con = sqlite3.connect(db_path)
-    existing = {row[1] for row in con.execute("PRAGMA table_info(tickets)").fetchall()}
-    expected = {
+    """Ajoute les colonnes manquantes (ALTER TABLE) — compatible SQLite et PostgreSQL."""
+    inspector = inspect(engine)
+
+    expected_tickets = {
         "user_id"          : "INTEGER",
         "priorite_saisie"  : "TEXT",
         "filiale"          : "TEXT",
@@ -45,34 +57,36 @@ def _migrate_columns() -> None:
         "classification_finale": "TEXT",
         "assigne_a"        : "TEXT",
     }
+    _sync_columns(inspector, "tickets", expected_tickets)
+
+    expected_users = {
+        "first_login": "BOOLEAN DEFAULT FALSE",
+    }
+    _sync_columns(inspector, "users", expected_users)
+
+
+def _sync_columns(inspector, table: str, expected: dict[str, str]) -> None:
+    existing = {col["name"] for col in inspector.get_columns(table)}
     for column, column_type in expected.items():
         if column not in existing:
-            _add_column_if_missing(con, "tickets", column, column_type)
-
-    existing_users = {row[1] for row in con.execute("PRAGMA table_info(users)").fetchall()}
-    expected_users = {
-        "first_login": "BOOLEAN DEFAULT 0",
-    }
-    for column, column_type in expected_users.items():
-        if column not in existing_users:
-            _add_column_if_missing(con, "users", column, column_type)
-
-    con.commit()
-    con.close()
+            _add_column_if_missing(table, column, column_type)
 
 
-def _add_column_if_missing(con: sqlite3.Connection, table: str, column: str, column_type: str) -> None:
+def _add_column_if_missing(table: str, column: str, column_type: str) -> None:
     """
     ALTER TABLE tolerant aux courses entre workers uvicorn concurrents (--workers 2) :
-    chaque worker relit PRAGMA table_info et ne tente l'ALTER que si la colonne
-    manque encore, mais deux workers peuvent passer ce test simultanement avant
-    que l'un des deux n'ait commit — le "duplicate column name" resultant est donc
-    attendu et ignore plutot que de faire planter le worker au demarrage.
+    chaque worker relit les colonnes existantes et ne tente l'ALTER que si la colonne
+    manque encore, mais deux workers peuvent passer ce test simultanement avant que l'un
+    des deux n'ait commit — l'erreur "colonne deja existante" resultante (SQLite comme
+    PostgreSQL, formulations differentes) est donc attendue et ignoree plutot que de
+    faire planter le worker au demarrage.
     """
     try:
-        con.execute(f"ALTER TABLE {table} ADD COLUMN {column} {column_type}")
-    except sqlite3.OperationalError as e:
-        if "duplicate column name" not in str(e):
+        with engine.begin() as conn:
+            conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {column_type}"))
+    except Exception as e:
+        msg = str(e).lower()
+        if "duplicate column" not in msg and "already exists" not in msg:
             raise
 
 

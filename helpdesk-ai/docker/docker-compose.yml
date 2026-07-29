@@ -8,12 +8,32 @@
 #   http://localhost:8081 → Frontend Angular (Nginx)
 #   http://localhost:8000 → API FastAPI (+ /docs pour Swagger)
 #   http://localhost:8501 → Dashboard Streamlit
+#   (interne)             → PostgreSQL (base opérationnelle) — pas de port hôte exposé
 #
 # Note : port 80 non utilisé côté hôte — réservé par Windows (plage d'exclusion
 # Hyper-V/WSL2 + service système sur PID 4). 8081 choisi pour éviter tout conflit.
 # ──────────────────────────────────────────────────────────────────────────────
 
 services:
+
+  # ── PostgreSQL — base opérationnelle (utilisateurs, tickets, historique) ──────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=helpdesk
+      - POSTGRES_PASSWORD=helpdesk
+      - POSTGRES_DB=helpdesk
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helpdesk -d helpdesk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - helpdesk-net
 
   # ── API FastAPI ──────────────────────────────────────────────────────────────
   api:
@@ -26,13 +46,16 @@ services:
     env_file:
       - ../.env
     environment:
-      # SQLite dans le volume (remplace la valeur du .env si présente)
-      - DB_URL=sqlite:///./data/tickets.db
+      # PostgreSQL (service ci-dessus), résolu par nom de service sur le réseau interne
+      - DB_URL=postgresql+psycopg2://helpdesk:helpdesk@postgres:5432/helpdesk
       # Accepter le frontend ET l'accès direct depuis le navigateur
       - CORS_ORIGINS=http://localhost:8081,http://localhost:4200,http://localhost:8000
     volumes:
-      # Persistance de la base SQLite entre les redémarrages
+      # Persistance de la base de connaissances vectorielle ChromaDB + modèles
       - api-data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8000/api/v1/health"]
       interval: 30s
@@ -78,6 +101,8 @@ services:
 # ── Volumes ──────────────────────────────────────────────────────────────────
 volumes:
   api-data:
+    driver: local
+  postgres-data:
     driver: local
 
 # ── Réseau interne ────────────────────────────────────────────────────────────

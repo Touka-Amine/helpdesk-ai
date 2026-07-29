@@ -24,8 +24,9 @@ python-multipart>=0.0.6
 email-validator>=2.0.0
 
 # ── Base de données ───────────────────────────────────────────────────────────
-sqlalchemy>=2.0.25           # ORM — base opérationnelle (SQLite)
-tinydb>=4.8.0                # NoSQL document store — tickets résolus archivés
+sqlalchemy>=2.0.25           # ORM — base opérationnelle (PostgreSQL)
+psycopg2-binary>=2.9.9        # driver PostgreSQL
+chromadb>=0.5.0               # base vectorielle — base de connaissances RAG (tickets résolus)
 
 # ── RAG sémantique ────────────────────────────────────────────────────────────
 sentence-transformers>=2.2.2    # paraphrase-multilingual-mpnet-base-v2 (768d)

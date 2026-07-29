@@ -35,7 +35,8 @@
 ## Infrastructure
 - [ ] **Kubernetes** (si objectif de scalabilité) — **P**
 - [ ] Architecture **microservices** complète — **P**
-- [ ] Migration SQLite → **PostgreSQL** (+ pgvector) — **S**
+- [x] Migration SQLite → **PostgreSQL** — fait le 2026-07-29 (ADR-006), base vectorielle
+  ChromaDB plutôt que pgvector (ADR-004)
 
 ## Produit / UX
 - [ ] Notifications temps réel (email / in-app) sur changement de statut — **C**

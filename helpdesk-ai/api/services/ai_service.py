@@ -6,6 +6,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from data.preprocess import clean_text
 from models.heuristics import apply_heuristics
+from api.db.vector_store import query_similar
+
+TOP_K = 3
 
 
 def get_predictor():
@@ -16,6 +19,45 @@ def get_predictor():
     return predictor
 
 
+def _build_recommendations(static_recs: list, query_text: str, categorie: str | None) -> list[dict]:
+    """
+    Construit la liste finale de recommandations en fusionnant :
+      - les résultats statiques (FAISS/TF-IDF, corpus d'entraînement DVC)
+      - les résultats live (ChromaDB, tickets résolus par les admins depuis le dernier
+        `dvc repro` — recherchables immédiatement, sans réentraînement)
+
+    Triées par score décroissant, tronquées au top K.
+    """
+    recommendations = []
+    for rec in static_recs:
+        resolution = rec.get("resolution", "")
+        knowledge  = rec.get("knowledge", "")
+        if not resolution or resolution.lower() in ("nan", "none"):
+            resolution = knowledge
+        recommendations.append({
+            "score"     : rec["score"],
+            "resolution": resolution,
+            "knowledge" : knowledge,
+            "fallback"  : rec.get("fallback", False),
+            "source"    : rec.get("source", "static"),
+        })
+
+    for rec in query_similar(query_text, categorie=categorie, top_k=TOP_K):
+        recommendations.append({
+            "score"     : rec["score"],
+            "resolution": rec.get("resolution", ""),
+            "knowledge" : rec.get("knowledge", ""),
+            "fallback"  : False,
+            "source"    : "chroma_live",
+        })
+
+    recommendations.sort(key=lambda r: r["score"], reverse=True)
+    recommendations = recommendations[:TOP_K]
+    for i, rec in enumerate(recommendations, 1):
+        rec["rank"] = i
+    return recommendations
+
+
 def recommend_for_category(
     titre: str,
     description: str,
@@ -24,25 +66,14 @@ def recommend_for_category(
 ) -> dict:
     """
     Recommande une solution RAG pour une catégorie donnée.
-    Utilise predictor.recommend() qui dispatch vers le moteur sémantique (FAISS)
-    ou lexical (TF-IDF) selon disponibilité.
+    Utilise predictor.recommend() (moteur sémantique/lexical statique) fusionné avec
+    la base de connaissances vectorielle live (ChromaDB, tickets résolus récemment).
     """
     predictor = get_predictor()
     recs = predictor.recommend(titre, description, categorie, allow_fallback=allow_fallback)
 
-    recommendations = []
-    for i, rec in enumerate(recs, 1):
-        resolution = rec.get("resolution", "")
-        knowledge  = rec.get("knowledge", "")
-        if not resolution or resolution.lower() in ("nan", "none"):
-            resolution = knowledge
-        recommendations.append({
-            "rank"      : i,
-            "score"     : rec["score"],
-            "resolution": resolution,
-            "knowledge" : knowledge,
-            "fallback"  : rec.get("fallback", False),
-        })
+    query_text = f"{titre}\n{description}"
+    recommendations = _build_recommendations(recs, query_text, categorie)
 
     return {
         "categorie"      : categorie,
@@ -55,7 +86,8 @@ def recommend_for_category(
 
 def predict_and_recommend(titre: str, description: str) -> dict:
     """
-    Pipeline complet : prédiction ML → heuristiques → recommandations RAG sémantique.
+    Pipeline complet : prédiction ML → heuristiques → recommandations RAG (statique +
+    base de connaissances vectorielle live).
 
     Returns dict avec : categorie, categorie_ml, confiance, auto_routed,
                         low_confidence, heuristic_applied, solution, knowledge,
@@ -81,22 +113,10 @@ def predict_and_recommend(titre: str, description: str) -> dict:
     confiance_finale = h["confiance"]
     category_filter  = categorie_finale if confiance_finale >= 0.70 else None
 
-    # ── RAG sémantique (via predictor.recommend → FAISS ou TF-IDF) ───────────
+    # ── RAG (statique FAISS/TF-IDF + live ChromaDB) ───────────────────────────
     recs = predictor.recommend(titre, description, category_filter)
-
-    recommendations = []
-    for i, rec in enumerate(recs, 1):
-        resolution = rec.get("resolution", "")
-        knowledge  = rec.get("knowledge", "")
-        if not resolution or resolution.lower() in ("nan", "none"):
-            resolution = knowledge
-        recommendations.append({
-            "rank"      : i,
-            "score"     : rec["score"],
-            "resolution": resolution,
-            "knowledge" : knowledge,
-            "fallback"  : rec.get("fallback", False),
-        })
+    query_text = f"{titre}\n{description}"
+    recommendations = _build_recommendations(recs, query_text, category_filter)
 
     return {
         "categorie"        : categorie_finale,

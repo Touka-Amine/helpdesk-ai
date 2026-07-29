@@ -11,7 +11,8 @@ email-validator>=2.0.0
 
 # Base de données
 sqlalchemy>=2.0.25
-tinydb>=4.8.0
+psycopg2-binary>=2.9.9
+chromadb>=0.5.0
 
 # Auth
 python-jose>=3.3.0

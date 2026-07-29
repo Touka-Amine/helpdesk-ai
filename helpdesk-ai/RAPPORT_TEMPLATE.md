@@ -52,7 +52,8 @@ Après:
 | **RAG Engine** | Cosine similarity | — | Simple, rapide, transparent |
 | **API** | FastAPI | 0.108.0 | Async, performant, validations Pydantic |
 | **Dashboard** | Streamlit | 1.29.0 | Rapide, itérative, client satisfait |
-| **DB** | SQLite + SQLAlchemy | 2.0.25 | Léger, migrations easy |
+| **DB** | PostgreSQL + SQLAlchemy | 2.0.25 | Robuste en écriture concurrente, standard de production |
+| **Base vectorielle** | ChromaDB | ≥0.5.0 | Base de connaissances RAG embarquée, interrogée en direct |
 | **MLOps** | MLflow + DVC | 2.9.2 / 3.38.1 | Tracking + versioning |
 | **Auth** | python-jose + bcrypt | 3.3.0 / 1.7.4 | Standard JWT + bcrypt |
 
@@ -88,7 +89,8 @@ Après:
 ┌─────────────────────────────────────────────────────┐
 │           DATA LAYER                                │
 ├──────────────────────────────────────────────────────┤
-│ • Database: SQLite (tickets, users, history)        │
+│ • Database: PostgreSQL (tickets, users, history)    │
+│ • Vector store: ChromaDB (résolutions admin, live) │
 │ • Models: best_pipeline.pkl, rag_engine.pkl        │
 │ • RAG Knowledge: HelpDesk1.csv (1800 tickets)      │
 └──────────────────────────────────────────────────────┘
@@ -512,7 +514,7 @@ GET    /tickets/{id}/history      → Client (own) + Admin
 ### 7.3 Données Sensibles
 
 ```
-Stored in DB (SQLite):
+Stored in DB (PostgreSQL):
 - Hashed passwords (bcrypt)
 - JWT secrets (env variable)
 - User roles
@@ -816,12 +818,12 @@ Models:
 API:
 - Endpoints count: 9 main endpoints
 - Avg response time: < 200ms
-- Concurrent users: 50+ (SQLite limit)
+- Concurrent users: écritures concurrentes robustes (PostgreSQL, plus de limite SQLite)
 
 Deployment:
 - Port API: 8000
 - Port Dashboard: 8501
-- Database: SQLite (data/tickets.db)
+- Database: PostgreSQL (service docker-compose) + ChromaDB (base de connaissances RAG)
 ```
 
 ### 11.4 Points Clés à Souligner
@@ -929,7 +931,8 @@ Streamlit:
 - FastAPI 0.108.0
 - Streamlit 1.29.0
 - SQLAlchemy 2.0.25
-- SQLite3
+- PostgreSQL 16
+- ChromaDB
 - JWT (python-jose)
 - Bcrypt
 - DVC 3.38.1

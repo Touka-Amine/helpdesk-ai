@@ -13,14 +13,16 @@ flowchart LR
     front["frontend :8081→80\nAngular / Nginx"]
     api["api :8000\nFastAPI / uvicorn"]
     dash["dashboard :8501\nStreamlit"]
-    vol[(SQLite vol)]
+    pg[(PostgreSQL)]
+    chroma[(ChromaDB vol)]
   end
 
   Navigateur -->|HTTP :8081| front
   Navigateur -->|HTTP :8000| api
   front --> api
   dash --> api
-  api --> vol
+  api --> pg
+  api --> chroma
 ```
 
 > **Port hôte 8081 (pas 80)** : sur Windows, le port 80 est souvent réservé (plage
@@ -79,7 +81,7 @@ docker compose -f docker/docker-compose.yml logs -f api
 # Arrêt (avec suppression des conteneurs)
 docker compose -f docker/docker-compose.yml down
 
-# Arrêt + suppression du volume SQLite
+# Arrêt + suppression des volumes (PostgreSQL + ChromaDB)
 docker compose -f docker/docker-compose.yml down -v
 
 # Rebuild forcé d'un seul service
@@ -96,7 +98,7 @@ docker compose -f docker/docker-compose.yml up -d api
 | `docker/Dockerfile.api` | Image API FastAPI (python:3.11-slim, NLTK + ST pré-téléchargés) |
 | `docker/Dockerfile.front` | Image Angular multi-stage (node:20 build → nginx:1.27 serve) |
 | `docker/Dockerfile.dashboard` | Image Streamlit (python:3.11-slim) |
-| `docker/docker-compose.yml` | Orchestration multi-services + volume SQLite + réseau interne |
+| `docker/docker-compose.yml` | Orchestration multi-services + volumes PostgreSQL/ChromaDB + réseau interne |
 | `docker/requirements-api.txt` | Dépendances Python runtime uniquement (sans dvc/mlflow/jupyter) |
 | `docker/nginx.conf` | Config Nginx : SPA routing + cache assets + headers sécurité |
 | `.dockerignore` | Exclut node_modules, venv, mlruns, camembert_lora (~2 Go) du contexte |
@@ -112,7 +114,7 @@ Toutes les variables sont dans `.env` (copier depuis `.env.example`) :
 | `SECRET_KEY` | Clé JWT (min 32 chars) | *(à changer)* |
 | `ALGORITHM` | Algorithme JWT | `HS256` |
 | `TOKEN_EXPIRE_MIN` | Durée token (minutes) | `480` |
-| `DB_URL` | URL SQLAlchemy | `sqlite:///./data/tickets.db` |
+| `DB_URL` | URL SQLAlchemy | `postgresql+psycopg2://helpdesk:helpdesk@postgres:5432/helpdesk` |
 | `CONFIDENCE_THRESHOLD` | Seuil auto-routage | `0.40` |
 | `ADMIN_EMAILS` | Emails admins (virgule) | — |
 | `CORS_ORIGINS` | Origines CORS (virgule) | `http://localhost:8081,http://localhost:4200` |
@@ -124,7 +126,8 @@ Toutes les variables sont dans `.env` (copier depuis `.env.example`) :
 
 | Volume | Point de montage | Contenu |
 |---|---|---|
-| `api-data` | `/app/data` | Base SQLite `tickets.db` (persistée entre redémarrages) |
+| `api-data` | `/app/data` | Base de connaissances vectorielle ChromaDB `chroma/` (persistée entre redémarrages) |
+| `postgres-data` | `/var/lib/postgresql/data` | Base opérationnelle PostgreSQL (utilisateurs, tickets, historique) |
 
 Les modèles ML/RAG (`models/`) sont intégrés dans l'image API pour la démo. Pour mettre à jour
 un modèle sans rebuild : monter `models/` en volume override dans `docker-compose.yml`.

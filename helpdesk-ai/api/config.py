@@ -8,7 +8,10 @@ class Settings(BaseSettings):
     SECRET_KEY           : str   = "change-this-in-production-min-32-chars"
     ALGORITHM            : str   = "HS256"
     TOKEN_EXPIRE_MIN     : int   = 480
-    DB_URL               : str   = "sqlite:///./data/tickets.db"
+    # Par défaut : service "postgres" du docker-compose. Pour un lancement hors Docker,
+    # surcharger via .env (ex: postgresql+psycopg2://user:pass@localhost:5432/helpdesk,
+    # ou revenir à sqlite:///./data/tickets.db pour un dev local sans serveur Postgres).
+    DB_URL               : str   = "postgresql+psycopg2://helpdesk:helpdesk@postgres:5432/helpdesk"
     CONFIDENCE_THRESHOLD : float = 0.40
     ADMIN_EMAILS         : str   = ""
     CORS_ORIGINS         : str   = "http://localhost:4200,http://localhost:3000"
