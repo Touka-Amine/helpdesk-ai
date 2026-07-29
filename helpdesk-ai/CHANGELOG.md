@@ -5,6 +5,25 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Corrigé (2026-07-29, ajustements suite à retour utilisateur sur le workflow tickets)
+
+- `Modifié` : **file d'approbation** (`approval-queue.ts`/`.html`) — le panneau de décision intégré
+  (message client + note interne + boutons Valider/Rejeter) est supprimé. Un simple clic sur un
+  ticket en attente le fait passer automatiquement à *Prise en Charge* (message client auto +
+  auto-assignation, logique déjà en place côté `PATCH /tickets/{id}/approve`) puis redirige
+  directement vers `/admin/tickets/{id}` — toute la décision se prend désormais sur l'écran de
+  détail, pas dans un popup dupliqué.
+- `Modifié` : **écran de clôture** (`ticket-detail`) — le sélecteur de statut n'est plus affiché à
+  l'étape de revue (il n'était pas logique de le demander avant même d'avoir vu la classification IA
+  et la suggestion RAG). Il apparaît désormais à l'étape de clôture, regroupé avec Catégorie finale /
+  Priorité finale / Classification finale : les 4 champs sont modifiables ensemble au même endroit.
+- `Modifié` : consigne du champ **Solution appliquée** renforcée (placeholder + texte d'aide) pour
+  inciter à décrire diagnostic + action réalisée en détail — ce texte alimente directement la base
+  de connaissances RAG et sert de matériau pour un futur ré-entraînement.
+- Vérifié en direct : clic sur un ticket en attente dans la file d'approbation → statut, message
+  auto et assignation confirmés dans l'historique ; étape de clôture affichant bien les 4 champs
+  (statut + catégorie + priorité + classification) ensemble.
+
 ### Ajouté / Modifié (2026-07-29, refonte du workflow de traitement des tickets)
 
 - `Ajouté` : nouveaux champs `Ticket.priorite_finale`, `Ticket.classification_finale`,

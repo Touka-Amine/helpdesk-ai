@@ -112,20 +112,26 @@ export class TicketDetail implements OnInit {
     });
   }
 
-  /** Etape 1 -> 2 : passe a l'ecran de cloture. Pre-remplit le message client
-   *  automatique si le nouveau statut est "Prise en Charge" et qu'aucun message
-   *  n'a encore ete saisi (le backend fait de meme si ce champ arrive vide). */
+  /** Etape 1 -> 2 : passe a l'ecran de cloture, ou le statut et les 3 colonnes
+   *  (categorie/priorite/classification) sont modifiables ensemble. Le statut
+   *  n'est pas demande a l'etape de revue : il est deja passe automatiquement a
+   *  "Prise en Charge" des l'ouverture depuis la file d'approbation. */
   goToClosure(): void {
-    if (!this.form.get('statut')?.value) return;
-    const v = this.form.value;
-    if (v.statut === 'Prise en Charge' && !(v.commentaire_client ?? '').trim()) {
-      this.form.patchValue({ commentaire_client: AUTO_MESSAGE_PRISE_EN_CHARGE });
-    }
     this.step.set('cloture');
   }
 
   backToReview(): void {
     this.step.set('revue');
+  }
+
+  /** Pre-remplit le message client automatique si l'admin choisit "Prise en Charge"
+   *  a l'etape de cloture et qu'aucun message n'a encore ete saisi (le backend fait
+   *  de meme si ce champ arrive vide). */
+  onStatutChange(): void {
+    const v = this.form.value;
+    if (v.statut === 'Prise en Charge' && !(v.commentaire_client ?? '').trim()) {
+      this.form.patchValue({ commentaire_client: AUTO_MESSAGE_PRISE_EN_CHARGE });
+    }
   }
 
   save(): void {

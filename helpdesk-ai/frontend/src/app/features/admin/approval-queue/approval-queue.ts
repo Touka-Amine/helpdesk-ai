@@ -1,27 +1,24 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { TicketApiService } from '../../../api/ticket-api.service';
-import { Ticket, ApproveTicketRequest, Statut } from '../../../models/ticket.models';
+import { Ticket } from '../../../models/ticket.models';
 
 @Component({
   selector: 'app-approval-queue',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './approval-queue.html',
   styleUrl: './approval-queue.css',
 })
 export class ApprovalQueue implements OnInit {
   private ticketApi = inject(TicketApiService);
+  private router = inject(Router);
 
   allTickets = signal<Ticket[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
-  submitting = signal(false);
-
-  selectedTicket = signal<Ticket | null>(null);
-  messageClient = signal('');
-  noteInterne = signal('');
+  opening = signal<number | null>(null);
 
   pendingTickets = computed(() =>
     this.allTickets().filter(t => t.statut === 'En attente')
@@ -38,10 +35,6 @@ export class ApprovalQueue implements OnInit {
       next: (data: Ticket[]) => {
         this.allTickets.set(data);
         this.loading.set(false);
-        // sélectionne le premier ticket en attente par défaut
-        if (this.pendingTickets().length > 0 && !this.selectedTicket()) {
-          this.selectTicket(this.pendingTickets()[0]);
-        }
       },
       error: () => {
         this.error.set('Impossible de charger les tickets.');
@@ -50,20 +43,8 @@ export class ApprovalQueue implements OnInit {
     });
   }
 
-  selectTicket(t: Ticket): void {
-    this.selectedTicket.set(t);
-    this.messageClient.set('');
-    this.noteInterne.set('');
-  }
-
   getConfidence(t: Ticket): number {
     return t.confiance ?? 0;
-  }
-  getCategory(t: Ticket): string {
-    return t.categorie_finale || t.categorie_predite || 'Non classé';
-  }
-  getRagSuggestion(t: Ticket): string {
-    return t.solution_rag || 'Aucune suggestion disponible pour ce ticket.';
   }
 
   isAutoRouted(t: Ticket): boolean {
@@ -78,45 +59,18 @@ export class ApprovalQueue implements OnInit {
     return `${Math.round(diffH / 24)} j`;
   }
 
-  approve(): void {
-    const t = this.selectedTicket();
-    if (!t) return;
-    this.submit(t, 'Prise en Charge' as Statut);
-  }
-
-  reject(): void {
-    const t = this.selectedTicket();
-    if (!t) return;
-    this.submit(t, 'Rejeté' as Statut);
-  }
-
-  private submit(t: Ticket, statut: Statut): void {
-    const payload: ApproveTicketRequest = {
-      statut,
-      commentaire_client: this.messageClient() || undefined,
-      commentaire_interne: this.noteInterne() || undefined,
-    };
-
-    this.submitting.set(true);
-    this.ticketApi.approveTicket(t.id, payload).subscribe({
-      next: () => {
-        this.submitting.set(false);
-        this.loadTickets();
-        this.selectedTicket.set(null);
+  /** Un simple clic prend le ticket en charge (statut change automatiquement) et
+   *  ouvre directement l'écran de traitement complet — plus de popup de décision
+   *  ici, cet écran ne sert qu'à réceptionner rapidement les tickets en attente. */
+  openTicket(t: Ticket): void {
+    this.opening.set(t.id);
+    this.error.set(null);
+    this.ticketApi.approveTicket(t.id, { statut: 'Prise en Charge' }).subscribe({
+      next: () => this.router.navigate(['/admin/tickets', t.id]),
+      error: () => {
+        this.opening.set(null);
+        this.error.set('Impossible de prendre ce ticket en charge.');
       },
-      error: (err: any) => {
-        this.submitting.set(false);
-        this.error.set(`Erreur lors de la mise à jour (${err.status}).`);
-      },
-    });
-  }
-
-  refreshRag(): void {
-    const t = this.selectedTicket();
-    if (!t) return;
-    this.ticketApi.refreshRag(t.id).subscribe({
-      next: () => this.loadTickets(),
-      error: () => this.error.set('Impossible de rafraîchir la suggestion RAG.'),
     });
   }
 }
