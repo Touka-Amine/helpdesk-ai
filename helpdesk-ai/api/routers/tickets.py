@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -5,10 +6,16 @@ from sqlalchemy.orm import Session
 
 from api.db.database import get_db
 from api.db.models import Ticket, User, TicketHistory
-from api.db.vector_store import archive_resolved_ticket, get_stats as vector_stats, get_all_resolved
+from api.db.vector_store import (
+    archive_resolved_ticket, delete_resolved, get_stats as vector_stats, get_all_resolved,
+)
 from api.routers.auth import get_current_user, require_admin
-from api.schemas.ticket_schemas import ApproveRequest, FeedbackRequest, TicketCreate, TicketOut
-from api.services.ai_service import predict_and_recommend, recommend_for_category
+from api.schemas.ticket_schemas import (
+    AdminTicketCreate, ApproveRequest, FeedbackRequest, RagSynthesisOut, TicketCreate, TicketOut,
+)
+from api.services.ai_service import get_live_candidates, predict_and_recommend, recommend_for_category
+from api.services.auth_service import hash_password
+from api.services.llm_service import synthesize_recommendations
 from api.services.ticket_service import ticket_to_dict, log_ticket_history
 
 # Sous ce score de similarité RAG, on considère qu'aucun cas historique proche
@@ -29,6 +36,10 @@ STATUS_TRANSITIONS = {
 # remplace la saisie manuelle d'un message a ce stade (le client est juste informe
 # que sa demande est traitee ; le vrai message personnalise vient a la resolution).
 AUTO_MESSAGE_PRISE_EN_CHARGE = "Votre ticket est en cours de traitement par notre équipe IT. Nous revenons vers vous rapidement."
+
+# Message automatique de clôture — remplace le message générique de prise en charge
+# si l'admin ne l'a pas explicitement personnalisé avant de résoudre le ticket.
+AUTO_MESSAGE_RESOLU = "Votre ticket a été résolu par notre équipe IT. N'hésitez pas à nous recontacter si le problème persiste."
 
 
 router = APIRouter(prefix="/tickets", tags=["Tickets"])
@@ -61,12 +72,80 @@ def create_ticket(
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
-    
+
     # Log initial
     log_ticket_history(db, ticket.id, None, "statut", None, "En attente")
     log_ticket_history(db, ticket.id, None, "categorie_finale", None, pred.get("categorie", ""))
     db.commit()
-    
+
+    return ticket_to_dict(ticket)
+
+
+@router.post("/admin-create", response_model=TicketOut)
+def admin_create_ticket(
+    data: AdminTicketCreate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    """
+    Création d'un ticket par un admin depuis le tableau (ex : appel téléphonique).
+    Demandeur = client existant (demandeur_user_id) ou saisie libre (nom/prenom/email) —
+    dans ce second cas, un compte client est créé automatiquement en is_active=False
+    (pas de connexion possible : c'est un profil "trace", pas un vrai compte utilisateur)
+    pour porter le ticket comme n'importe quel autre.
+    """
+    if data.demandeur_user_id:
+        user = db.query(User).filter(User.id == data.demandeur_user_id).first()
+        if not user:
+            raise HTTPException(404, "Demandeur introuvable")
+    else:
+        if not (data.demandeur_nom and data.demandeur_prenom and data.demandeur_email):
+            raise HTTPException(
+                400,
+                "Indiquez un client existant (demandeur_user_id) ou un nom/prenom/email "
+                "pour créer un profil.",
+            )
+        email = data.demandeur_email.lower()
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            user = User(
+                email=email,
+                nom=data.demandeur_nom,
+                prenom=data.demandeur_prenom,
+                hashed_password=hash_password(secrets.token_urlsafe(24)),
+                role="client",
+                filiale=data.filiale,
+                is_active=False,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
+    pred = predict_and_recommend(data.titre, data.description)
+    ticket = Ticket(
+        user_id=user.id,
+        titre=data.titre,
+        description=data.description,
+        priorite_saisie=data.priorite,
+        filiale=data.filiale,
+        equipement=data.equipement,
+        categorie_predite=pred.get("categorie_ml", pred.get("categorie", "")),
+        categorie_finale=pred.get("categorie", ""),
+        confiance=pred.get("confiance", 0),
+        statut="En attente",
+        solution_rag=pred.get("solution", ""),
+        knowledge_rag=pred.get("knowledge", ""),
+        rag_score=pred.get("rag_score"),
+        created_at=datetime.now(timezone.utc),
+    )
+    db.add(ticket)
+    db.commit()
+    db.refresh(ticket)
+
+    log_ticket_history(db, ticket.id, admin.id, "statut", None, "En attente (créé par admin)")
+    log_ticket_history(db, ticket.id, admin.id, "categorie_finale", None, pred.get("categorie", ""))
+    db.commit()
+
     return ticket_to_dict(ticket)
 
 
@@ -97,6 +176,36 @@ def get_my_ticket_detail(
     if not ticket:
         raise HTTPException(404, "Ticket introuvable")
     return ticket_to_dict(ticket)
+
+
+@router.get("/{ticket_id}/similar-titles")
+def get_similar_titles(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    Titres d'autres tickets déjà résolus sur un problème proche — volontairement
+    dépourvu de toute solution technique ou métadonnée IA (score, catégorie brute) :
+    le client n'a pas besoin/droit de voir ces détails, juste de savoir qu'il n'est
+    pas seul à avoir rencontré ce problème. Réservé au propriétaire du ticket (ou admin).
+    """
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(404, "Ticket introuvable")
+    if ticket.user_id != user.id and user.role != "admin":
+        raise HTTPException(403, "Accès refusé")
+
+    categorie = ticket.categorie_finale or ticket.categorie_predite or None
+    candidates = get_live_candidates(ticket.titre, ticket.description, categorie)
+    titres = []
+    for c in candidates:
+        if c.get("ticket_id") == ticket_id:
+            continue
+        titre = (c.get("titre") or "").strip()
+        if titre and titre not in titres:
+            titres.append(titre)
+    return {"titres": titres[:3]}
 
 
 @router.post("/{ticket_id}/feedback")
@@ -226,6 +335,15 @@ def approve_ticket(
     elif new_status == "Prise en Charge" and not ticket.commentaire_client:
         ticket.commentaire_client = AUTO_MESSAGE_PRISE_EN_CHARGE
         log_ticket_history(db, ticket.id, admin.id, "commentaire_client", None, AUTO_MESSAGE_PRISE_EN_CHARGE)
+    elif new_status == "Résolu" and (
+        not ticket.commentaire_client or ticket.commentaire_client == AUTO_MESSAGE_PRISE_EN_CHARGE
+    ):
+        # Le message generique de prise en charge ne doit jamais rester affiche au
+        # client une fois le ticket reellement resolu — seul un message explicitement
+        # personnalise par l'admin (traite dans le bloc if ci-dessus) le remplace.
+        old_comment = ticket.commentaire_client
+        ticket.commentaire_client = AUTO_MESSAGE_RESOLU
+        log_ticket_history(db, ticket.id, admin.id, "commentaire_client", old_comment, AUTO_MESSAGE_RESOLU)
     
     # Commentaires admin (notes internes)
     if hasattr(ticket, "commentaire_admin"):
@@ -305,6 +423,51 @@ def refresh_rag(
         "knowledge_rag": ticket.knowledge_rag,
         "rag_score": ticket.rag_score,
     }
+
+
+@router.get("/{ticket_id}/rag-synthesis", response_model=RagSynthesisOut)
+def get_rag_synthesis(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    """
+    Assistant de triage IA (human-in-the-loop) : synthétise les tickets historiques
+    similaires (base de connaissances ChromaDB) en français professionnel via un LLM
+    local (Ollama), plutôt que d'afficher la résolution brute d'un seul cas.
+    """
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(404, "Ticket introuvable")
+
+    categorie = ticket.categorie_finale or ticket.categorie_predite or None
+    candidates = get_live_candidates(ticket.titre, ticket.description, categorie)
+    # Le ticket lui-meme peut apparaitre dans ses propres candidats s'il a deja ete
+    # archive (ex : re-analyse apres resolution) — non pertinent pour se comparer a soi-meme.
+    candidates = [c for c in candidates if c.get("ticket_id") != ticket_id]
+    return synthesize_recommendations(ticket.titre, ticket.description, candidates)
+
+
+@router.delete("/{ticket_id}")
+def delete_ticket(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    """Suppression définitive (admin uniquement) — l'historique lié est supprimé
+    d'abord pour respecter la contrainte de clé étrangère ticket_history.ticket_id.
+    L'éventuelle entrée archivée dans ChromaDB (ticket résolu) est retirée aussi,
+    pour ne pas laisser une entrée fantôme réapparaître dans les futures suggestions
+    RAG avec un ID de ticket qui n'existe plus."""
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(404, "Ticket introuvable")
+
+    db.query(TicketHistory).filter(TicketHistory.ticket_id == ticket_id).delete()
+    db.delete(ticket)
+    db.commit()
+    delete_resolved(ticket_id)
+    return {"message": "Ticket supprimé", "id": ticket_id}
 
 
 @router.get("/admin/all")

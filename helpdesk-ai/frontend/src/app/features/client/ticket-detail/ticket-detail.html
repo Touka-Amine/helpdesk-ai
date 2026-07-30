@@ -20,12 +20,8 @@
               </span>
             </div>
             <h1 class="font-headline-md text-headline-md text-on-surface">{{ t.titre }}</h1>
-            @if (t.filiale || t.priorite_saisie) {
-              <p class="font-label-sm text-label-sm text-on-surface-variant">
-                @if (t.filiale) { {{ t.filiale }} }
-                @if (t.filiale && t.priorite_saisie) { · }
-                @if (t.priorite_saisie) { Priorité : {{ t.priorite_saisie }} }
-              </p>
+            @if (t.filiale) {
+              <p class="font-label-sm text-label-sm text-on-surface-variant">{{ t.filiale }}</p>
             }
           </div>
           <button (click)="goBack()"
@@ -34,37 +30,6 @@
             Mes tickets
           </button>
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-stack-lg mb-stack-lg">
-          <div class="bg-surface-container p-stack-md rounded-lg border border-outline-variant/30">
-            <p class="text-label-sm font-label-sm text-outline mb-1">Catégorie identifiée par l'IA</p>
-            <div class="flex items-center gap-2 text-primary font-semibold">
-              <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
-              <span class="font-body-md text-body-md">{{ t.categorie_finale || t.categorie_predite || '—' }}</span>
-            </div>
-          </div>
-          <div class="bg-surface-container p-stack-md rounded-lg border border-outline-variant/30">
-            <p class="text-label-sm font-label-sm text-outline mb-1">Confiance de l'IA</p>
-            @if (confiance() != null) {
-              <div class="space-y-1">
-                <div class="flex justify-between items-center text-label-md font-label-md">
-                  <span class="text-on-surface font-bold">{{ confiance() }}%</span>
-                </div>
-                <div class="w-full bg-outline-variant/40 h-1.5 rounded-full overflow-hidden">
-                  <div class="h-full transition-all duration-500" [style.width.%]="confiance()" [style.background]="confianceColor()"></div>
-                </div>
-              </div>
-            } @else {
-              <span class="font-body-md text-body-md text-on-surface-variant">—</span>
-            }
-          </div>
-        </div>
-
-        @if (confiance() != null && confiance()! < 40) {
-          <p class="text-label-sm font-label-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-stack-md">
-            ⚠️ Confiance faible — vérifiez que cette catégorie correspond bien à votre problème.
-          </p>
-        }
 
         <div class="space-y-stack-sm">
           <h4 class="font-label-md text-label-md text-outline">Description du problème</h4>
@@ -85,17 +50,11 @@
         </section>
       }
 
-      <!-- Feedback : dépend uniquement du statut, pas de la présence d'une solution RAG -->
-      @if (t.statut === 'Résolu') {
+      <!-- Feedback : dépend uniquement du statut, pas de la présence d'une solution RAG.
+           Une fois un vote envoyé, la section ne réaffiche plus rien (pas de message de
+           confirmation résiduel) : le vote est déjà pris en compte, rien à ajouter. -->
+      @if (t.statut === 'Résolu' && !t.feedback_vote) {
         <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-container-padding shadow-sm">
-          @if (t.feedback_vote) {
-            <p class="font-label-md text-label-md text-on-surface flex items-center gap-2">
-              <span class="material-symbols-outlined text-primary text-[20px]">
-                {{ t.feedback_vote === 'up' ? 'thumb_up' : 'thumb_down' }}
-              </span>
-              Merci, votre retour a bien été enregistré.
-            </p>
-          } @else {
             <div class="flex flex-col gap-stack-md">
               <p class="font-label-md text-label-md text-on-surface">Cette réponse vous a-t-elle aidé ?</p>
               <div class="flex gap-stack-md items-center">
@@ -125,7 +84,6 @@
                 </div>
               }
             </div>
-          }
         </section>
       }
 
@@ -144,28 +102,71 @@
       }
     </div>
 
-    <!-- Colonne latérale -->
+    <!-- Colonne latérale : suivi simplifié + cas similaires + contact rapide
+         (remplace l'ancien historique brut, retiré pour ne pas exposer de detail interne) -->
     <aside class="w-full lg:w-[320px] shrink-0 space-y-gutter">
-      @if (history().length) {
-        <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
-          <h4 class="font-label-md text-label-md text-outline mb-stack-lg uppercase tracking-wider">Historique</h4>
-          <div class="relative space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-outline-variant/30">
-            @for (h of history(); track h.id) {
-              <div class="relative pl-8">
-                <div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center z-10">
-                  <span class="material-symbols-outlined text-on-secondary-container text-[14px]">history</span>
-                </div>
-                <p class="text-label-sm font-label-sm text-outline">{{ formatDate(h.timestamp) }} · {{ h.par }}</p>
-                <p class="font-body-md text-body-md text-on-surface">
-                  {{ h.champ }}
-                  @if (h.ancienne_valeur) { : {{ h.ancienne_valeur }} → }
-                  {{ h.nouvelle_valeur }}
-                </p>
-              </div>
-            }
+      <!-- Suivi simplifié -->
+      <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+        <h4 class="font-label-md text-label-md text-outline mb-stack-lg uppercase tracking-wider">Suivi</h4>
+        <div class="space-y-stack-lg">
+          <div class="flex items-center gap-stack-sm">
+            <span class="material-symbols-outlined text-primary text-[20px]">support_agent</span>
+            <div>
+              <p class="text-label-sm font-label-sm text-outline">Pris en charge par</p>
+              <p class="font-body-md text-body-md text-on-surface">{{ t.assigne_a || 'Équipe IT' }}</p>
+            </div>
           </div>
+          <div class="flex items-center gap-stack-sm">
+            <span class="material-symbols-outlined text-primary text-[20px]">schedule</span>
+            <div>
+              <p class="text-label-sm font-label-sm text-outline">Temps écoulé</p>
+              <p class="font-body-md text-body-md text-on-surface">{{ t.temps_ecoule || '—' }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-stack-sm">
+            <span class="material-symbols-outlined text-primary text-[20px]">update</span>
+            <div>
+              <p class="text-label-sm font-label-sm text-outline">Dernière mise à jour</p>
+              <p class="font-body-md text-body-md text-on-surface">{{ formatDate(derniereMaj()) }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cas similaires (FAQ) : titres seulement, aucune solution technique ni score IA -->
+      @if (similarTitles().length) {
+        <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+          <h4 class="font-label-md text-label-md text-outline mb-stack-md uppercase tracking-wider">D'autres cas similaires</h4>
+          <ul class="space-y-stack-sm">
+            @for (s of similarTitles(); track s) {
+              <li class="flex items-start gap-2 text-body-md font-body-md text-on-surface-variant">
+                <span class="material-symbols-outlined text-[16px] text-primary mt-0.5">task_alt</span>
+                {{ s }}
+              </li>
+            }
+          </ul>
+          <p class="text-label-sm font-label-sm text-on-surface-variant/70 mt-stack-md">
+            Ce n'est pas un cas isolé — notre équipe a déjà traité des demandes similaires.
+          </p>
         </section>
       }
+
+      <!-- Contact rapide -->
+      <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+        <h4 class="font-label-md text-label-md text-outline mb-stack-lg uppercase tracking-wider">Besoin d'aide ?</h4>
+        <div class="space-y-stack-md">
+          <a [href]="'mailto:support-it@onetech.local?subject=Relance ticket %23' + t.id"
+            class="flex items-center gap-2 text-primary font-label-md text-label-md hover:underline">
+            <span class="material-symbols-outlined text-[18px]">mail</span>
+            Relancer le support
+          </a>
+          <button (click)="goToNewTicket()"
+            class="flex items-center gap-2 text-primary font-label-md text-label-md hover:underline">
+            <span class="material-symbols-outlined text-[18px]">add_circle</span>
+            Créer un nouveau ticket
+          </button>
+        </div>
+      </section>
 
       <button (click)="printTicket()"
         class="w-full bg-surface-container-lowest border border-outline-variant hover:bg-surface-container transition-colors py-3 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2">

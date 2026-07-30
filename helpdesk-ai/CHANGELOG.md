@@ -5,6 +5,89 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Ajouté / Modifié (2026-07-30, masquage IA client, clôture pilotée par statut, assistant de triage IA)
+
+- `Modifié` (client, Tâche 1.1/1.3/1.4) : `frontend/.../client/ticket-detail` — retrait des
+  métadonnées IA (catégorie prédite, score de confiance) de la vue client, réservées aux
+  admins ; suppression du message de confirmation de feedback résiduel ; colonne latérale
+  (ex-historique brut) remplacée par 3 blocs client-safe : Suivi (technicien assigné, temps
+  écoulé, dernière mise à jour), Cas similaires (titres de tickets résolus proches, sans
+  solution technique ni score — nouvel endpoint `GET /tickets/{id}/similar-titles`), Contact
+  rapide (relance par email, lien nouveau ticket).
+- `Ajouté` (backend, Tâche 1.2) : message client automatique différencié à la résolution
+  (`AUTO_MESSAGE_RESOLU`) — remplace le message générique de prise en charge s'il n'a pas
+  été personnalisé par l'admin (`api/routers/tickets.py::approve_ticket`).
+- `Modifié` (admin, Tâche 2.1 — **révisé en cours de vérification suite à un retour direct**) :
+  le statut n'est plus choisi via un menu déroulant pré-rempli à l'étape de clôture. Le
+  bouton **Enregistrer** ouvre directement une modale listant les transitions valides depuis
+  le statut actuel ; l'admin y choisit le statut réel du ticket. Un ticket déjà terminal
+  (Résolu/Rejeté) s'enregistre directement (pas de modale, aucune transition à choisir), les
+  autres champs restant modifiables. La solution appliquée reste obligatoire pour clore en
+  « Résolu » un cas nouveau.
+- `Supprimé` (admin) : colonne CID du tableau `frontend/.../admin/ticket-list` (Tâche 2.2).
+- `Ajouté` (admin, Tâche 2.3) : édition inline du tableau (catégorie/priorité/classification/
+  assigné à/résolution) sans ouvrir le détail — réutilise `PATCH /tickets/{id}/approve` avec
+  le même statut (autorisé depuis le fix de la Tâche « ticket résolu reste éditable »).
+- `Ajouté` (admin, Tâche 2.4) : création d'un ticket depuis le tableau (`POST
+  /tickets/admin-create`) — demandeur = client existant ou saisie libre (crée un compte
+  client `is_active=False` pour porter le ticket, sans connexion possible). Suppression
+  définitive (`DELETE /tickets/{id}`, supprime l'historique lié puis le ticket) protégée par
+  une confirmation forte : l'admin doit taper le mot **SUPPRIMER**.
+- `Ajouté` (Tâche 3 — assistant de triage IA, human-in-the-loop) : `api/services/llm_service.py`
+  + nouveau service Docker `ollama` (image `ollama/ollama`, modèle `llama3.2:3b`, 100%
+  on-premise — aucun appel externe). Le RAG ne se contente plus de retourner la résolution
+  brute d'un seul ticket (parfois mal écrite) : `GET /tickets/{id}/rag-synthesis` interroge
+  les tickets similaires réellement archivés (ChromaDB, avec leur vrai ID), et un LLM local
+  les reformule en français professionnel, structurés en liste à puces (ID, score, catégorie,
+  résumé d'une phrase), avec un exemple concret (few-shot) injecté dans le prompt pour ancrer
+  le format — nécessaire pour qu'un modèle aussi petit (3B) respecte fidèlement le format et
+  n'invente pas d'ID/score. Dégradation gracieuse vers un récapitulatif brut si Ollama est
+  indisponible/trop lent. Un second champ permet d'explorer la procédure complète d'un des
+  tickets proposés en tapant son ID (appel à l'action du LLM).
+- Vérifié en direct (Docker, navigateur) : les 3 tâches de bout en bout, y compris la
+  synthèse IA réelle (`source: "ollama"`, ~20-60s selon la longueur du prompt sur CPU) et son
+  repli automatique observé pendant le tuning du prompt/timeout.
+
+### Modifié (2026-07-30, retour utilisateur — popup dédié pour la solution appliquée)
+
+- `Modifié` (admin, Tâche 2.1 bis) : l'étape de clôture (`frontend/.../admin/ticket-detail`)
+  est scindée en deux sous-étapes au lieu d'un seul écran chargé — catégorie/priorité/
+  classification/réponse client d'abord, puis un **grand popup dédié** à « Solution
+  appliquée » (le champ le plus long, désormais isolé dans une fenêtre `max-w-2xl` avec
+  une zone de texte de 12 lignes, pour que l'admin puisse rédiger le diagnostic à l'aise
+  au lieu d'une petite colonne de 360px). Parcours : Suivant → Suivant → Enregistrer.
+  Si le statut choisi « Résolu » nécessite une solution manquante (cas nouveau), la
+  modale de statut se referme et rouvre ce popup avec l'erreur affichée directement
+  au-dessus du champ, au lieu de rester loin dans la petite modale de statut.
+
+### Modifié (2026-07-30, retour utilisateur — synthèse IA affichée par défaut)
+
+- `Modifié` (admin, Tâche 3 bis) : le panneau « Solution suggérée (RAG) » de l'étape Revue
+  (`frontend/.../admin/ticket-detail`) déclenche désormais **automatiquement** la synthèse
+  IA (`GET /tickets/{id}/rag-synthesis`) dès qu'un ticket a un cas connu, avec un état de
+  chargement visible — ce n'était auparavant qu'un bouton optionnel (« Analyser avec l'IA »)
+  sous la résolution brute d'un seul cas, ce qui laissait l'admin voir en premier un texte
+  non reformulé (parfois mal écrit) tant qu'il n'avait pas cliqué. La reformulation
+  professionnelle du LLM est maintenant ce que l'admin voit par défaut, plus une action à
+  découvrir. Repli sur la suggestion brute conservé dans deux cas seulement : la meilleure
+  correspondance provient du corpus statique d'entraînement (aucun ID de ticket réel à
+  synthétiser) ou la requête échoue franchement (pas juste Ollama lent/indisponible, déjà
+  couvert par le repli serveur `source:"fallback"`). Le bouton « Rafraîchir » relance aussi
+  la synthèse. Vérifié en direct sur un vrai ticket (`#0046`, cas similaire réel `#0045`,
+  score 97%) : synthèse correcte affichée sans action de l'admin, puis exploration de la
+  procédure complète par ID fonctionnelle. `RISKS.md` (R-19) mis à jour : ce choix accepte
+  plus de latence visible en contrepartie d'une UX plus honnête.
+
+### Corrigé (2026-07-30, relecture — entrée fantôme ChromaDB après suppression)
+
+- `Corrigé` (backend, Tâche 2.4) : `DELETE /tickets/{id}` supprimait le ticket et son
+  historique côté PostgreSQL mais ne retirait jamais l'entrée correspondante de ChromaDB —
+  un ticket résolu (donc archivé) puis supprimé continuait à être proposé par le RAG et cité
+  par la synthèse IA (Tâche 3) avec un ID de ticket qui n'existait plus (404 à l'exploration).
+  Ajout de `delete_resolved()` dans `api/db/vector_store.py`, appelé depuis l'endpoint de
+  suppression. Vérifié directement dans le conteneur `api` (archive → présent dans
+  `query_similar()` → `delete_resolved()` → absent, compteur revenu à sa valeur initiale).
+
 ### Ajouté / Modifié (2026-07-29, migration SQLite→PostgreSQL et TinyDB→ChromaDB)
 
 - `Modifié` : base opérationnelle **SQLite → PostgreSQL** (ADR-006). Nouveau service

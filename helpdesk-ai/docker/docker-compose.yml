@@ -16,6 +16,16 @@
 
 services:
 
+  # ── Ollama — LLM local pour la synthèse RAG "human-in-the-loop" (100% on-premise,
+  # aucune donnée de ticket ne sort de l'infrastructure) ────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - helpdesk-net
+
   # ── PostgreSQL — base opérationnelle (utilisateurs, tickets, historique) ──────
   postgres:
     image: postgres:16-alpine
@@ -50,12 +60,15 @@ services:
       - DB_URL=postgresql+psycopg2://helpdesk:helpdesk@postgres:5432/helpdesk
       # Accepter le frontend ET l'accès direct depuis le navigateur
       - CORS_ORIGINS=http://localhost:8081,http://localhost:4200,http://localhost:8000
+      - OLLAMA_HOST=http://ollama:11434
     volumes:
       # Persistance de la base de connaissances vectorielle ChromaDB + modèles
       - api-data:/app/data
     depends_on:
       postgres:
         condition: service_healthy
+      ollama:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8000/api/v1/health"]
       interval: 30s
@@ -103,6 +116,8 @@ volumes:
   api-data:
     driver: local
   postgres-data:
+    driver: local
+  ollama-data:
     driver: local
 
 # ── Réseau interne ────────────────────────────────────────────────────────────

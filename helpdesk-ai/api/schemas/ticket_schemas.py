@@ -78,6 +78,29 @@ class TicketStatusUpdate(BaseModel):
     statut: str
 
 
+class AdminTicketCreate(BaseModel):
+    """
+    Création d'un ticket par l'admin depuis le tableau. Le demandeur est soit un client
+    déjà enregistré (demandeur_user_id), soit une personne sans compte (nom/prenom/email
+    en saisie libre — un compte "fantôme" is_active=False est alors créé pour porter le
+    ticket, cohérent avec le reste du schéma qui exige un user_id).
+    """
+    titre: str = Field(..., min_length=5)
+    description: str = Field(..., min_length=10)
+    priorite: str = "Modere"
+    filiale: str = ""
+    equipement: str = ""
+    demandeur_user_id: Optional[int] = None
+    demandeur_nom: Optional[str] = None
+    demandeur_prenom: Optional[str] = None
+    demandeur_email: Optional[str] = None
+
+
+class RagSynthesisOut(BaseModel):
+    text: str
+    source: str  # "ollama" | "fallback" | "none"
+
+
 class TicketHistoryItem(BaseModel):
     id: int
     champ: str

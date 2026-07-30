@@ -80,6 +80,24 @@ export interface TicketHistoryEntry {
   par: string;
 }
 
+export interface AdminCreateTicketRequest {
+  titre: string;
+  description: string;
+  priorite?: string;
+  filiale?: string;
+  equipement?: string;
+  demandeur_user_id?: number;
+  demandeur_nom?: string;
+  demandeur_prenom?: string;
+  demandeur_email?: string;
+}
+
+/** Correspond à RagSynthesisOut dans api/schemas/ticket_schemas.py */
+export interface RagSynthesis {
+  text: string;
+  source: 'ollama' | 'fallback' | 'none';
+}
+
 export const STATUT_CFG: Record<Statut, { label: string; color: string; bg: string }> = {
   'En attente':     { label: 'En attente',     color: '#92400e', bg: '#fef3c7' },
   'Prise en Charge':{ label: 'Prise en Charge', color: '#065f46', bg: '#d1fae5' },
@@ -88,4 +106,4 @@ export const STATUT_CFG: Record<Statut, { label: string; color: string; bg: stri
   'Problème':       { label: 'Problème',        color: '#4c1d95', bg: '#ede9fe' },
 };
 
-export const FILIALES = ['OTBS', 'Siège', 'HELIOFLEX', 'Agence Nord', 'Agence Sud'];
+export const FILIALES = ['EOT', 'FUBA', 'HELIOFLEX', 'OTBS', 'OTH', 'OTMA', 'TC', 'TPI', 'TTEI'];

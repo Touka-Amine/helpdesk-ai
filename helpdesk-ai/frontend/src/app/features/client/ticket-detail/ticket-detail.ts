@@ -18,6 +18,7 @@ export class TicketDetailClient implements OnInit {
 
   ticket  = signal<Ticket | null>(null);
   history = signal<TicketHistoryEntry[]>([]);
+  similarTitles = signal<string[]>([]);
   loading = signal(true);
   error   = signal<string | null>(null);
 
@@ -28,17 +29,11 @@ export class TicketDetailClient implements OnInit {
 
   statutCfg = STATUT_CFG;
 
-  confiance = computed(() => {
-    const c = this.ticket()?.confiance;
-    return c != null ? Math.round(c * 100) : null;
-  });
-
-  confianceColor = computed(() => {
-    const c = this.confiance();
-    if (c == null) return '#9ca3af';
-    if (c >= 70)  return '#15803d';
-    if (c >= 40)  return '#b45309';
-    return '#dc2626';
+  // Dernière mise à jour "conviviale" pour le bloc Suivi — dérivée de l'historique
+  // (déjà accessible au client pour son propre ticket) sans en exposer le detail brut.
+  derniereMaj = computed(() => {
+    const h = this.history();
+    return h.length ? h[h.length - 1].timestamp : this.ticket()?.created_at ?? null;
   });
 
   // La solution RAG (texte technique destine a un agent IT) n'est pas affichee au
@@ -86,12 +81,17 @@ export class TicketDetailClient implements OnInit {
     this.showFeedbackForm.set(false);
     this.feedbackComment.set('');
     this.history.set([]);
+    this.similarTitles.set([]);
     this.ticketApi.getMyTicketDetail(id).subscribe({
       next: (t) => {
         this.ticket.set(t);
         this.loading.set(false);
         this.ticketApi.getTicketHistory(id).subscribe({
           next: (h) => this.history.set(h),
+          error: () => {},
+        });
+        this.ticketApi.getSimilarTitles(id).subscribe({
+          next: (r) => this.similarTitles.set(r.titres),
           error: () => {},
         });
       },
@@ -139,5 +139,9 @@ export class TicketDetailClient implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/client/my-tickets']);
+  }
+
+  goToNewTicket(): void {
+    this.router.navigate(['/client/new-ticket']);
   }
 }

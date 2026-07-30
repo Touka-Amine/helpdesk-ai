@@ -5,6 +5,8 @@ import {
   Ticket,
   CreateTicketRequest,
   ApproveTicketRequest,
+  AdminCreateTicketRequest,
+  RagSynthesis,
   TicketHistoryEntry,
 } from '../models/ticket.models';
 
@@ -37,6 +39,10 @@ export class TicketApiService {
     return this.http.post<Ticket>(`${this.base}/${ticketId}/feedback`, { vote, comment });
   }
 
+  getSimilarTitles(ticketId: number) {
+    return this.http.get<{ titres: string[] }>(`${this.base}/${ticketId}/similar-titles`);
+  }
+
   // --- Espace admin ---
   getAllTickets() {
     return this.http.get<Ticket[]>(`${this.base}/admin/all`);
@@ -52,5 +58,17 @@ export class TicketApiService {
 
   getTicketHistory(ticketId: number) {
     return this.http.get<TicketHistoryEntry[]>(`${this.base}/${ticketId}/history`);
+  }
+
+  adminCreateTicket(payload: AdminCreateTicketRequest) {
+    return this.http.post<Ticket>(`${this.base}/admin-create`, payload);
+  }
+
+  deleteTicket(ticketId: number) {
+    return this.http.delete<{ message: string; id: number }>(`${this.base}/${ticketId}`);
+  }
+
+  getRagSynthesis(ticketId: number) {
+    return this.http.get<RagSynthesis>(`${this.base}/${ticketId}/rag-synthesis`);
   }
 }

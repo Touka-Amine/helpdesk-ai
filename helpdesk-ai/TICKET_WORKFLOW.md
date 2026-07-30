@@ -1,7 +1,8 @@
 # Workflow des tickets — documentation
 
-> Dernière mise à jour : **2026-07-29**. Décrit le comportement réel du code
-> (`api/routers/tickets.py`, `frontend/.../admin/approval-queue`, `.../admin/ticket-detail`).
+> Dernière mise à jour : **2026-07-30**. Décrit le comportement réel du code
+> (`api/routers/tickets.py`, `frontend/.../admin/approval-queue`, `.../admin/ticket-detail`,
+> `.../admin/ticket-list`, `.../client/ticket-detail`).
 
 ## Flux de statuts
 
@@ -56,9 +57,9 @@ automatiquement :
 4. Redirection directe vers `/admin/tickets/{id}` — tout le traitement se fait sur cet
    écran, pas dans un popup dupliqué
 
-## Traitement du ticket — écran en 2 étapes
+## Traitement du ticket — écran en 3 sous-étapes (revue → champs → solution)
 
-`frontend/.../admin/ticket-detail` (`TicketDetail`, signal `step`) :
+`frontend/.../admin/ticket-detail` (`TicketDetail`, signal `step` + `showSolutionModal`) :
 
 ### Étape 1 — Revue (`step() === 'revue'`)
 - **Résultat ML** : catégorie, priorité, classification et confiance affichés ensemble
@@ -69,23 +70,41 @@ automatiquement :
   - si `rag_score ≥ 0.50` (`NOVELTY_THRESHOLD`) : solution suggérée, avec source
   - sinon : panneau « Nouveau type de problème » — message explicite qu'aucun cas
     similaire n'est connu, invite à décrire la solution appliquée
-- Pas de sélecteur de statut ici (il a été déplacé à l'étape 2 — voir plus bas pour la
-  raison)
+- Pas de sélecteur de statut ici (il a été déplacé à la fin du parcours — voir plus bas)
 - Bouton **Suivant** → passe à l'étape de clôture
 
-### Étape 2 — Clôture (`step() === 'cloture'`)
-- **Nouveau statut** (`<select>`, statut actuel + transitions permises)
+### Étape 2 — Champs de clôture (`step() === 'cloture'`)
 - **Catégorie finale**, **Priorité finale**, **Classification finale** — trois `<select>`
   pré-remplis par la prédiction/valeur de départ, modifiables par l'admin
-- **Réponse au client** — pré-remplie avec le message automatique si le statut choisi est
-  « Prise en Charge » et qu'aucun message n'a encore été saisi
-- **Solution appliquée** (`commentaire_admin` en base) — jamais visible par le client,
-  alimente ChromaDB. Obligatoire si le ticket est un « cas nouveau » et que le statut visé
-  est « Résolu » (`400` sinon, côté serveur et côté client)
-- Bouton **Enregistrer** → `PATCH /tickets/{id}/approve`
+- **Réponse au client** — message libre visible par le client
+- Bouton **Suivant** → ouvre le popup dédié « Solution appliquée » (pas de sélecteur de
+  statut ni de champ solution sur cet écran)
 
-Les trois champs finaux et le statut sont regroupés **au même endroit**, à l'étape de
-clôture — pas demandés en amont de la revue de la classification IA.
+### Étape 3 — Popup « Solution appliquée » (`showSolutionModal()`, retour utilisateur)
+Champ isolé dans un grand popup dédié (`max-w-2xl`, textarea de 12 lignes) plutôt que
+noyé dans la colonne étroite avec les autres champs — l'admin doit pouvoir rédiger le
+diagnostic à l'aise, ce texte alimentant directement ChromaDB.
+- **Solution appliquée** (`commentaire_interne` / `commentaire_admin` en base) — jamais
+  visible par le client. Obligatoire si le ticket est un « cas nouveau » et que le statut
+  final choisi est « Résolu » (`400` côté serveur, même règle côté client)
+- Bouton **Enregistrer** — **toujours pas de sélecteur de statut dans le formulaire.** Le
+  clic ouvre une modale « Quel est le nouveau statut de ce ticket ? » listant les
+  transitions valides depuis le statut actuel (`availableStatuts()`) ; l'admin choisit le
+  statut réel là, une fois tous les autres champs déjà fixés. Un choix « Résolu » sur un
+  cas nouveau sans solution appliquée **referme la modale de statut et rouvre ce popup**
+  avec le message d'erreur affiché directement au-dessus du champ concerné (plutôt que
+  dans la petite modale de statut, loin du champ à corriger). Le message client
+  automatique adapté (`AUTO_MESSAGE_PRISE_EN_CHARGE`/`AUTO_MESSAGE_RESOLU`) est appliqué
+  côté serveur si le champ « Réponse au client » est resté vide ou inchangé. Après
+  enregistrement, redirection vers la liste de tous les tickets.
+  - **Ticket déjà terminal** (Résolu/Rejeté, aucune transition possible) : le clic sur
+    Enregistrer (dans ce popup) sauvegarde directement les autres champs, sans modale de
+    statut (rien à choisir).
+- Bouton **Retour** → referme le popup sans enregistrer, retour aux champs de l'étape 2.
+
+Le parcours complet est donc **Suivant → Suivant → Enregistrer** : catégorie/priorité/
+classification/réponse client d'abord, puis la solution appliquée seule dans son grand
+popup, la décision du statut restant la toute dernière action.
 
 ## Base de connaissances RAG — ChromaDB
 
@@ -102,6 +121,34 @@ Quand un ticket passe à **Résolu** (première fois ou correction ultérieure) 
    devient donc exploitable par le RAG **dès le ticket suivant**, sans réentraînement ni
    redémarrage du serveur
 
+## Assistant de triage IA — synthèse RAG (Ollama, 100% on-premise)
+
+`GET /tickets/{id}/rag-synthesis` (admin) reformule les tickets similaires réellement
+archivés (ChromaDB, avec leur vrai ID) en français professionnel via un LLM local
+(`api/services/llm_service.py`, service Docker `ollama`, modèle `llama3.2:3b`) : le RAG ne
+recrache plus la résolution brute d'un seul cas (parfois mal écrite). La réponse liste
+chaque ticket similaire à puces (`Ticket #<id> (Score : <score>% - <catégorie>) : <résumé>`)
+et termine en demandant l'ID du cas le plus pertinent. Un exemple concret (few-shot) est
+injecté dans l'historique de conversation envoyé au LLM pour ancrer le format exact — un
+modèle de cette taille (3B) suit un exemple complet beaucoup plus fidèlement que des règles
+abstraites seules. Si Ollama est indisponible ou trop lent (`OLLAMA_TIMEOUT`, 90s par
+défaut — l'inférence CPU peut prendre 20 à 60s selon la longueur du prompt), repli
+automatique sur un récapitulatif brut non reformulé (`source: "fallback"` dans la réponse,
+vs `"ollama"` en fonctionnement normal, `"none"` si aucun cas similaire n'existe).
+
+**Affichage par défaut (2026-07-30, retour utilisateur)** : le panneau « Solution suggérée »
+de l'étape Revue déclenche cette synthèse **automatiquement** dès l'ouverture d'un ticket
+ayant un cas connu (`!isNovelCase()`), avec un état de chargement visible — ce n'est plus
+une action optionnelle séparée en dessous d'une résolution brute. L'admin voit directement
+la reformulation professionnelle, jamais le texte brut d'un cas archivé, sauf repli
+explicite (`source: "fallback"`, avertissement affiché) ou si la meilleure correspondance
+provient uniquement du corpus statique d'entraînement (pas d'ID de ticket réel à
+synthétiser/explorer — dans ce cas, la suggestion brute `solution_rag` reste affichée,
+c'est la seule situation où du texte non reformulé apparaît encore par défaut). Le bouton
+« Rafraîchir » recalcule le score RAG **et** relance la synthèse. Le champ pour explorer la
+procédure complète d'un ticket cité (en tapant son ID) n'apparaît que si une synthèse réelle
+(`ollama`/`fallback`) est disponible.
+
 ## Endpoints API
 
 ### Tickets — client
@@ -110,14 +157,18 @@ POST   /tickets/                    # Créer un ticket
 GET    /tickets/me                  # Lister mes tickets
 GET    /tickets/{id}                # Détail d'un ticket
 GET    /tickets/{id}/history        # Historique du ticket
+GET    /tickets/{id}/similar-titles # Titres de cas similaires (sans solution ni score)
 ```
 
 ### Tickets — admin
 ```
 GET    /tickets/admin/all           # Lister tous les tickets
+POST   /tickets/admin-create        # Créer un ticket (client existant ou saisie libre)
 PATCH  /tickets/{id}/approve        # Changer statut / catégorie / priorité /
                                      # classification / commentaires
+DELETE /tickets/{id}                # Suppression définitive (+ historique lié)
 POST   /tickets/{id}/refresh-rag    # Recalculer la suggestion RAG
+GET    /tickets/{id}/rag-synthesis  # Synthèse IA des tickets similaires (LLM local)
 GET    /tickets/resolved/stats      # KPIs (ChromaDB) — total, par catégorie, par filiale
 GET    /tickets/resolved/archive    # Tickets résolus archivés (ChromaDB)
 ```
@@ -189,10 +240,9 @@ class TicketHistory:
 3. [Admin] Étape Revue : constate qu'aucune suggestion n'existe, clique Suivant
 
 4. [Admin] Étape Clôture :
-   → Statut = Résolu
    → Catégorie/Priorité/Classification finales confirmées
    → Solution appliquée (obligatoire, cas nouveau) : diagnostic + action détaillés
-   → Enregistrer
+   → Enregistrer → modale « Quel est le nouveau statut ? » → choix « Résolu »
 
 5. [Backend] resolved_at fixé, embedding calculé en tâche de fond, archivé dans ChromaDB
 

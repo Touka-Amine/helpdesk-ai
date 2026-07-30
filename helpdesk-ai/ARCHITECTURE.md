@@ -14,7 +14,7 @@ flowchart TB
   api --> rag[Service RAG sémantique]
   api --> db[(BDD\nPostgreSQL)]
   rag --> vdb[(Base vectorielle\nChromaDB)]
-  rag --> llm[LLM de génération\n+ guardrails]
+  rag --> llm[LLM local Ollama\nlivré llama3.2:3b]
   ml -.-> mlflow[(MLflow Registry)]
   subgraph MLOps
     dvc[DVC pipeline] --> mlflow
@@ -28,7 +28,8 @@ flowchart TB
 | Frontend | UI client/admin, restitution confiance + sources, feedback | 🟡 | `frontend/` |
 | API | Contrat REST, auth, orchestration | ✅🟡 | `api/` |
 | Service NLP | Classification, résumé, NER, priorité, sentiment | ✅🔴 | `api/services/ai_service.py`, `src/models/` |
-| Service RAG | Retrieval sémantique + génération | 🔴 | `src/rag/` (à refondre) |
+| Service RAG | Retrieval sémantique | ✅ | `src/rag/`, `api/services/ai_service.py` |
+| Assistant de triage IA | Synthèse LLM des cas similaires (human-in-the-loop) | ✅ | `api/services/llm_service.py`, service Docker `ollama` |
 | Base vectorielle | Index des embeddings (ChromaDB) | ✅ | `api/db/vector_store.py` |
 | BDD | Tickets, users, historique, feedback | ✅ | `api/db/` |
 | MLOps | Reproductibilité, registre | 🔴 | `dvc.yaml`, `mlruns/` |
@@ -76,6 +77,7 @@ classDiagram
 | API | FastAPI, Pydantic v2, Uvicorn |
 | NLP/ML | scikit-learn, imbalanced-learn, NLTK, HuggingFace Transformers, PEFT/LoRA |
 | RAG | sentence-transformers (FR), ChromaDB (base vectorielle, ADR-004), RAGAS |
+| LLM local | Ollama (`llama3.2:3b`, conteneur dédié, aucun appel externe) |
 | Données | pandas, DVC |
 | MLOps | DVC, MLflow |
 | Persistance | SQLAlchemy, PostgreSQL |
@@ -86,4 +88,6 @@ classDiagram
 - **Monolithe modulaire** (pas de microservices pour le PFE — voir ADR-005).
 - Séparation en couches : `routers` (HTTP) → `services` (métier) → `repositories` (données).
 - Sans état côté API (scalabilité horizontale possible).
-- Dégradation gracieuse : si le LLM est indisponible, repli sur retrieval sans génération.
+- Dégradation gracieuse : si le LLM est indisponible ou trop lent, repli sur un
+  récapitulatif brut non reformulé plutôt que de faire échouer la requête (implémenté,
+  `api/services/llm_service.py::_fallback_synthesis`).

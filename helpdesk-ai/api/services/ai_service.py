@@ -58,6 +58,18 @@ def _build_recommendations(static_recs: list, query_text: str, categorie: str | 
     return recommendations
 
 
+def get_live_candidates(titre: str, description: str, categorie: str | None, top_k: int = 3) -> list[dict]:
+    """
+    Candidats ChromaDB seuls (tickets réellement résolus, avec un ticket_id réel et
+    explorable) — contrairement à `_build_recommendations()`, ne mélange pas le corpus
+    statique d'entraînement (qui n'a pas d'ID de ticket associé). Utilisé par la synthèse
+    IA "human-in-the-loop" (api/services/llm_service.py), dont chaque puce doit pointer
+    vers un vrai ticket que l'admin peut ensuite ouvrir.
+    """
+    query_text = f"{titre}\n{description}"
+    return query_similar(query_text, categorie=categorie, top_k=top_k)
+
+
 def recommend_for_category(
     titre: str,
     description: str,

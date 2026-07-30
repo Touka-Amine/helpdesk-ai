@@ -141,6 +141,9 @@ def query_similar(text: str, categorie: Optional[str] = None, top_k: int = 3) ->
             "knowledge" : meta.get("knowledge", ""),
             "fallback"  : False,
             "source"    : "chroma_live",
+            "ticket_id" : meta.get("ticket_id") or (int(_id) if str(_id).isdigit() else None),
+            "categorie" : meta.get("categorie", ""),
+            "titre"     : meta.get("titre", ""),
         })
     return out
 
@@ -184,3 +187,16 @@ def get_stats() -> dict:
 def count_resolved() -> int:
     """Nombre total de tickets résolus archivés."""
     return _get_collection().count()
+
+
+def delete_resolved(ticket_id: int) -> None:
+    """
+    Retire un ticket de la base de connaissances vectorielle, s'il y était archivé.
+
+    Appelé lors de la suppression définitive d'un ticket (DELETE /tickets/{id}) : sans
+    ce nettoyage, un ticket résolu archivé puis supprimé laisserait une entrée fantôme
+    dans ChromaDB — toujours proposée par le RAG et citée par la synthèse IA avec un ID
+    qui ne correspond plus à aucun ticket réel (404 si l'admin l'explore). No-op si
+    l'id n'était pas archivé (ticket jamais résolu).
+    """
+    _get_collection().delete(ids=[str(ticket_id)])

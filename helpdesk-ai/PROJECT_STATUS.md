@@ -1,8 +1,9 @@
 # PROJECT_STATUS.md — Avancement global
 
 > Résumé concis. **Source de vérité : [PLAN.md](PLAN.md)** (section 10 — Tableau de bord).
-> Dernière mise à jour : **2026-07-29** (boucle RAG, refonte workflow tickets, migration
-> PostgreSQL/ChromaDB — voir [CHANGELOG.md](CHANGELOG.md) pour le détail daté).
+> Dernière mise à jour : **2026-07-30** (masquage IA côté client, clôture pilotée par
+> statut, assistant de triage IA via LLM local — voir [CHANGELOG.md](CHANGELOG.md) pour le
+> détail daté).
 
 ## Bandeau
 
@@ -53,6 +54,14 @@
   désormais **interrogée en direct** par le RAG à chaque recommandation (`query_similar()`),
   alors que TinyDB n'était qu'un journal jamais relu — vérifié en direct : une solution admin
   devient la suggestion proposée dès le ticket similaire suivant
+- **Interface client épurée + assistant de triage IA (2026-07-30)** — vue client : retrait
+  des métadonnées IA (catégorie prédite, confiance), colonne latérale remplacée par suivi
+  simplifié + cas similaires + contact rapide, message de résolution auto différencié ;
+  écran admin : clôture pilotée par le choix du statut final (modale ouverte par
+  « Enregistrer », plus de menu déroulant pré-rempli), édition inline du tableau, création/
+  suppression sécurisée de tickets ; nouveau service **Ollama** (LLM local `llama3.2:3b`,
+  100% on-premise) reformulant les tickets similaires archivés en français professionnel
+  au lieu d'afficher leur résolution brute — vérifié en direct avec repli automatique testé
 
 ## 🟡 En cours
 - Phase 13 (Optimisation) — Semaines 1–2 terminées (heuristiques + RAG hybride), Semaine 3

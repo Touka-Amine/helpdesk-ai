@@ -4,6 +4,11 @@
       <h2 class="font-display-lg text-display-lg text-on-surface">Tous les tickets</h2>
       <p class="font-body-md text-body-md text-on-surface-variant mt-1">Gérez et suivez l'ensemble des requêtes de support.</p>
     </div>
+    <button (click)="openCreateModal()"
+      class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md shadow-sm hover:opacity-90 transition-all">
+      <span class="material-symbols-outlined text-[18px]">add</span>
+      Nouveau ticket
+    </button>
   </div>
 
   <!-- Filtres -->
@@ -72,7 +77,6 @@
               <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Classification</th>
               <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Catégorie</th>
               <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Temps écoulé</th>
-              <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">CID</th>
               <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Filiale</th>
               <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Priorité</th>
               <th class="px-4 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Assigné à</th>
@@ -82,28 +86,84 @@
           </thead>
           <tbody class="divide-y divide-outline-variant/30">
             @for (t of filtered(); track t.id) {
-              <tr class="hover:bg-surface-container-low transition-colors group cursor-pointer" (click)="goToDetail(t.id)">
-                <td class="px-4 py-4">
-                  <span class="px-3 py-1 rounded-full font-label-sm text-label-sm whitespace-nowrap" [style.background]="statutCfg[t.statut]?.bg" [style.color]="statutCfg[t.statut]?.color">
-                    {{ statutCfg[t.statut]?.label ?? t.statut }}
-                  </span>
-                </td>
-                <td class="px-4 py-4 font-body-md text-body-md text-on-surface font-semibold max-w-[220px] truncate">{{ t.titre }}</td>
-                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.demandeur_nom || '—' }}</td>
-                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.classification_finale || t.classification_predite || '—' }}</td>
-                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.categorie_finale || t.categorie_predite || '—' }}</td>
-                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.temps_ecoule || '—' }}</td>
-                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.cid }}</td>
-                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.filiale || '—' }}</td>
-                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.priorite_finale || t.priorite_predite || '—' }}</td>
-                <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.assigne_a || '—' }}</td>
-                <td class="px-4 py-4 text-body-md text-on-surface-variant max-w-[220px] truncate">{{ t.commentaire_interne || '—' }}</td>
-                <td class="px-4 py-4 text-right">
-                  <button (click)="goToDetail(t.id); $event.stopPropagation()" class="p-2 hover:bg-surface-container-high rounded-full transition-colors group-hover:text-primary">
-                    <span class="material-symbols-outlined text-[20px]">visibility</span>
-                  </button>
-                </td>
-              </tr>
+              @if (editingId() === t.id) {
+                <!-- Ligne en édition inline (Tâche 2.3) -->
+                <tr class="bg-primary/5">
+                  <td class="px-4 py-3">
+                    <span class="px-3 py-1 rounded-full font-label-sm text-label-sm whitespace-nowrap" [style.background]="statutCfg[t.statut]?.bg" [style.color]="statutCfg[t.statut]?.color">
+                      {{ statutCfg[t.statut]?.label ?? t.statut }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 font-body-md text-body-md text-on-surface font-semibold max-w-[220px] truncate">{{ t.titre }}</td>
+                  <td class="px-4 py-3 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.demandeur_nom || '—' }}</td>
+                  <td class="px-4 py-3">
+                    <select [(ngModel)]="editClassification" class="w-full rounded-lg border border-outline-variant bg-surface p-1 text-body-sm">
+                      @for (c of classificationOptions; track c) { <option [value]="c">{{ c }}</option> }
+                    </select>
+                  </td>
+                  <td class="px-4 py-3">
+                    <select [(ngModel)]="editCategorie" class="w-full rounded-lg border border-outline-variant bg-surface p-1 text-body-sm">
+                      @for (c of categorieOptions; track c) { <option [value]="c">{{ c }}</option> }
+                    </select>
+                  </td>
+                  <td class="px-4 py-3 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.temps_ecoule || '—' }}</td>
+                  <td class="px-4 py-3 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.filiale || '—' }}</td>
+                  <td class="px-4 py-3">
+                    <select [(ngModel)]="editPriorite" class="w-full rounded-lg border border-outline-variant bg-surface p-1 text-body-sm">
+                      @for (p of prioriteOptions; track p) { <option [value]="p">{{ p }}</option> }
+                    </select>
+                  </td>
+                  <td class="px-4 py-3">
+                    <input [(ngModel)]="editAssigneA" type="text" placeholder="Non assigné"
+                      class="w-full rounded-lg border border-outline-variant bg-surface p-1 text-body-sm" />
+                  </td>
+                  <td class="px-4 py-3">
+                    <input [(ngModel)]="editCommentaire" type="text" placeholder="Résolution / motif"
+                      class="w-full rounded-lg border border-outline-variant bg-surface p-1 text-body-sm" />
+                  </td>
+                  <td class="px-4 py-3 text-right whitespace-nowrap">
+                    <button (click)="saveEdit(t, $event)" [disabled]="savingEdit()" title="Enregistrer"
+                      class="p-2 hover:bg-green-100 text-green-700 rounded-full transition-colors disabled:opacity-50">
+                      <span class="material-symbols-outlined text-[20px]">check</span>
+                    </button>
+                    <button (click)="cancelEdit($event)" title="Annuler"
+                      class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                  </td>
+                </tr>
+              } @else {
+                <tr class="hover:bg-surface-container-low transition-colors group cursor-pointer" (click)="goToDetail(t.id)">
+                  <td class="px-4 py-4">
+                    <span class="px-3 py-1 rounded-full font-label-sm text-label-sm whitespace-nowrap" [style.background]="statutCfg[t.statut]?.bg" [style.color]="statutCfg[t.statut]?.color">
+                      {{ statutCfg[t.statut]?.label ?? t.statut }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-4 font-body-md text-body-md text-on-surface font-semibold max-w-[220px] truncate">{{ t.titre }}</td>
+                  <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.demandeur_nom || '—' }}</td>
+                  <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.classification_finale || t.classification_predite || '—' }}</td>
+                  <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.categorie_finale || t.categorie_predite || '—' }}</td>
+                  <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.temps_ecoule || '—' }}</td>
+                  <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.filiale || '—' }}</td>
+                  <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.priorite_finale || t.priorite_predite || '—' }}</td>
+                  <td class="px-4 py-4 text-body-md text-on-surface-variant whitespace-nowrap">{{ t.assigne_a || '—' }}</td>
+                  <td class="px-4 py-4 text-body-md text-on-surface-variant max-w-[220px] truncate">{{ t.commentaire_interne || '—' }}</td>
+                  <td class="px-4 py-4 text-right whitespace-nowrap">
+                    <button (click)="startEdit(t, $event)" title="Modifier"
+                      class="p-2 hover:bg-surface-container-high rounded-full transition-colors group-hover:text-primary">
+                      <span class="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                    <button (click)="goToDetail(t.id); $event.stopPropagation()" title="Voir le détail"
+                      class="p-2 hover:bg-surface-container-high rounded-full transition-colors group-hover:text-primary">
+                      <span class="material-symbols-outlined text-[20px]">visibility</span>
+                    </button>
+                    <button (click)="openDeleteConfirm(t, $event)" title="Supprimer"
+                      class="p-2 hover:bg-error-container rounded-full transition-colors hover:text-error">
+                      <span class="material-symbols-outlined text-[20px]">delete</span>
+                    </button>
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>
@@ -111,3 +171,112 @@
     }
   </div>
 </div>
+
+<!-- Tâche 2.4 : création d'un ticket depuis le tableau -->
+@if (showCreateModal()) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-gutter" (click)="closeCreateModal()">
+    <div class="bg-surface-container-lowest rounded-xl p-container-padding max-w-lg w-full shadow-lg space-y-stack-md max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+      <h3 class="font-headline-sm text-headline-sm text-on-surface">Nouveau ticket</h3>
+
+      <div>
+        <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Demandeur</label>
+        <div class="flex gap-stack-sm mb-stack-sm">
+          <button type="button" (click)="demandeurMode.set('existing')"
+            class="flex-1 py-2 rounded-lg border font-label-sm text-label-sm"
+            [class.border-primary]="demandeurMode() === 'existing'" [class.text-primary]="demandeurMode() === 'existing'"
+            [class.border-outline-variant]="demandeurMode() !== 'existing'">
+            Client existant
+          </button>
+          <button type="button" (click)="demandeurMode.set('free')"
+            class="flex-1 py-2 rounded-lg border font-label-sm text-label-sm"
+            [class.border-primary]="demandeurMode() === 'free'" [class.text-primary]="demandeurMode() === 'free'"
+            [class.border-outline-variant]="demandeurMode() !== 'free'">
+            Saisie libre (sans compte)
+          </button>
+        </div>
+
+        @if (demandeurMode() === 'existing') {
+          <select [ngModel]="newDemandeurUserId()" (ngModelChange)="newDemandeurUserId.set($event)"
+            class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md">
+            <option [ngValue]="null">Sélectionnez un client…</option>
+            @for (c of clients(); track c.id) {
+              <option [ngValue]="c.id">{{ c.prenom }} {{ c.nom }} ({{ c.email }})</option>
+            }
+          </select>
+        } @else {
+          <div class="grid grid-cols-2 gap-stack-sm">
+            <input [(ngModel)]="newDemandeurPrenom" placeholder="Prénom" class="rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md" />
+            <input [(ngModel)]="newDemandeurNom" placeholder="Nom" class="rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md" />
+          </div>
+          <input [(ngModel)]="newDemandeurEmail" placeholder="Email" type="email" class="w-full mt-stack-sm rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md" />
+        }
+      </div>
+
+      <div>
+        <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Titre</label>
+        <input [(ngModel)]="newTitre" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md" />
+      </div>
+      <div>
+        <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Description</label>
+        <textarea [(ngModel)]="newDescription" rows="3" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md resize-none"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-stack-sm">
+        <div>
+          <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Priorité</label>
+          <select [(ngModel)]="newPriorite" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md">
+            @for (p of prioriteOptions; track p) { <option [value]="p">{{ p }}</option> }
+          </select>
+        </div>
+        <div>
+          <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Filiale</label>
+          <select [(ngModel)]="newFiliale" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md">
+            @for (f of filiales; track f) { <option [value]="f">{{ f }}</option> }
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Équipement <span class="text-outline">(optionnel)</span></label>
+        <input [(ngModel)]="newEquipement" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md" />
+      </div>
+
+      @if (createError()) {
+        <div class="text-body-md font-body-md text-error bg-error-container/40 rounded-lg px-3 py-2">{{ createError() }}</div>
+      }
+
+      <div class="flex justify-end gap-stack-md">
+        <button type="button" (click)="closeCreateModal()" class="px-4 py-2 rounded-lg border border-outline-variant font-label-md text-label-md">Annuler</button>
+        <button type="button" (click)="submitCreate()" [disabled]="creating()"
+          class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm disabled:opacity-60">
+          {{ creating() ? 'Création…' : 'Créer le ticket' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Tâche 2.4 : suppression sécurisée -->
+@if (deleteTarget(); as dt) {
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-gutter" (click)="closeDeleteConfirm()">
+    <div class="bg-surface-container-lowest rounded-xl p-container-padding max-w-md w-full shadow-lg space-y-stack-md" (click)="$event.stopPropagation()">
+      <h3 class="font-headline-sm text-headline-sm text-error flex items-center gap-2">
+        <span class="material-symbols-outlined">warning</span> Suppression définitive
+      </h3>
+      <p class="font-body-md text-body-md text-on-surface-variant">
+        Vous êtes sur le point de supprimer définitivement le ticket <strong>#{{ dt.id }} — {{ dt.titre }}</strong>
+        ainsi que tout son historique. Cette action est irréversible.
+      </p>
+      <p class="font-label-md text-label-md text-on-surface">
+        Tapez <strong>{{ deleteConfirmWord }}</strong> pour confirmer :
+      </p>
+      <input [(ngModel)]="deleteConfirmText" type="text" [placeholder]="deleteConfirmWord"
+        class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-error focus:border-error outline-none" />
+      <div class="flex justify-end gap-stack-md">
+        <button type="button" (click)="closeDeleteConfirm()" class="px-4 py-2 rounded-lg border border-outline-variant font-label-md text-label-md">Annuler</button>
+        <button type="button" (click)="confirmDelete()" [disabled]="!deleteConfirmValid() || deleting()"
+          class="px-4 py-2 rounded-lg bg-error text-on-error font-label-md text-label-md shadow-sm disabled:opacity-50">
+          {{ deleting() ? 'Suppression…' : 'Supprimer définitivement' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
