@@ -22,6 +22,13 @@ __pycache__/
 *.pkl
 mlruns/
 
+# Exception : le registre de modèles. Ses .pkl sont les artefacts figés des versions
+# promues, et sans eux le rollback annoncé par helpdesk-ai/MLOPS.md §3.6 ne fonctionne
+# pas depuis un clone frais : l'index listerait des versions dont le modèle a disparu.
+# Un pipeline pèse ~330 Ko ; si l'historique devient trop lourd, supprimer les
+# répertoires des versions anciennes plutôt que de réintroduire l'exclusion.
+!helpdesk-ai/models/registry/**/*.pkl
+
 # Bases de données locales
 *.db
 *.sqlite
@@ -39,3 +46,22 @@ Thumbs.db
 
 # Config locale Claude Code (permissions/session propres a la machine)
 .claude/settings.local.json
+
+# LaTeX — artefacts de compilation du mémoire
+report/*.aux
+report/*.log
+report/*.toc
+report/*.lof
+report/*.lot
+report/*.out
+report/*.bbl
+report/*.blg
+report/*.bcf
+report/*.run.xml
+report/*.mtc*
+report/*.maf
+report/*.idx
+report/*.ilg
+report/*.ind
+report/*.synctex.gz
+report/**/*.aux

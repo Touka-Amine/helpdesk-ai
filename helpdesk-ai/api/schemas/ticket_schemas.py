@@ -101,6 +101,23 @@ class RagSynthesisOut(BaseModel):
     source: str  # "ollama" | "fallback" | "none"
 
 
+class ChatMessage(BaseModel):
+    role: str = Field(..., pattern="^(user|assistant)$")
+    content: str = Field(..., min_length=1, max_length=2000)
+
+
+class ChatRequest(BaseModel):
+    # Historique de la conversation (question/reponse), sans le contexte du ticket ni le
+    # system prompt — reconstruits cote serveur a chaque appel a partir de l'etat reel de
+    # la base (cf. api/services/llm_service.py::chat_reply), jamais fournis par le client.
+    messages: list[ChatMessage] = Field(..., min_length=1, max_length=20)
+
+
+class ChatResponseOut(BaseModel):
+    reply: str
+    source: str  # "ollama" | "fallback" | "none"
+
+
 class TicketHistoryItem(BaseModel):
     id: int
     champ: str

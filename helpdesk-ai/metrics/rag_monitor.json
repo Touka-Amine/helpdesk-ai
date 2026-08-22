@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-08-22T04:56:20.793339+00:00",
+  "production": {
+    "n_tickets": 5
+  },
+  "base_connaissances": {
+    "disponible": true,
+    "total": 0,
+    "note": "base de connaissances vide — aucun ticket resolu archive"
+  },
+  "evaluation_hors_ligne": {
+    "disponible": true,
+    "date": null,
+    "protocole": "proxy",
+    "resume": {
+      "generated_at": "2026-08-22T03:19:30.582205+00:00",
+      "protocole": "proxy",
+      "avertissement_protocole": "Protocole proxy : est considere pertinent tout resultat de la meme categorie que la requete. Indicatif seulement. Construisez le jeu annote avec --build-template pour obtenir des mesures interpretables.",
+      "top_k": 3,
+      "n_requetes": 80,
+      "source_requetes": "data/splits/test.csv",
+      "moteur_en_production": "hybride"
+    }
+  },
+  "non_mesurable": [
+    "Recommandation effectivement utilisee par l'administrateur : aucun evenement de selection n'est journalise.",
+    "Pertinence objective sans jeu annote : voir src/pipeline/rag_eval.py.",
+    "Contradictions entre connaissances : seuls les quasi-doublons sont detectes."
+  ]
+}

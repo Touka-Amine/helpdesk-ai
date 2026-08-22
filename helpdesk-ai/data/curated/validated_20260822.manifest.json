@@ -1,0 +1,17 @@
+{
+  "created_at": "2026-08-22T02:11:52.640950+00:00",
+  "db": "sqlite:///data/tickets.db",
+  "collectees": 5,
+  "eligibles": 0,
+  "validees": 0,
+  "repartition_force_etiquette": {},
+  "motifs_rejet": {
+    "statut non terminal (Rejete)": 2,
+    "statut non terminal (En cours)": 1,
+    "statut non terminal (Valide)": 1,
+    "statut non terminal (En attente)": 1
+  },
+  "include_weak_labels": false,
+  "categories": {},
+  "fichier": "data/curated/validated_20260822.csv"
+}

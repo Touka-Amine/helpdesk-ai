@@ -1,0 +1,31 @@
+{
+  "created_at": "2026-08-22T02:07:54.498775+00:00",
+  "strategy": "group",
+  "test_size": 0.2,
+  "random_state": 42,
+  "n_rows": 356,
+  "n_titres": 12,
+  "titres": [
+    "Absence de signature automatique dans Outlook",
+    "Accès non autorisé détecté par l'IDS",
+    "Alarme UPS – batterie faible",
+    "Certificat SSL expiré sur site interne",
+    "Compte utilisateur bloqué",
+    "Erreur lors de l'impression des documents",
+    "Mise à jour Windows bloquée à 99%",
+    "Perte de communication avec le SAN",
+    "Problème de synchronisation Outlook",
+    "Redémarrage intempestif du switch de bureau",
+    "Réinitialisation du mot de passe Outlook",
+    "Service Windows arrêté"
+  ],
+  "class_support": {
+    "Microsoft": 135,
+    "Infrastructure": 91,
+    "Système": 52,
+    "Réseau": 45,
+    "Sécurité": 33
+  },
+  "sha256": "70d7fcc83f00546d910a0928b9203d6511e773ab30a7ddf923204abdf16bf1a5",
+  "note": "Jeu de test gele. Toute evaluation et toute comparaison de modeles s'appuient sur ce fichier. Le regenerer invalide les comparaisons anterieures et doit etre une decision explicite."
+}

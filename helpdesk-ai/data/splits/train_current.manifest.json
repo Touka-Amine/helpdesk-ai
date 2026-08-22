@@ -1,0 +1,32 @@
+{
+  "created_at": "2026-08-22T02:11:53.913042+00:00",
+  "dataset_version": "3c89ac6025ba",
+  "sha256": "3c89ac6025baa8f677729a94c627eee94557331dad002b0e37a238268514f063",
+  "n_rows": 1444,
+  "n_titres": 46,
+  "base_train": {
+    "fichier": "data/splits/train.csv",
+    "n_rows": 1444
+  },
+  "lots_production": [],
+  "n_production_retenues": 0,
+  "rejets_anti_fuite": {
+    "titre_dans_test": 0,
+    "description_dans_test": 0,
+    "doublon_ticket": 0
+  },
+  "par_source": {
+    "corpus_historique": 1444
+  },
+  "par_categorie": {
+    "Applicatifs": 326,
+    "Réseau": 324,
+    "Microsoft": 274,
+    "Communication": 144,
+    "Système": 134,
+    "Infrastructure": 133,
+    "Backup": 69,
+    "Sécurité": 40
+  },
+  "test_reference": "data/splits/test.csv"
+}

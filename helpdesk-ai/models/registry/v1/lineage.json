@@ -1,0 +1,6 @@
+{
+  "source": "bootstrap",
+  "note": "Modele deja en service avant la mise en place du registre.",
+  "dataset_version": "pre-registry",
+  "test_reference": "GroupShuffleSplit par Titre : les 58 Titres uniques sont splittés 80/20, garantissant que le modele n'a jamais vu les Titres de test."
+}

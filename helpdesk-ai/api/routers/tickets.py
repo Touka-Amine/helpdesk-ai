@@ -11,11 +11,12 @@ from api.db.vector_store import (
 )
 from api.routers.auth import get_current_user, require_admin
 from api.schemas.ticket_schemas import (
-    AdminTicketCreate, ApproveRequest, FeedbackRequest, RagSynthesisOut, TicketCreate, TicketOut,
+    AdminTicketCreate, ApproveRequest, ChatRequest, ChatResponseOut, FeedbackRequest,
+    RagSynthesisOut, TicketCreate, TicketOut,
 )
 from api.services.ai_service import get_live_candidates, predict_and_recommend, recommend_for_category
 from api.services.auth_service import hash_password
-from api.services.llm_service import synthesize_recommendations
+from api.services.llm_service import chat_reply, synthesize_recommendations
 from api.services.ticket_service import ticket_to_dict, log_ticket_history
 
 # Sous ce score de similarité RAG, on considère qu'aucun cas historique proche
@@ -68,6 +69,12 @@ def create_ticket(
         knowledge_rag=pred.get("knowledge", ""),
         rag_score=pred.get("rag_score"),
         created_at=datetime.now(timezone.utc),
+        # Tracabilite de la prediction. Sans ces trois champs, impossible de savoir
+        # apres coup quel modele a produit la categorie ni si une regle metier l'a
+        # ecrasee : le monitoring et la collecte n'auraient rien a lire.
+        model_version=pred.get("model_version", ""),
+        heuristic_applied=bool(pred.get("heuristic_applied", False)),
+        heuristic_rule=pred.get("heuristic_rule") or "",
     )
     db.add(ticket)
     db.commit()
@@ -137,6 +144,12 @@ def admin_create_ticket(
         knowledge_rag=pred.get("knowledge", ""),
         rag_score=pred.get("rag_score"),
         created_at=datetime.now(timezone.utc),
+        # Tracabilite de la prediction. Sans ces trois champs, impossible de savoir
+        # apres coup quel modele a produit la categorie ni si une regle metier l'a
+        # ecrasee : le monitoring et la collecte n'auraient rien a lire.
+        model_version=pred.get("model_version", ""),
+        heuristic_applied=bool(pred.get("heuristic_applied", False)),
+        heuristic_rule=pred.get("heuristic_rule") or "",
     )
     db.add(ticket)
     db.commit()
@@ -361,13 +374,22 @@ def approve_ticket(
         # "Temps ecoule" repartir de zero.
         if not ticket.resolved_at:
             ticket.resolved_at = datetime.now(timezone.utc)
-        # La base de connaissances est alimentée en priorité par la solution
-        # reellement appliquee par l'admin (commentaire_admin) — verifiee humainement —
-        # et seulement en repli par la suggestion IA d'origine (jamais validee).
+        # La base de connaissances est alimentée par la solution reellement appliquee
+        # par l'admin (commentaire_admin), verifiee humainement.
+        #
+        # L'ORIGINE DE LA SOLUTION EST DESORMAIS DECLAREE. L'ancien repli
+        # `commentaire_admin or solution_rag` faisait entrer dans la base une
+        # suggestion IA jamais relue des que l'admin cloturait sans commentaire
+        # au-dessus du seuil de nouveaute : cette connaissance etait ensuite
+        # proposee aux tickets suivants, dont les resolutions etaient a leur tour
+        # archivees. Le repli existe toujours, mais il est etiquete "ia" et
+        # src/knowledge/quality.py le refuse (knowledge.quality.require_human_solution).
+        #
         # En tache de fond : le calcul de l'embedding (sentence-transformers) ne doit
         # jamais retarder la reponse HTTP a l'admin qui vient de cliquer "Enregistrer".
         # Re-archive (upsert) aussi sur une correction ulterieure : la base de
         # connaissances doit refleter la derniere version de la solution.
+        solution_admin = (ticket.commentaire_admin or "").strip()
         background_tasks.add_task(
             archive_resolved_ticket,
             ticket_id          = ticket.id,
@@ -375,12 +397,13 @@ def approve_ticket(
             description        = ticket.description,
             categorie          = ticket.categorie_finale or ticket.categorie_predite or "",
             confiance          = ticket.confiance,
-            solution           = ticket.commentaire_admin or ticket.solution_rag or "",
+            solution           = solution_admin or (ticket.solution_rag or ""),
             knowledge          = ticket.knowledge_rag or "",
             filiale            = ticket.filiale or "",
             equipement         = ticket.equipement or "",
             commentaire_client = ticket.commentaire_client or "",
             approved_by        = str(admin.id),
+            source_solution    = "admin" if solution_admin else "ia",
         )
 
     db.commit()
@@ -446,6 +469,32 @@ def get_rag_synthesis(
     # archive (ex : re-analyse apres resolution) — non pertinent pour se comparer a soi-meme.
     candidates = [c for c in candidates if c.get("ticket_id") != ticket_id]
     return synthesize_recommendations(ticket.titre, ticket.description, candidates)
+
+
+@router.post("/{ticket_id}/chat", response_model=ChatResponseOut)
+def chat_about_ticket(
+    ticket_id: int,
+    body: ChatRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    """
+    Chat conversationnel avec l'assistant IA au sujet d'un ticket et de ses cas
+    similaires (Tache 3 bis, human-in-the-loop) : l'admin peut poser des questions de
+    suivi libres plutot que de se limiter a la synthese initiale figee. Le contexte
+    (ticket + candidats reellement archives) est reconstruit ici a chaque appel a partir
+    de l'etat actuel de la base, jamais fourni par le client.
+    """
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(404, "Ticket introuvable")
+
+    categorie = ticket.categorie_finale or ticket.categorie_predite or None
+    candidates = get_live_candidates(ticket.titre, ticket.description, categorie)
+    candidates = [c for c in candidates if c.get("ticket_id") != ticket_id]
+
+    history = [{"role": m.role, "content": m.content} for m in body.messages]
+    return chat_reply(ticket.titre, ticket.description, candidates, history)
 
 
 @router.delete("/{ticket_id}")

@@ -56,6 +56,10 @@ def _migrate_columns() -> None:
         "priorite_finale"  : "TEXT",
         "classification_finale": "TEXT",
         "assigne_a"        : "TEXT",
+        # Tracabilite MLOps — voir api/db/models.py.
+        "model_version"    : "TEXT",
+        "heuristic_applied": "BOOLEAN DEFAULT FALSE",
+        "heuristic_rule"   : "TEXT",
     }
     _sync_columns(inspector, "tickets", expected_tickets)
 

@@ -4,8 +4,9 @@
     {
       "name": "frontend",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "C:\\projetpfe\\helpdesk-ai\\frontend", "start"],
-      "port": 4200
+      "runtimeArgs": ["--prefix", "C:\\projetpfe\\helpdesk-ai\\frontend", "start", "--", "--port", "4300"],
+      "port": 4300,
+      "autoPort": false
     }
   ]
 }

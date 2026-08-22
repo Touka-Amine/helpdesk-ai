@@ -1,0 +1,26 @@
+# ── Surcouche optionnelle GPU pour Ollama ───────────────────────────────────────
+#
+# Active l'accélération GPU (NVIDIA) pour le service Ollama, SANS modifier
+# docker-compose.yml (qui doit rester utilisable tel quel sur une machine sans
+# GPU — ex. le jour de la soutenance sur un autre poste). Cette surcouche est
+# opt-in : elle ne s'applique que si on l'ajoute explicitement à la commande.
+#
+# Prérequis : GPU NVIDIA + pilotes a jour + Docker Desktop avec le support GPU
+# WSL2 active (Settings > Resources > WSL Integration).
+#
+# Usage (depuis helpdesk-ai/) :
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.gpu.yml up -d --build
+#
+# Si le GPU n'est pas accessible depuis Docker, le service ollama echouera au
+# demarrage avec cette surcouche — revenir a la commande sans -f ...gpu.yml.
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

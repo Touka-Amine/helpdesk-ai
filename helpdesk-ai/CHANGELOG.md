@@ -5,6 +5,176 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Ajouté (2026-08-22, industrialisation MLOps — deux boucles d'amélioration)
+
+Documentation complète du cycle de vie : [MLOPS.md](MLOPS.md).
+
+**Axe 1 — boucle du modèle de classification**
+
+- `Ajouté` : **registre de modèles** (`src/registry/model_registry.py`, `models/registry/`) —
+  versions figées avec leur pipeline, leurs métadonnées, leurs métriques et leur lineage ;
+  alias `production` ; historique horodaté de chaque décision ; rollback en une commande
+  (`python src/pipeline/promote.py --rollback N`). Le Model Registry MLflow fonctionne avec
+  le store `file:./mlruns` du projet, vérifié à l'exécution, mais MLflow 3.6 le déclare
+  déprécié : l'enregistrement MLflow est fait **en plus**, jamais à la place, et son échec
+  n'est pas bloquant.
+- `Ajouté` : **collecte des tickets validés** (`src/pipeline/collect.py`) — extraction en
+  lecture seule depuis PostgreSQL vers `data/curated/`, avec qualification de la **force de
+  l'étiquette** déduite de `ticket_history` : `corrected` (un admin a changé la catégorie,
+  poids 1.0), `confirmed` (il a traité le ticket sans la contester, 0.7), `weak` (aucun admin
+  identifiable, **exclu par défaut**). Sans cette distinction, réentraîner sur « les tickets
+  validés » revient largement à réentraîner le modèle sur ses propres sorties.
+- `Ajouté` : **construction versionnée du dataset** (`src/pipeline/build_dataset.py`) —
+  fusion corpus historique + lots de production, identifiant de version par empreinte
+  SHA-256, et trois garde-fous anti-fuite (titre présent au test, description identique après
+  normalisation, ticket collecté deux fois). La paraphrase sémantique d'un ticket de test
+  n'est pas détectée : limite documentée.
+- `Ajouté` : **porte de promotion** (`src/pipeline/promote.py`) — seul script qui écrit
+  `models/best_pipeline.pkl`. Réévalue candidat **et** production dans la même exécution sur
+  le même jeu de test, puis applique trois portes : gain minimum sur la métrique principale,
+  aucune classe avec support ne perdant plus de 0.05, accuracy non régressive. En cas de
+  rejet, l'artefact de production est restauré depuis le registre.
+- `Modifié` : `src/pipeline/train.py` produit désormais un **candidat**
+  (`models/candidate_pipeline.pkl`) et non plus directement le modèle servi. Ajout de la
+  précision, du rappel, du support et de la matrice de confusion par classe ; pondération par
+  force d'étiquette ; le bloc MLflow n'avale plus silencieusement ses exceptions.
+- `Ajouté` : **déclencheurs de réentraînement** (`src/monitoring/ml_monitor.py`) — le moniteur
+  écrit `metrics/should_retrain.json`, il ne lance rien. Seuils dans `params.yaml` : 150
+  nouveaux tickets validés, ou +30 sur une classe minoritaire, ou hausse du désaccord
+  ML/humain, avec un verrou d'une semaine entre deux réentraînements.
+- `Ajouté` : rechargement du modèle sans redémarrage — `POST /api/v1/admin/model/reload`, et
+  chaque worker uvicorn compare de lui-même le pointeur `models/registry/PRODUCTION` au
+  modèle qu'il a en mémoire (au plus une fois par 30 s).
+
+**Axe 2 — cycle de vie des connaissances RAG**
+
+- `Corrigé` : **auto-contamination de la base de connaissances**. L'archivage faisait
+  `solution = commentaire_admin or solution_rag or ""`. Quand un administrateur clôturait
+  sans écrire de commentaire et que `rag_score >= 0.50`, c'est la **suggestion de l'IA,
+  jamais relue**, qui entrait dans ChromaDB et devenait une source pour les tickets suivants,
+  dont les résolutions étaient à leur tour archivées. L'origine est désormais déclarée
+  (`source_solution` vaut `admin` ou `ia`) et le contrôle qualité refuse la seconde. C'est la
+  cause structurelle de l'incident décrit en R-04.
+- `Ajouté` : **contrôle qualité des connaissances** (`src/knowledge/quality.py`) — solution
+  présente, au moins 4 mots, origine humaine, non-recopie de la description (≤ 90 % de
+  vocabulaire commun), détection de quasi-doublon. Testable sans base.
+- `Ajouté` : **statuts de cycle de vie** dans ChromaDB — `actif`, `superseded` (remplacée par
+  une connaissance quasi identique plus récente), `obsolete`. Rien n'est jamais supprimé
+  automatiquement : une procédure ancienne peut rester la bonne. Le filtrage se fait après la
+  requête, pas dans la clause `where`, pour ne pas exclure silencieusement les entrées
+  antérieures à ce champ.
+- `Ajouté` : **versionnement de la base** (`src/knowledge/snapshot.py`) — export horodaté en
+  JSON Lines, empreinte SHA-256, et comparaison entre deux états (`--diff last`).
+- `Ajouté` : **évaluation RAG rejouable** (`src/pipeline/rag_eval.py`), stage DVC, deux
+  protocoles. `--build-template` génère un jeu de 80 requêtes à annoter par un administrateur.
+- `Corrigé` : **`recall_at_3 = 0.0277` était un artefact de protocole**, pas une mesure. Avec
+  « même catégorie = pertinent », *Microsoft* compte des centaines de pertinents et un
+  rappel@3 vaut mécaniquement 3/300 quelle que soit la qualité du moteur. Le rappel est
+  désormais laissé à `null` en mode proxy.
+- `Corrigé` : l'évaluation mesurait les moteurs avec `allow_fallback=False`, une configuration
+  que la production n'utilise pas — elle renvoyait zéro résultat. Elle interroge maintenant
+  les moteurs comme `api/predictor.py`, et rapporte le taux de repli à part. Le **moteur
+  hybride réellement servi** est mesuré pour la première fois : P@3 = 0.354, contre 0.292
+  (sémantique) et 0.154 (lexical) sur le même jeu de 80 requêtes.
+- `Ajouté` : **monitoring RAG** (`src/monitoring/rag_monitor.py`) — distribution des
+  `rag_score`, taux de nouveauté, avis utilisateurs, taux de rejet implicite de la suggestion
+  par l'admin, volume, statuts, quasi-doublons, ancienneté, qualité entrante.
+
+**Socle et traçabilité**
+
+- `Ajouté` : **jeu de test gelé** (`data/reference/test_reference.csv` + manifeste protégé par
+  SHA-256). `split.py` le relit au lieu de le regénérer. Sans référence stable, comparer la
+  F1-macro de deux modèles ne mesure rien et la porte de promotion devient arbitraire. Le
+  gel reproduit **à l'octet près** le découpage existant : train 1444 / test 356 / rag 1357,
+  46 et 12 titres uniques, F1-macro 0.685 et accuracy 0.8539 inchangées.
+- `Ajouté` : métrique `f1_macro_classes_evaluables` — la F1-macro calculée sur les seules
+  classes ayant du support au test, soit **0.822 sur 5 classes** contre 0.685 pour la macro
+  complète. Une classe absente du test a une F1 de 0.0 par construction ; l'inclure mesure la
+  composition du jeu de test, pas le modèle. C'est cette métrique que la porte de promotion
+  utilise. Le chiffre 0.685 reste publié tel quel dans `metrics/ml_eval.json`.
+- `Ajouté` : option `split.strategy: stratified_group`, qui mettrait les 8 catégories au test
+  (traitement de R-14). **Non activée** : la basculer changerait la référence d'évaluation
+  publiée dans le mémoire. Décision à prendre explicitement.
+- `Ajouté` : traçabilité des prédictions — colonnes `model_version`, `heuristic_applied`,
+  `heuristic_rule` sur la table `tickets`. Ces champs ne se reconstruisent pas après coup :
+  chaque ticket créé sans eux est perdu pour le monitoring.
+- `Ajouté` : stage DVC `rag_semantic_build`. L'index FAISS servi en production était construit
+  **hors pipeline** : il n'était ni reproductible ni versionné.
+- `Ajouté` : endpoints d'administration en lecture seule — `/admin/registry`,
+  `/admin/promotion-decision`, `/admin/monitoring/{ml,rag,retrain-trigger,rag-eval}`. Aucun ne
+  lance d'entraînement ni ne promeut de modèle : ces opérations passent par DVC.
+- `Supprimé` : bloc `model:` de `params.yaml` (`random_forest`, `n_estimators: 200`), code mort
+  — `train.py` ne l'a jamais lu et le modèle réel est un LinearSVC calibré.
+- `Corrigé` : `api/config.py` refusait de démarrer à cause des variables `POSTGRES_*` du
+  `.env`, partagé avec docker-compose. `tests/test_api_integration.py` était incollectable en
+  local depuis la migration PostgreSQL. Résolu par `extra="ignore"`.
+- `Ajouté` : **68 tests** (`test_model_registry.py`, `test_kb_quality.py`,
+  `test_promotion_gate.py`, `test_collect.py`, `test_build_dataset.py`,
+  `test_vector_store_lifecycle.py`) et `pytest.ini` avec le marqueur `slow`. Suite complète :
+  **125 tests passent**.
+- `Ajouté` : `scripts/mlops_e2e_demo.py` — démonstration du cycle complet sur une base de
+  production simulée, avec restauration de l'état initial du dépôt.
+
+### Corrigé (2026-08-17, préparation de la rédaction du mémoire — audit des chiffres publiés)
+
+- `Corrigé` : **périmètre de R-14 sous-évalué**. Les documents affirmaient que
+  `data/splits/test.csv` ne contenait aucun exemple de **2** catégories (*Backup*,
+  *Communication*). Vérification faite sur les données : **3** catégories sont absentes —
+  *Applicatifs*, *Backup* et *Communication* (0/356). Le test ne couvre donc que **5 des 8
+  catégories** du domaine (Microsoft 135, Infrastructure 91, Système 52, Réseau 45,
+  Sécurité 33). Corrigé dans `RISKS.md` (R-14), `CADRAGE_SRS.md` (ENF-03) et `TESTING.md`.
+- `Corrigé` : **F1-macro 0.685 vs 0.5673 — non comparables**. Les deux valeurs sont exactes
+  mais issues de protocoles distincts : 0.685 provient du pipeline DVC
+  (`GroupShuffleSplit` non stratifié, **5/8 classes**), 0.5673 du notebook 05
+  (`StratifiedShuffleSplit`, **8/8 classes**). Le premier est mécaniquement supérieur
+  puisqu'il exclut les catégories rares du test. Seul le couple **0.5673 (baseline) vs
+  0.5685 (CamemBERT)** constitue une comparaison valide. La nuance, jusqu'ici présente
+  uniquement dans `RISKS.md`/`CADRAGE_SRS.md`/`TESTING.md`, a été propagée aux fichiers de
+  synthèse qui citaient 0.685 sans avertissement : `PROJECT_STATUS.md`, `PLAN.md`,
+  `PFE_PROGRESS.md`.
+- `Corrigé` : **taille de la base RAG mal libellée**. `DIAGNOSTIC_QUALITE_DONNEES.md`
+  présentait « 476 tickets résolus » comme la base de résolution RAG. En réalité 476 = tickets
+  au statut *Résolu* sur le corpus complet, tandis que la base réellement indexée
+  (`data/splits/rag.csv`) compte **1357 tickets** : tout ticket **du jeu d'entraînement** dont
+  `Résolution/Motif` est renseignée, quel que soit son statut (Résolu 358, Rejeté 363,
+  Problème 237, Prise en Charge 236, En attente 163). La restriction au train est un choix
+  anti-fuite délibéré. Nouvelle section §2.1 ajoutée au diagnostic pour lever l'ambiguïté.
+- `Ajouté` : `PLAN_RAPPORT.md` — plan détaillé du mémoire (7 chapitres organisés par sprints,
+  3 niveaux de titres), calqué sur la structure des deux rapports de référence encadrés par le
+  même encadrant académique, avec inventaire des figures, acronymes et ordre de rédaction.
+
+### Ajouté (2026-07-30, retour utilisateur — accélération GPU optionnelle pour Ollama)
+
+- `Ajouté` : `docker/docker-compose.gpu.yml` — surcouche **optionnelle** (opt-in, ne modifie
+  pas `docker-compose.yml`) activant l'accélération GPU NVIDIA pour le service Ollama.
+  Mesuré en direct sur une NVIDIA GeForce MX130 (2 Go VRAM) : ~13s à chaud contre ~18-20s
+  sans GPU (gain modeste ~30%, la VRAM disponible ne permet pas de charger tout le modèle
+  3B — 770 Mo/2048 Mo utilisés). Non activé par défaut : le fichier `docker-compose.yml`
+  de base doit rester utilisable tel quel sur une machine sans GPU (ex. soutenance sur un
+  autre poste) — l'ajouter fait échouer le démarrage d'Ollama si aucun GPU n'est détecté.
+  `RISKS.md` (R-19) mis à jour avec les mesures.
+
+### Ajouté (2026-07-30, retour utilisateur — chat conversationnel avec l'assistant IA)
+
+- `Ajouté` (Tâche 3 ter) : `POST /tickets/{id}/chat` — au-delà de la synthèse initiale figée,
+  l'admin peut poser des questions de suivi libres sur un ticket et ses cas similaires
+  (« Quelle est la procédure complète du ticket #45 ? », « Quelle priorité recommandes-tu ? »).
+  Contexte (ticket + candidats ChromaDB réels) reconstruit côté serveur à chaque appel,
+  jamais fourni par le client, avec le même assainissement anti-contamination que la
+  synthèse initiale (`api/services/llm_service.py::chat_reply`). Historique de conversation
+  envoyé par le client (max 20 messages, 10 derniers conservés dans le prompt).
+- `Corrigé` (en cours de vérification) : le garde-fou anti-hallucination rejetait à tort une
+  réponse honnête du LLM quand l'admin posait une question sur un ticket inexistant (ex.
+  « le ticket 9999 ») — le LLM répondait correctement qu'il n'avait pas cette information,
+  mais citait le numéro en écho, ce qui déclenchait le repli générique. Corrigé : un ID que
+  l'admin mentionne lui-même dans sa question est désormais autorisé en écho, seul un ID
+  que le LLM introduit de lui-même (jamais vu ni dans les candidats ni dans les questions de
+  l'admin) déclenche le repli. Vérifié en direct dans le navigateur (question réelle sur le
+  ticket #45, réponse correcte et fidèle, sans hallucination).
+- `Ajouté` (frontend) : bouton « Discuter avec l'assistant IA » sous le panneau RAG
+  (`.../admin/ticket-detail`) — interface de chat non persistée, remise à zéro à chaque
+  changement de ticket.
+
 ### Ajouté / Modifié (2026-07-30, masquage IA client, clôture pilotée par statut, assistant de triage IA)
 
 - `Modifié` (client, Tâche 1.1/1.3/1.4) : `frontend/.../client/ticket-detail` — retrait des
@@ -59,6 +229,28 @@
   Si le statut choisi « Résolu » nécessite une solution manquante (cas nouveau), la
   modale de statut se referme et rouvre ce popup avec l'erreur affichée directement
   au-dessus du champ, au lieu de rester loin dans la petite modale de statut.
+
+### Corrigé (2026-07-30, retour utilisateur — hallucination LLM + latence)
+
+- `Corrigé` (backend, `api/services/llm_service.py`) : reproduit et corrigé un cas réel
+  d'hallucination — un ticket résolu avec le texte de synthèse IA lui-même collé dans
+  « Solution appliquée » (erreur de test), une fois réarchivé et réutilisé comme candidat
+  pour un ticket suivant, faisait « continuer le motif » au LLM qui inventait deux faux
+  tickets (#1042, #985 — repris de l'exemple few-shot du prompt). Deux gardes-fous
+  ajoutés : assainissement de toute « résolution brute » qui ressemble déjà à une
+  synthèse IA avant de l'envoyer au prompt, et validation en sortie (tout ID de ticket
+  cité par le LLM qui ne correspond à aucun candidat réel fait basculer sur le
+  récapitulatif brut). `temperature=0.2` (réponse plus factuelle, moins encline à
+  inventer). Revérifié en direct dans les deux sens (ticket contaminé comme cible et
+  comme candidat) : plus aucune invention.
+- `Modifié` (latence) : `keep_alive:"30m"` sur chaque appel Ollama (le modèle reste
+  chargé entre deux tickets, évite ~10-15s de rechargement à chaque appel) et
+  `num_predict:400` (plafond de tokens générés). Mesuré en direct : ~95s à froid (juste
+  après un redémarrage du conteneur) contre ~18-19s à chaud. Le panneau affiche
+  désormais la suggestion RAG brute *immédiatement* (déjà en base, latence nulle)
+  pendant que la reformulation IA charge en tâche de fond, au lieu de tout masquer
+  derrière un message d'attente — l'admin n'est plus jamais bloqué sans rien voir.
+  `RISKS.md` (R-04, R-19) mis à jour avec les mesures et gardes-fous.
 
 ### Modifié (2026-07-30, retour utilisateur — synthèse IA affichée par défaut)
 

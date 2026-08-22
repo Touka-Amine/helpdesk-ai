@@ -36,10 +36,30 @@ Trois points d'attention, tous **maîtrisables**, conditionnent la qualité du m
 | Cohérence des labels | **0 incohérence** | ✅ même type → même catégorie |
 | Longueur description (mots) | min 23 · **médiane 33** · max 46 | Homogène |
 | Champs manquants notables | Date résolution 73,6 % · CID 50,3 % · Résolution/Motif 5,9 % | Explicables |
-| Base de résolution (RAG) | **476 tickets résolus** (450 avec résolution renseignée) | Taille correcte |
+| Tickets au statut « Résolu » | **476** (450 avec `Résolution/Motif` renseignée) | Sous-ensemble du corpus |
+| Base de résolution (RAG) réellement indexée | **1357** (`data/splits/rag.csv`) | Voir §2.1 — définition |
 
 > Figures : `dq_01_distribution_classes.png`, `dq_02_completude.png`, `dq_03_longueurs.png`,
 > `dq_04_redondance.png`, `dq_05_statuts.png` (toutes regroupées dans le PDF).
+
+### 2.1 Précision sur la taille de la base RAG (deux définitions à ne pas confondre)
+
+Deux chiffres circulent dans le projet ; ils sont **tous deux exacts** mais ne mesurent pas la
+même chose. À employer sans ambiguïté dans le mémoire :
+
+| Définition | Valeur | Périmètre |
+|---|---|---|
+| Tickets au statut « Résolu » | 476 | Corpus complet (indicateur descriptif) |
+| Tickets avec `Résolution/Motif` renseignée | 1693 | Corpus complet |
+| **Base RAG effectivement indexée** (`data/splits/rag.csv`) | **1357** | **Train uniquement**, tous statuts confondus, `Résolution/Motif` renseignée |
+
+Le moteur RAG n'indexe **pas** seulement les tickets « Résolu » : `src/pipeline/split.py` retient
+tout ticket du jeu d'entraînement dont le champ `Résolution/Motif` est renseigné, quel que soit
+son statut (Résolu 358, Rejeté 363, Problème 237, Prise en Charge 236, En attente 163). La
+restriction au jeu d'entraînement est un choix **anti-fuite** délibéré : les résolutions des
+tickets de test ne doivent pas être consultables par le RAG lors de l'évaluation.
+
+**Chiffre à citer dans le mémoire pour la base de connaissances : 1357.**
 
 ---
 
@@ -51,7 +71,7 @@ Trois points d'attention, tous **maîtrisables**, conditionnent la qualité du m
 - ✅ **Labels parfaitement cohérents** : un même type de ticket reçoit toujours la même catégorie
   (0 incohérence) — gage de fiabilité de l'annotation.
 - ✅ **Texte homogène** (médiane 33 mots) : pas de tickets aberrants par la longueur.
-- ✅ **Base de résolution suffisante** pour le moteur RAG (476 tickets résolus).
+- ✅ **Base de résolution suffisante** pour le moteur RAG (**1357 tickets** indexés, cf. §2.1).
 
 ---
 
@@ -105,7 +125,7 @@ résolus ont une date ; le CID n'est pas systématique) — **non bloquant**. `R
 | 4 | **Rééquilibrage** (SMOTE / pondération) + augmentation ciblée des classes rares | 5 | Haute |
 | 5 | Anonymiser les **données personnelles** (demandeur, filiale) — RGPD | 2 | Haute |
 | 6 | Versionner données + traitements via **DVC** (reproductibilité) | 2/10 | Haute |
-| 7 | Enrichir la **base de résolution** (476 → +) pour les catégories rares | 6 | Moyenne |
+| 7 | Enrichir la **base de résolution** (1357 → +) pour les catégories rares | 6 | Moyenne |
 
 ---
 

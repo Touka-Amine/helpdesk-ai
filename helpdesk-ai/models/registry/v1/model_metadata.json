@@ -1,0 +1,36 @@
+{
+  "model_name": "LinearSVC_calibré",
+  "sklearn_version": "1.6.1",
+  "f1_macro_ml_seul": 0.2708,
+  "f1_macro_avec_heuristiques": 0.685,
+  "f1_macro_cv": null,
+  "accuracy_test": 0.8539,
+  "confidence_threshold": 0.6,
+  "confidence_threshold_v1": 0.4,
+  "classes": [
+    "Applicatifs",
+    "Backup",
+    "Communication",
+    "Infrastructure",
+    "Microsoft",
+    "Réseau",
+    "Système",
+    "Sécurité"
+  ],
+  "train_size": 1444,
+  "test_size": 356,
+  "unique_train": 46,
+  "unique_test": 12,
+  "dataset_note": "Corpus a 58 types de tickets recurrents ; split GroupShuffleSplit par Titre (46 train / 12 test) — aucun Titre de test vu a l'entrainement.",
+  "split_strategy": "GroupShuffleSplit par Titre : les 58 Titres uniques sont splittés 80/20, garantissant que le modele n'a jamais vu les Titres de test.",
+  "known_weaknesses": [
+    "ML seul : F1 faible car les Titres de test sont entierement nouveaux (generalisation zero-shot par Titre)",
+    "[CORRIGE v1.1] Communication : 'teams' retire de FORCE_RULES Microsoft, ajoute en SOFT_RULES Communication",
+    "[CORRIGE v1.1] Infrastructure : 'san' ajoute en FORCE_RULES Infrastructure",
+    "[CORRIGE v1.1] Securite : 'ids' + 'acces non autorise' ajoutes en FORCE_RULES Securite"
+  ],
+  "confidence_stats": {
+    "v1_0": "88.2% routage automatique a 66% de precision (seuil=0.40)",
+    "v1_1_target": "seuil releve 0.40->0.60 : ~70% routage auto a ~85% precision estimee"
+  }
+}

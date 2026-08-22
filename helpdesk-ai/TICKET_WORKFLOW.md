@@ -149,6 +149,50 @@ c'est la seule situation où du texte non reformulé apparaît encore par défau
 procédure complète d'un ticket cité (en tapant son ID) n'apparaît que si une synthèse réelle
 (`ollama`/`fallback`) est disponible.
 
+**Anti-hallucination (2026-07-30)** : cas réel reproduit — un ticket résolu avec le texte de
+synthèse IA lui-même collé dans « Solution appliquée » (erreur de test), une fois réarchivé
+et réutilisé comme candidat pour un ticket suivant, faisait « continuer le motif » au LLM qui
+inventait des tickets inexistants (repris de l'exemple few-shot du prompt). Deux gardes-fous
+dans `api/services/llm_service.py` : (1) toute « résolution brute » qui ressemble déjà à une
+synthèse IA (`Ticket #<id> (Score :`) est assainie avant d'être envoyée au prompt ; (2) tout
+ID de ticket cité par le LLM en sortie qui ne correspond à aucun candidat réel fait basculer
+sur le récapitulatif brut (`source: "fallback"`). `temperature=0.2` (réponse factuelle) et
+`num_predict=400` (plafond de tokens, borne le pire cas de latence).
+
+**Latence (2026-07-30)** : mesurée ~95s à froid (juste après redémarrage du conteneur `api`,
+modèle déchargé d'Ollama) contre ~18-20s à chaud. `keep_alive:"30m"` sur chaque appel Ollama
+garde le modèle chargé en mémoire entre deux tickets. Le panneau affiche la suggestion RAG
+brute immédiatement (déjà en base, latence nulle) pendant que la reformulation IA charge en
+tâche de fond, plutôt que de tout masquer derrière un message d'attente.
+
+## Chat conversationnel avec l'assistant IA (2026-07-30, retour utilisateur)
+
+`POST /tickets/{id}/chat` (admin) : au-delà de la synthèse initiale figée (format à 3
+parties), l'admin peut poser des questions de suivi libres sur le ticket et ses cas
+similaires (« Quelle est la procédure complète du ticket #45 ? », « Quelle priorité
+recommandes-tu ? »). Le contexte (ticket + candidats réellement archivés dans ChromaDB) est
+reconstruit **côté serveur à chaque appel** à partir de l'état actuel de la base — jamais
+fourni par le client — pour bénéficier du même assainissement anti-contamination et rester
+fidèle aux vraies données à tout moment (`api/services/llm_service.py::chat_reply`).
+
+Le client envoie uniquement l'historique de la conversation (`{"messages": [{"role": "user"
+| "assistant", "content": str}, ...]}`, max 20 messages, les 10 derniers étant conservés
+dans le prompt envoyé au LLM pour borner la latence). Réponse : `{"reply": str, "source":
+"ollama" | "fallback"}`.
+
+Même garde-fou anti-hallucination que la synthèse initiale, avec une nuance : un ID de
+ticket que l'admin a lui-même mentionné dans sa question (même sans le format `#<id>`
+strict, ex. « le ticket 9999 ») est autorisé en écho dans la réponse du LLM sans être
+considéré comme une invention — seul un ID que le LLM introduit lui-même, jamais vu ni dans
+les candidats réels ni dans les questions de l'admin, déclenche le repli. Sans cette
+distinction, une question honnête de l'admin sur un ticket inexistant ferait basculer à tort
+sur le message de repli générique alors que le LLM répondait correctement qu'il n'a pas
+cette information.
+
+Frontend (`.../admin/ticket-detail`) : bouton « Discuter avec l'assistant IA » sous le
+panneau RAG, ouvre une petite interface de chat (historique de la conversation, non
+persisté — remis à zéro à chaque changement de ticket, comme le reste du panneau IA).
+
 ## Endpoints API
 
 ### Tickets — client
@@ -169,6 +213,7 @@ PATCH  /tickets/{id}/approve        # Changer statut / catégorie / priorité /
 DELETE /tickets/{id}                # Suppression définitive (+ historique lié)
 POST   /tickets/{id}/refresh-rag    # Recalculer la suggestion RAG
 GET    /tickets/{id}/rag-synthesis  # Synthèse IA des tickets similaires (LLM local)
+POST   /tickets/{id}/chat           # Chat conversationnel avec l'assistant IA (LLM local)
 GET    /tickets/resolved/stats      # KPIs (ChromaDB) — total, par catégorie, par filiale
 GET    /tickets/resolved/archive    # Tickets résolus archivés (ChromaDB)
 ```

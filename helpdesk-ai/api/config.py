@@ -3,7 +3,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env")
+    # extra="ignore" : le fichier .env est partagé avec docker-compose, qui y lit
+    # POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB pour le service postgres. Sans
+    # cette tolérance, pydantic-settings refuse de construire Settings à cause de ces
+    # trois clés, et toute importation de api.main échoue — ce qui rendait
+    # tests/test_api_integration.py incollectable en local.
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     SECRET_KEY           : str   = "change-this-in-production-min-32-chars"
     ALGORITHM            : str   = "HS256"

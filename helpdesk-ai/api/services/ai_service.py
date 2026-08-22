@@ -12,10 +12,20 @@ TOP_K = 3
 
 
 def get_predictor():
-    """Retourne l'instance singleton du Predictor (lazy-load si nécessaire)."""
+    """
+    Retourne l'instance singleton du Predictor (lazy-load si nécessaire).
+
+    Vérifie au passage que le modèle en mémoire est bien celui que le registre
+    désigne comme étant en production. Le contrôle est étranglé à une fois toutes
+    les 30 secondes (cf. api/predictor.py) : une promotion ou un rollback est pris
+    en compte par tous les workers sans redémarrage, sans coût mesurable sur le
+    chemin de prédiction.
+    """
     from api.predictor import predictor
     if not predictor._loaded:
         predictor.load()
+    else:
+        predictor.ensure_fresh()
     return predictor
 
 
@@ -139,6 +149,9 @@ def predict_and_recommend(titre: str, description: str) -> dict:
         "low_confidence"   : confiance_finale < predictor.threshold,
         "heuristic_applied": h["heuristic_applied"],
         "heuristic_rule"   : h["heuristic_rule"],
+        # Version du modele ayant produit cette prediction, persistee sur le ticket.
+        "model_version"    : (f"v{predictor.model_version}"
+                              if predictor.model_version is not None else ""),
         "solution"         : recommendations[0]["resolution"] if recommendations else "",
         "knowledge"        : recommendations[0]["knowledge"]  if recommendations else "",
         "rag_score"        : recommendations[0]["score"]      if recommendations else None,

@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-08-22T04:56:15.179399+00:00",
+  "should_retrain": false,
+  "motif": "Derniere decision de promotion il y a 0 jour(s), minimum 7.",
+  "declencheurs": [
+    {
+      "nom": "volume_nouveaux_tickets",
+      "valeur": 0,
+      "seuil": 150,
+      "declenche": false,
+      "justification": "En dessous, reparti sur huit classes, l'apport par classe reste sous le bruit d'echantillonnage du jeu de test."
+    },
+    {
+      "nom": "volume_minoritaire_Sécurité",
+      "valeur": 0,
+      "seuil": 30,
+      "declenche": false,
+      "justification": "Une classe faible progresse proportionnellement plus vite."
+    },
+    {
+      "nom": "volume_minoritaire_Backup",
+      "valeur": 0,
+      "seuil": 30,
+      "declenche": false,
+      "justification": "Une classe faible progresse proportionnellement plus vite."
+    },
+    {
+      "nom": "volume_minoritaire_Communication",
+      "valeur": 0,
+      "seuil": 30,
+      "declenche": false,
+      "justification": "Une classe faible progresse proportionnellement plus vite."
+    },
+    {
+      "nom": "hausse_desaccord",
+      "valeur": null,
+      "seuil": null,
+      "declenche": false,
+      "justification": "Aucun referentiel etabli (monitoring.disagreement_baseline vaut null). Conclure a une derive sans point de comparaison serait une invention. Fixez ce referentiel apres une premiere periode d'exploitation."
+    }
+  ],
+  "verrou_temporel": {
+    "bloque": true,
+    "motif": "Derniere decision de promotion il y a 0 jour(s), minimum 7.",
+    "derniere_promotion": "2026-08-22T02:14:44.221015+00:00",
+    "min_days_between_retrains": 7
+  },
+  "commande": null
+}

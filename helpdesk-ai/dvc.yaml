@@ -1,3 +1,26 @@
+# Pipeline HelpDesk AI.
+#
+# Deux chaines partent du meme corpus et ne se melangent jamais :
+#   classification  preprocess -> split -> build_dataset -> train -> promote
+#   connaissances   preprocess -> split -> rag_build / rag_semantic_build -> rag_eval
+#
+# DEUX SCRIPTS NE SONT VOLONTAIREMENT PAS DES STAGES
+#
+#   src/pipeline/collect.py     lit PostgreSQL, dont l'etat ne peut pas etre hache
+#                               par DVC. En faire un stage avec data/curated en
+#                               sortie serait pire que l'omettre : DVC supprime les
+#                               sorties d'un stage avant de l'executer, ce qui
+#                               effacerait l'historique des lots collectes. Le
+#                               script se lance a la main, ou sur recommandation de
+#                               src/monitoring/ml_monitor.py.
+#
+#   src/monitoring/*.py         lisent la production, pas le corpus. Ils
+#                               rapportent, ils ne transforment rien.
+#
+# models/registry/ n'est la sortie d'aucun stage, pour la meme raison : DVC
+# l'effacerait a chaque `dvc repro promote` et le projet perdrait tout son
+# historique de versions et la possibilite de revenir en arriere.
+
 stages:
 
   preprocess:
@@ -25,10 +48,25 @@ stages:
           - data.train_path
           - data.test_path
           - data.rag_path
+          - split
     outs:
       - data/splits/train.csv
       - data/splits/test.csv
       - data/splits/rag.csv
+
+  build_dataset:
+    cmd: python src/pipeline/build_dataset.py
+    deps:
+      - src/pipeline/build_dataset.py
+      - data/splits/train.csv
+      - data/splits/test.csv
+      - data/curated
+    params:
+      - params.yaml:
+          - collect.curated_dir
+    outs:
+      - data/splits/train_current.csv
+      - data/splits/train_current.manifest.json
 
   train:
     cmd: python src/pipeline/train.py
@@ -36,7 +74,8 @@ stages:
       - src/pipeline/train.py
       - src/data/preprocess.py
       - src/models/heuristics.py
-      - data/splits/train.csv
+      - src/registry/model_registry.py
+      - data/splits/train_current.csv
       - data/splits/test.csv
     params:
       - params.yaml:
@@ -44,10 +83,32 @@ stages:
           - ml.confidence_threshold
           - data.random_state
     outs:
+      - models/candidate_pipeline.pkl
+      - models/candidate_metadata.json
+    metrics:
+      - metrics/ml_eval_candidate.json:
+          cache: false
+      - metrics/confusion_matrix_candidate.json:
+          cache: false
+
+  promote:
+    cmd: python src/pipeline/promote.py
+    deps:
+      - src/pipeline/promote.py
+      - src/registry/model_registry.py
+      - models/candidate_pipeline.pkl
+      - data/splits/test.csv
+    params:
+      - params.yaml:
+          - promotion
+          - registry
+    outs:
       - models/best_pipeline.pkl
       - models/model_metadata.json
     metrics:
       - metrics/ml_eval.json:
+          cache: false
+      - metrics/promotion_decision.json:
           cache: false
 
   rag_build:
@@ -62,3 +123,34 @@ stages:
           - rag.similarity_threshold
     outs:
       - models/rag_engine.pkl
+
+  rag_semantic_build:
+    cmd: python src/pipeline/rag_semantic_build.py
+    deps:
+      - src/pipeline/rag_semantic_build.py
+      - src/rag/semantic_engine.py
+      - data/splits/rag.csv
+    params:
+      - params.yaml:
+          - rag.top_k
+          - rag.similarity_threshold
+    outs:
+      - models/semantic_rag
+
+  rag_eval:
+    cmd: python src/pipeline/rag_eval.py
+    deps:
+      - src/pipeline/rag_eval.py
+      - src/rag/engine.py
+      - src/rag/semantic_engine.py
+      - src/rag/hybrid_engine.py
+      - models/rag_engine.pkl
+      - models/semantic_rag
+      - data/splits/test.csv
+    params:
+      - params.yaml:
+          - rag
+          - knowledge.eval_set_path
+    metrics:
+      - metrics/rag_eval.json:
+          cache: false

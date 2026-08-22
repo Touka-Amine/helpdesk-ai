@@ -1,0 +1,35 @@
+{
+  "model_name": "LinearSVC_calibré",
+  "sklearn_version": "1.6.1",
+  "trained_at": "2026-08-22T02:12:56.496916+00:00",
+  "f1_macro_ml_seul": 0.2708,
+  "f1_macro_avec_heuristiques": 0.685,
+  "f1_macro_classes_evaluables": 0.822,
+  "accuracy_test": 0.8539,
+  "precision_macro": 0.771,
+  "recall_macro": 0.6705,
+  "confidence_threshold": 0.6,
+  "classes": [
+    "Applicatifs",
+    "Backup",
+    "Communication",
+    "Infrastructure",
+    "Microsoft",
+    "Réseau",
+    "Système",
+    "Sécurité"
+  ],
+  "train_size": 1444,
+  "test_size": 356,
+  "train_production_rows": 0,
+  "unique_train": 46,
+  "unique_test": 12,
+  "dataset_version": "3c89ac6025ba",
+  "sample_weight_applique": false,
+  "split_strategy": "group",
+  "test_reference_frozen": true,
+  "classes_sans_support_test": [
+    "Applicatifs"
+  ],
+  "dataset_note": "Corpus historique a 58 types de tickets recurrents, decoupe par Titre, enrichi des tickets de production valides par un administrateur."
+}

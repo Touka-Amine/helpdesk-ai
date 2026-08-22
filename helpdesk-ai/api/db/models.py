@@ -52,6 +52,15 @@ class Ticket(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     resolved_at = Column(DateTime, nullable=True)
 
+    # ── Tracabilite de la prediction (MLOps, axe 1) ────────────────────────────
+    # Ces trois champs ne se reconstruisent pas apres coup : un ticket cree sans
+    # eux est definitivement perdu pour le monitoring. Ils repondent aux questions
+    # "quel modele a produit cette categorie" et "une regle metier l'a-t-elle
+    # ecrasee", que src/monitoring/ml_monitor.py exploite.
+    model_version = Column(String, nullable=True)
+    heuristic_applied = Column(Boolean, default=False)
+    heuristic_rule = Column(String, nullable=True)
+
     user = relationship("User", back_populates="tickets", foreign_keys=[user_id])
     history = relationship("TicketHistory", back_populates="ticket")
 

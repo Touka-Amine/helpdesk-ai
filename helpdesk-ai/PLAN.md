@@ -73,7 +73,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | État | Élément | Avancement | Qualité | Dette technique | Remarques |
 |---|---|---|---|---|---|
 | ✅ | EDA + preprocessing (notebooks 01–02) | 90 % | Bonne | Notebooks à figer en scripts | À consolider/documenter (Phase 3). |
-| ✅ | Baseline ML TF-IDF + LogReg/LinearSVC | 100 % | F1-macro heuristiques **0.685** | Sur-apprentissage (CV=1.0) lié à la redondance du corpus | Référence de comparaison ; pipeline DVC (Phase 10). |
+| ✅ | Baseline ML TF-IDF + LogReg/LinearSVC | 100 % | F1-macro heuristiques **0.685** (protocole DVC) ⚠️ **5/8 classes** — R-14 ; **0.5673** sur protocole stratifié 8 classes | Sur-apprentissage (CV=1.0) lié à la redondance du corpus | Référence de comparaison ; pipeline DVC (Phase 10). Seul le 0.5673 est comparable à CamemBERT. |
 | ✅ | RAG lexical (`src/rag/engine.py`) | 100 % | Bonne (fallback) | — | Conservé comme fallback du RAG hybride (Phase 13). |
 | ✅ | Backend cœur (auth JWT, tickets, approbation, historique) | 100 % | Bonne | Couches services/repos minces mais fonctionnelles | Durci Phase 8 (CORS, rate limiting, OpenAPI /api/v1). |
 | ✅ | Documentation (cahier des charges, workflow) | 85 % | Très bonne | — | Base solide pour le mémoire. |
@@ -86,7 +86,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | ✅ | RAG hybride (sémantique + lexical) | 100 % | score = 0.5×sém + 0.5×lex | Gain P@3/MRR à mesurer (notebook à ré-exécuter) | Phase 13 Semaine 2. Validé bout-en-bout en Docker (Phase 12, 2026-07-05). |
 | ✅ | Évaluation RAG (RAGAS) + génération | 100 % | P@3 0.30 sém/0.42 lex, MRR 0.56/0.65 | RAGAS simplifié (template-based) | Phase 7 terminée. |
 | 🔴 | RGPD / anonymisation | 0 % | — | Données personnelles non traitées | Phase 2 (reliquat). |
-| ✅ | MLOps (pipeline DVC, MLflow registry) | 100 % | F1-macro heuristiques 0.685 tracké | Model cards à enrichir | Phase 10 : 4 stages DVC + MLflow. |
+| ✅ | MLOps (DVC, registre de modèles, monitoring) | 100 % | F1-macro heuristiques 0.685 tracké ; **0.822 sur les 5 classes évaluables** | Model cards à enrichir ; aucun trafic de production pour alimenter les boucles (R-20) | Phase 10 : 8 stages DVC, registre avec promotion/rollback, deux boucles d'amélioration ([MLOPS.md](MLOPS.md)). |
 | ✅ | Docker / CI-CD / monitoring | 100 % | `docker compose up` opérationnel | Pas de scan de sécurité d'image | Phase 11 : 3 services + CI 3 jobs. |
 | ✅ | Tests automatisés + validation | 100 % | 41 tests unitaires + 18/18 tests d'intégration + test de charge + matrice exigences→résultats + étude utilisateur (couverture 74 % local / 22 % en CI) | Couverture non vérifiée par la CI (best_pipeline.pkl gitignoré) ; 2 régressions UX trouvées (R-15, R-16) | Phase 12 terminée (2026-07-05) ; matrice = [CADRAGE_SRS.md](CADRAGE_SRS.md) §5-6. |
 | 🔴 | Mémoire PFE | 10 % | — | — | Phase 14 (continu). |
@@ -422,11 +422,23 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [x] Refonte des 15 écrans (client + admin) via maquettes Stitch, fabrications retirées au profit de données réelles
 - [x] Module gestion des comptes : CRUD admin-only, mot de passe temporaire, `first_login` obligatoire
 
-### Phase 10 — MLOps
-- [ ] Compléter le pipeline DVC de bout en bout
-- [ ] Mettre en place MLflow Registry
-- [ ] Rédiger model cards / data cards
-- [ ] Monitoring minimal (métriques IA)
+### Phase 10 — MLOps ✅ TERMINÉ (2026-08-22) — voir [MLOPS.md](MLOPS.md)
+- [x] Pipeline DVC de bout en bout — **8 stages** : `preprocess → split → build_dataset →
+      train → promote` (classification) et `rag_build / rag_semantic_build → rag_eval`
+      (connaissances). Les deux chaînes partent de `split` et ne se rejoignent jamais
+- [x] Registre de modèles avec promotion, rejet motivé et rollback
+      (`src/registry/model_registry.py`). Le Model Registry MLflow fonctionne avec le store
+      fichier du projet mais MLflow 3.6 le déclare déprécié : il est alimenté **en plus**,
+      jamais à la place
+- [x] Jeu de test **gelé** (`data/reference/`, empreinte SHA-256) — sans référence stable,
+      comparer deux modèles ne mesure rien
+- [x] Boucle de collecte des tickets validés avec qualification de la force de l'étiquette
+- [x] Monitoring ML et RAG (`src/monitoring/`) + déclencheurs de réentraînement écrivant un
+      rapport, jamais une action
+- [x] Cycle de vie des connaissances RAG : contrôle qualité, statuts, versionnement, évaluation
+- [ ] Model cards / data cards — non rédigées. Le lineage par version
+      (`models/registry/v*/lineage.json`) en contient déjà la matière : dataset, jeu de test,
+      métriques, run MLflow
 
 ### Phase 11 — Déploiement ✅ TERMINÉ (2026-07-04)
 - [x] Dockerfile API + Dockerfile front
@@ -515,12 +527,12 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 |---|---|
 | **Progression globale** | **~86 %** (Phases 0–12 terminées, Phase 9 complétée rétroactivement, Phase 13 partiellement avancée + travaux d'ingénierie hors-phases significatifs — voir ci-dessous) |
 | **Phase actuelle** | Phase 9 — Frontend ✅ **terminée** (2026-07-06) · Phase 12 — Tests & validation ✅ **terminée** (2026-07-05) · travaux 2026-07-16→29 hors découpage strict (UX + boucle RAG + workflow tickets + infra) |
-| **Tâche actuelle** | Aucune — prochaine étape à décider : Phase 13 Semaine 3 (données réelles, conditionnelle) ou Phase 14 (mémoire PFE) |
-| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · **Phase 9 (Frontend connecté + 15 écrans redessinés Stitch + module gestion des comptes, 2026-07-06)** · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · Phase 12 (tests, matrice exigences, étude utilisateur) · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) · **Boucle de feedback RAG** (`rag_score`, détection cas nouveau, archivage validé admin, 2026-07-16) · **Refonte workflow tickets** (file d'approbation simplifiée, écran de clôture en 2 étapes avec catégorie/priorité/classification/statut regroupés, édition post-clôture, 2026-07-29) · **Migration PostgreSQL + ChromaDB** (ADR-004, ADR-006 — RAG interrogé en direct sur les résolutions admin, 2026-07-29) |
-| **Tâches restantes** | Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 |
-| **Prochaine étape** | Décider : Phase 13 Semaine 3 (données) ou démarrer Phase 14 (mémoire PFE) |
-| **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · split de test sans exemples Backup/Communication (R-14) · pas d'auto-routage par confiance (R-16) · RGPD non traité · délai 6 mois · latence P95 non conforme sous charge (R-13, voir [RISKS.md](RISKS.md)) — *R-15 (feedback client trompeur) clos le 2026-07-06* |
-| **Dette technique** | RGPD à faire (Phase 2 reliquat) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git) · pas de scan sécurité d'image Docker · LLM-as-a-Judge BACKLOG · EF-14 « génération LLM » en réalité template-based (à nuancer au mémoire) · seuil 0.40 (routage bas niveau) et 0.50 (`NOVELTY_THRESHOLD`) codés en dur dans `tickets.py` · incohérence nommage `priorite`/`priorite_saisie` · priorité/classification affichées comme « Résultat ML » ne sont pas de vraies prédictions entraînées (valeurs de départ confirmées par l'admin — à nuancer au mémoire, même logique qu'EF-14) |
+| **Tâche actuelle** | Aucune — prochaine étape à décider : activer ou non `split.strategy: stratified_group` (R-14), puis Phase 14 (mémoire PFE) |
+| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · **Phase 9 (Frontend connecté + 15 écrans redessinés Stitch + module gestion des comptes, 2026-07-06)** · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · Phase 12 (tests, matrice exigences, étude utilisateur) · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) · **Boucle de feedback RAG** (`rag_score`, détection cas nouveau, archivage validé admin, 2026-07-16) · **Refonte workflow tickets** (file d'approbation simplifiée, écran de clôture en 2 étapes avec catégorie/priorité/classification/statut regroupés, édition post-clôture, 2026-07-29) · **Migration PostgreSQL + ChromaDB** (ADR-004, ADR-006 — RAG interrogé en direct sur les résolutions admin, 2026-07-29) · **Industrialisation MLOps** (jeu de test gelé, registre de modèles avec porte de promotion et rollback, collecte des tickets validés, cycle de vie des connaissances RAG, monitoring — 2026-08-22, [MLOPS.md](MLOPS.md)) |
+| **Tâches restantes** | Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 · calibrage des seuils MLOps après mise en exploitation (R-20) · annotation du jeu d'évaluation RAG (R-22) |
+| **Prochaine étape** | Trancher R-14 (référence de test à 5 ou 8 classes), puis démarrer Phase 14 (mémoire PFE) |
+| **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · split de test sans exemples Applicatifs/Backup/Communication (R-14, atténué : test gelé + métrique sur classes évaluables) · boucles MLOps sans données réelles (R-20) · fuite par paraphrase non détectée (R-21) · jeu annoté RAG absent (R-22) · pas d'auto-routage par confiance (R-16) · RGPD non traité · délai 6 mois · latence P95 non conforme sous charge (R-13, voir [RISKS.md](RISKS.md)) — *R-15 (feedback client trompeur) clos le 2026-07-06* |
+| **Dette technique** | RGPD à faire (Phase 2 reliquat) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git ; sa collecte en local est en revanche réparée depuis le 2026-08-22) · model cards non rédigées · pas de scan sécurité d'image Docker · LLM-as-a-Judge BACKLOG · EF-14 « génération LLM » en réalité template-based (à nuancer au mémoire) · seuil 0.40 (routage bas niveau) et 0.50 (`NOVELTY_THRESHOLD`) codés en dur dans `tickets.py` · incohérence nommage `priorite`/`priorite_saisie` · priorité/classification affichées comme « Résultat ML » ne sont pas de vraies prédictions entraînées (valeurs de départ confirmées par l'admin — à nuancer au mémoire, même logique qu'EF-14) |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (LLM-as-a-Judge, QLoRA, hybrid search avancé, re-ranking, agents, K8s…) |
 
 > **Calcul de la progression** : moyenne pondérée de l'avancement des 15 phases par leur priorité.

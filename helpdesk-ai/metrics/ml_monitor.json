@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-08-22T04:56:15.179399+00:00",
+  "fenetre_jours": 30,
+  "n_tickets_total": 5,
+  "non_mesurable": [
+    "F1 reelle en production : les etiquettes non contestees par un admin sont des confirmations par omission, pas une verite terrain.",
+    "Derive semantique au-dela du vocabulaire : les embeddings des tickets de production ne sont pas conserves.",
+    "Taux d'heuristiques avant l'introduction de la colonne heuristic_applied."
+  ],
+  "desaccord": {
+    "n_tickets_valides": 0,
+    "note": "aucun ticket resolu avec categorie predite"
+  },
+  "distribution_categories_production": {
+    "Microsoft": 3,
+    "Réseau": 1,
+    "Applicatifs": 1
+  },
+  "derive_distribution": {
+    "psi": 4.5385,
+    "reference": "data/splits/train_current.csv",
+    "n_production": 5,
+    "lecture": "<0.10 stable | 0.10-0.25 moderee | >0.25 nette",
+    "avertissement": "Indice bruite en dessous de quelques centaines de tickets de production."
+  },
+  "confiance": {
+    "moyenne": 0.5637,
+    "mediane": 0.75,
+    "p10": 0.2485,
+    "part_sous_seuil": 0.4,
+    "seuil": 0.6
+  },
+  "derive_lexicale": {
+    "taux_hors_vocabulaire": 0.5,
+    "n_descriptions": 5,
+    "lecture": "part des mots de production absents du vocabulaire TF-IDF du modele servi"
+  }
+}

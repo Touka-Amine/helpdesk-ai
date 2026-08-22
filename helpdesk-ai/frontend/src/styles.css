@@ -133,6 +133,33 @@ body {
   vertical-align: middle;
 }
 
+/* Puce "Ticket #N" injectee via [innerHTML] (synthese IA admin, repli brut, chat) — police
+   mono pour marquer une reference verifiable au milieu de la prose, cliquable pour renvoyer
+   vers "Explorer un ticket" (cf. onTicketRefClick dans ticket-detail.ts). Globale car le
+   contenu est insere hors template Angular : les styles scopes au composant ne s'y appliquent
+   jamais (l'encapsulation de vue ne marque que les elements rendus par Angular lui-meme). */
+.ticket-ref {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  margin: 0 2px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.ticket-ref:hover {
+  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+.ticket-ref:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
 .layout-shell {
   display: flex;
   height: 100vh;

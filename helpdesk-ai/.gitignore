@@ -11,6 +11,22 @@ data/splits/*
 !data/raw/*.dvc
 !data/processed/*.dvc
 !data/splits/*.dvc
+# Manifestes de version du dataset : métadonnées seules (empreinte, comptes,
+# répartition par catégorie). Ils portent la traçabilité « quelle version du
+# dataset correspond à quel modèle » et doivent donc être versionnés avec le code.
+!data/splits/*.manifest.json
+
+# Données MLOps — même régime que le corpus : le contenu reste hors git, seuls les
+# manifestes y entrent. `data/reference/test_reference.csv` contient 356 tickets
+# réels et 169 noms de demandeurs en clair ; `data/curated/` exporte des tickets de
+# production et `data/knowledge/` des solutions rédigées par les administrateurs.
+# Aucun de ces fichiers n'a sa place dans un historique git public.
+data/reference/*
+data/curated/*
+data/knowledge/*
+!data/reference/*manifest.json
+!data/curated/*.manifest.json
+!data/knowledge/*.manifest.json
 
 # Données externes (benchmark public reproductible via notebook 01)
 data/external/

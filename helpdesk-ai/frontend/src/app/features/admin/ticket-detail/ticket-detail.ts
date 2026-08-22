@@ -4,8 +4,8 @@ import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TicketApiService } from '../../../api/ticket-api.service';
 import {
-  Ticket, STATUT_CFG, TicketHistoryEntry,
-  Statut, ApproveTicketRequest,
+  Ticket, STATUT_CFG,
+  Statut, ApproveTicketRequest, ChatMessage,
   PRIORITE_OPTIONS, CLASSIFICATION_OPTIONS, CATEGORIE_OPTIONS,
 } from '../../../models/ticket.models';
 
@@ -35,7 +35,6 @@ export class TicketDetail implements OnInit {
   private fb        = inject(FormBuilder);
 
   ticket   = signal<Ticket | null>(null);
-  history  = signal<TicketHistoryEntry[]>([]);
   loading  = signal(true);
   saving   = signal(false);
   error    = signal<string | null>(null);
@@ -73,14 +72,73 @@ export class TicketDetail implements OnInit {
   exploreResult = signal<Ticket | null>(null);
   exploreError = signal<string | null>(null);
 
-  // Rendu minimal du markdown genere par le LLM (gras + retours a la ligne) — le
-  // contenu vient d'un prompt controle cote serveur, pas d'une saisie utilisateur.
-  synthHtml = computed(() => {
-    const t = this.synthText();
-    if (!t) return '';
-    const escaped = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-  });
+  // Chat conversationnel avec l'assistant IA (Tache 3 bis, retour utilisateur) : l'admin
+  // peut poser des questions de suivi libres sur le ticket/les cas similaires, au-dela
+  // de la synthese initiale figee. Historique garde en memoire (signal), pas persiste —
+  // repart a zero a chaque changement de ticket, comme le reste du panneau IA. Toujours
+  // visible (pas de bouton pour l'ouvrir) : l'admin doit voir d'emblee qu'il peut soit
+  // chercher un ticket precis au-dessus, soit poser une question libre ici.
+  chatMessages = signal<ChatMessage[]>([]);
+  chatInput = signal('');
+  chatLoading = signal(false);
+
+  // Refonte "entreprise" (retour utilisateur) : le chat vit desormais dans une bulle IA
+  // flottante (coin bas-droit, meme pattern que la bulle de l'accueil client) plutot que
+  // dans le panneau RAG lui-meme. Le panneau RAG (synthese + explorateur) part dans une
+  // popup dediee pour alleger la grille principale — memes donnees/logique qu'avant,
+  // juste deplacees hors de la carte pleine page.
+  chatBubbleOpen = signal(false);
+  ragModalOpen = signal(false);
+
+  toggleChatBubble(): void {
+    this.chatBubbleOpen.update((v) => !v);
+  }
+
+  openRagModal(): void {
+    this.ragModalOpen.set(true);
+  }
+
+  closeRagModal(): void {
+    this.ragModalOpen.set(false);
+  }
+
+  private static readonly TICKET_REF_RE = /ticket\s*#\s*(\d+)/gi;
+
+  // Rendu minimal du texte genere par l'IA (gras, retours a la ligne, et mentions
+  // "Ticket #N" transformees en puce cliquable qui renvoie vers "Explorer un ticket") —
+  // utilise pour la synthese, le repli brut et les messages du chat, qui citent tous
+  // des tickets de la meme facon.
+  renderText(text: string | null | undefined): string {
+    if (!text) return '';
+    const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // Pas d'attribut data-* : le sanitizer HTML d'Angular (SecurityContext.HTML, applique
+    // automatiquement a [innerHTML]) retire les attributs personnalises hors allowlist —
+    // seuls role/tabindex survivent. L'ID est donc repris depuis le texte visible au clic.
+    const withRefs = escaped.replace(TicketDetail.TICKET_REF_RE, (_match, id) =>
+      `<span class="ticket-ref" role="button" tabindex="0">Ticket #${id}</span>`);
+    return withRefs.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  }
+
+  synthHtml = computed(() => this.renderText(this.synthText()));
+
+  /** Delegation d'evenements pour les puces ".ticket-ref" injectees via [innerHTML]
+   *  (Angular ne lie pas (click) a du HTML insere hors template) : cliquer ou activer
+   *  au clavier une mention "Ticket #N" remplit et lance directement l'explorateur. La
+   *  puce peut venir de la bulle de chat (surface separee) ou du contenu de la popup RAG
+   *  elle-meme — dans les deux cas on ouvre/garde la popup ouverte pour que le resultat
+   *  soit visible (l'input #rag-explore-input n'existe dans le DOM que si la popup l'est). */
+  onTicketRefClick(event: Event): void {
+    if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ') return;
+    const target = (event.target as HTMLElement).closest('.ticket-ref');
+    if (!target) return;
+    const id = target.textContent?.match(/\d+/)?.[0];
+    if (!id) return;
+    event.preventDefault();
+    this.exploreId.set(id);
+    this.exploreTicket();
+    this.ragModalOpen.set(true);
+    setTimeout(() => document.getElementById('rag-explore-input')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  }
 
   // Aucun cas historique proche : la solution appliquee devient obligatoire
   // avant de resoudre, car c'est elle qui alimentera la base de connaissances.
@@ -112,7 +170,6 @@ export class TicketDetail implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     this.success.set(null);
-    this.history.set([]);
     this.showResolveConfirm.set(false);
     this.showSolutionModal.set(false);
     this.modalError.set(null);
@@ -121,6 +178,11 @@ export class TicketDetail implements OnInit {
     this.exploreId.set('');
     this.exploreResult.set(null);
     this.exploreError.set(null);
+    this.chatMessages.set([]);
+    this.chatInput.set('');
+    this.chatLoading.set(false);
+    this.chatBubbleOpen.set(false);
+    this.ragModalOpen.set(false);
     this.ticketApi.getMyTicketDetail(id).subscribe({
       next: (t) => {
         this.ticket.set(t);
@@ -134,10 +196,6 @@ export class TicketDetail implements OnInit {
           commentaire_interne: t.commentaire_interne,
         });
         this.availableStatuts.set(TRANSITIONS[t.statut] ?? []);
-        this.ticketApi.getTicketHistory(id).subscribe({
-          next: (h) => this.history.set(h),
-          error: () => {},
-        });
         // La synthese IA (Tache 3) est desormais la suggestion affichee par defaut
         // (retour utilisateur) plutot qu'une action optionnelle en plus de la resolution
         // brute — declenchee automatiquement des qu'un cas connu existe (isNovelCase()
@@ -295,6 +353,33 @@ export class TicketDetail implements OnInit {
       error: () => {
         this.exploreLoading.set(false);
         this.exploreError.set(`Ticket #${id} introuvable.`);
+      },
+    });
+  }
+
+  /** Envoie la question de l'admin + tout l'historique de la conversation — le contexte
+   *  du ticket et des cas similaires est reconstruit cote serveur a chaque appel, jamais
+   *  envoye par le client (cf. api/services/llm_service.py::chat_reply). */
+  sendChatMessage(): void {
+    const text = this.chatInput().trim();
+    if (!text || this.chatLoading() || !this.ticket()) return;
+
+    const history = [...this.chatMessages(), { role: 'user' as const, content: text }];
+    this.chatMessages.set(history);
+    this.chatInput.set('');
+    this.chatLoading.set(true);
+
+    this.ticketApi.chatAboutTicket(this.ticket()!.id, history).subscribe({
+      next: (r) => {
+        this.chatLoading.set(false);
+        this.chatMessages.update((m) => [...m, { role: 'assistant', content: r.reply }]);
+      },
+      error: () => {
+        this.chatLoading.set(false);
+        this.chatMessages.update((m) => [
+          ...m,
+          { role: 'assistant', content: "Je n'ai pas pu répondre pour le moment. Réessayez." },
+        ]);
       },
     });
   }

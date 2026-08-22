@@ -42,14 +42,11 @@ export class Home implements OnInit {
 
   userFirstName = computed(() => this.auth.currentUser()?.prenom ?? '');
   totalCount = computed(() => this.tickets().length);
-  recentTickets = computed(() => this.tickets().slice(0, 3));
-
-  avgConfidencePercent = computed(() => {
-    const withConf = this.tickets().filter((t) => t.confiance != null);
-    if (withConf.length === 0) return null;
-    const sum = withConf.reduce((acc, t) => acc + (t.confiance as number), 0);
-    return Math.round((sum / withConf.length) * 100);
-  });
+  recentTickets = computed(() => this.tickets().slice(0, 5));
+  enCoursCount = computed(
+    () => this.tickets().filter((t) => t.statut !== 'Résolu' && t.statut !== 'Rejeté').length,
+  );
+  resolvedCount = computed(() => this.tickets().filter((t) => t.statut === 'Résolu').length);
 
   ngOnInit(): void {
     this.loadTickets();

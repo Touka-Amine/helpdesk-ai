@@ -7,6 +7,8 @@ import {
   ApproveTicketRequest,
   AdminCreateTicketRequest,
   RagSynthesis,
+  ChatMessage,
+  ChatResponse,
   TicketHistoryEntry,
 } from '../models/ticket.models';
 
@@ -70,5 +72,9 @@ export class TicketApiService {
 
   getRagSynthesis(ticketId: number) {
     return this.http.get<RagSynthesis>(`${this.base}/${ticketId}/rag-synthesis`);
+  }
+
+  chatAboutTicket(ticketId: number, messages: ChatMessage[]) {
+    return this.http.post<ChatResponse>(`${this.base}/${ticketId}/chat`, { messages });
   }
 }

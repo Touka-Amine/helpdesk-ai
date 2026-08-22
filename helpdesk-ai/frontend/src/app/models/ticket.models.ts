@@ -98,6 +98,18 @@ export interface RagSynthesis {
   source: 'ollama' | 'fallback' | 'none';
 }
 
+/** Correspond à ChatMessage dans api/schemas/ticket_schemas.py */
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+/** Correspond à ChatResponseOut dans api/schemas/ticket_schemas.py */
+export interface ChatResponse {
+  reply: string;
+  source: 'ollama' | 'fallback' | 'none';
+}
+
 export const STATUT_CFG: Record<Statut, { label: string; color: string; bg: string }> = {
   'En attente':     { label: 'En attente',     color: '#92400e', bg: '#fef3c7' },
   'Prise en Charge':{ label: 'Prise en Charge', color: '#065f46', bg: '#d1fae5' },

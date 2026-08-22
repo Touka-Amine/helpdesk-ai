@@ -1,1 +1,4 @@
-/* Styles geres via Tailwind CSS directement dans ticket-detail.html. */
+/* Styles geres via Tailwind CSS directement dans ticket-detail.html.
+   La puce ".ticket-ref" (mentions "Ticket #N" cliquables) est definie globalement dans
+   src/styles.css : ce composant l'injecte via [innerHTML], et l'encapsulation de vue
+   d'Angular (par defaut) n'applique jamais les styles scopes a du contenu insere ainsi. */

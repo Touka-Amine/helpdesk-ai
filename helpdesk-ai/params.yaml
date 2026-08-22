@@ -7,16 +7,21 @@ data:
   test_size: 0.2
   random_state: 42
 
+split:
+  # "group"            : GroupShuffleSplit par Titre (comportement historique)
+  # "stratified_group" : groupes par Titre, repartis pour que les 8 categories
+  #                      soient presentes au test. Change la reference d'evaluation.
+  strategy: group
+  # Jeu de test GELE. Une fois cree, split.py le relit au lieu de le regenerer :
+  # sans reference stable, comparer deux modeles n'a aucun sens (cf. promote.py).
+  freeze_test: true
+  reference_test_path: data/reference/test_reference.csv
+  reference_manifest: data/reference/test_reference_manifest.json
+
 nlp:
   max_features: 5000
   ngram_range: [1, 2]
   min_df: 2
-
-model:
-  name: random_forest
-  n_estimators: 200
-  random_state: 42
-  class_weight: balanced
 
 rag:
   top_k: 3
@@ -27,3 +32,91 @@ rag:
 ml:
   confidence_threshold: 0.60   # relevé de 0.40 → routage auto ~70% tickets à ~85% précision
   confidence_threshold_v1: 0.40 # ancienne valeur — conservée pour référence benchmark
+
+augment:
+  cible_par_categorie: 0    # 0 = aligner sur la categorie la plus fournie
+  max_par_source: 5         # plafond de paraphrases par ticket d'origine
+  temperature: 0.9
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AXE 1 — Boucle d'amelioration du modele de classification
+# ─────────────────────────────────────────────────────────────────────────────
+
+collect:
+  curated_dir: data/curated
+  # Un ticket n'est eligible que s'il a ete reellement traite par un humain.
+  eligible_statuts: ["Résolu"]
+  require_approved_by: true
+  min_description_words: 5
+  # Force du label, deduite de ticket_history :
+  #   corrected → un admin a change categorie_finale        (label fort)
+  #   confirmed → categorie_finale journalisee, non modifiee (label moyen)
+  #   weak      → l'admin n'a jamais touche a la categorie   (confirmation par omission)
+  # Inclure les "weak" revient largement a reentrainer le modele sur ses propres
+  # sorties : la boucle amplifierait ses erreurs au lieu de les corriger.
+  include_weak_labels: false
+  label_weights:
+    corrected: 1.0
+    confirmed: 0.7
+    weak: 0.3
+
+retrain:
+  # Declencheurs evalues par src/monitoring/ml_monitor.py. Le moniteur ECRIT UN
+  # RAPPORT, il ne lance rien : la decision reste humaine (dvc repro).
+  min_new_tickets: 150        # sous ce seuil, reparti sur 8 classes, l'apport
+                              # par classe reste sous le bruit d'echantillonnage
+                              # du jeu de test (356 lignes)
+  min_new_per_minority: 30    # +30 sur Sécurité (73 tickets) = +40 %, detectable
+  minority_categories: ["Sécurité", "Backup", "Communication"]
+  disagreement_increase_pts: 10.0   # hausse du desaccord ML/humain vs reference
+  min_days_between_retrains: 7      # verrou anti "ML continu naif"
+
+promotion:
+  # Un modele candidat ne remplace la production que s'il passe TOUTES ces portes,
+  # evaluees sur le jeu de test GELE (data/reference/test_reference.csv).
+  primary_metric: f1_macro_heuristiques
+  min_improvement: 0.005       # gain minimum sur la metrique principale
+  max_class_regression: 0.05   # aucune classe ne doit perdre plus que ca
+  allow_accuracy_regression: false
+  # Les classes sans support au test sont exclues des comparaisons : leur F1 vaut
+  # 0.0 par construction et ecraserait la moyenne dans les deux sens.
+  ignore_zero_support_classes: true
+
+registry:
+  dir: models/registry
+  production_alias: production
+  # MLflow : le Model Registry fonctionne avec le store "file:./mlruns" mais MLflow
+  # 3.6 le declare deprecie. Le registre de reference du projet reste celui de
+  # src/registry/model_registry.py ; l'enregistrement MLflow est un complement dont
+  # l'echec n'est jamais bloquant.
+  mlflow_register: auto        # auto | true | false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AXE 2 — Cycle de vie des connaissances (RAG)
+# ─────────────────────────────────────────────────────────────────────────────
+
+knowledge:
+  snapshot_dir: data/knowledge
+  eval_set_path: data/knowledge/rag_eval_set.json
+  quality:
+    min_solution_words: 4
+    # Une suggestion IA jamais relue par un humain ne doit pas devenir une
+    # connaissance de reference : sinon le RAG se nourrit de ses propres sorties.
+    require_human_solution: true
+    # Rejette une "solution" qui n'est qu'un copier-coller de la description.
+    max_overlap_with_description: 0.90
+    # Au-dela, la connaissance entrante est consideree comme un doublon de
+    # l'existante : mise a jour de l'entree en place plutot qu'ajout.
+    near_duplicate_threshold: 0.95
+  lifecycle:
+    # Une connaissance non re-confirmee au-dela de cette anciennete est signalee
+    # comme potentiellement obsolete. Signalement, jamais suppression automatique.
+    stale_after_days: 365
+
+monitoring:
+  metrics_dir: metrics
+  # Fenetre glissante des rapports de monitoring.
+  window_days: 30
+  # Referentiel de comparaison du taux de desaccord ML/humain. Null tant qu'aucune
+  # mesure de production n'existe : le moniteur refuse alors de conclure a une derive.
+  disagreement_baseline: null

@@ -1,35 +1,51 @@
 {
-  "phase": "Phase 7 - Evaluation RAG",
-  "date": "2026-07-03",
-  "n_eval_queries": 80,
-  "eval_protocol": "Stratified sample 10/cat, GT=meme categorie, auto-match filtre (score>=0.999)",
-  "semantic": {
-    "engine": "SemanticRAGEngine (FAISS + paraphrase-multilingual-mpnet-base-v2)",
-    "precision_at_3": 0.3042,
-    "recall_at_3": 0.0277,
-    "mrr_at_3": 0.5646,
-    "ndcg_at_3": 0.3505,
-    "avg_similarity_score": 0.6886
+  "generated_at": "2026-08-22T03:19:30.582205+00:00",
+  "protocole": "proxy",
+  "avertissement_protocole": "Protocole proxy : est considere pertinent tout resultat de la meme categorie que la requete. Indicatif seulement. Construisez le jeu annote avec --build-template pour obtenir des mesures interpretables.",
+  "top_k": 3,
+  "n_requetes": 80,
+  "source_requetes": "data/splits/test.csv",
+  "moteurs": {
+    "lexical": {
+      "precision_at_3": 0.1542,
+      "mrr_at_3": 0.4354,
+      "ndcg_at_3": 0.4391,
+      "taux_reponse": 1.0,
+      "taux_repli": 1.0,
+      "seuil_pertinence": 0.5,
+      "score_similarite_moyen": 0.2117,
+      "n_requetes": 80,
+      "recall_at_3": null,
+      "note_rappel": "Non calcule en mode proxy : l'ensemble des pertinents est la categorie entiere, ce qui rend le rappel@k mecaniquement proche de zero et sans rapport avec la qualite du moteur."
+    },
+    "semantique": {
+      "precision_at_3": 0.2917,
+      "mrr_at_3": 0.5813,
+      "ndcg_at_3": 0.596,
+      "taux_reponse": 1.0,
+      "taux_repli": 0.0125,
+      "seuil_pertinence": 0.5,
+      "score_similarite_moyen": 0.6099,
+      "n_requetes": 80,
+      "recall_at_3": null,
+      "note_rappel": "Non calcule en mode proxy : l'ensemble des pertinents est la categorie entiere, ce qui rend le rappel@k mecaniquement proche de zero et sans rapport avec la qualite du moteur."
+    },
+    "hybride": {
+      "precision_at_3": 0.3542,
+      "mrr_at_3": 0.5375,
+      "ndcg_at_3": 0.5754,
+      "taux_reponse": 1.0,
+      "taux_repli": 1.0,
+      "seuil_pertinence": 0.5,
+      "score_similarite_moyen": 0.3551,
+      "n_requetes": 80,
+      "recall_at_3": null,
+      "note_rappel": "Non calcule en mode proxy : l'ensemble des pertinents est la categorie entiere, ce qui rend le rappel@k mecaniquement proche de zero et sans rapport avec la qualite du moteur."
+    }
   },
-  "lexical": {
-    "engine": "RAGEngine (TF-IDF cosinus)",
-    "precision_at_3": 0.4208,
-    "recall_at_3": 0.0295,
-    "mrr_at_3": 0.6521,
-    "ndcg_at_3": 0.452,
-    "avg_similarity_score": 0.1801
-  },
-  "ragas": {
-    "context_precision": 0.3042,
-    "context_recall": 0.0277,
-    "answer_relevancy": 0.5841,
-    "faithfulness": 1.0,
-    "hallucination_rate": 0.0,
-    "n_ragas_queries": 40
-  },
-  "generation": {
-    "method": "Template-based avec citations numerotees",
-    "faithfulness": 1.0,
-    "hallucination_rate": 0.0
-  }
+  "moteur_en_production": "hybride",
+  "non_mesure": [
+    "Fidelite de la generation : le chemin de classification n'appelle aucun LLM, la synthese admin est un appel separe et facultatif.",
+    "Utilite reelle percue : necessiterait un retour explicite par recommandation, que l'interface ne collecte pas."
+  ]
 }

@@ -12,6 +12,11 @@
 #
 # Note : port 80 non utilisé côté hôte — réservé par Windows (plage d'exclusion
 # Hyper-V/WSL2 + service système sur PID 4). 8081 choisi pour éviter tout conflit.
+#
+# GPU (optionnel, machine avec NVIDIA uniquement) : ce fichier reste utilisable tel
+# quel sur une machine sans GPU (ex. jour de la soutenance). Pour activer l'accélération
+# GPU d'Ollama sur une machine qui en a une, ajouter la surcouche dédiée :
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.gpu.yml up -d --build
 # ──────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -59,7 +64,7 @@ services:
       # PostgreSQL (service ci-dessus), résolu par nom de service sur le réseau interne
       - DB_URL=postgresql+psycopg2://helpdesk:helpdesk@postgres:5432/helpdesk
       # Accepter le frontend ET l'accès direct depuis le navigateur
-      - CORS_ORIGINS=http://localhost:8081,http://localhost:4200,http://localhost:8000
+      - CORS_ORIGINS=http://localhost:8081,http://localhost:4200,http://localhost:8000,http://localhost:4300
       - OLLAMA_HOST=http://ollama:11434
     volumes:
       # Persistance de la base de connaissances vectorielle ChromaDB + modèles
