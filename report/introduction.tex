@@ -1,0 +1,41 @@
+\chapter*{Introduction générale}
+\addcontentsline{toc}{chapter}{Introduction générale} % to include the introduction to the table of content
+\markboth{Introduction générale}{} %To redefine the section page head
+
+La transformation numérique a rendu les organisations dépendantes de leur système d'information
+dans des proportions inédites. Messagerie, applications métier, accès distants, sauvegardes : la
+quasi-totalité des activités repose sur une chaîne technique dont l'interruption, même brève, se
+traduit par un arrêt de production. Le support informatique est ainsi devenu une fonction critique,
+longtemps considérée comme une activité de second plan.
+
+Cette évolution s'accompagne des progrès rapides du traitement automatique du langage naturel. Les
+modèles de langage pré-entraînés savent aujourd'hui classer un texte court et bruité avec une
+fiabilité utile en production, et les architectures de génération augmentée par récupération,
+désignées par le sigle RAG, permettent d'interroger un historique documentaire en langage naturel
+en restituant ses sources.
+
+Le support informatique interne illustre ces enjeux. Un service support traite peu de problèmes
+inédits ; il traite surtout des variantes de cas déjà rencontrés, et chaque ticket laisse une trace
+qui constitue en principe un capital de connaissance. Ce capital reste largement inexploité, faute
+d'un outil capable de qualifier les demandes et de retrouver les cas comparables. S'y ajoute une
+contrainte de confidentialité, les tickets contenant des données nominatives et des éléments
+d'architecture réseau.
+
+C'est dans ce contexte que s'inscrit ce projet de fin d'études, réalisé au sein
+d'\textbf{OneTech Business Solutions} autour de la plateforme \textbf{HelpDesk AI}. L'objectif est
+de classer automatiquement les demandes entrantes, de retrouver dans l'historique les résolutions
+comparables et d'assister la formulation de la réponse, sans qu'aucune donnée ne quitte
+l'infrastructure de l'entreprise. Le service support concerné est mutualisé : onze consultants
+traitent les demandes de huit entités du groupe, et l'historique de leurs interventions, soit
+1\,800 tickets répartis en huit catégories, forme la matière première du travail.
+
+Les travaux couvrent l'ensemble de la chaîne de valeur de la donnée, de l'analyse du besoin métier
+jusqu'à l'industrialisation de la solution. Le principe directeur retenu est celui
+du maintien de la décision humaine : l'intelligence artificielle propose, le consultant tranche.
+
+Le présent rapport est structuré en sept chapitres. Le premier présente l'organisme d'accueil et la
+démarche de conduite retenue. Le deuxième réunit les concepts mobilisés et la spécification des
+besoins. Le troisième décrit la constitution et la gouvernance du jeu de données. Le quatrième
+compare plusieurs approches de classification. Le cinquième construit le système d'assistance à la
+résolution. Le sixième porte sur le développement de l'application. Enfin, le septième expose
+l'industrialisation et la validation de la solution.

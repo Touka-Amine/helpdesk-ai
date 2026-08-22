@@ -1,0 +1,35 @@
+%=========== Commandes propres à ce mémoire ===============%
+% Ce fichier complète tpl/new_commands.tex sans le modifier.
+%==========================================================%
+
+% Marqueur visible pour toute information encore manquante.
+% Règle de rédaction : on ne comble JAMAIS un trou par une invention,
+% on laisse un \todo{...} qui apparaît en rouge dans le PDF.
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[EN ATTENTE : #1]}}}
+
+% Raccourcis de nommage récurrents
+\newcommand{\otbs}{OneTech Business Solutions\xspace}
+\newcommand{\OTBS}{OTBS\xspace}
+
+%================= Style des tableaux ====================%
+% Teinte de l'en-tete et espacement vertical des lignes, pour des
+% tableaux plus aeres et plus lisibles.
+\definecolor{enteteTab}{RGB}{226,239,218}
+
+% A placer juste apres \centering dans chaque environnement table.
+\newcommand{\styletableau}{%
+  \renewcommand{\arraystretch}{1.45}%
+  \setlength{\tabcolsep}{6pt}%
+}
+
+%================ Reglages de composition ================%
+% Autorise TeX a etirer legerement les espaces plutot qu'a
+% laisser deborder une ligne dans la marge.
+\tolerance=2000
+\emergencystretch=3em
+\hbadness=4000
+
+% Interdit qu'une ligne isolee soit rejetee seule en haut ou en bas de page.
+\widowpenalty=10000
+\clubpenalty=10000
+\displaywidowpenalty=10000
