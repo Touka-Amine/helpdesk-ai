@@ -118,10 +118,14 @@ def run() -> None:
         ]
         rejets["description_dans_test"] = avant - len(curated)
 
-        if "ticket_id" in curated.columns:
-            avant = len(curated)
-            curated = curated.drop_duplicates(subset=["ticket_id"], keep="last")
-            rejets["doublon_ticket"] = avant - len(curated)
+    # Deduplication inconditionnelle : un meme ticket figure dans tous les lots
+    # collectes apres sa resolution. La rattacher au bloc anti-fuite ci-dessus la
+    # rendait dependante de la presence du jeu de test, alors qu'elle n'a rien a
+    # voir avec lui — sans jeu de test, le meme ticket aurait ete compte n fois.
+    if not curated.empty and "ticket_id" in curated.columns:
+        avant = len(curated)
+        curated = curated.drop_duplicates(subset=["ticket_id"], keep="last")
+        rejets["doublon_ticket"] = avant - len(curated)
 
     for motif, n in rejets.items():
         if n:

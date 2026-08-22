@@ -226,11 +226,30 @@ def construire_base(chemin: str) -> dict[str, int]:
     return repartition
 
 
+# Artefacts que la demonstration ecrase et doit rendre a l'identique. Les artefacts
+# du candidat en font partie : sans eux, models/candidate_metadata.json resterait
+# celui du modele entraine sur les tickets simules, alors qu'il est versionne.
+ETAT_SAUVEGARDE = (
+    TRAIN_CURRENT,
+    TRAIN_CURRENT.replace(".csv", ".manifest.json"),
+    SERVED,
+    "models/model_metadata.json",
+    "models/candidate_pipeline.pkl",
+    "models/candidate_metadata.json",
+    "metrics/ml_eval.json",
+    "metrics/ml_eval_candidate.json",
+    "metrics/confusion_matrix_candidate.json",
+    "metrics/promotion_decision.json",
+)
+
+
 def sauvegarder_etat(dossier: str) -> None:
     os.makedirs(dossier, exist_ok=True)
-    for chemin in (TRAIN_CURRENT, TRAIN_CURRENT.replace(".csv", ".manifest.json"),
-                   SERVED, "models/model_metadata.json", "metrics/ml_eval.json",
-                   "metrics/promotion_decision.json"):
+    # Trace des artefacts absents avant la demonstration : ils devront le redevenir.
+    absents = [c for c in ETAT_SAUVEGARDE if not os.path.exists(c)]
+    with open(os.path.join(dossier, "absents.json"), "w", encoding="utf-8") as f:
+        json.dump(absents, f)
+    for chemin in ETAT_SAUVEGARDE:
         if os.path.exists(chemin):
             shutil.copy2(chemin, os.path.join(dossier, os.path.basename(chemin)))
     if os.path.exists("models/registry"):
@@ -242,17 +261,20 @@ def sauvegarder_etat(dossier: str) -> None:
 
 
 def restaurer_etat(dossier: str) -> None:
-    for nom, cible in (
-        ("train_current.csv", TRAIN_CURRENT),
-        ("train_current.manifest.json", TRAIN_CURRENT.replace(".csv", ".manifest.json")),
-        ("best_pipeline.pkl", SERVED),
-        ("model_metadata.json", "models/model_metadata.json"),
-        ("ml_eval.json", "metrics/ml_eval.json"),
-        ("promotion_decision.json", "metrics/promotion_decision.json"),
-    ):
-        source = os.path.join(dossier, nom)
+    for cible in ETAT_SAUVEGARDE:
+        source = os.path.join(dossier, os.path.basename(cible))
         if os.path.exists(source):
             shutil.copy2(source, cible)
+
+    # Un artefact qui n'existait pas avant la demonstration ne doit pas subsister :
+    # il decrirait un modele entraine sur des tickets simules.
+    try:
+        with open(os.path.join(dossier, "absents.json"), encoding="utf-8") as f:
+            for chemin in json.load(f):
+                if os.path.exists(chemin):
+                    os.remove(chemin)
+    except (OSError, json.JSONDecodeError):
+        pass
     if os.path.exists(os.path.join(dossier, "registry")):
         shutil.rmtree("models/registry", ignore_errors=True)
         shutil.copytree(os.path.join(dossier, "registry"), "models/registry")

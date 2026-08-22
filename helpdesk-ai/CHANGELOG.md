@@ -5,6 +5,42 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Corrigé (2026-08-22, relecture de l'architecture MLOps — trois défauts trouvés)
+
+- `Corrigé` : **`promote.py` rendait l'application incapable de démarrer.** Relancé sans
+  nouveau candidat, il sortait en erreur. Or `models/best_pipeline.pkl` est une **sortie**
+  du stage DVC `promote`, et DVC supprime les sorties d'un stage avant de l'exécuter :
+  un `dvc repro` sans entraînement préalable laissait l'artefact servi absent, alors même
+  que le registre en détenait une copie intacte. Reproduit, puis corrigé — le stage est
+  désormais idempotent, restaure la production et sort en succès. Il n'échoue plus que
+  sur un dépôt sans aucun modèle ni candidat. Couvert par `tests/test_promote_idempotence.py`.
+- `Corrigé` : **une métrique absente faisait gagner le candidat par défaut.** `comparer()`
+  lisait la métrique de décision avec `.get(metrique, 0.0)` : un modèle de production dont
+  la métrique aurait manqué aurait valu 0.0, et n'importe quel candidat aurait franchi la
+  porte, soit l'inverse exact de ce qu'elle protège. La comparaison lève désormais une
+  erreur explicite plutôt que d'arbitrer sur une valeur inventée.
+- `Corrigé` : **rechargement concurrent du modèle.** Les endpoints synchrones de FastAPI
+  s'exécutent dans un pool de threads. Plusieurs requêtes pouvaient franchir ensemble le
+  contrôle de fraîcheur et déclencher deux rechargements simultanés, ou lire un pipeline
+  déjà remplacé alors que le seuil de décision ne l'était pas encore. Verrou réentrant sur
+  `load()`, `reload()` et `ensure_fresh()`, avec re-contrôle sous verrou.
+- `Corrigé` : **le verrou anti-réentraînement lisait une sortie DVC.**
+  `ml_monitor._verrou_temporel()` datait la dernière décision depuis
+  `metrics/promotion_decision.json`, supprimé à chaque `dvc repro` et réécrit par une
+  exécution sans candidat. Il lit maintenant l'historique du registre, qui n'est la sortie
+  d'aucun stage et ne conserve que les arbitrages réellement rendus.
+- `Corrigé` : **déduplication des tickets collectés conditionnée au jeu de test.** Dans
+  `build_dataset.py`, `drop_duplicates(subset=["ticket_id"])` était imbriqué dans le bloc
+  anti-fuite : sans `test.csv`, un même ticket présent dans plusieurs lots aurait été
+  compté autant de fois.
+- `Corrigé` : **`scripts/mlops_e2e_demo.py` ne restaurait pas les artefacts du candidat.**
+  `models/candidate_metadata.json`, qui est versionné, restait celui du modèle entraîné sur
+  les tickets simulés. La sauvegarde couvre désormais tous les artefacts touchés et
+  supprime ceux qui n'existaient pas avant la démonstration. Vérifié par comparaison
+  d'empreintes avant/après : le dépôt est rendu à l'identique.
+
+Suite de tests portée à **132 tests**.
+
 ### Ajouté (2026-08-22, industrialisation MLOps — deux boucles d'amélioration)
 
 Documentation complète du cycle de vie : [MLOPS.md](MLOPS.md).

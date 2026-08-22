@@ -355,14 +355,33 @@ def run(args: argparse.Namespace) -> int:
 
 
 def _verrou_temporel(cfg: dict, maintenant: datetime) -> dict:
-    """Empeche deux reentrainements rapproches, meme si les seuils sont mal calibres."""
+    """
+    Empeche deux reentrainements rapproches, meme si les seuils sont mal calibres.
+
+    La date de reference vient de l'historique du REGISTRE, pas de
+    metrics/promotion_decision.json. Ce dernier est une sortie de stage DVC : il est
+    supprime avant chaque execution de promote, et une execution sans candidat y
+    ecrit une entree « sans objet » qui redemarrerait le compteur sans qu'aucun
+    arbitrage n'ait eu lieu. L'historique du registre, lui, n'est la sortie d'aucun
+    stage et ne conserve que les decisions reellement rendues.
+    """
     jours = int(cfg.get("min_days_between_retrains", 7))
+    vide = {"bloque": False, "motif": None, "derniere_promotion": None,
+            "min_days_between_retrains": jours}
     try:
-        with open("metrics/promotion_decision.json", encoding="utf-8") as f:
-            derniere = datetime.fromisoformat(json.load(f)["at"])
-    except Exception:
-        return {"bloque": False, "motif": None, "derniere_promotion": None,
-                "min_days_between_retrains": jours}
+        with open("models/registry/registry.json", encoding="utf-8") as f:
+            historique = json.load(f).get("history", [])
+    except (OSError, json.JSONDecodeError):
+        return vide
+
+    arbitrages = [h for h in historique
+                  if h.get("action") in ("promote", "reject", "rollback")]
+    if not arbitrages:
+        return vide
+    try:
+        derniere = datetime.fromisoformat(arbitrages[-1]["at"])
+    except (KeyError, ValueError):
+        return vide
     if derniere.tzinfo is None:
         derniere = derniere.replace(tzinfo=timezone.utc)
     ecart = maintenant - derniere

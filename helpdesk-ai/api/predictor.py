@@ -4,6 +4,7 @@ import joblib
 import json
 import os
 import sys
+import threading
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -42,6 +43,12 @@ class Predictor:
             cls._instance._semantic_rag_loaded = False
             cls._instance.model_version = None
             cls._instance._last_freshness_check = 0.0
+            # Les endpoints synchrones de FastAPI s'executent dans un pool de threads :
+            # plusieurs requetes peuvent traverser ensemble ensure_fresh() et declencher
+            # deux rechargements concurrents, ou lire un pipeline deja remplace alors que
+            # le seuil ne l'est pas encore. Verrou reentrant parce que reload() appelle
+            # load(), qui prend le meme verrou.
+            cls._instance._lock = threading.RLock()
         return cls._instance
 
     # ── Version en service et fraicheur ──────────────────────────────────────
@@ -65,26 +72,34 @@ class Predictor:
         l'ancien modele jusqu'au prochain redemarrage. Chaque worker compare donc
         lui-meme le pointeur du registre a la version qu'il a en memoire.
         """
-        maintenant = time.time()
-        if maintenant - self._last_freshness_check < FRESHNESS_CHECK_INTERVAL:
-            return False
-        self._last_freshness_check = maintenant
-
-        version = self._read_pointer()
-        if version is None or version == self.model_version:
+        # Controle hors verrou : le cas courant est « rien a faire », il ne doit pas
+        # serialiser les requetes.
+        if time.time() - self._last_freshness_check < FRESHNESS_CHECK_INTERVAL:
             return False
 
-        print(f"Nouvelle version en production detectee : v{version} "
-              f"(worker sur v{self.model_version}) — rechargement")
-        self.reload()
-        return True
+        with self._lock:
+            # Re-controle sous verrou : plusieurs threads ont pu franchir le test
+            # ci-dessus avant que le premier n'ait mis a jour l'horodatage.
+            if time.time() - self._last_freshness_check < FRESHNESS_CHECK_INTERVAL:
+                return False
+            self._last_freshness_check = time.time()
+
+            version = self._read_pointer()
+            if version is None or version == self.model_version:
+                return False
+
+            print(f"Nouvelle version en production detectee : v{version} "
+                  f"(worker sur v{self.model_version}) — rechargement")
+            self.reload()
+            return True
 
     def reload(self):
         """Recharge les artefacts depuis le disque. Idempotent."""
-        self._loaded = False
-        self._semantic_rag_loaded = False
-        self.load()
-        return self.model_version
+        with self._lock:
+            self._loaded = False
+            self._semantic_rag_loaded = False
+            self.load()
+            return self.model_version
 
     def info(self) -> dict:
         """Etat du modele servi — expose par GET /api/v1/admin/model-info."""
@@ -101,9 +116,16 @@ class Predictor:
         }
 
     def load(self):
-        if self._loaded:
-            return
+        # Sous verrou de bout en bout : le chargement remplace pipeline, seuil, classes
+        # et version en plusieurs affectations. Sans cela, une requete concurrente peut
+        # lire un pipeline deja remplace alors que le seuil ne l'est pas encore, et
+        # appliquer un seuil de decision qui ne correspond pas au modele interroge.
+        with self._lock:
+            if self._loaded:
+                return
+            self._load_unlocked()
 
+    def _load_unlocked(self):
         print("Chargement des modèles ML et RAG...")
 
         # Pickle compat: notebooks sauvegardés avec __main__.RAGEngine

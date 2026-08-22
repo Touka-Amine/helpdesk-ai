@@ -3,7 +3,7 @@
 > Source de vérité : [PLAN.md](PLAN.md). Dernière mise à jour : **2026-08-22** (industrialisation
 > MLOps). Résultats détaillés et traçabilité par exigence : [CADRAGE_SRS.md](CADRAGE_SRS.md) §5.
 >
-> **125 tests passent** (`python -m pytest tests/ -q`, 68 s). Pour une exécution rapide pendant
+> **132 tests passent** (`python -m pytest tests/ -q`, 68 s). Pour une exécution rapide pendant
 > le développement, `pytest -m "not slow"` exclut les tests qui chargent
 > sentence-transformers ou font tourner ChromaDB.
 >
@@ -29,7 +29,7 @@
 
 ## 3. Tests par couche
 
-### 3.1 Unitaires (98 tests — `tests/test_*.py`)
+### 3.1 Unitaires (105 tests — `tests/test_*.py`)
 - [x] `clean_text()` et `build_text_for_*` (cas accents, URLs, IP, vides) — `test_preprocess.py` (16)
 - [x] Heuristiques (mots-clés → catégorie) — `test_heuristics.py` (8)
 - [x] RAG lexical : retrieval, seuils, fallback, déduplication — `test_rag_engine.py` (8)
@@ -39,6 +39,7 @@
 - [x] Porte de promotion : gain minimum, effondrement d'une classe, classes sans support, accuracy — `test_promotion_gate.py` (11)
 - [x] Collecte : éligibilité, force de l'étiquette, format corpus, non-export du demandeur — `test_collect.py` (14)
 - [x] Construction du dataset : fusion, anti-fuite (titre, description, doublon), versionnement — `test_build_dataset.py` (7)
+- [x] Robustesse de la porte : idempotence du stage après suppression des sorties par DVC, refus d'arbitrer sur une métrique absente — `test_promote_idempotence.py` (7)
 - [ ] Schémas Pydantic (validation entrée/sortie) — pas de tests dédiés (couverts indirectement par les tests d'intégration)
 
 ### 3.2 Intégration (18/18 tests — `test_api_integration.py`)
@@ -94,7 +95,7 @@
   atteinte) mais **22 % seulement reproductible en CI** (41 tests unitaires : `test_api_integration.py`
   exclu car `models/best_pipeline.pkl` est gitignoré et absent d'un clone frais). Le gate n'est
   donc pas encore vérifié automatiquement par la CI telle que configurée aujourd'hui.
-  *2026-08-22 : la suite est passée à 125 tests. La couverture n'a pas été remesurée ; les
+  *2026-08-22 : la suite est passée à 132 tests. La couverture n'a pas été remesurée ; les
   chiffres ci-dessus datent de la Phase 12 et sont donc désormais un plancher.*
 - **Gate de promotion d'un modèle** (`src/pipeline/promote.py`, voir [MLOPS.md](MLOPS.md) §3.5) —
   un modèle candidat ne remplace la production que s'il gagne au moins 0.005 sur la métrique

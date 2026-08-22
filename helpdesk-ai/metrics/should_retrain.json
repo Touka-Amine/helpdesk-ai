@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-22T04:56:15.179399+00:00",
+  "generated_at": "2026-08-22T05:47:49.545408+00:00",
   "should_retrain": false,
   "motif": "Derniere decision de promotion il y a 0 jour(s), minimum 7.",
   "declencheurs": [
@@ -42,7 +42,7 @@
   "verrou_temporel": {
     "bloque": true,
     "motif": "Derniere decision de promotion il y a 0 jour(s), minimum 7.",
-    "derniere_promotion": "2026-08-22T02:14:44.221015+00:00",
+    "derniere_promotion": "2026-08-22T02:14:44.390948+00:00",
     "min_days_between_retrains": 7
   },
   "commande": null

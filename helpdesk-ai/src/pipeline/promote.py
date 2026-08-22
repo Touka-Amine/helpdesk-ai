@@ -95,8 +95,20 @@ def comparer(metriques_candidat: dict, metriques_prod: dict, confusion: dict,
     regression_max = float(promo.get("max_class_regression", 0.05))
     accuracy_libre = bool(promo.get("allow_accuracy_regression", False))
 
-    val_candidat = float(metriques_candidat.get(metrique, 0.0))
-    val_prod = float(metriques_prod.get(metrique, 0.0))
+    # Une metrique absente ne doit JAMAIS etre lue comme un zero : le modele de
+    # production vaudrait 0.0 et le candidat gagnerait par defaut, soit exactement
+    # l'inverse de ce que cette porte protege. On refuse d'arbitrer plutot que
+    # d'arbitrer sur une valeur inventee.
+    for nom, source in (("candidat", metriques_candidat), ("production", metriques_prod)):
+        if metrique not in source:
+            raise KeyError(
+                f"Metrique de decision '{metrique}' absente des metriques du {nom}. "
+                f"Comparaison impossible — aucune promotion n'est prononcee. "
+                f"Cles disponibles : {sorted(k for k in source if k.startswith('f1_macro'))}"
+            )
+
+    val_candidat = float(metriques_candidat[metrique])
+    val_prod = float(metriques_prod[metrique])
     delta = round(val_candidat - val_prod, 4)
 
     portes = []
@@ -219,14 +231,40 @@ def run(args: argparse.Namespace) -> int:
 
     registre.bootstrap_from_existing()
 
-    if not os.path.exists(CANDIDATE_PATH):
-        print(f"[promote] Aucun candidat ({CANDIDATE_PATH}). Lancez src/pipeline/train.py.")
-        return 1
-
+    # Rien a arbitrer : soit l'artefact candidat manque, soit le registre n'a plus de
+    # version en attente parce qu'une execution precedente a deja tranche.
+    #
+    # Ce cas DOIT rester idempotent et sortir en succes. models/best_pipeline.pkl est
+    # une sortie de ce stage DVC, or DVC supprime les sorties d'un stage avant de
+    # l'executer : sortir en erreur ici laisserait l'artefact servi absent et l'API
+    # incapable de demarrer, alors meme que le registre en detient une copie intacte.
+    manque_artefact = not os.path.exists(CANDIDATE_PATH)
     candidats = [v for v in registre.list_versions() if v["tag"] == "candidate"]
-    if not candidats:
-        print("[promote] Aucun candidat dans le registre.")
-        return 1
+    if manque_artefact or not candidats:
+        motif = (f"artefact candidat absent ({CANDIDATE_PATH})" if manque_artefact
+                 else "aucune version en attente dans le registre")
+        production = registre.get_production()
+        if production is None:
+            print(f"[promote] {motif.capitalize()}, et aucun modele en production.")
+            print(f"[promote] Lancez d'abord : python src/pipeline/train.py")
+            return 1
+        print(f"[promote] Rien a arbitrer — {motif}.")
+        _restaurer_production(registre, production["version"])
+        metriques_prod, _ = evaluer_artefact(
+            os.path.join(registre.version_dir(production["version"]), "pipeline.pkl"),
+            pd.read_csv(TEST_PATH, encoding="utf-8"), threshold,
+        )
+        _ecrire_metriques_production(metriques_prod)
+        if not os.path.exists(DECISION_OUT):
+            ecrire_decision({
+                "at": datetime.now(timezone.utc).isoformat(),
+                "resultat": "sans objet",
+                "version_production_precedente": production["version"],
+                "motif": f"Aucun arbitrage a rendre : {motif}.",
+            })
+        print(f"[promote] La production reste v{production['version']}.")
+        return 0
+
     candidat = candidats[0]
     production = registre.get_production()
 

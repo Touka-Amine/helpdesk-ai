@@ -140,6 +140,18 @@ En cas de rejet, l'artefact de production est **restauré** depuis le registre. 
 supprime les sorties d'un stage avant de l'exécuter ; sans cette restauration,
 `models/best_pipeline.pkl` serait absent après un rejet et l'API ne démarrerait plus.
 
+**Le stage est idempotent.** Relancé sans nouveau candidat, il restaure la production
+et sort en succès plutôt qu'en erreur. Sortir en erreur laissait l'artefact servi
+absent, puisque DVC l'avait déjà supprimé, alors même que le registre en détenait une
+copie intacte : l'application ne démarrait plus. Il n'échoue que dans un cas, un dépôt
+sans aucun modèle ni candidat, où il n'y a effectivement rien à restaurer.
+
+**Une métrique manquante interrompt l'arbitrage.** Si la métrique de décision est
+absente des métriques de l'un des deux modèles, la comparaison lève une erreur au lieu
+de la lire comme un zéro. Sans ce contrôle, un modèle de production dont la métrique
+serait absente vaudrait 0.0 et tout candidat gagnerait par défaut, soit l'inverse exact
+de ce que cette porte protège.
+
 ### 3.6 Le registre et le rollback
 
 `models/registry/` contient l'index, et pour chaque version le pipeline figé, ses
@@ -352,7 +364,12 @@ l'historique des lots collectés.
 `src/monitoring/*.py` lisent la production, pas le corpus. Ils rapportent, ils ne
 transforment rien.
 
-`models/registry/` n'est la sortie d'aucun stage, pour la même raison.
+`models/registry/` n'est la sortie d'aucun stage, pour la même raison. C'est ce qui en
+fait le **journal de référence des décisions** : `metrics/promotion_decision.json` ne
+porte que la dernière décision et disparaît à chaque `dvc repro`, tandis que
+l'historique du registre conserve chaque promotion, chaque rejet et chaque rollback
+avec son motif. Le verrou anti-réentraînement de `ml_monitor.py` lit donc cet
+historique, et non le fichier de métrique.
 
 ---
 
