@@ -1,0 +1,148 @@
+{
+  "date": "2026-09-07T14:15:41.144781+00:00",
+  "protocole": {
+    "decoupage": "StratifiedShuffleSplit sur les 58 titres uniques, graine 42",
+    "train": 1445,
+    "test": 355,
+    "scenarios_train": 46,
+    "scenarios_test": 12,
+    "categories_au_test": 8,
+    "seuil_confiance": 0.6
+  },
+  "avertissement": "Les configurations v1.1 utilisent des regles dont 3 mots-cles (ids, acces non autorise, san) ont ete ajoutes en consultant le jeu de test, et dont 'teams' a ete retire pour la meme raison. Leurs scores ne sont pas des estimations valides de generalisation. Ne pas publier.",
+  "resultats": {
+    "01_hasard": {
+      "f1_macro": 0.1382,
+      "precision_macro": 0.1369,
+      "recall_macro": 0.1492,
+      "accuracy": 0.1887,
+      "corrects": 67,
+      "f1_par_classe": {
+        "Applicatifs": 0.2553,
+        "Backup": 0.0714,
+        "Communication": 0.0328,
+        "Infrastructure": 0.1429,
+        "Microsoft": 0.2025,
+        "Réseau": 0.2895,
+        "Système": 0.1111,
+        "Sécurité": 0.0
+      },
+      "libelle": "Référence plancher (hasard)",
+      "statut": "défendable"
+    },
+    "02_tfidf_seul": {
+      "f1_macro": 0.3753,
+      "precision_macro": 0.3159,
+      "recall_macro": 0.5,
+      "accuracy": 0.5803,
+      "corrects": 206,
+      "f1_par_classe": {
+        "Applicatifs": 1.0,
+        "Backup": 0.0,
+        "Communication": 0.5636,
+        "Infrastructure": 0.0,
+        "Microsoft": 0.0,
+        "Réseau": 0.6446,
+        "Système": 0.7945,
+        "Sécurité": 0.0
+      },
+      "libelle": "TF-IDF + LinearSVC seul",
+      "statut": "défendable"
+    },
+    "03_tfidf_regles_v10": {
+      "f1_macro": 0.644,
+      "precision_macro": 0.6595,
+      "recall_macro": 0.675,
+      "accuracy": 0.8366,
+      "corrects": 297,
+      "f1_par_classe": {
+        "Applicatifs": 1.0,
+        "Backup": 0.0,
+        "Communication": 0.0,
+        "Infrastructure": 1.0,
+        "Microsoft": 0.8571,
+        "Réseau": 0.9286,
+        "Système": 0.7945,
+        "Sécurité": 0.5714
+      },
+      "libelle": "TF-IDF + règles métier (propres)",
+      "statut": "défendable"
+    },
+    "04_tfidf_regles_v11": {
+      "f1_macro": 0.7513,
+      "precision_macro": 0.7564,
+      "recall_macro": 0.8105,
+      "accuracy": 0.8225,
+      "corrects": 292,
+      "f1_par_classe": {
+        "Applicatifs": 1.0,
+        "Backup": 0.0,
+        "Communication": 0.5636,
+        "Infrastructure": 1.0,
+        "Microsoft": 0.6522,
+        "Réseau": 1.0,
+        "Système": 0.7945,
+        "Sécurité": 1.0
+      },
+      "libelle": "TF-IDF + règles métier (v1.1)",
+      "statut": "CONTAMINÉ"
+    },
+    "05_camembert_seul": {
+      "f1_macro": 0.5685,
+      "precision_macro": 0.6424,
+      "recall_macro": 0.5887,
+      "accuracy": 0.6873,
+      "corrects": 244,
+      "f1_par_classe": {
+        "Applicatifs": 1.0,
+        "Backup": 1.0,
+        "Communication": 0.3243,
+        "Infrastructure": 0.0,
+        "Microsoft": 0.5818,
+        "Réseau": 0.642,
+        "Système": 1.0,
+        "Sécurité": 0.0
+      },
+      "libelle": "CamemBERT + LoRA seul",
+      "statut": "défendable"
+    },
+    "06_camembert_regles_v10": {
+      "f1_macro": 0.8198,
+      "precision_macro": 0.8321,
+      "recall_macro": 0.825,
+      "accuracy": 0.8901,
+      "corrects": 316,
+      "f1_par_classe": {
+        "Applicatifs": 1.0,
+        "Backup": 1.0,
+        "Communication": 0.0,
+        "Infrastructure": 1.0,
+        "Microsoft": 0.8571,
+        "Réseau": 0.9512,
+        "Système": 1.0,
+        "Sécurité": 0.75
+      },
+      "libelle": "CamemBERT + règles métier (propres)",
+      "statut": "défendable"
+    },
+    "07_camembert_regles_v11": {
+      "f1_macro": 0.9499,
+      "precision_macro": 0.9468,
+      "recall_macro": 0.9677,
+      "accuracy": 0.938,
+      "corrects": 333,
+      "f1_par_classe": {
+        "Applicatifs": 1.0,
+        "Backup": 1.0,
+        "Communication": 0.7317,
+        "Infrastructure": 1.0,
+        "Microsoft": 0.8675,
+        "Réseau": 1.0,
+        "Système": 1.0,
+        "Sécurité": 1.0
+      },
+      "libelle": "CamemBERT + règles métier (v1.1)",
+      "statut": "CONTAMINÉ"
+    }
+  }
+}

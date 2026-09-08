@@ -1,0 +1,82 @@
+{
+  "dataset_version": "3c89ac6025ba",
+  "dataset_sha256": "3c89ac6025baa8f677729a94c627eee94557331dad002b0e37a238268514f063",
+  "dataset_file": "data/splits/train_current.csv",
+  "dataset_manifest": {
+    "created_at": "2026-08-22T05:54:13.216068+00:00",
+    "dataset_version": "3c89ac6025ba",
+    "sha256": "3c89ac6025baa8f677729a94c627eee94557331dad002b0e37a238268514f063",
+    "n_rows": 1444,
+    "n_titres": 46,
+    "base_train": {
+      "fichier": "data/splits/train.csv",
+      "n_rows": 1444
+    },
+    "lots_production": [],
+    "n_production_retenues": 0,
+    "rejets_anti_fuite": {
+      "titre_dans_test": 0,
+      "description_dans_test": 0,
+      "doublon_ticket": 0
+    },
+    "par_source": {
+      "corpus_historique": 1444
+    },
+    "par_categorie": {
+      "Applicatifs": 326,
+      "Réseau": 324,
+      "Microsoft": 274,
+      "Communication": 144,
+      "Système": 134,
+      "Infrastructure": 133,
+      "Backup": 69,
+      "Sécurité": 40
+    },
+    "test_reference": "data/splits/test.csv"
+  },
+  "test_reference": "data/splits/test.csv",
+  "test_manifest": {
+    "created_at": "2026-08-22T02:07:54.498775+00:00",
+    "strategy": "group",
+    "test_size": 0.2,
+    "random_state": 42,
+    "n_rows": 356,
+    "n_titres": 12,
+    "titres": [
+      "Absence de signature automatique dans Outlook",
+      "Accès non autorisé détecté par l'IDS",
+      "Alarme UPS – batterie faible",
+      "Certificat SSL expiré sur site interne",
+      "Compte utilisateur bloqué",
+      "Erreur lors de l'impression des documents",
+      "Mise à jour Windows bloquée à 99%",
+      "Perte de communication avec le SAN",
+      "Problème de synchronisation Outlook",
+      "Redémarrage intempestif du switch de bureau",
+      "Réinitialisation du mot de passe Outlook",
+      "Service Windows arrêté"
+    ],
+    "class_support": {
+      "Microsoft": 135,
+      "Infrastructure": 91,
+      "Système": 52,
+      "Réseau": 45,
+      "Sécurité": 33
+    },
+    "sha256": "70d7fcc83f00546d910a0928b9203d6511e773ab30a7ddf923204abdf16bf1a5",
+    "note": "Jeu de test gele. Toute evaluation et toute comparaison de modeles s'appuient sur ce fichier. Le regenerer invalide les comparaisons anterieures et doit etre une decision explicite."
+  },
+  "n_production_rows": 0,
+  "sample_weight_applique": false,
+  "params_nlp": {
+    "max_features": 5000,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 2
+  },
+  "confidence_threshold": 0.6,
+  "trained_at": "2026-09-07T14:57:57.568136+00:00",
+  "mlflow_run_id": "ea96399ac9cd4191b91137ad1b11edab"
+}

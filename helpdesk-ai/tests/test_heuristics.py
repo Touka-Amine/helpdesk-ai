@@ -35,27 +35,53 @@ def test_force_rule_matching_but_no_change_reports_not_applied():
 
 
 def test_force_rule_word_boundary_matches_standalone_keyword():
-    # "ids" (Intrusion Detection System) en tant que mot isolé → Sécurité
+    # « esxi » en tant que mot isolé → Infrastructure, quelle que soit la confiance
     result = apply_heuristics(
-        text_original="Alerte : IDS a bloqué une connexion suspecte",
+        text_original="L'hôte ESXi du cluster ne répond plus depuis ce matin",
         predicted_category="Réseau",
         confidence=0.90,
         threshold=0.60,
     )
-    assert result["categorie"] == "Sécurité"
+    assert result["categorie"] == "Infrastructure"
     assert result["heuristic_applied"] is True
     assert result["heuristic_type"] == "force"
 
 
 def test_force_rule_word_boundary_avoids_substring_false_positive():
-    # "ids" ne doit PAS matcher à l'intérieur d'un autre mot (ex. "grids")
+    # « sage erp » ne doit PAS matcher à l'intérieur de « usage erp » : la frontière
+    # de mot exige un séparateur avant le « s ».
     result = apply_heuristics(
-        text_original="Le nombre de grids affichés a augmenté",
-        predicted_category="Applicatifs",
+        text_original="Nous étudions l'usage erp dans les filiales",
+        predicted_category="Communication",
         confidence=0.90,
         threshold=0.60,
     )
     assert result["heuristic_applied"] is False
+
+
+def test_mots_cles_retires_de_l_audit_ne_declenchent_plus():
+    """
+    Audit du 2026-08-22 : quatre mots-clés ont été retirés des règles fermes parce
+    qu'ils n'étaient attestés dans aucun ticket d'entraînement et ne se
+    déclenchaient que sur des tickets de test. Les réintroduire sans validation
+    écrite du service support gonflerait artificiellement les résultats publiés.
+    """
+    cas = [
+        ("Le SAN ne répond plus", "Infrastructure"),
+        ("OneDrive ne synchronise pas les fichiers", "Microsoft"),
+        ("Accès non autorisé détecté par l'IDS", "Sécurité"),
+    ]
+    for texte, categorie_autrefois_forcee in cas:
+        r = apply_heuristics(
+            text_original=texte,
+            predicted_category="Réseau",
+            confidence=0.90,
+            threshold=0.60,
+        )
+        assert r["categorie"] != categorie_autrefois_forcee, (
+            f"« {texte} » force encore {categorie_autrefois_forcee} : "
+            f"un mot-clé retiré à l'audit a été réintroduit."
+        )
 
 
 # ── SOFT_RULES ───────────────────────────────────────────────────────────────

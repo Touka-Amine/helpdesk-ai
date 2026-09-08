@@ -8,6 +8,33 @@ Deux niveaux de règles :
                    Corrigent les ambiguïtés sur les cas à faible confiance.
 
 Appelé par ai_service.predict_and_recommend() sur le texte brut (non nettoyé).
+
+RÈGLE MÉTHODOLOGIQUE — audit du 2026-08-22
+------------------------------------------
+Un mot-clé n'est admis ici que s'il est **attesté dans le jeu d'entraînement**, ou
+s'il est inerte sur le jeu de test. Aucun mot-clé ne doit être ajouté après avoir
+observé une erreur sur le jeu de test : cela revient à ajuster le système sur les
+données qui servent à le juger, et le score cesse alors de mesurer la
+généralisation.
+
+Quatre mots-clés ont été retirés à ce titre. Ils ne figuraient dans aucun ticket
+d'entraînement, se déclenchaient uniquement sur des tickets de test, et un
+commentaire de ce fichier attestait que l'un d'eux avait été ajouté en lisant un
+titre de test :
+
+    onedrive             (Microsoft)      45 tickets de test corrigés
+    ids                  (Sécurité)       12 tickets de test corrigés
+    acces non autorise   (Sécurité)       redondant avec « ids »
+    san                  (Infrastructure) 21 tickets de test corrigés
+
+Effet mesuré du retrait, CamemBERT + règles, protocole stratifié 8 catégories :
+F1-macro 0,9499 -> 0,8343. L'écart de 0,116 était la part non généralisable.
+
+Ces quatre termes désignent des produits ou technologies dont la catégorie est
+exacte (OneDrive est un produit Microsoft, un IDS relève de la sécurité, un SAN du
+stockage). Ils pourront être réintroduits si le service support les valide par
+écrit comme référentiel métier, indépendamment de tout résultat de test. Cette
+validation doit être documentée en annexe du mémoire avant réintroduction.
 """
 
 import unicodedata
@@ -28,29 +55,29 @@ def _normalize(text: str) -> str:
 # la confiance.
 FORCE_RULES: list[tuple[list[str], str]] = [
     # Microsoft — noms de produits exclusifs Microsoft
-    # "teams" retiré : "Problème Microsoft Teams" est Communication, pas Microsoft
-    # → Teams ambiguë selon le contexte ; géré par SOFT_RULES à confiance modérée
+    # "teams" retiré : les 64 tickets d'entraînement contenant « teams » sont TOUS
+    # classés Communication par le service. Traité en SOFT_RULES Communication.
+    # "onedrive" retiré (2026-08-22, audit des règles) : voir la note en tête de fichier.
     (
-        ["outlook", "office 365", "office365", "onedrive",
+        ["outlook", "office 365", "office365",
          "sharepoint", "azure ad", "azure active directory", "exchange server",
          "microsoft 365", "m365", "onenote", "microsoft defender"],
         "Microsoft",
     ),
-    # Sécurité — menaces explicites / incidents avérés + équipements de sécurité réseau
-    # "ids" ajouté : Intrusion Detection System → Sécurité sans ambiguïté
-    # "acces non autorise" ajouté : test title "Accès non autorisé détecté par l'IDS"
+    # Sécurité — menaces explicites et incidents avérés
+    # "ids", "acces non autorise" et "acces non-autorise" retirés (2026-08-22, audit
+    # des règles) : voir la note en tête de fichier.
     (
         ["ransomware", "malware", "cryptolocker", "wannacry",
          "virus informatique", "attaque ddos", "intrusion detectee",
-         "cyberattaque", "ids", "acces non autorise", "acces non-autorise"],
+         "cyberattaque"],
         "Sécurité",
     ),
     # Infrastructure — équipements physiques critiques
-    # "san" ajouté : Storage Area Network → Infrastructure sans ambiguïté
-    # "perte communication" seul est ambigu, mais "san" dans le même texte suffit
+    # "san" et "perte communication san" retirés (2026-08-22, audit des règles) :
+    # voir la note en tête de fichier.
     (
-        ["san", "baie de stockage", "perte communication san",
-         "hyperviseur", "esxi", "vcenter"],
+        ["baie de stockage", "hyperviseur", "esxi", "vcenter"],
         "Infrastructure",
     ),
     # Applicatifs — logiciels métier nommés
