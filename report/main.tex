@@ -14,6 +14,13 @@
 % \selectlanguage{french}, effectue dans tpl/new_commands.tex.
 \frenchsetup{StandardLists=true}
 
+%============= Placement des flottants ====================%
+% \FloatBarrier force la sortie des tableaux et figures en attente avant de
+% poursuivre. Sans lui, un tableau trop haut pour tenir en fin de page est
+% reporte au sommet de la suivante et se retrouve apres le debut de la section
+% qui suit, donc detache du texte qui l'annonce.
+\usepackage{placeins}
+
 \input{./tpl/new_commands}
 \input{commandes_locales}
 

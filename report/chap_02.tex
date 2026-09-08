@@ -35,9 +35,9 @@ distingue mal, un mot rare et localisé distingue bien. Dans notre corpus, un te
 \emph{spooler} ou \emph{VPN} identifient immédiatement une catégorie.
 
 Cette représentation reste compétitive sur des corpus de taille modeste au vocabulaire stable, ce
-qui explique qu'elle constitue encore le point de comparaison de référence en classification de
-textes courts. Elle est peu coûteuse à calculer, entièrement interprétable, et ne demande aucune
-donnée d'entraînement supplémentaire.
+qui explique qu'elle serve encore de point de comparaison de référence en classification de textes
+courts. Elle est peu coûteuse à calculer, entièrement interprétable, et ne demande aucune donnée
+d'entraînement supplémentaire.
 
 Sa limite est structurelle. Deux formulations différentes d'une même idée produisent deux vecteurs
 sans rapport. \emph{Session Outlook bloquée} et \emph{messagerie qui ne s'ouvre plus} ne partagent
@@ -113,20 +113,18 @@ Cette exigence dépassait les moyens matériels dont nous disposions. Les métho
 d'origine et en n'entraînant qu'un petit nombre de paramètres additionnels.
 
 La technique LoRA, retenue dans ce travail, insère dans certaines couches du modèle deux matrices de
-rang faible dont le produit vient s'ajouter aux poids gelés~\cite{hu2022}. La
-figure~\ref{fig:lora} en donne le principe.
+rang faible dont le produit vient s'ajouter aux poids gelés~\cite{hu2022}. Une couche dont la
+matrice de poids $W_0$ reste figée voit sa sortie corrigée par un terme $BA$, où $A$ projette
+l'entrée sur un espace de dimension réduite $r$ et $B$ la ramène vers la dimension de sortie :
 
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.92\textwidth]{ch02_principe_lora.png}
-\caption{Principe de l'adaptation par matrices de rang faible}
-\label{fig:lora}
-\end{figure}
+\[
+h = W_0 x + \frac{\alpha}{r}\,B A x
+\]
 
-Seules les matrices $A$ et $B$ sont apprises. Le rang $r$ qui les caractérise, très inférieur à la
-dimension des couches d'origine, détermine le nombre de paramètres entraînables : il chute de
-plusieurs ordres de grandeur, et l'empreinte mémoire avec lui. Un second paramètre, noté $\alpha$,
-règle l'amplitude de la correction apportée.
+Seules les matrices $A$ et $B$ sont apprises. Le rang $r$, très inférieur à la dimension des couches
+d'origine, détermine le nombre de paramètres entraînables : il chute de plusieurs ordres de
+grandeur, et l'empreinte mémoire avec lui. Le facteur $\alpha$ règle l'amplitude de la correction
+apportée.
 
 Le prix de cette économie est une capacité d'adaptation moindre, puisque le modèle ne peut se
 réorganiser que dans le sous-espace autorisé par le rang choisi. Le chapitre~4 détaille la
@@ -172,7 +170,7 @@ attribués à une catégorie lui appartient réellement. Le rappel indique quell
 d'une catégorie a effectivement été retrouvée. Le score F1 en fait la moyenne harmonique, qui
 pénalise fortement le déséquilibre entre les deux.
 
-Le \textbf{F1-macro} moyenne ensuite ces scores sur les catégories sans les pondérer par leurs
+Le F1-macro moyenne ensuite ces scores sur les catégories sans les pondérer par leurs
 effectifs. Une catégorie rare y pèse autant qu'une catégorie fréquente, et l'effondrement de l'une
 se voit immédiatement. C'est cette métrique que nous retenons comme critère principal au
 chapitre~4, complétée par le rappel de chaque catégorie prise séparément.
@@ -203,7 +201,14 @@ récupération répond à cette double limite.
 
 Plutôt que d'interroger la mémoire du modèle, l'architecture RAG commence par rechercher dans une
 base documentaire les passages les plus proches de la question, puis les fournit au modèle en même
-temps que la question~\cite{lewis2020}. La figure~\ref{fig:rag} en résume le déroulement.
+temps que la question~\cite{lewis2020}.
+
+Le déroulement se répartit sur deux phases qui ne s'exécutent ni au même moment ni à la même
+fréquence, distinction que la figure~\ref{fig:rag} met en évidence. La phase hors ligne transforme
+une fois pour toutes le corpus documentaire en vecteurs rangés dans un index ; elle n'est rejouée
+que lorsque le corpus change. La phase en ligne se déclenche à chaque question : celle-ci est
+encodée par le même modèle, comparée aux vecteurs de l'index, et les passages les plus proches
+accompagnent la question soumise au modèle de langue.
 
 \begin{figure}[!htbp]
 \centering
@@ -211,6 +216,16 @@ temps que la question~\cite{lewis2020}. La figure~\ref{fig:rag} en résume le d�
 \caption{Principe de la génération augmentée par récupération}
 \label{fig:rag}
 \end{figure}
+
+L'encodage doit employer le même modèle dans les deux phases. Deux modèles différents placeraient
+les documents et les questions dans des espaces sans rapport, et la mesure de proximité perdrait
+tout sens.
+
+Un exemple mesuré sur notre corpus donne la mesure du procédé. Le ticket
+\og Erreur activation Office 365 \fg{} retrouve, avec une similarité de 0,78, la résolution
+\og vérifier la connexion, réactiver la licence avec l'outil de récupération Microsoft \fg{}, alors
+qu'aucun terme du premier ne figure dans la seconde. Le chapitre~5 détaille la construction de cet
+index et son évaluation.
 
 Plusieurs propriétés en découlent, toutes utiles à notre contexte. La réponse s'appuie sur des documents
 identifiables, donc citables et vérifiables par l'utilisateur. La base peut être enrichie sans
@@ -305,7 +320,7 @@ détermine largement la qualité de la sortie. Une consigne efficace précise le
 modèle, le format de la réponse, les données sur lesquelles il doit s'appuyer et le comportement à
 adopter en cas d'information manquante.
 
-Cette formulation constitue un artefact à part entière du système, au même titre que le code. Elle
+Cette formulation est un artefact à part entière du système, au même titre que le code. Elle
 se teste, se révise et gagne à être versionnée, car une modification apparemment anodine peut
 changer sensiblement le comportement observé.
 
@@ -378,39 +393,24 @@ alternatives écartées sont discutées au fil des chapitres, là où la décisi
 \styletableau
 \caption{Environnement technologique du projet}
 \label{tab:stack}
-\begin{tabular}{|Bp{3.4cm}|Lp{4.2cm}|Lp{6.2cm}|}
+\begin{tabular}{|Bp{3.2cm}|Lp{5.1cm}|Lp{5.1cm}|}
 \hline
 \rowcolor{enteteTab}
 \textbf{Couche} & \textbf{Technologies} & \textbf{Justification} \\
 \hline
-Traitement des données & pandas, NumPy & Manipulation tabulaire du corpus et préparation des jeux
-d'entraînement \\
+Données & pandas, NumPy & Manipulation du corpus \\
 \hline
-Apprentissage classique & scikit-learn, imbalanced-learn, LightGBM & Modèles de référence,
-vectorisation TF-IDF et traitement du déséquilibre dans un cadre unifié \\
+Apprentissage & scikit-learn, LightGBM, imbalanced-learn & Modèles de référence et déséquilibre \\
 \hline
-Modèles de langue & HuggingFace Transformers, PEFT & Accès à CamemBERT pré-entraîné et
-implémentation de l'adaptation LoRA \\
+Modèles de langue & HuggingFace Transformers, PEFT & CamemBERT et adaptation LoRA \\
 \hline
-Recherche sémantique & sentence-transformers, FAISS, ChromaDB & Encodage multilingue des tickets,
-indexation vectorielle et persistance de la base de connaissances \\
+Recherche sémantique & sentence-transformers, FAISS, ChromaDB & Encodage, indexation, persistance \\
 \hline
-Modèle de langage local & Ollama & Exécution d'un modèle ouvert sur l'infrastructure de
-l'entreprise, sans appel externe \\
+Modèle génératif & Ollama & Exécution locale, sans appel externe \\
 \hline
-Interface de programmation & FastAPI, Pydantic, Uvicorn & Contrat d'API typé et validation des
-échanges \\
+Application & FastAPI, PostgreSQL, Angular & API typée, base et interface web \\
 \hline
-Persistance & PostgreSQL, SQLAlchemy & Base relationnelle pour les tickets, les comptes et
-l'historique \\
-\hline
-Interface utilisateur & Angular, Tailwind CSS & Application web à deux parcours, portail du
-demandeur et console d'administration \\
-\hline
-Industrialisation & DVC, MLflow, Docker Compose & Reproductibilité de la chaîne, suivi des
-expérimentations et déploiement conteneurisé \\
-\hline
-Tests & pytest & Tests unitaires et d'intégration exécutés en intégration continue \\
+Industrialisation & DVC, MLflow, Docker, pytest & Reproductibilité, suivi, déploiement \\
 \hline
 \end{tabular}
 \end{table}
@@ -421,6 +421,7 @@ tickets rédigés en français mais parsemés de termes techniques anglais. Le m
 choisi pour tenir sur le matériel disponible plutôt que pour ses performances de rédaction :
 l'arbitrage est assumé et ses conséquences sont mesurées au chapitre~5.
 
+\FloatBarrier
 \section{Spécification des besoins}
 
 Les concepts et les outils étant posés, il reste à formaliser ce que la plateforme doit accomplir.
@@ -428,8 +429,9 @@ Cette section traduit les besoins identifiés au chapitre~1 en exigences vérifi
 
 \subsection{Acteurs du système}
 
-La plateforme distingue \textbf{deux profils}, et cette distinction se traduit directement dans le
-contrôle d'accès de l'application, qui ne connaît que deux rôles.
+La plateforme distingue deux profils, récapitulés au tableau~\ref{tab:acteurs}. Cette
+distinction se traduit directement dans le contrôle d'accès de l'application, qui ne connaît que
+deux rôles.
 
 \begin{table}[!htbp]
 \centering
@@ -468,39 +470,66 @@ et à dégrader la confiance dans l'outil au premier écart constaté.
 
 \subsection{Exigences fonctionnelles}
 
-Les besoins fonctionnels ont été formalisés sous forme d'exigences numérotées, chacune assortie d'un
-critère d'acceptation vérifiable et d'un niveau de priorité selon la méthode MoSCoW, qui distingue
-ce qui doit être livré de ce qui peut l'être si les conditions le permettent. Le
-tableau~\ref{tab:ef} les regroupe par domaine.
+Les besoins fonctionnels ont été formalisés sous forme d'exigences numérotées. Chacune porte un
+identifiant stable, un critère d'acceptation vérifiable et un niveau de priorité. Trois niveaux
+sont employés. Une exigence de priorité \textbf{élevée} conditionne la livraison : son absence
+rendrait la plateforme inutilisable pour l'usage visé. Une priorité \textbf{moyenne} désigne une
+fonction attendue dont le report resterait acceptable. Une priorité \textbf{faible} marque un
+apport de confort, traité si les conditions le permettent.
+
+Le tableau~\ref{tab:ef} présente les exigences par domaine fonctionnel. La numérotation reprend
+celle du dossier de spécification, ce qui permet de suivre chaque exigence jusqu'à son évaluation
+au chapitre~7.
 
 \begin{table}[!htbp]
 \centering
 \styletableau
-\caption{Exigences fonctionnelles par domaine}
+\caption{Exigences fonctionnelles et critères d'acceptation}
 \label{tab:ef}
-\begin{tabular}{|Bp{3.6cm}|Lp{8.4cm}|Cp{1.8cm}|}
+\begin{tabular}{|Cp{1.2cm}|Lp{4.6cm}|Lp{5.4cm}|Cp{1.9cm}|}
 \hline
 \rowcolor{enteteTab}
-\textbf{Domaine} & \textbf{Exigences} & \textbf{Priorité} \\
+\textbf{Réf.} & \textbf{Exigence} & \textbf{Critère d'acceptation} & \textbf{Priorité} \\
 \hline
-Accès et sécurité & Authentification, gestion des rôles, journal d'audit des modifications & Must \\
+\multicolumn{4}{|l|}{\cellcolor{white}\textit{Accès et cycle de vie du ticket}} \\
 \hline
-Cycle de vie du ticket & Création, suivi par le demandeur, affectation, transitions de statut,
-clôture & Must \\
+EF-01 & Authentification et gestion des rôles & Accès restreint selon le rôle, jeton vérifié à
+chaque appel & Élevée \\
 \hline
-Classification & Attribution automatique d'une catégorie avec score de confiance, routage des cas
-incertains vers une revue humaine & Must \\
+EF-02 & Création d'un ticket par le demandeur & Ticket persisté, statut initial renseigné & Élevée \\
 \hline
-Assistance à la résolution & Recherche de cas similaires avec citation des sources, synthèse rédigée
-à l'attention du consultant & Must / Should \\
+EF-07 & Journal d'audit des modifications & Chaque changement tracé avec son auteur et sa date &
+Élevée \\
 \hline
-Enrichissement du ticket & Résumé automatique, extraction d'entités, suggestion de priorité, analyse
-de sentiment & Should / Could \\
+EF-08 & Suivi du ticket par le demandeur & Statut et réponse consultables & Élevée \\
 \hline
-Boucle de qualité & Validation ou correction humaine, recueil du retour utilisateur, capitalisation
-des résolutions validées & Must / Should \\
+\multicolumn{4}{|l|}{\cellcolor{white}\textit{Traitement automatique}} \\
 \hline
-Supervision & Tableau de bord des volumes, des catégories et des délais & Could \\
+EF-03 & Classification automatique en catégorie & Catégorie et score de confiance retournés &
+Élevée \\
+\hline
+EF-04 & Recherche de cas comparables & Trois résolutions proposées avec leurs sources & Élevée \\
+\hline
+EF-05 & Orientation selon le score de confiance & Cas peu assurés dirigés vers une revue humaine &
+Élevée \\
+\hline
+EF-14 & Synthèse rédigée à l'attention du consultant & Réponse formulée, sources citées, garde-fous
+actifs & Moyenne \\
+\hline
+\multicolumn{4}{|l|}{\cellcolor{white}\textit{Boucle de qualité et enrichissement}} \\
+\hline
+EF-06 & Validation ou correction par l'administrateur & Catégorie finale et solution enregistrées &
+Élevée \\
+\hline
+EF-13 & Recueil du retour du demandeur & Avis persisté et exploitable & Moyenne \\
+\hline
+EF-09 & Résumé automatique du ticket & Résumé affiché à l'administrateur & Moyenne \\
+\hline
+EF-11 & Suggestion de priorité & Niveau proposé à la prise en charge & Moyenne \\
+\hline
+EF-12 & Analyse de tonalité du message & Indicateur d'urgence affiché & Faible \\
+\hline
+EF-15 & Tableau de bord d'activité & Volumes, catégories et délais consultables & Faible \\
 \hline
 \end{tabular}
 \end{table}
@@ -555,9 +584,10 @@ elle qui a imposé l'exécution locale du modèle de langage.
 
 \subsection{Traçabilité des exigences}
 
-Chaque domaine d'exigences a été rattaché au chapitre qui en rend compte, de manière à ce que le
-lecteur puisse vérifier qu'aucun n'a été abandonné en cours de route. Les résultats mesurés et le
-bilan de conformité, exigence par exigence, sont présentés au chapitre~7.
+Le tableau~\ref{tab:tracabilite} rattache chaque domaine d'exigences au chapitre qui en rend
+compte, de manière à ce que le lecteur puisse vérifier qu'aucun n'a été abandonné en cours de
+route. Les résultats mesurés et le bilan de conformité, exigence par exigence, sont présentés au
+chapitre~7.
 
 \begin{table}[!htbp]
 \centering
