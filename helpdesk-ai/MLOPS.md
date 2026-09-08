@@ -87,7 +87,7 @@ Créer une référence v2 est une décision explicite : supprimer le manifeste, 
 8. `Applicatifs`, `Backup` et `Communication` n'ont aucun ticket de test, leur F1
 vaut 0.0 par construction. C'est pourquoi la métrique de décision est
 `f1_macro_classes_evaluables`, calculée sur les seules classes ayant du support.
-Sur le corpus actuel : 0.822 sur 5 classes, contre 0.685 pour la macro complète.
+Sur le corpus actuel : 0.6995 sur 5 classes, contre 0.5829 pour la macro complète (valeurs postérieures à l'audit des règles du 2026-08-22).
 Basculer `split.strategy` sur `stratified_group` corrigerait ce défaut au prix d'un
 changement de la référence publiée.
 

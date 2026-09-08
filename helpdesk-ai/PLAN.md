@@ -4,7 +4,9 @@
 > prévue ici. À chaque session : relire ce fichier → identifier la phase/tâche active → exécuter
 > **une seule** tâche → tester → mettre à jour ce fichier → cocher → résumer → proposer la suite.
 >
-> **Méta** — Dernière mise à jour : **2026-07-29** · Phase active : **Phase 13** (Phases 0–12
+> **Méta** — Dernière mise à jour : **2026-09-08** · Phase active : **Phase 14 — rédaction du
+> mémoire** (introduction et chapitres 1 à 4 rédigés, 77 pages compilées ; suivi détaillé dans
+> [PFE_PROGRESS.md](PFE_PROGRESS.md)). Phases 0–12
 > terminées, Phase 9 complétée rétroactivement le 2026-07-06 avec la refonte Stitch, corrections
 > UX complémentaires le 2026-07-16 : sidebar noire, mode sombre, formulaire ticket, routing,
 > expiration de session. Depuis, hors découpage strict des phases ML — boucle de feedback RAG
@@ -55,7 +57,7 @@ Architecture modulaire, pipeline reproductible (DVC), registre de modèles (MLfl
 ### 1.6 Critères de réussite (mesurables)
 | Critère | Cible | Mesuré (2026-07-05) |
 |---|---|---|
-| F1-macro classification (test dé-dupliqué) | ≥ 0.85 | 0.685 (heuristiques) — 🔴 non atteint ; ⚠️ mesure non représentative (split sans exemples Backup/Communication, voir R-14) |
+| F1-macro classification (test dé-dupliqué) | ≥ 0.85 | **0.8343** (CamemBERT + règles, protocole stratifié 8 classes) — 🟡 à 0.016 de la cible ; le pipeline servi est à 0.5829 sur le protocole DVC, ⚠️ mesure non représentative (split sans exemples Backup/Communication, voir R-14) |
 | Rappel classe *Sécurité* | ≥ 0.70 | 0.364 — 🔴 non atteint (matrice exigences, [CADRAGE_SRS.md](CADRAGE_SRS.md) §5) |
 | RAG : Context Recall | ≥ 0.80 | 0.028 — 🔴 non atteint (RAGAS simplifié, Phase 7) |
 | RAG : Faithfulness | ≥ 0.85 | 1.0 (template-based, Phase 7) — ✅ |
@@ -73,7 +75,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | État | Élément | Avancement | Qualité | Dette technique | Remarques |
 |---|---|---|---|---|---|
 | ✅ | EDA + preprocessing (notebooks 01–02) | 90 % | Bonne | Notebooks à figer en scripts | À consolider/documenter (Phase 3). |
-| ✅ | Baseline ML TF-IDF + LogReg/LinearSVC | 100 % | F1-macro heuristiques **0.685** (protocole DVC) ⚠️ **5/8 classes** — R-14 ; **0.5673** sur protocole stratifié 8 classes | Sur-apprentissage (CV=1.0) lié à la redondance du corpus | Référence de comparaison ; pipeline DVC (Phase 10). Seul le 0.5673 est comparable à CamemBERT. |
+| ✅ | Baseline ML TF-IDF + LinearSVC calibré | 100 % | Après l'audit des règles du 2026-08-22 (R-23) : TF-IDF seul **0.3753**, TF-IDF + règles **0.5827** (stratifié 8 classes) ; pipeline servi **0.5829** (DVC, ⚠️ 5/8 classes — R-14) | Sur-apprentissage (CV=1.0) lié à la redondance du corpus | Les valeurs 0.685 et 0.7513 antérieures à l'audit sont **périmées** — voir [PLAN_RAPPORT.md](PLAN_RAPPORT.md) Point 5. |
 | ✅ | RAG lexical (`src/rag/engine.py`) | 100 % | Bonne (fallback) | — | Conservé comme fallback du RAG hybride (Phase 13). |
 | ✅ | Backend cœur (auth JWT, tickets, approbation, historique) | 100 % | Bonne | Couches services/repos minces mais fonctionnelles | Durci Phase 8 (CORS, rate limiting, OpenAPI /api/v1). |
 | ✅ | Documentation (cahier des charges, workflow) | 85 % | Très bonne | — | Base solide pour le mémoire. |
@@ -81,15 +83,15 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 | ✅ | Gestion des comptes / utilisateurs (admin) | 100 % | Bonne | — | CRUD admin-only (`api/routers/admin.py`), mot de passe temporaire auto-généré, `first_login` forcé via guards Angular jusqu'au changement de mot de passe (2026-07-06). |
 | ✅ | Couches `services/`, `db/repositories/`, `middleware/` | 90 % | Bonne | Code mort supprimé (`api/db/__init__.py`, Phase 12) | Rate limiting via dépendance FastAPI. |
 | ✅ | Endpoint `/ingest` | Fonctionnel | Bonne | — | Réécrit Phase 8 : API key, ORM, validation Pydantic. |
-| ✅ | CamemBERT fine-tuné (LoRA) + benchmark | 100 % | F1=0.5685 | features enrichies | Phase 5 — à parité avec TF-IDF+heuristiques mais sans règles codées. Infrastructure/Sécurité à 0.00. |
+| ✅ | CamemBERT fine-tuné (LoRA) + benchmark | 100 % | Seul **0.5685** ; **avec les règles 0.8343**, meilleure combinaison mesurée (à 0.016 de l'objectif ENF-03) | Modèle non industrialisé : l'API sert le pipeline TF-IDF | Phase 5. Comparaison à configuration égale (2026-08-22) : CamemBERT devance TF-IDF de +0.193 sans règles et +0.252 avec — **H1 vérifiée**. |
 | ✅ | RAG sémantique (embeddings FR + FAISS) | 100 % | Score cosinus 0.93 vs 0.76 lexical (+0.17) | FAISS local | Phase 6 terminée. |
 | ✅ | RAG hybride (sémantique + lexical) | 100 % | score = 0.5×sém + 0.5×lex | Gain P@3/MRR à mesurer (notebook à ré-exécuter) | Phase 13 Semaine 2. Validé bout-en-bout en Docker (Phase 12, 2026-07-05). |
 | ✅ | Évaluation RAG (RAGAS) + génération | 100 % | P@3 0.30 sém/0.42 lex, MRR 0.56/0.65 | RAGAS simplifié (template-based) | Phase 7 terminée. |
 | 🔴 | RGPD / anonymisation | 0 % | — | Données personnelles non traitées | Phase 2 (reliquat). |
-| ✅ | MLOps (DVC, registre de modèles, monitoring) | 100 % | F1-macro heuristiques 0.685 tracké ; **0.822 sur les 5 classes évaluables** | Model cards à enrichir ; aucun trafic de production pour alimenter les boucles (R-20) | Phase 10 : 8 stages DVC, registre avec promotion/rollback, deux boucles d'amélioration ([MLOPS.md](MLOPS.md)). |
+| ✅ | MLOps (DVC, registre de modèles, monitoring) | 100 % | F1-macro heuristiques **0.5829** tracké (0.685 avant l'audit des règles du 2026-08-22) | Model cards à enrichir ; aucun trafic de production pour alimenter les boucles (R-20) | Phase 10 : 8 stages DVC, registre avec promotion/rollback, deux boucles d'amélioration ([MLOPS.md](MLOPS.md)). |
 | ✅ | Docker / CI-CD / monitoring | 100 % | `docker compose up` opérationnel | Pas de scan de sécurité d'image | Phase 11 : 3 services + CI 3 jobs. |
-| ✅ | Tests automatisés + validation | 100 % | 41 tests unitaires + 18/18 tests d'intégration + test de charge + matrice exigences→résultats + étude utilisateur (couverture 74 % local / 22 % en CI) | Couverture non vérifiée par la CI (best_pipeline.pkl gitignoré) ; 2 régressions UX trouvées (R-15, R-16) | Phase 12 terminée (2026-07-05) ; matrice = [CADRAGE_SRS.md](CADRAGE_SRS.md) §5-6. |
-| 🔴 | Mémoire PFE | 10 % | — | — | Phase 14 (continu). |
+| ✅ | Tests automatisés + validation | 100 % | **133 tests** (mesurés le 2026-09-08) : unitaires, intégration 18/18, cycle de vie ChromaDB, charge, matrice exigences→résultats, étude utilisateur (couverture 74 % local / 22 % en CI, non remesurée depuis) | Couverture non vérifiée par la CI (best_pipeline.pkl gitignoré) ; 2 régressions UX trouvées (R-15, R-16) | Phase 12 terminée (2026-07-05) ; matrice = [CADRAGE_SRS.md](CADRAGE_SRS.md) §5-6. |
+| 🟡 | Mémoire PFE | ~50 % | 77 pages compilées, 0 erreur ; 9 figures, 28 tableaux | Chapitres 5–7, conclusion, annexes et résumés à rédiger ; chapitre 1 sous sa cible faute de réponses OTBS | **Phase active.** Suivi : [PFE_PROGRESS.md](PFE_PROGRESS.md) · plan : [PLAN_RAPPORT.md](PLAN_RAPPORT.md). |
 
 ---
 
@@ -380,7 +382,7 @@ Légende : ✅ Terminé · 🟡 En cours · 🔴 À faire
 - [x] Entraînement GPU local (MX130, 10 epochs, FP32)
 - [x] Features enrichies (`text_enriched` : type+priorité simplifiés + titre + description) → F1 0.5325 → 0.5685
 - [x] Évaluation (F1-macro 0.5685 / Accuracy 0.6873, matrice de confusion `cam_01`)
-- [x] Benchmark vs LogReg (CamemBERT 0.5685 ≈ TF-IDF+heuristiques 0.5673 — écart +0.0012 dans le bruit, mais sans règles codées)
+- [x] Benchmark vs LogReg — ⚠️ **conclusion révisée le 2026-08-22.** La comparaison d'alors opposait CamemBERT *sans* règles à TF-IDF *avec* règles, ce qui n'est pas une comparaison à configuration égale. À configuration égale : sans règles 0.3753 contre **0.5685**, avec règles 0.5827 contre **0.8343**. CamemBERT devance TF-IDF dans les deux cas
 - [x] Analyse confiance / HITL (seuil 0.4 → 91 % auto-route @ 70 % précision)
 - [x] Sauvegarde de l'adaptateur (`models/camembert_lora_adapter/`)
 - [x] Documenter (CHANGELOG, `camembert_metadata.json`)
@@ -525,12 +527,12 @@ Une tâche n'est *terminée* que si **tous** ces points sont vrais :
 
 | Indicateur | Valeur |
 |---|---|
-| **Progression globale** | **~86 %** (Phases 0–12 terminées, Phase 9 complétée rétroactivement, Phase 13 partiellement avancée + travaux d'ingénierie hors-phases significatifs — voir ci-dessous) |
-| **Phase actuelle** | Phase 9 — Frontend ✅ **terminée** (2026-07-06) · Phase 12 — Tests & validation ✅ **terminée** (2026-07-05) · travaux 2026-07-16→29 hors découpage strict (UX + boucle RAG + workflow tickets + infra) |
-| **Tâche actuelle** | Aucune — prochaine étape à décider : activer ou non `split.strategy: stratified_group` (R-14), puis Phase 14 (mémoire PFE) |
-| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · **Phase 9 (Frontend connecté + 15 écrans redessinés Stitch + module gestion des comptes, 2026-07-06)** · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.685) · Phase 11 (Docker + CI/CD) · Phase 12 (tests, matrice exigences, étude utilisateur) · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) · **Boucle de feedback RAG** (`rag_score`, détection cas nouveau, archivage validé admin, 2026-07-16) · **Refonte workflow tickets** (file d'approbation simplifiée, écran de clôture en 2 étapes avec catégorie/priorité/classification/statut regroupés, édition post-clôture, 2026-07-29) · **Migration PostgreSQL + ChromaDB** (ADR-004, ADR-006 — RAG interrogé en direct sur les résolutions admin, 2026-07-29) · **Industrialisation MLOps** (jeu de test gelé, registre de modèles avec porte de promotion et rollback, collecte des tickets validés, cycle de vie des connaissances RAG, monitoring — 2026-08-22, [MLOPS.md](MLOPS.md)) |
-| **Tâches restantes** | Phase 13 Semaine 3 (conditionnelle) · Phases 14–15 · calibrage des seuils MLOps après mise en exploitation (R-20) · annotation du jeu d'évaluation RAG (R-22) |
-| **Prochaine étape** | Trancher R-14 (référence de test à 5 ou 8 classes), puis démarrer Phase 14 (mémoire PFE) |
+| **Progression globale** | **~90 %** (Phases 0–12 terminées, Phase 13 partiellement avancée, Phase 14 à ~50 % — voir ci-dessous) |
+| **Phase actuelle** | **Phase 14 — Rédaction du mémoire.** Introduction et chapitres 1 à 4 rédigés et relus, 77 pages compilées sans erreur. Phases 0–12 terminées, Phase 13 aux Semaines 1–2 |
+| **Tâche actuelle** | Rédiger le **chapitre 5 — Sprint 3 : système RAG et assistant LLM**. Deux chiffres à trancher au préalable ([PFE_PROGRESS.md](PFE_PROGRESS.md) §5) : la comparaison 0.93/0.76 porte sur un index de 476 documents alors que celui servi en contient 1 357, et `recall_at_3 = 0.0277` est un artefact de protocole (R-22) |
+| **Tâches terminées** | Phase 0 · Phase 1 (SRS v0.1) · Phase 3 (EDA) · Phase 4 (baseline ML) · Phase 5 (CamemBERT LoRA F1=0.5685) · Phase 6 (RAG sémantique FAISS score 0.93) · Phase 7 (RAGAS : AR=0.58, Faith=1.0) · Phase 8 (Backend API v1.1) · **Phase 9 (Frontend connecté + 15 écrans redessinés Stitch + module gestion des comptes, 2026-07-06)** · Phase 10 (MLOps DVC+MLflow, F1 heuristiques 0.5829 après l'audit des règles) · Phase 11 (Docker + CI/CD) · Phase 12 (tests, matrice exigences, étude utilisateur) · Phase 13 Semaines 1–2 (heuristiques + RAG hybride) · **Boucle de feedback RAG** (`rag_score`, détection cas nouveau, archivage validé admin, 2026-07-16) · **Refonte workflow tickets** (file d'approbation simplifiée, écran de clôture en 2 étapes avec catégorie/priorité/classification/statut regroupés, édition post-clôture, 2026-07-29) · **Migration PostgreSQL + ChromaDB** (ADR-004, ADR-006 — RAG interrogé en direct sur les résolutions admin, 2026-07-29) · **Industrialisation MLOps** (jeu de test gelé, registre de modèles avec porte de promotion et rollback, collecte des tickets validés, cycle de vie des connaissances RAG, monitoring — 2026-08-22, [MLOPS.md](MLOPS.md)) · **Audit des règles métier** (quatre mots-clés ajustés sur le jeu de test retirés, R-23 clos ; campagne de réévaluation des sept approches sur un protocole unique — 2026-08-22) · **Cartographie des notebooks** ([../reports/analyse-notebooks/ANALYSE_NOTEBOOKS.md](../reports/analyse-notebooks/ANALYSE_NOTEBOOKS.md)) · **Mémoire : introduction et chapitres 1 à 4** (77 pages, 9 figures, 28 tableaux — 2026-09) |
+| **Tâches restantes** | Mémoire : chapitres 5, 6, 7, conclusion générale, annexes, résumés FR et EN · réponses au questionnaire OTBS (bloque le chapitre 1) · Phase 13 Semaine 3 (conditionnelle) · Phase 15 (soutenance) · calibrage des seuils MLOps après mise en exploitation (R-20) · annotation du jeu d'évaluation RAG (R-22) |
+| **Prochaine étape** | Chapitre 5 du mémoire. R-14 reste ouvert mais ne bloque plus la rédaction : la règle de citation est fixée dans [PLAN_RAPPORT.md](PLAN_RAPPORT.md) Point 1 — tout F1-macro est cité avec son protocole et le nombre de catégories couvertes |
 | **Risques ouverts** | F1 classification ML seul faible (zero-shot par Titre) · split de test sans exemples Applicatifs/Backup/Communication (R-14, atténué : test gelé + métrique sur classes évaluables) · boucles MLOps sans données réelles (R-20) · fuite par paraphrase non détectée (R-21) · jeu annoté RAG absent (R-22) · pas d'auto-routage par confiance (R-16) · RGPD non traité · délai 6 mois · latence P95 non conforme sous charge (R-13, voir [RISKS.md](RISKS.md)) — *R-15 (feedback client trompeur) clos le 2026-07-06* |
 | **Dette technique** | RGPD à faire (Phase 2 reliquat) · `test_api_integration.py` non branché en CI (nécessite `models/best_pipeline.pkl`, ignoré par git ; sa collecte en local est en revanche réparée depuis le 2026-08-22) · model cards non rédigées · pas de scan sécurité d'image Docker · LLM-as-a-Judge BACKLOG · EF-14 « génération LLM » en réalité template-based (à nuancer au mémoire) · seuil 0.40 (routage bas niveau) et 0.50 (`NOVELTY_THRESHOLD`) codés en dur dans `tickets.py` · incohérence nommage `priorite`/`priorite_saisie` · priorité/classification affichées comme « Résultat ML » ne sont pas de vraies prédictions entraînées (valeurs de départ confirmées par l'admin — à nuancer au mémoire, même logique qu'EF-14) |
 | **Fonctionnalités futures** | Voir [BACKLOG.md](BACKLOG.md) (LLM-as-a-Judge, QLoRA, hybrid search avancé, re-ranking, agents, K8s…) |

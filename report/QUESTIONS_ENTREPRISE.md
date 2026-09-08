@@ -3,7 +3,26 @@
 > À transmettre **en une seule fois** à l'encadrant professionnel.
 > Établie après dépouillement du PPTX d'intégration, du site www.onetech-bs.com et des
 > fichiers du dépôt. Ne figurent ici que les informations **introuvables** dans ces trois sources.
-> Date : 2026-08-18 · Mémoire PFE HelpDesk AI — M. A. Toukabri
+> Date : 2026-08-18 · **Point de situation au 2026-09-08** · Mémoire PFE HelpDesk AI — M. A. Toukabri
+
+---
+
+## Point de situation au 2026-09-08 — ce que l'absence de réponses coûte aujourd'hui
+
+Le questionnaire n'a toujours pas été transmis. La rédaction a avancé sans lui : l'introduction
+et les chapitres 1 à 4 sont écrits, 77 pages compilent sans erreur. Le prix payé est mesurable.
+
+| Effet | Détail |
+|---|---|
+| **Chapitre 1 sous sa cible** | 8 pages rédigées pour une cible de 12 à 15. Les sous-sections prévues sur l'organisation du service (Q5), le positionnement du stagiaire (Q6) et le processus antérieur (Q10) sont absentes ou réduites à une phrase |
+| **Chiffres d'ouverture non confirmés** | Le temps de traitement de 30 à 45 minutes (Q4) et la volumétrie (Q3) sont cités comme ordres de grandeur. Ce sont les chiffres qui justifient l'existence du projet |
+| **Page de garde provisoire** | Les noms des encadrants (Q7, Q12) sont renseignés sous réserve dans `global_config.tex` |
+| **Publication du corpus en suspens** | Sans réponse à Q1 et Q2, aucun extrait de ticket réel ni statistique nominative ne peut figurer au mémoire. Les chapitres 3 et 4 ont été rédigés en n'exposant que des agrégats |
+| **Chapitre 7 amputé** | Sans Q20, la section « étude utilisateur » se limite à l'étude légère menée en interne |
+| **Risque suivi** | Ce point est enregistré comme **R-26** dans [../helpdesk-ai/RISKS.md](../helpdesk-ai/RISKS.md) |
+
+**Priorité si une seule occasion se présente** : Q1, Q2, Q3, Q4, Q5, Q7, Q9. Ces sept réponses
+débloquent le chapitre 1, l'introduction, la conclusion et la page de garde.
 
 ---
 

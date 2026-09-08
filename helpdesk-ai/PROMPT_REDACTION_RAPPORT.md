@@ -106,13 +106,22 @@
     | Longueur description | médiane 33 mots | — |
     | Split | train 1444 / test 356 / RAG 1357 | — |
     | **Base RAG indexée** | **1357** | ❌ Ne PAS écrire 476. 476 = tickets au statut « Résolu », ce n'est pas la base RAG. Voir `DIAGNOSTIC_QUALITE_DONNEES.md` §2.1 |
-    | **F1 baseline (comparaison)** | **0,5673** | Protocole stratifié, 8 classes — **seul chiffre comparable à CamemBERT** |
-    | **F1 CamemBERT + LoRA** | **0,5685** | Écart +0,0012 = **parité**, pas un gain |
-    | F1 baseline (pipeline DVC) | 0,685 | ❌ **Jamais sans la mention « 5 catégories sur 8 »** et un renvoi à R-14. Ne jamais l'opposer à 0,5685 |
+    | **Hasard (`DummyClassifier`)** | **0,1382** | Plancher de référence, protocole stratifié 8 classes |
+    | **TF-IDF seul** | **0,3753** | Protocole stratifié, 8 classes, **sans les règles** |
+    | **TF-IDF + règles** | **0,5827** | Protocole stratifié, 8 classes. ❌ Ne PAS écrire 0,7513 ni 0,5673 : valeurs d'avant l'audit des règles du 2026-08-22 (R-23) |
+    | **CamemBERT + LoRA seul** | **0,5685** | Protocole stratifié, 8 classes, **sans les règles** |
+    | **CamemBERT + règles** | **0,8343** | ⭐ Meilleure combinaison mesurée, à 0,016 de l'objectif ENF-03. ❌ Ne PAS écrire 0,9499 : valeur d'avant l'audit |
+    | F1 du pipeline servi (DVC) | 0,5829 | ❌ **Jamais sans la mention « 5 catégories sur 8 »** et un renvoi à R-14. ❌ Ne PAS écrire 0,685 : valeur d'avant l'audit |
+    | **Comparaison à configuration égale** | sans règles **+0,193** · avec règles **+0,252** en faveur de CamemBERT | **H1 est vérifiée.** Comparer TF-IDF *avec* règles à CamemBERT *sans* règles est la faute à ne pas commettre : les règles sont indépendantes du modèle |
+    | Catégorie bloquante pour ENF-03 | *Microsoft* à **0,4463**, cible **0,5719** | C'est le seul verrou restant |
+    | Rappel *Sécurité* (ENF-04, cible ≥ 0,70) | CamemBERT + règles **0,60** · TF-IDF + règles **0,40** (stratifié), **0,00** (pipeline) | ❌ ENF-04 n'est atteinte par **aucune** configuration. C'est un rappel, pas un F1 |
+    | Règles métier | **129 motifs** (29 fermes, 100 souples) | ❌ Ne PAS écrire 135 : quatre mots-clés retirés à l'audit (R-23) |
     | Classes absentes du test DVC | **3** : Applicatifs, Backup, Communication | ❌ Ne PAS écrire 2 |
-    | RAG sémantique vs lexical | 0,93 vs 0,76 (cosinus) | — |
+    | RAG sémantique vs lexical | 0,93 vs 0,76 (cosinus) | ⚠️ Mesuré sur un index de **476 documents** (`models/semantic_rag_metadata.json`), pas sur les 1357 servis. À citer avec son index de mesure, ou à rejouer — voir R-25 |
+    | **Moteur hybride réellement servi** | **P@3 = 0,354** contre 0,292 (sémantique) et 0,154 (lexical) | ⭐ Campagne du 2026-08-22, protocole identique pour les trois moteurs. C'est le chiffre RAG à mettre en avant |
+    | `recall_at_3` de `metrics/rag_eval.json` | 0,0277 | ❌ **Ne pas citer comme une mesure de qualité.** Artefact du protocole proxy « même catégorie = pertinent » (R-22) |
     | RAGAS | P@3 = 0,30 (sém) / 0,42 (lex) · MRR = 0,56 / 0,65 · AR = 0,58 · Faithfulness = 1,0 | ❌ Faithfulness = 1,0 est vrai **par construction** (génération template-based). Ne jamais présenter comme « 0 % d'hallucination d'un LLM » |
-    | Tests | 41 unitaires · 18/18 intégration | — |
+    | Tests | **133 tests** au total (dont 18/18 d'intégration), mesurés le 2026-09-08 | ❌ Ne PAS écrire 41, 125 ni 132 : comptages antérieurs |
     | Latence Ollama | ~19 s à chaud / ~95 s à froid | — |
     | Seuil « cas nouveau » | rag_score < 0,50 | — |
     | Config LoRA | r=8, α=16, dropout 0,1, modules query/value, LR 2e-4, batch 2 + accum 4, 10 epochs, max_len 128 | — |
@@ -120,8 +129,15 @@
     ### R3 — Les limites se disent, elles ne se cachent pas
     Le mémoire doit énoncer explicitement, aux endroits prévus par le plan :
     - La **redondance du corpus** (58 scénarios réinstanciés) et son effet sur les résultats
-    - Le fait que **CamemBERT n'a pas dépassé la baseline** — présenté comme un résultat analysé,
-      jamais maquillé
+    - Le fait que **CamemBERT, seul, ne suffit pas** : à 0,5685 il reste loin de l'objectif, et
+      c'est sa combinaison avec les règles métier qui atteint 0,8343. Le résultat s'analyse,
+      il ne se maquille pas
+    - Le fait que **CamemBERT n'est pas industrialisé** : l'API sert le pipeline TF-IDF + règles
+    - Que **quatre mots-clés des règles avaient été ajustés sur le jeu de test** (R-23), que le
+      défaut a été trouvé en relecture interne, corrigé, et que les scores publiés sont ceux
+      d'après correction. Un jury valorise davantage une fuite méthodologique trouvée et corrigée
+      qu'un score élevé non expliqué
+    - Que les **129 motifs des règles n'ont pas été validés par OTBS** (R-24)
     - Le **RGPD non traité** (reliquat Phase 2)
     - La **latence P95 non conforme**
     - L'**absence d'augmentation de données** (recommandée mais non implémentée)

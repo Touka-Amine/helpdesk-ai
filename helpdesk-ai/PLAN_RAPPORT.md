@@ -9,18 +9,48 @@
 
 ---
 
+---
+
+## ÉTAT DE LA RÉDACTION — au 2026-09-08
+
+> Suivi détaillé et figures restant à produire : [PFE_PROGRESS.md](PFE_PROGRESS.md).
+> Sources LaTeX : `../report/`. Le document compile à **77 pages, sans erreur**.
+
+| # | Chapitre | Pages | Cible | État |
+|---|---|---|---|---|
+| — | Introduction générale | 1 | 2–3 p. | 🟡 à étoffer en fin de rédaction |
+| 1 | Contexte général du projet | 2–9 | 12–15 p. | 🟡 rédigé, sous la cible (bloqué sur les réponses OTBS) |
+| 2 | Concepts fondamentaux et spécification | 10–25 | 15–18 p. | ✅ rédigé, repris le 2026-09-07 |
+| 3 | Sprint 1 — Données et gouvernance | 26–39 | 14–16 p. | ✅ rédigé et vérifié |
+| 4 | Sprint 2 — Modélisation IA | 40–55 | 16–18 p. | ✅ rédigé, corrigé après l'audit des règles |
+| 5 | Sprint 3 — RAG et assistant LLM | 56 | 16–18 p. | 🔴 **prochain à rédiger** — voir Point 4 ci-dessous |
+| 6 | Sprint 4 — Développement de l'application | 57 | 16–18 p. | 🔴 squelette |
+| 7 | Sprint 5 — Industrialisation et validation | 58 | 14–16 p. | 🔴 squelette |
+| — | Conclusion générale | 59 | 2–3 p. | 🔴 balises seules |
+| — | Annexes | 62 | — | 🔴 balises seules |
+| — | Résumés FR et EN | `global_config.tex` | 1 p. | 🔴 à rédiger en dernier |
+
+**Écart à l'ordre initialement recommandé.** Les chapitres 1 et 2 ont été rédigés avant le
+chapitre 5, contrairement à l'ordre proposé plus bas. Le chapitre 2 ayant servi à fixer le
+vocabulaire réutilisé aux chapitres 3 et 4, l'écriture s'est faite dans l'ordre de lecture.
+L'ordre restant est inchangé : 5, puis 6 et 7, puis l'introduction, la conclusion et les résumés.
+
+**Conventions de rédaction en vigueur.** Style académique, « nous » de modestie, aucune métrique
+inventée : toute valeur citée renvoie à un fichier du dépôt. En cas de doute, la valeur est
+laissée entre crochets plutôt que devinée. Les limites du travail sont énoncées explicitement.
+
 ## PAGES LIMINAIRES (`frontmatter`)
 
 | Élément | Fichier LaTeX | État |
 |---|---|---|
-| Page de garde | `tpl/cover_page.tex` | À remplir (nom, titre, encadrants, année) |
-| Autorisations de dépôt / signatures | `tpl/signatures.tex` | À faire signer (encadrant pro + académique) |
-| Dédicaces | `dedicaces.tex` | À rédiger |
-| Remerciements | `remerciement.tex` | À rédiger (OTBS, encadrants, jury, enseignants) |
+| Page de garde | `tpl/cover_page.tex` | ✅ renseignée via `global_config.tex` |
+| Autorisations de dépôt / signatures | `tpl/signatures.tex` | 🟡 rédigée, **reste à faire signer** |
+| Dédicaces | `dedicaces.tex` | ✅ rédigées |
+| Remerciements | `remerciement.tex` | ✅ rédigés |
 | Table des matières | auto | — |
 | Liste des figures | auto | — |
 | Liste des tableaux | auto | — |
-| Liste des abréviations | `acronymes.tex` | À rédiger (voir §Acronymes ci-dessous) |
+| Liste des abréviations | `acronymes.tex` | ✅ rédigée |
 
 **Titre proposé** : *Conception et développement d'une plateforme intelligente de
 classification et d'assistance à la résolution de tickets informatiques par NLP et RAG*
@@ -396,34 +426,44 @@ RAGAS · REST · RGPD · SMOTE · SRS · TF-IDF · UML · VRAM
 
 ---
 
-## POINTS À CORRIGER AVANT RÉDACTION — état au 2026-08-17
+## POINTS À CORRIGER AVANT RÉDACTION — état au 2026-09-08
 
 | # | Point | Statut |
 |---|---|---|
-| 1 | F1 baseline : 0,685 vs 0,5673 | ✅ **Tranché** — voir ci-dessous |
+| 1 | Deux protocoles d'évaluation coexistent | ✅ **Tranché** — voir ci-dessous. ⚠️ Chiffres actualisés après l'audit des règles du 2026-08-22 |
 | 2 | Base RAG : 476 vs 1 357 tickets | ✅ **Tranché** — voir ci-dessous |
-| 3 | Informations entreprise (effectif, organigramme, chiffres) | 🔴 À obtenir auprès de l'encadrant professionnel |
+| 3 | Informations entreprise (effectif, organigramme, chiffres) | 🔴 Toujours en attente — voir [../report/QUESTIONS_ENTREPRISE.md](../report/QUESTIONS_ENTREPRISE.md). Le chapitre 1 reste sous sa cible tant que ces réponses manquent |
+| 4 | Chiffres du RAG à citer au chapitre 5 | 🟡 **À trancher avant de rédiger** — voir ci-dessous |
+| 5 | Scores de classification postérieurs à l'audit des règles | ✅ **Tranché** — voir ci-dessous |
 
 ### Point 1 — F1 baseline : deux protocoles, pas une erreur
 
 Les deux chiffres sont exacts mais proviennent de **protocoles d'évaluation différents** :
 
-| Protocole | Split | Classes couvertes | F1-macro baseline |
+| Protocole | Split | Classes couvertes | F1-macro TF-IDF + règles |
 |---|---|---|---|
-| Pipeline DVC (`metrics/ml_eval.json`) | `GroupShuffleSplit` par Titre, **non stratifié** | **5 / 8** | **0,685** |
-| Notebook 05 (`models/camembert_metadata.json`) | `StratifiedShuffleSplit` sur titres uniques | **8 / 8** | **0,5673** |
+| Pipeline DVC (`metrics/ml_eval.json`) | `GroupShuffleSplit` par Titre, **non stratifié** | **5 / 8** | **0,5829** (0,685 avant l'audit) |
+| Campagne du 2026-08-22 (notebooks 03 et 05) | `StratifiedShuffleSplit` sur les titres uniques | **8 / 8** | **0,5827** (0,7513 avant l'audit) |
+
+Les deux valeurs sont aujourd'hui presque identiques, mais cette proximité est fortuite : elles ne
+portent ni sur le même découpage ni sur le même nombre de catégories. Elle ne dispense pas de
+préciser le protocole à chaque citation.
 
 Le test du pipeline DVC ne contient **aucun exemple** d'*Applicatifs*, *Backup* et *Communication*
 (0/356). Son F1-macro ne porte donc que sur 5 classes — dont les plus faciles — ce qui le rend
 **mécaniquement supérieur** et **non comparable** au protocole stratifié.
 
 **Règle de citation dans le mémoire :**
-- Comparaison baseline vs CamemBERT → **0,5673 vs 0,5685** (même split, 8 classes). C'est la
-  seule comparaison scientifiquement valide.
-- Le 0,685 se cite uniquement comme métrique du pipeline de production, **toujours accompagné**
-  de la mention « 5 catégories sur 8 » et d'un renvoi à R-14.
-- Ne jamais écrire « la baseline atteint 0,685 » sans cette nuance : un jury qui ouvre
-  `metrics/ml_eval.json` verra qu'il ne contient que 6 entrées `f1_*` sur 8 catégories.
+- Comparer TF-IDF et CamemBERT **à configuration égale**, c'est-à-dire tous deux avec les règles
+  ou tous deux sans : sans règles **0,3753 contre 0,5685**, avec règles **0,5827 contre 0,8343**.
+  Opposer TF-IDF *avec* règles à CamemBERT *sans* règles est la faute à ne pas commettre, puisque
+  les règles s'appliquent indépendamment du modèle.
+- Le chiffre du pipeline DVC (**0,5829**) se cite uniquement comme métrique de production,
+  **toujours accompagné** de la mention « 5 catégories sur 8 » et d'un renvoi à R-14.
+- Ne jamais citer un F1-macro sans son protocole : un jury qui ouvre `metrics/ml_eval.json` verra
+  qu'il ne contient que 6 entrées `f1_*` pour 8 catégories.
+- Les valeurs **0,685**, **0,7513**, **0,5673** et **0,9499** appartiennent à l'avant-audit. Elles
+  ne se citent que pour documenter la correction, jamais comme résultats du travail.
 
 ### Point 2 — Base RAG : deux définitions, pas une erreur
 
@@ -439,3 +479,38 @@ ticket **du jeu d'entraînement** dont `Résolution/Motif` est renseignée, quel
 train est un choix **anti-fuite** délibéré, à valoriser dans le mémoire.
 
 **Chiffre à citer pour la base de connaissances : 1 357.**
+
+### Point 4 — Chiffres du RAG : ce qui est publiable et ce qui ne l'est pas
+
+| Chiffre | Source | Verdict |
+|---|---|---|
+| Score cosinus **0,93 contre 0,76** (sémantique contre lexical) | `models/semantic_rag_metadata.json` | Mesuré sur un index de **476 documents**, alors que l'index servi en contient **1 357**. Le chiffre est daté, pas faux. À republier en précisant l'index de mesure, ou à rejouer sur l'index courant |
+| `recall_at_3 = 0,0277` | `metrics/rag_eval.json` | **Ne pas citer comme une mesure de qualité.** C'est un artefact du protocole proxy « même catégorie = pertinent » (R-22). Le notebook d'origine `07_rag_evaluation.ipynb` n'a par ailleurs aucune sortie enregistrée |
+| **P@3 = 0,354** (hybride) contre 0,292 (sémantique) et 0,154 (lexical) | campagne du 2026-08-22, [MLOPS.md](MLOPS.md) | **Chiffre à mettre en avant.** Première mesure du moteur réellement servi, protocole identique pour les trois moteurs |
+| P@3 = 0,30 · MRR = 0,56 · AR = 0,58 · Faithfulness = 1,0 | RAGAS, Phase 7 | Citables, mais toujours avec la mention que le jeu annoté n'existe pas (R-22) |
+
+**Règle de citation au chapitre 5** : toute métrique de pertinence RAG est présentée comme
+indicative tant que le jeu annoté n'est pas constitué. La commande
+`python src/pipeline/rag_eval.py --build-template` génère le gabarit d'annotation (80 requêtes).
+
+### Point 5 — Scores de classification : les valeurs d'avant le 2026-08-22 sont périmées
+
+L'audit des règles métier du 2026-08-22 (R-23) a retiré quatre mots-clés qui n'étaient attestés
+dans aucun ticket d'entraînement et ne se déclenchaient que sur des tickets de test. Les scores
+publiés avant cette date mesuraient donc en partie de la mémorisation.
+
+| Système | Avant l'audit | **Valeur à citer** | Protocole |
+|---|---|---|---|
+| Hasard (`DummyClassifier`) | — | **0,1382** | stratifié, 8 classes |
+| TF-IDF seul | 0,3753 | **0,3753** | stratifié, 8 classes |
+| TF-IDF + règles | 0,7513 | **0,5827** | stratifié, 8 classes |
+| CamemBERT seul | 0,5685 | **0,5685** | stratifié, 8 classes |
+| **CamemBERT + règles** | 0,9499 | **0,8343** | stratifié, 8 classes |
+| Pipeline servi (TF-IDF + règles) | 0,685 | **0,5829** | DVC, 5 classes sur 8 (R-14) |
+
+Deux conséquences pour la rédaction. D'abord, **H1 est vérifiée** : à configuration égale,
+CamemBERT devance TF-IDF de +0,193 sans les règles et de +0,252 avec. Ensuite, l'écart à
+l'objectif ENF-03 n'est plus que de **0,016**, et il tient à une seule catégorie, *Microsoft*,
+qui plafonne à 0,4463 quand elle devrait atteindre 0,5719.
+
+Comparaison détaillée avant et après : [../reports/analyse-notebooks/COMPARAISON_AVANT_APRES.md](../reports/analyse-notebooks/COMPARAISON_AVANT_APRES.md).

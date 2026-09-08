@@ -1,26 +1,33 @@
 # PROJECT_STATUS.md — Avancement global
 
 > Résumé concis. **Source de vérité : [PLAN.md](PLAN.md)** (section 10 — Tableau de bord).
-> Dernière mise à jour : **2026-08-22** (industrialisation MLOps : boucle d'amélioration du
-> modèle et cycle de vie des connaissances RAG — voir [MLOPS.md](MLOPS.md) et
+> Suivi de la rédaction du mémoire : [PFE_PROGRESS.md](PFE_PROGRESS.md).
+> Dernière mise à jour : **2026-09-08** (rédaction du mémoire : introduction et chapitres 1 à 4
+> rédigés, 77 pages compilées — voir [PFE_PROGRESS.md](PFE_PROGRESS.md) et
 > [CHANGELOG.md](CHANGELOG.md) pour le détail daté).
 
 ## Bandeau
 
 | | |
 |---|---|
-| **Phase active** | Phase 13 — Optimisation (Phases 0–12 terminées) + travaux d'ingénierie hors-phases (RAG live, workflow tickets, infra) |
-| **Progression globale** | ~86 % |
+| **Phase active** | Phase 14 — Rédaction du mémoire (Phases 0–12 terminées, Phase 13 partielle) |
+| **Progression globale** | ~90 % |
 | **Périmètre** | Cœur rehaussé (Must) |
 | **Durée** | Stage 6 mois · GPU local |
-| **Prochaine étape** | Décider : activer `split.strategy: stratified_group` (R-14) ou conserver la référence publiée, puis Phase 14 (mémoire PFE) |
+| **Mémoire** | 4 chapitres sur 7 rédigés · 77 pages compilées sur une cible de 110–135 |
+| **Prochaine étape** | Rédiger le chapitre 5 (RAG et assistant LLM) — deux chiffres à trancher au préalable, voir [PFE_PROGRESS.md](PFE_PROGRESS.md) §5 |
 
 ## ✅ Terminé
 - EDA + preprocessing (notebooks 01–02) + features enrichies (`text_enriched`)
-- Baseline ML TF-IDF + heuristiques — F1-macro **0.685** sur le protocole DVC ⚠️ *(test ne
-  couvrant que 5 catégories sur 8 — voir R-14 ; chiffre non comparable au 0.5673 ci-dessous)*
+- Baseline ML TF-IDF + heuristiques — F1-macro **0.5829** sur le protocole DVC ⚠️ *(test ne
+  couvrant que 5 catégories sur 8 — voir R-14 ; chiffre non comparable au 0.5827 du protocole
+  stratifié). Valeur postérieure à l'audit des règles du 2026-08-22, qui a retiré quatre
+  mots-clés introduits en consultant le jeu de test*
 - **CamemBERT-base + LoRA — F1-macro 0.5685** (protocole stratifié 8 classes, notebook 05 :
-  à parité avec la baseline mesurée **sur le même split**, 0.5673, sans règles codées)
+  la baseline sans règles atteignant 0.3753 sur le même split)
+- **Meilleure combinaison : CamemBERT + LoRA + règles métier — F1-macro 0.8343** (protocole
+  stratifié 8 classes, à 0.016 de l'objectif ENF-03). Comparaison à configuration égale menée
+  le 2026-08-22 : CamemBERT devance TF-IDF de +0.252 avec les règles, ce qui **vérifie H1**
 - RAG lexical (conservé comme fallback) + **RAG sémantique FAISS** (score cosinus 0.93 vs 0.76, +0.17)
 - **RAG hybride** (0.5×sémantique + 0.5×lexical, Phase 13 Semaine 2)
 - **Évaluation RAG (RAGAS, Phase 7)** — P@3=0.30 sém/0.42 lex, MRR=0.56/0.65, AR=0.58, Faithfulness=1.0
@@ -34,7 +41,7 @@
 - **Déploiement Docker (Phase 11)** — 3 services, CI/CD (lint, tests, build), healthchecks
 - **Tests & validation (Phase 12)** — 41 tests unitaires, 18/18 tests d'intégration, test de
   charge, matrice exigences→résultats, étude utilisateur légère (5 bugs de déploiement/auth trouvés et corrigés)
-  ; suite portée à **125 tests** le 2026-08-22
+  ; suite portée à **133 tests** (mesurés le 2026-09-08)
 - Documentation (cahier des charges, workflow, système de pilotage 11 fichiers)
 - **UX complémentaire (2026-07-16)** — sidebar noire + mode sombre (admin/client), formulaire
   Nouveau ticket reconstruit (exemples guidés), fix routing racine→login, expiration de session
@@ -92,15 +99,30 @@
   tests d'intégration en local.
   *Limite* : aucun trafic de production à traiter, les seuils restent à calibrer (R-20).
 
+- **Audit des règles métier et campagne d'évaluation (2026-08-22)** — quatre mots-clés ajoutés en
+  consultant le jeu de test ont été retirés (R-23, clos). Les sept approches ont été réévaluées
+  sur un protocole unique, ce qui a permis la première comparaison à configuration égale entre
+  TF-IDF et CamemBERT : **H1 est vérifiée**. Comparaison avant/après conservée dans
+  [../reports/analyse-notebooks/COMPARAISON_AVANT_APRES.md](../reports/analyse-notebooks/COMPARAISON_AVANT_APRES.md)
+- **Cartographie des notebooks (2026-08-22)** — rôle architectural de chacun, carte des
+  dépendances, écarts à l'architecture cible :
+  [../reports/analyse-notebooks/ANALYSE_NOTEBOOKS.md](../reports/analyse-notebooks/ANALYSE_NOTEBOOKS.md)
+- **Mémoire PFE — introduction et chapitres 1 à 4 (2026-08 → 2026-09)** — 77 pages compilées,
+  9 figures, 28 tableaux, chaque valeur citée renvoyant à un fichier du dépôt
+
 ## 🟡 En cours
+- **Phase 14 (mémoire PFE) — ~50 %.** Introduction et chapitres 1 à 4 rédigés et relus, 77 pages
+  compilées sans erreur. Prochain : chapitre 5 (RAG et assistant LLM). Détail et blocages dans
+  [PFE_PROGRESS.md](PFE_PROGRESS.md)
 - Phase 13 (Optimisation) — Semaines 1–2 terminées (heuristiques + RAG hybride), Semaine 3
   (données réelles) conditionnelle
-- Phase 14 (mémoire PFE) — ~15 %, à intensifier
 
 ## 🔴 À faire (prioritaire)
+- Mémoire : chapitres 5, 6 et 7, conclusion générale, annexes, résumés FR et EN
+- Réponses au questionnaire OTBS ([../report/QUESTIONS_ENTREPRISE.md](../report/QUESTIONS_ENTREPRISE.md)) — le chapitre 1 reste sous sa cible sans elles
 - Phase 2 (reliquat) : RGPD / anonymisation
 - Phase 13 : optimiser la latence P95 (R-13, non conforme sous charge)
-- Phases 14–15 : mémoire PFE, préparation soutenance
+- Phase 15 : préparation de la soutenance
 
 ## Avancement par phase
 | Phase | Avancement |
@@ -109,7 +131,7 @@
 | 1 Cadrage & SRS | ✅ 100 % (SRS v0.1) |
 | 2 Data & RGPD | 🟡 ~45 % (diagnostic qualité + features enrichies faits, RGPD à faire) |
 | 3 EDA | ✅ ~90 % (consolidé + benchmark externe) |
-| 4 ML baseline | ✅ 100 % (multi-modèles + heuristiques ; F1=0.685 protocole DVC ⚠️ 5/8 classes, ou 0.5673 protocole stratifié 8 classes) |
+| 4 ML baseline | ✅ 100 % (multi-modèles + heuristiques ; F1=0.5829 protocole DVC ⚠️ 5/8 classes, ou 0.5827 protocole stratifié 8 classes ; **meilleure combinaison CamemBERT+règles = 0.8343**) |
 | 5 Fine-Tuning | ✅ 100 % (CamemBERT LoRA, F1=0.5685 sur protocole stratifié 8 classes) |
 | 6 RAG sémantique | ✅ 100 % (FAISS + paraphrase-multilingual, score 0.93) |
 | 7 Éval RAG | ✅ 100 % (P@3=0.30 sém, MRR=0.56, AR=0.58, Faith=1.0) |
@@ -117,7 +139,7 @@
 | 9 Frontend | ✅ 100 % (connexion + 15 écrans Stitch + gestion des comptes, 2026-07-06) |
 | 10 MLOps | ✅ 100 % (DVC **8 stages**, registre de modèles avec promotion/rollback, monitoring ML et RAG, suivi MLflow — [MLOPS.md](MLOPS.md)) |
 | 11 Déploiement | ✅ 100 % (Docker 3 services + CI/CD) |
-| 12 Tests | ✅ 100 % (125 tests : unitaires, intégration, cycle de vie ChromaDB, charge, matrice exigences, étude utilisateur) |
+| 12 Tests | ✅ 100 % (**133 tests** : unitaires, intégration, cycle de vie ChromaDB, charge, matrice exigences, étude utilisateur) |
 | 13 Optimisation | 🟡 ~65 % (Semaines 1–2 faites, Semaine 3 conditionnelle) |
-| 14 Doc/mémoire | 🟡 ~15 % |
+| 14 Doc/mémoire | 🟡 ~50 % (introduction + chapitres 1–4 rédigés, 77 p. compilées ; restent les chapitres 5–7, la conclusion, les annexes et les résumés) |
 | 15 Soutenance | 🔴 0 % |

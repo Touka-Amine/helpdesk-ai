@@ -5,6 +5,116 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Ajouté (2026-09-08, synchronisation du suivi de rédaction)
+
+- `Modifié` : **[PFE_PROGRESS.md](PFE_PROGRESS.md) entièrement réécrit.** Le fichier suivait
+  encore un découpage en 14 chapitres thématiques hérité du cahier des charges, alors que le
+  mémoire est organisé en 7 chapitres par sprints depuis [PLAN_RAPPORT.md](PLAN_RAPPORT.md), et
+  portait la mention « Dernière mise à jour : à la création ». Il devient le tableau de bord de
+  la rédaction : état par chapitre avec pages réelles, figures produites, chiffres à trancher
+  avant le chapitre 5, écarts à assumer devant le jury, blocages externes.
+- `Ajouté` : **section « État de la rédaction » dans [PLAN_RAPPORT.md](PLAN_RAPPORT.md)**, plus
+  deux points de méthode — Point 4 sur les chiffres du RAG publiables et Point 5 sur les scores
+  de classification périmés depuis l'audit des règles.
+- `Modifié` : [PLAN.md](PLAN.md), [PROJECT_STATUS.md](PROJECT_STATUS.md), [RISKS.md](RISKS.md) et
+  [TESTING.md](TESTING.md) alignés sur l'état réel — phase active passée à la Phase 14, tâche
+  courante fixée au chapitre 5, comptage des tests porté à **133** (mesuré, `pytest --collect-only`).
+- `Ajouté` : **R-25** (trois figures et deux métriques du chapitre 5 proviennent de notebooks sans
+  sorties enregistrées) et **R-26** (informations entreprise manquantes, chapitre 1 sous sa cible).
+
+### Ajouté (2026-08 → 2026-09, rédaction du mémoire)
+
+- `Ajouté` : **introduction générale et chapitres 1 à 4** dans `../report/`. Le document compile
+  à **77 pages**, sans erreur ni référence non résolue, avec 9 figures et 28 tableaux. Chaque
+  valeur citée renvoie à un fichier du dépôt.
+- `Ajouté` : trois figures produites pour le chapitre 4 — `ch04_benchmark.png` (comparaison des
+  sept approches), `ch04_confusion_camembert.png`, `ch04_confiance.png`.
+- `Corrigé` : **cinq erreurs factuelles du chapitre 4**, trouvées en relecture avant publication.
+  Une cible d'amélioration confondait un incrément (+0,126) avec la valeur à atteindre (0,5719) ;
+  la catégorie *Microsoft* était décrite comme nulle alors qu'elle est à 0,4463 ; deux
+  dénombrements de catégories étaient faux ; et un score de 0,75 était attribué au modèle servi
+  alors qu'il appartient à CamemBERT, le modèle servi étant à 0,5714 sur cette mesure.
+- `Corrigé` : **confusion entre F1 et rappel sur ENF-04.** L'exigence porte sur le rappel. Les
+  valeurs réelles sont 0,60 pour CamemBERT + règles et 0,40 pour TF-IDF + règles en protocole
+  stratifié, 0,00 en protocole pipeline. **ENF-04 n'est atteinte par aucune configuration**, ce
+  qui est désormais écrit tel quel.
+- `Modifié` : **chapitre 2 repris** (2026-09-07) — figure sur l'adaptation par matrices de rang
+  faible retirée au profit de sa formulation mathématique, figure du principe RAG refaite en
+  séparant la phase hors ligne de la phase en ligne, tableau des exigences fonctionnelles réécrit
+  au format SRS (référence, exigence, critère d'acceptation, priorité) avec des priorités
+  Élevée / Moyenne / Faible, et `placeins` ajouté au préambule pour que `\FloatBarrier` empêche
+  un tableau trop haut de flotter par-dessus le début de la section suivante.
+- `Ajouté` : **cartographie des notebooks**
+  ([../reports/analyse-notebooks/ANALYSE_NOTEBOOKS.md](../reports/analyse-notebooks/ANALYSE_NOTEBOOKS.md)).
+  Trois producteurs concurrents de `data/processed/HelpDesk1.csv` avec des schémas différents
+  (9 colonnes contre 23), deux producteurs de `models/best_pipeline.pkl` sous des découpages
+  différents, deux notebooks sans aucune sortie enregistrée, et `models/semantic_rag_metadata.json`
+  décrivant un index de 476 documents quand celui servi en contient 1 357.
+- `Ajouté` : **comparaison avant/après l'audit des règles**
+  ([../reports/analyse-notebooks/COMPARAISON_AVANT_APRES.md](../reports/analyse-notebooks/COMPARAISON_AVANT_APRES.md))
+  et instantané des métriques d'avant nettoyage (`metrics/campagne_avant_nettoyage.json`), pour
+  que la progression du travail reste démontrable.
+- `Ajouté` : suite de tests portée à **133** — idempotence de la promotion et non-régression de
+  l'audit des règles.
+
+### Corrigé (2026-08-22, audit des règles métier — fuite méthodologique)
+
+- `Corrigé` : **quatre mots-clés des règles fermes avaient été ajoutés en consultant le jeu de
+  test.** Un commentaire de `src/models/heuristics.py` documentait explicitement l'un d'eux :
+  `« acces non autorise » ajouté : test title "Accès non autorisé détecté par l'IDS"`. La
+  confrontation de chaque mot-clé au jeu d'entraînement a montré que `onedrive`, `san`, `ids` et
+  `acces non autorise` n'y figuraient dans **aucun ticket** et ne se déclenchaient que sur des
+  tickets de test : 45, 21 et 12 tickets respectivement. Un mot-clé introduit après avoir observé
+  une erreur sur le test ajuste le système aux données qui servent à le juger ; le score cesse
+  alors de mesurer la généralisation. Les quatre termes sont retirés, les règles fermes passent de
+  35 à 29 motifs.
+- `Modifié` : **conséquences chiffrées du retrait**, protocole stratifié 8 catégories :
+
+  | Système | Avant | Après |
+  |---|---|---|
+  | TF-IDF + règles | 0.7513 | **0.5827** |
+  | CamemBERT + règles | 0.9499 | **0.8343** |
+
+  Protocole du pipeline : `f1_macro_heuristiques` 0.685 → **0.5829**,
+  `f1_macro_classes_evaluables` 0.822 → **0.6995**, `accuracy` 0.8539 → **0.8202**,
+  `recall_Sécurité` 0.3636 → **0.0000**.
+- `Ajouté` : **règle méthodologique en tête de `heuristics.py`.** Un mot-clé n'est admis que s'il
+  est attesté dans le jeu d'entraînement, ou s'il reste sans effet sur le jeu de test. Les quatre
+  termes retirés pourront être réintroduits si le service support les valide par écrit comme
+  référentiel métier, établi sans consultation des résultats de test.
+- `Ajouté` : `tests/test_heuristics.py::test_mots_cles_retires_de_l_audit_ne_declenchent_plus`,
+  qui échoue si l'un des quatre termes revient. Les deux tests de frontière de mot, qui
+  s'appuyaient sur `ids`, ont été réécrits avec `esxi` et `sage erp`. Suite à **133 tests**.
+
+### Ajouté (2026-08-22, comparaison à configuration égale — hypothèse H1)
+
+- `Ajouté` : **CamemBERT évalué avec les règles métier**, ce qui n'avait jamais été fait. Le
+  chapitre 4 comparait jusqu'ici une chaîne lexicale *avec* règles à un transformer *sans* règles.
+  Les règles ne dépendent d'aucun modèle : elles lisent le texte brut et corrigent une catégorie
+  prédite, quelle qu'en soit l'origine.
+
+  | Configuration | TF-IDF | CamemBERT | Écart |
+  |---|---|---|---|
+  | Sans règles | 0.3753 | 0.5685 | +0.193 |
+  | Avec règles | 0.5827 | **0.8343** | +0.252 |
+
+- `Corrigé` : **l'hypothèse H1 du cahier des charges est vérifiée**, alors que le mémoire la
+  donnait pour infirmée. CamemBERT devance la chaîne lexicale dans les deux configurations.
+- `Corrigé` : ENF-03 passe de « non atteint, écart de 0.28 » à « presque atteint, écart de
+  0.016 ». Il suffirait que *Microsoft* passe de 0.4463 à 0.5719 pour franchir la barre.
+- `Corrigé` : ENF-04 reste non atteint. Le meilleur rappel sur *Sécurité* est 0.60, pour une cible
+  de 0.70. La précision vaut 1.00 dans toutes les configurations.
+- `Modifié` : chapitre 4 du mémoire réécrit — introduction, tableau des objectifs, gain des
+  heuristiques, deux sections nouvelles (`sec:combinaison`, `sec:audit`), section « Ce qui sépare
+  encore de l'objectif », arbitrage de production rouvert, bilan et conclusion. Figure
+  `ch04_benchmark.png` régénérée. Mémoire à 76 pages, compilation sans erreur.
+- `Corrigé` : cinq erreurs factuelles introduites dans la première version de cette réécriture et
+  trouvées en relecture — la cible de *Microsoft* annoncée à 0.13 au lieu de 0.5719, *Microsoft*
+  décrit comme nul alors qu'il vaut 0.4463, « cinq catégories au-dessus de 0.74 et trois à 1.00 »
+  au lieu de six et quatre, *Backup* crédité de huit scénarios au lieu de six, et un F1 de 0.75
+  attribué au modèle servi alors qu'il appartient à CamemBERT.
+
+
 ### Corrigé (2026-08-22, relecture de l'architecture MLOps — trois défauts trouvés)
 
 - `Corrigé` : **`promote.py` rendait l'application incapable de démarrer.** Relancé sans

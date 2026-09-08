@@ -1,7 +1,13 @@
 # ARCHITECTURE.md — Architecture détaillée
 
 > Vue de référence (évolutive). Résumé dans [PLAN.md](PLAN.md) (section 3). Décisions dans
-> [DECISIONS.md](DECISIONS.md). Dernière mise à jour : *à la création*.
+> [DECISIONS.md](DECISIONS.md). Chaîne MLOps détaillée dans [MLOPS.md](MLOPS.md).
+> Dernière mise à jour : **2026-09-08** (mise à niveau après l'industrialisation MLOps du
+> 2026-08-22 : le module MLOps n'était plus à l'état de projet).
+>
+> **Ce document sert de source au chapitre 6 du mémoire** (conception de l'application) et à la
+> partie infrastructure du chapitre 7. Les diagrammes Mermaid ci-dessous sont à reproduire en
+> figures LaTeX — voir [PFE_PROGRESS.md](PFE_PROGRESS.md) §4.
 
 ## 1. Vue d'ensemble (C4 — niveau Conteneurs)
 
@@ -32,7 +38,13 @@ flowchart TB
 | Assistant de triage IA | Synthèse LLM des cas similaires (human-in-the-loop) | ✅ | `api/services/llm_service.py`, service Docker `ollama` |
 | Base vectorielle | Index des embeddings (ChromaDB) | ✅ | `api/db/vector_store.py` |
 | BDD | Tickets, users, historique, feedback | ✅ | `api/db/` |
-| MLOps | Reproductibilité, registre | 🔴 | `dvc.yaml`, `mlruns/` |
+| MLOps — pipeline | Reproductibilité de bout en bout, **8 stages** | ✅ | `dvc.yaml`, `params.yaml`, `mlruns/` |
+| MLOps — registre de modèles | Versions, alias `production`, lignage, rollback | ✅ | `src/registry/model_registry.py`, `models/registry/` |
+| MLOps — collecte | Tickets validés depuis PostgreSQL, qualification de la force de l'étiquette | ✅ | `src/pipeline/collect.py` |
+| MLOps — dataset versionné | Fusion, empreinte SHA-256, garde-fous anti-fuite | ✅ | `src/pipeline/build_dataset.py` |
+| MLOps — porte de promotion | Trois conditions, seul écrivain de `models/best_pipeline.pkl` | ✅ | `src/pipeline/promote.py` |
+| MLOps — cycle de vie des connaissances | Contrôle qualité avant indexation, statuts, instantanés | ✅ | `src/knowledge/quality.py`, `src/knowledge/snapshot.py` |
+| MLOps — supervision | Dérive du modèle et du corpus RAG | ✅ | `src/monitoring/ml_monitor.py`, `src/monitoring/rag_monitor.py` |
 | Sécurité | JWT, RBAC, secrets | 🟡 | `api/services/auth_service.py`, middleware |
 
 ## 3. Flux de données (création d'un ticket)
@@ -79,7 +91,7 @@ classDiagram
 | RAG | sentence-transformers (FR), ChromaDB (base vectorielle, ADR-004), RAGAS |
 | LLM local | Ollama (`llama3.2:3b`, conteneur dédié, aucun appel externe) |
 | Données | pandas, DVC |
-| MLOps | DVC, MLflow |
+| MLOps | DVC (8 stages), MLflow (`file:./mlruns`), registre de modèles maison (`src/registry/`) |
 | Persistance | SQLAlchemy, PostgreSQL |
 | Sécurité | python-jose (JWT), passlib/bcrypt |
 | Déploiement | Docker, docker-compose, GitHub Actions |

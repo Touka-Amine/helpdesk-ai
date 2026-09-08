@@ -1,5 +1,13 @@
 # 📄 Guide Rapport PFE - HelpDesk AI
 
+> ⚠️ **Document superseded — conservé pour mémoire.**
+> Cette esquisse en 12 sections thématiques date du début du projet. Le plan qui fait foi est
+> [PLAN_RAPPORT.md](PLAN_RAPPORT.md) : **7 chapitres organisés par sprints**, calqué sur les deux
+> rapports de référence de l'encadrant académique, avec une cible de 110 à 135 pages.
+> Les sources rédigées sont dans `../report/` (LaTeX, gabarit TEK-UP `isipfe`), et l'avancement
+> se suit dans [PFE_PROGRESS.md](PFE_PROGRESS.md).
+> Ne pas rédiger à partir de ce fichier. Il reste utile comme réservoir d'idées de contenu.
+
 ## Structure Proposée du Rapport
 
 ---

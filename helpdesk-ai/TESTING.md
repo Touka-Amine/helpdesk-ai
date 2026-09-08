@@ -3,7 +3,7 @@
 > Source de vérité : [PLAN.md](PLAN.md). Dernière mise à jour : **2026-08-22** (industrialisation
 > MLOps). Résultats détaillés et traçabilité par exigence : [CADRAGE_SRS.md](CADRAGE_SRS.md) §5.
 >
-> **132 tests passent** (`python -m pytest tests/ -q`, 68 s). Pour une exécution rapide pendant
+> **133 tests passent** (`python -m pytest tests/ -q`, 2 min 12 s — mesure du 2026-09-08). Pour une exécution rapide pendant
 > le développement, `pytest -m "not slow"` exclut les tests qui chargent
 > sentence-transformers ou font tourner ChromaDB.
 >
@@ -57,8 +57,8 @@
 - [ ] Parcours complet automatisé création→validation→résolution→restitution — non automatisé, seulement manuel
 
 ### 3.4 Tests IA / modèle
-- [x] Métriques mesurées : F1-macro=0.685, rappel Sécurité=0.364 — ⚠️ non représentatif, voir R-14 dans [RISKS.md](RISKS.md) (split de test ne couvrant que 5 catégories sur 8 : Applicatifs, Backup et Communication absentes)
-- [x] **F1-macro sur les classes évaluables = 0.822** (5 classes ayant du support). Écart avec 0.685
+- [x] Métriques mesurées en Phase 12 : F1-macro=0.685, rappel Sécurité=0.364 — ⚠️ **valeurs d'avant l'audit des règles du 2026-08-22 ; le pipeline est depuis à 0.5829**. Également non représentatif, voir R-14 dans [RISKS.md](RISKS.md) (split de test ne couvrant que 5 catégories sur 8 : Applicatifs, Backup et Communication absentes)
+- [x] **F1-macro sur les classes évaluables = 0.822** (5 classes ayant du support, mesure de Phase 12). Écart avec 0.685
       entièrement dû aux trois classes à support nul, dont la F1 vaut 0.0 par construction
 - [x] **Jeu de test gelé** (`data/reference/`, empreinte SHA-256 vérifiée à chaque exécution de
       `split.py`) — condition nécessaire pour que comparer deux modèles ait un sens
@@ -95,7 +95,8 @@
   atteinte) mais **22 % seulement reproductible en CI** (41 tests unitaires : `test_api_integration.py`
   exclu car `models/best_pipeline.pkl` est gitignoré et absent d'un clone frais). Le gate n'est
   donc pas encore vérifié automatiquement par la CI telle que configurée aujourd'hui.
-  *2026-08-22 : la suite est passée à 132 tests. La couverture n'a pas été remesurée ; les
+  *2026-09-08 : la suite compte 133 tests (125 au 2026-08-22, puis les tests d'idempotence de la
+  promotion et la non-régression de l'audit des règles). La couverture n'a pas été remesurée ; les
   chiffres ci-dessus datent de la Phase 12 et sont donc désormais un plancher.*
 - **Gate de promotion d'un modèle** (`src/pipeline/promote.py`, voir [MLOPS.md](MLOPS.md) §3.5) —
   un modèle candidat ne remplace la production que s'il gagne au moins 0.005 sur la métrique

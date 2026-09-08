@@ -1,7 +1,15 @@
 # TASKS.md — Tâches de la phase active
 
 > Tâches du sprint courant. Détail complet des checklists dans [PLAN.md](PLAN.md) (section 6).
-> Dernière mise à jour : **2026-07-29**. **Phase active : Phase 13 — Optimisation** (Phases 9 et 12 closes).
+> Dernière mise à jour : **2026-09-08**. **Phase active : Phase 14 — Rédaction du mémoire**
+> (Phases 0–12 closes, Phase 13 aux Semaines 1–2). Tâche courante : chapitre 5 du mémoire —
+> suivi dans [PFE_PROGRESS.md](PFE_PROGRESS.md).
+>
+> ⚠️ **Ce fichier est un journal.** Les entrées ci-dessous conservent les chiffres tels qu'ils
+> étaient au moment de la tâche, y compris le F1-macro de **0.685** devenu **0.5829** après
+> l'audit des règles du 2026-08-22 (R-23). Elles ne sont pas corrigées, pour ne pas réécrire
+> l'historique. **Pour citer une métrique dans le mémoire, se reporter à
+> [PROMPT_REDACTION_RAPPORT.md](PROMPT_REDACTION_RAPPORT.md) §R2**, qui fait foi.
 
 ## ✅ Terminé — Migration PostgreSQL + ChromaDB (2026-07-29, ADR-004 / ADR-006)
 - [x] Base opérationnelle SQLite → PostgreSQL : service dédié dans `docker-compose.yml`,
