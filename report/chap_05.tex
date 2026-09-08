@@ -1,1 +1,701 @@
 \chapter{Sprint 3 --- Système RAG et assistant LLM}
+
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+
+Le sprint précédent a livré un classifieur qui affecte une catégorie à chaque ticket entrant.
+Savoir qu'une demande relève de la catégorie \emph{Microsoft} oriente son affectation, sans rien
+dire de la manière de la traiter. Ce sprint construit le second volet de la solution : un moteur
+qui retrouve dans l'historique les tickets comparables et présente leur résolution à
+l'administrateur.
+
+La redondance du corpus, qui a limité le classifieur au chapitre précédent, devient ici un atout.
+Cinquante-huit scénarios réinstanciés signifient qu'un nouveau ticket a de fortes chances de
+ressembler à un ticket déjà résolu. C'est exactement l'hypothèse dont vit un système de recherche
+par similarité.
+
+Trois moteurs ont été construits et comparés sous un protocole unique : une recherche lexicale,
+une recherche sémantique, puis leur combinaison. S'y ajoute un modèle de langage exécuté sur
+l'infrastructure du service, qui reformule les résolutions retrouvées avant de les présenter.
+
+Deux résultats méritent d'être annoncés d'emblée. Le moteur hybride, celui qui est servi, obtient
+la meilleure précision à trois passages, 0,3542 contre 0,2917 pour le sémantique seul. Mais son
+score de similarité moyen, 0,3551, n'atteint jamais le seuil de pertinence de 0,50 fixé dans la
+configuration : sur les quatre-vingts requêtes d'évaluation, aucune n'a été servie autrement que
+par le mécanisme de repli. La section~\ref{sec:seuil5} analyse cet écart et ses conséquences sur
+le comportement de l'application.
+
+Ce chapitre énonce également une limite qu'il ne dissimule pas. Le jeu d'évaluation annoté du
+système de recherche n'existe pas. Les mesures rapportées reposent sur un protocole indicatif,
+détaillé à la section~\ref{sec:eval5}, et ne doivent pas être lues comme des mesures de
+pertinence au sens strict.
+
+\section{Objectifs du sprint}
+
+Le sprint poursuit sept objectifs, récapitulés au tableau~\ref{tab:obj5}. Les trois premiers
+construisent la capacité de recherche, les deux suivants l'évaluent et l'exposent à
+l'administrateur, les deux derniers ferment la boucle par laquelle la base de connaissances
+s'enrichit.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Objectifs du sprint 3 et livrables associés}
+\label{tab:obj5}
+\begin{tabular}{|Cp{0.8cm}|Lp{6.2cm}|Lp{4.2cm}|Lp{2.4cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{N\textsuperscript{o}} & \textbf{Objectif} & \textbf{Livrable} & \textbf{État} \\
+\hline
+1 & Constituer une base de connaissances à partir de l'historique & Corpus de 1\,357 résolutions
+& Atteint \\
+\hline
+2 & Mettre en place une recherche par similarité de sens & Index vectoriel FAISS & Atteint \\
+\hline
+3 & Combiner recherche de sens et recherche de mots & Moteur hybride & Atteint \\
+\hline
+4 & Mesurer les trois moteurs sous un protocole unique & Campagne d'évaluation reproductible &
+Atteint avec réserve \\
+\hline
+5 & Présenter les cas retrouvés en français professionnel & Assistant de reformulation local &
+Atteint \\
+\hline
+6 & Garantir qu'aucune donnée de ticket ne sorte de l'infrastructure & Modèle de langage
+sur site & Atteint \\
+\hline
+7 & Alimenter la base par les solutions réellement appliquées & Contrôle qualité et cycle de vie
+& Atteint \\
+\hline
+\end{tabular}
+\end{table}
+
+L'objectif 4 porte la mention « atteint avec réserve ». La campagne existe, elle est rejouable et
+ses résultats sont écrits dans le dépôt, mais elle repose sur une approximation de la pertinence
+que la section~\ref{sec:eval5} expose sans détour.
+
+\FloatBarrier
+
+\section{La base de connaissances}
+\label{sec:kb5}
+
+\subsection{Ce que nous y plaçons}
+
+La base est produite par le module de découpage du corpus, au même moment que les jeux
+d'entraînement et de test. Elle retient tout ticket du jeu d'entraînement dont le champ
+\emph{Résolution\,/\,Motif} est renseigné, soit \textbf{1\,357 tickets} répartis sur les huit
+catégories du référentiel.
+
+Un choix mérite d'être explicité, car il surprend à la première lecture. La base n'est pas
+restreinte aux tickets clos avec le statut \emph{Résolu}. Le tableau~\ref{tab:kb5} donne sa
+composition réelle.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Composition de la base de connaissances par statut de ticket}
+\label{tab:kb5}
+\begin{tabular}{|Lp{4.6cm}|Cp{2.4cm}|Lp{6.4cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Statut du ticket} & \textbf{Effectif} & \textbf{Ce que le champ contient} \\
+\hline
+Rejeté & 363 & Le motif du refus, qui vaut réponse pour une demande semblable \\
+\hline
+Résolu & 358 & La procédure appliquée \\
+\hline
+Problème & 237 & Le diagnostic posé, la cause identifiée \\
+\hline
+Prise en charge & 236 & L'action engagée et son état d'avancement \\
+\hline
+En attente & 163 & L'élément manquant qui bloque le traitement \\
+\hline
+\rowcolor{enteteTab}
+\textbf{Total} & \textbf{1\,357} & \\
+\hline
+\end{tabular}
+\end{table}
+
+Les tickets rejetés forment le premier contingent. Un rejet documenté répond à une question réelle
+du demandeur : pourquoi cette demande ne relève pas du service, ou quelle démarche il convient de
+suivre à la place. L'écarter au motif qu'il n'est pas « résolu » reviendrait à priver la base d'un
+quart de sa matière.
+
+Ce choix a une contrepartie. Un ticket au statut \emph{En attente} décrit un blocage plutôt qu'une
+solution, et le proposer comme réponse peut désorienter. Nous avons retenu la couverture large,
+en nous appuyant sur le fait que l'administrateur reste seul décideur : il lit la suggestion, il
+ne l'applique pas mécaniquement.
+
+\subsection{Ce que ces résolutions contiennent}
+
+Les textes retenus sont courts. Leur longueur médiane est de \textbf{12 mots}, l'étendue va de 7 à
+16 mots. Un exemple, tiré du corpus, donne la mesure de ce format :
+
+\begin{quote}
+\og Vérifier les entrées DNS, vider le cache DNS client, forcer l'enregistrement du serveur. \fg{}
+\end{quote}
+
+Une résolution de douze mots énumère des gestes, elle ne les explique pas. Elle vaut comme repère
+pour un technicien qui connaît le domaine, non comme procédure autonome. Cette brièveté conditionne
+tout ce qui suit. Elle limite ce qu'un modèle de langage peut en tirer, puisqu'il n'a rien à
+résumer, et elle explique que l'assistant décrit à la section~\ref{sec:llm5} soit conçu pour
+reformuler plutôt que pour synthétiser.
+
+Elle fixe aussi une attente raisonnable pour le système. Le moteur ne remplace pas l'expertise de
+l'administrateur : il lui épargne la recherche manuelle dans un historique de plusieurs milliers
+de lignes.
+
+\subsection{Une contrainte anti-fuite qui se paie}
+
+La base est constituée à partir du seul jeu d'entraînement. Aucun ticket du jeu de test n'y figure.
+
+Cette restriction est délibérée. Sans elle, une requête d'évaluation issue du jeu de test se
+retrouverait elle-même dans l'index, avec une similarité proche de 1, et toute mesure de qualité
+deviendrait sans objet. Le même raisonnement que celui appliqué au découpage du chapitre~3 vaut
+ici : un système évalué sur des données qu'il a mémorisées ne renseigne sur rien.
+
+Le coût de ce choix apparaît dans les mesures. Les requêtes d'évaluation portent sur des tickets
+absents de la base par construction, donc sur des cas où le moteur doit trouver un voisin
+différent plutôt que le ticket lui-même. Les scores rapportés à la section~\ref{sec:resultats5}
+constituent de ce fait une borne basse de ce que le système obtiendrait en exploitation, où un
+ticket récurrent peut retrouver une occurrence antérieure du même scénario.
+
+\FloatBarrier
+
+\section{Trois moteurs de recherche}
+
+\subsection{Le moteur lexical}
+
+Le premier moteur applique au corpus la représentation vectorielle décrite au chapitre~4 :
+pondération TF-IDF sur cinq mille descripteurs, unigrammes et bigrammes. La requête est projetée
+dans le même espace que les documents indexés, et le classement se fait par similarité cosinus.
+
+Ce moteur trouve un ticket lorsque la demande et la résolution partagent des mots. Sa force tient
+à sa précision sur les formulations exactes : un ticket qui mentionne \emph{OneDrive} retrouve les
+tickets qui mentionnent \emph{OneDrive}. Sa limite tient au même mécanisme. Deux textes qui
+décrivent le même incident avec un vocabulaire différent restent, pour lui, sans rapport.
+
+Cette limite n'est pas théorique dans un corpus francophone rédigé par des utilisateurs. Une même
+panne de messagerie se dit \og je ne reçois plus mes mails \fg{}, \og la synchronisation échoue \fg{}
+ou \og Outlook ne se connecte plus \fg{}, sans qu'aucun mot commun ne subsiste.
+
+\subsection{Le moteur sémantique}
+
+Le second moteur remplace la représentation par occurrences par une représentation apprise. Chaque
+ticket est encodé par le modèle \texttt{paraphrase-multilingual-mpnet-base-v2}, qui produit un
+vecteur de 768 dimensions.
+
+Trois raisons ont conduit à ce modèle. Il traite le français sans passer par une traduction, il a
+été entraîné à rapprocher des paraphrases, ce qui correspond exactement à l'usage recherché, et il
+s'exécute sur le matériel disponible sans accélération graphique.
+
+L'index est construit avec la bibliothèque FAISS, dans une structure à produit scalaire sur
+vecteurs normalisés. Cette normalisation rend le produit scalaire égal au cosinus, ce qui donne
+une mesure de similarité bornée entre $-1$ et $1$ et directement comparable d'une requête à
+l'autre. Un index global est complété par un index par catégorie, ce qui permet de restreindre la
+recherche lorsque la catégorie prédite est jugée fiable.
+
+\subsection{Le moteur hybride}
+
+Le troisième moteur ne choisit pas entre les deux précédents. Il interroge les deux et fusionne
+leurs scores par une combinaison linéaire :
+
+\[
+\text{score}_{\text{hybride}} = \alpha \cdot \text{score}_{\text{sémantique}}
++ (1 - \alpha) \cdot \text{score}_{\text{lexical}}
+\]
+
+Le paramètre $\alpha$ vaut 0,5 dans la configuration servie, ce qui accorde le même poids aux deux
+sources. Chaque sous-moteur remonte quinze candidats sans filtrage, la fusion s'applique ensuite,
+et le filtrage par seuil intervient en dernier. Cet ordre évite qu'un ticket écarté trop tôt par
+l'un des deux moteurs soit perdu pour la fusion.
+
+L'intention est de réunir deux comportements complémentaires : la tolérance à la reformulation du
+moteur sémantique et la précision du moteur lexical sur les tickets répétés à l'identique. La
+section~\ref{sec:seuil5} montre que cette fusion produit un effet secondaire qui n'avait pas été
+anticipé.
+
+\FloatBarrier
+
+\section{Protocole d'évaluation}
+\label{sec:eval5}
+
+\subsection{Ce que le protocole mesure}
+
+La campagne interroge les trois moteurs avec quatre-vingts requêtes tirées du jeu de test, en
+demandant trois passages à chaque fois. Les moteurs sont interrogés exactement comme le fait
+l'application, mécanisme de repli compris. Mesurer une configuration que personne n'exécute
+donnerait un chiffre sans rapport avec le service rendu.
+
+Quatre indicateurs sont calculés pour chaque moteur.
+
+\begin{itemize}
+  \item La \textbf{précision à trois passages} donne la proportion de passages pertinents parmi
+        les trois retournés.
+  \item Le \textbf{rang réciproque moyen} récompense le fait que le premier passage pertinent
+        arrive tôt dans la liste.
+  \item Le \textbf{gain cumulé actualisé normalisé} pondère chaque passage pertinent par sa
+        position, et rapporte le résultat au classement idéal.
+  \item Le \textbf{score de similarité moyen} donne la valeur brute rendue par le moteur, celle
+        qui est comparée au seuil de pertinence.
+\end{itemize}
+
+\subsection{Ce que le protocole approxime}
+
+Décider si un passage est pertinent suppose de savoir ce qui l'est. Cette information n'existe
+pas : aucun jeu de référence annoté n'a été constitué pour le système de recherche.
+
+Le protocole retenu remplace donc la pertinence par une approximation. Est considéré comme
+pertinent tout passage appartenant à la même catégorie que la requête. Cette règle est grossière.
+Deux tickets de la catégorie \emph{Réseau} peuvent décrire des incidents sans aucun rapport, et
+le protocole les comptera comme un succès.
+
+Nous avons retenu cette approximation faute de mieux, en la déclarant dans le fichier de résultats
+lui-même, qui porte un avertissement explicite. Les valeurs rapportées servent à \textbf{comparer
+les trois moteurs entre eux}, sous une règle identique pour tous. Elles ne mesurent pas la
+pertinence perçue par un administrateur.
+
+Une conséquence directe mérite d'être signalée. Le rappel à trois passages n'est pas publié. Sous
+le protocole d'approximation, l'ensemble des passages pertinents est la catégorie entière, soit
+plusieurs centaines de tickets, ce qui rend un rappel sur trois passages mécaniquement proche de
+zéro et sans rapport avec la qualité du moteur. Publier ce chiffre aurait donné une valeur
+d'apparence rigoureuse et de contenu nul.
+
+\subsection{Deux dimensions hors de portée de la campagne}
+
+Deux dimensions échappent entièrement à la campagne, et le fichier de résultats les énumère.
+
+La \textbf{fidélité de la génération} n'est pas mesurée. Le chemin de classification n'appelle
+aucun modèle de langage, et la reformulation destinée à l'administrateur constitue un appel
+séparé et facultatif. Une mesure de fidélité supposerait un protocole distinct, appliqué à ce
+second chemin.
+
+L'\textbf{utilité réellement perçue} n'est pas mesurée non plus. Elle demanderait un retour
+explicite de l'administrateur sur chaque recommandation, que l'interface ne collecte pas
+aujourd'hui.
+
+Le risque associé à l'absence de jeu annoté est suivi au registre sous la référence R-22. La
+commande d'évaluation dispose d'une option qui produit le gabarit d'annotation, soit
+quatre-vingts requêtes accompagnées de leurs dix meilleurs candidats. Le travail restant se compte
+en une demi-journée d'annotation par un administrateur du service.
+
+\FloatBarrier
+
+\section{Résultats}
+\label{sec:resultats5}
+
+La figure~\ref{fig:moteurs5} rassemble les mesures des trois moteurs, et le
+tableau~\ref{tab:moteurs5} en donne les valeurs.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch05_moteurs.png}
+\caption{Comparaison des trois moteurs de recherche, 80 requêtes du jeu de test, trois passages
+demandés}
+\label{fig:moteurs5}
+\end{figure}
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Mesures des trois moteurs sous le protocole d'approximation, campagne du 22 août 2026}
+\label{tab:moteurs5}
+\begin{tabular}{|Bp{3.0cm}|Cp{2.0cm}|Cp{1.8cm}|Cp{1.8cm}|Cp{2.2cm}|Cp{1.8cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Moteur} & \textbf{Précision @3} & \textbf{MRR @3} & \textbf{nDCG @3} &
+\textbf{Similarité moyenne} & \textbf{Taux de repli} \\
+\hline
+Lexical & 0,1542 & 0,4354 & 0,4391 & 0,2117 & 1,000 \\
+\hline
+Sémantique & 0,2917 & \textbf{0,5813} & \textbf{0,5960} & \textbf{0,6099} & 0,0125 \\
+\hline
+Hybride (servi) & \textbf{0,3542} & 0,5375 & 0,5754 & 0,3551 & 1,000 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Lecture des mesures}
+
+Le moteur sémantique domine le moteur lexical sur les quatre indicateurs. L'écart est le plus net
+sur la précision, qui passe de 0,1542 à 0,2917, et sur la similarité moyenne, qui passe de 0,2117
+à 0,6099. Ce résultat confirme l'hypothèse de départ : dans un corpus rédigé en langage libre, la
+proximité de sens retrouve des cas que le partage de vocabulaire manque.
+
+Le moteur hybride présente un profil moins uniforme. Il obtient la meilleure précision à trois
+passages, 0,3542, ce qui signifie qu'il place davantage de passages pertinents dans la liste
+retournée. Ses deux indicateurs de classement restent en revanche derrière ceux du moteur
+sémantique, 0,5375 contre 0,5813 pour le rang réciproque, 0,5754 contre 0,5960 pour le gain
+cumulé.
+
+L'interprétation tient à la nature des deux familles d'indicateurs. La précision compte les
+passages pertinents sans considérer leur ordre, tandis que le rang réciproque et le gain cumulé
+récompensent le fait de placer le bon passage en tête. La fusion fait donc entrer dans le trio de
+tête des passages que le moteur sémantique seul écartait, tout en ordonnant l'ensemble un peu
+moins bien. Pour un usage où l'administrateur lit les trois propositions, la précision est
+l'indicateur qui compte, ce qui justifie le choix du moteur hybride pour le service.
+
+\subsection{Le seuil que le moteur servi n'atteint jamais}
+\label{sec:seuil5}
+
+La dernière colonne du tableau~\ref{tab:moteurs5} appelle une analyse à part.
+
+Le paramétrage fixe un seuil de pertinence à 0,50 et un seuil de repli à 0,20. Une requête dont
+aucun passage n'atteint 0,50 n'est servie que grâce au repli, et le taux de repli compte ces
+requêtes. Le moteur sémantique affiche un taux de 0,0125, soit une requête sur les
+quatre-vingts. Le moteur hybride affiche \textbf{1,000} : aucune des quatre-vingts requêtes n'a
+atteint le seuil.
+
+Le mécanisme est arithmétique. Le score hybride est la moyenne du score sémantique et du score
+lexical. Le premier vaut 0,6099 en moyenne, le second 0,2117. Leur moyenne vaut 0,3551, très
+en dessous de 0,50. Pour qu'un score hybride atteigne le seuil avec un score lexical de l'ordre de
+0,21, il faudrait que le score sémantique atteigne environ 0,79, valeur que le moteur sémantique
+lui-même n'atteint pas en moyenne.
+
+Autrement dit, le seuil de 0,50 a été calibré sur l'échelle du moteur sémantique, puis conservé
+tel quel lorsque le moteur hybride a pris sa place. Or la fusion change l'échelle des scores en
+même temps qu'elle change le classement.
+
+Cette observation a une conséquence directe sur le comportement de l'application. Le module de
+traitement des tickets utilise le même seuil de 0,50 pour décider qu'un ticket constitue un
+\emph{cas nouveau}, c'est-à-dire un cas pour lequel l'administrateur doit obligatoirement rédiger
+la solution appliquée avant de clore. Un score de recommandation systématiquement inférieur à 0,50
+signifie que tout ticket est traité comme un cas nouveau.
+
+Cet effet n'est pas entièrement indésirable. Il garantit que la base de connaissances est
+alimentée par une solution rédigée à chaque clôture, ce qui est précisément l'intention de la
+boucle décrite à la section~\ref{sec:boucle5}. Mais il obtient ce résultat par accident plutôt que
+par conception, et il prive le seuil de sa fonction de discrimination.
+
+Deux corrections sont envisageables, et nous les énonçons sans trancher, faute de trafic réel sur
+lequel les calibrer. La première consiste à relever la pondération $\alpha$ pour rapprocher
+l'échelle hybride de l'échelle sémantique. La seconde consiste à fixer un seuil propre au moteur
+hybride, distinct de celui du moteur sémantique. Le risque associé est suivi au registre sous la
+référence R-20, qui porte sur le calibrage des seuils après une première période d'exploitation.
+
+\subsection{Le chiffre de 0,93 et ce qu'il mesure}
+
+Une valeur circule dans les fichiers du projet et mérite d'être remise à sa place, car un lecteur
+qui ouvre les métadonnées du moteur sémantique la rencontrera.
+
+Ces métadonnées rapportent un score de similarité moyen de 0,9321 pour la recherche sémantique
+contre 0,7646 pour la recherche lexicale, soit un gain de 0,1675. Deux précisions sont
+nécessaires avant toute citation de ces nombres.
+
+D'abord, la quantité mesurée n'est pas la même que celle du tableau~\ref{tab:moteurs5}. Il s'agit
+de la similarité du \emph{meilleur} passage, tandis que la campagne rapporte la similarité moyenne
+des \emph{trois} passages retenus. Un score de premier passage élevé indique que le moteur trouve
+un voisin proche, sans rien dire de sa pertinence.
+
+Ensuite, cette mesure a été conduite sur un index de \textbf{476 documents}, à un stade antérieur
+du projet, alors que l'index servi en contient 1\,357. Un index plus fourni offre davantage de
+voisins proches, mais aussi davantage d'occasions de se tromper.
+
+Nous retenons la campagne du 22 août comme référence unique pour ce chapitre, parce qu'elle
+mesure les trois moteurs sous un protocole identique et sur l'index réellement servi. Le risque
+associé à la coexistence de mesures anciennes est suivi sous la référence R-25.
+
+\FloatBarrier
+
+\section{L'assistant de reformulation}
+\label{sec:llm5}
+
+\subsection{Pourquoi un modèle exécuté sur site}
+
+Le moteur de recherche rend le texte brut d'une résolution passée. Ce texte a été saisi par un
+technicien pressé, dans un champ libre, sans relecture. Le corpus en porte la trace sous forme de
+fautes, d'abréviations et de formulations télégraphiques.
+
+Présenter ce texte tel quel à un administrateur fonctionne, mais mal. Un modèle de langage capable
+de le reformuler en français professionnel améliore nettement la lisibilité de la suggestion.
+
+Le choix d'exécuter ce modèle sur l'infrastructure du service découle d'une contrainte du client,
+non d'une préférence technique. Un ticket contient le nom du demandeur, sa filiale, parfois des
+éléments d'architecture du système d'information. \otbs est certifié ISO/IEC 27001, et transmettre
+ces contenus à un service tiers aurait supposé une démarche contractuelle et un accord de
+traitement qui dépassent le cadre d'un projet de fin d'études.
+
+Le modèle s'exécute donc dans un conteneur dédié de l'environnement, et aucune donnée de ticket ne
+quitte l'infrastructure. Cette contrainte est structurante : elle exclut les modèles accessibles
+uniquement par interface distante et ramène le choix aux modèles librement redistribuables et
+suffisamment légers pour la machine disponible.
+
+\subsection{Modèle retenu et contraintes matérielles}
+
+Le modèle retenu est \texttt{llama3.2:3b}, servi par Ollama. Trois milliards de paramètres
+constituent un compromis : le modèle tient en mémoire sur une machine de bureau, tout en produisant
+un français correct.
+
+La machine de développement dispose d'une carte graphique NVIDIA GeForce MX130 de 2~Go, ce qui ne
+suffit pas à charger le modèle entièrement en mémoire vidéo. L'exécution se fait donc par défaut
+sur le processeur, un fichier de composition optionnel permettant d'activer l'accélération
+graphique. Le tableau~\ref{tab:latence5} donne les latences mesurées dans les deux configurations.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Latence de la reformulation selon la configuration matérielle}
+\label{tab:latence5}
+\begin{tabular}{|Bp{4.0cm}|Cp{3.0cm}|Cp{3.0cm}|Lp{3.4cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Configuration} & \textbf{Premier appel} & \textbf{Appels suivants} & \textbf{Mémoire
+vidéo} \\
+\hline
+Processeur seul (par défaut) & environ 95~s & 18 à 20~s & sans objet \\
+\hline
+Accélération graphique activée & environ 47~s & environ 13~s & 770~Mo sur 2\,048~Mo \\
+\hline
+\end{tabular}
+\end{table}
+
+Le gain apporté par la carte graphique reste modeste, de l'ordre de trente pour cent, précisément
+parce que le modèle ne tient pas entièrement en mémoire vidéo. L'accélération n'est pas activée par
+défaut, afin qu'un poste dépourvu de carte compatible démarre sans échec, considération qui pèse
+le jour d'une démonstration.
+
+\subsection{Conception du prompt}
+
+Un modèle de trois milliards de paramètres suit mal des consignes abstraites. La conception du
+prompt en tient compte.
+
+L'instruction système impose un format en trois parties : une phrase d'introduction annonçant le
+nombre de tickets trouvés, une ligne par ticket au format exact
+\og \textbf{Ticket \#identifiant (Score : x\% - catégorie) :} \fg{} suivie d'une phrase de
+reformulation, puis une question finale invitant l'administrateur à désigner le cas retenu. Elle
+interdit explicitement de recopier le texte brut et de produire quoi que ce soit d'autre.
+
+Ces consignes sont complétées par un exemple complet injecté dans l'historique de conversation,
+comportant une requête fictive et la réponse attendue. Cette technique, dite d'amorçage par
+l'exemple, améliore sensiblement le respect du format par un modèle de cette taille. Elle a
+toutefois introduit un défaut que la sous-section suivante expose.
+
+Un second prompt gouverne le mode conversationnel, dans lequel l'administrateur pose des questions
+de suivi en langage libre sur le ticket courant. Les mêmes règles de non-invention s'y appliquent.
+
+\subsection{Garde-fous contre l'invention}
+
+Un incident survenu en usage réel a conduit à durcir ce module. Il est décrit ici parce que sa
+cause structurelle importe autant que sa correction.
+
+Un ticket avait été clos avec, dans le champ \emph{solution appliquée}, le texte de la synthèse
+générée par l'assistant lui-même, collé par erreur depuis le panneau d'affichage. Ce texte est
+ensuite redevenu candidat pour un ticket suivant. Recevant dans son prompt un contenu qui
+ressemblait déjà à une synthèse, le modèle a continué le motif et a produit deux tickets
+supplémentaires qui n'existaient pas, reprenant les identifiants \#1042 et \#985 de l'exemple
+d'amorçage.
+
+Deux garde-fous ont été ajoutés, décrits au tableau~\ref{tab:garde5}.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Garde-fous appliqués à la reformulation}
+\label{tab:garde5}
+\begin{tabular}{|Bp{3.2cm}|Lp{5.2cm}|Lp{5.0cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Garde-fou} & \textbf{Mécanisme} & \textbf{Effet} \\
+\hline
+Assainissement en entrée & Une résolution qui présente la signature d'une synthèse déjà générée
+est remplacée avant d'entrer dans le prompt & Le modèle ne reçoit plus de texte qui l'invite à
+poursuivre un motif \\
+\hline
+Validation en sortie & Tout identifiant de ticket cité par le modèle est confronté à la liste des
+candidats réellement fournis & Un identifiant inventé fait basculer l'affichage sur le
+récapitulatif brut \\
+\hline
+Température basse & Le paramètre d'échantillonnage est fixé à 0,2 & La réponse suit de plus près
+les données fournies \\
+\hline
+Plafond de production & La longueur de sortie est bornée à 400 unités lexicales & Le pire cas de
+latence est borné \\
+\hline
+\end{tabular}
+\end{table}
+
+Ces deux premiers garde-fous ont été éprouvés en rejouant le scénario dans les deux sens, avec le
+ticket contaminé comme cible puis comme candidat d'un autre ticket. Aucune invention n'a été
+observée depuis.
+
+La limite de ce dispositif doit être énoncée. La validation en sortie porte sur les identifiants
+de tickets, qui suivent un format reconnaissable. Elle ne vérifie pas que le contenu reformulé
+reste fidèle à la résolution d'origine. Une mesure de fidélité automatique n'est pas branchée sur
+ce flux.
+
+Enfin, la cause structurelle de l'incident tenait à ce qu'une synthèse jamais relue par un humain
+pouvait entrer dans la base de connaissances. Cette voie est fermée en amont, par le contrôle
+qualité décrit à la section suivante. Le risque reste ouvert au registre sous la référence R-04,
+la vérification de fidélité n'étant pas automatisée.
+
+\subsection{Dégradation gracieuse}
+
+L'appel au modèle de langage est facultatif par construction. Il intervient après que la
+recommandation a été calculée et affichée.
+
+Si le service de modèle est indisponible, ou si l'appel dépasse le délai d'attente fixé à quatre-vingt-dix
+secondes, l'application retombe sur un récapitulatif brut des cas trouvés, sans reformulation. La
+suggestion reste donc utilisable, dans une présentation moins soignée. Le paramètre de maintien en
+mémoire, fixé à trente minutes, évite le rechargement du modèle entre deux appels rapprochés, ce
+qui explique l'écart entre le premier appel et les suivants au tableau~\ref{tab:latence5}.
+
+\FloatBarrier
+
+\section{La boucle d'alimentation}
+\label{sec:boucle5}
+
+La figure~\ref{fig:chaine5} récapitule la chaîne complète, du ticket entrant jusqu'au retour de la
+solution validée dans la base.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch05_chaine_rag.png}
+\caption{Chaîne servie : recommandation d'une part, alimentation de la base de l'autre}
+\label{fig:chaine5}
+\end{figure}
+
+\subsection{D'un journal à une base interrogée}
+
+La première version du projet archivait les tickets résolus dans une base documentaire légère.
+Cet archivage souffrait d'un défaut que sa relecture a révélé : rien ne relisait jamais ce qui y
+était écrit. La base fonctionnait comme un journal, alimenté et jamais consulté, et le moteur de
+recherche continuait de travailler sur le corpus figé issu du découpage.
+
+La migration vers ChromaDB a changé cette situation. La collection est désormais interrogée à
+chaque recommandation. Une solution rédigée par un administrateur devient candidate dès le ticket
+similaire suivant, ce qui a été vérifié en exploitation.
+
+Cette vérification a mis au jour un défaut propre à l'exécution multi-processus. La collection
+étant mise en cache par processus, un serveur ne voyait pas les écritures faites par l'autre.
+La correction porte sur la fraîcheur de la collection entre processus, et l'incident est clos au
+registre sous la référence R-17.
+
+\subsection{Le contrôle qualité}
+
+Toute solution ne mérite pas d'entrer dans la base. Un module de contrôle applique quatre règles
+avant indexation, données au tableau~\ref{tab:qualite5}.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Règles du contrôle qualité appliquées avant indexation}
+\label{tab:qualite5}
+\begin{tabular}{|Bp{3.6cm}|Cp{2.0cm}|Lp{7.6cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Règle} & \textbf{Seuil} & \textbf{Ce qu'elle écarte} \\
+\hline
+Origine humaine & exigée & Une suggestion produite par l'assistant et jamais relue \\
+\hline
+Longueur minimale & 4 mots & Une mention de clôture sans contenu, du type \og ok \fg{} \\
+\hline
+Recouvrement avec la description & 0,90 & Une solution qui recopie l'énoncé du problème \\
+\hline
+Quasi-doublon & 0,95 & Une redite d'une connaissance déjà indexée, qui est alors remplacée \\
+\hline
+\end{tabular}
+\end{table}
+
+La première règle est la plus importante. Elle exige que l'origine de la solution soit déclarée et
+qu'elle provienne d'un administrateur. Une suggestion produite par le système, quelle que soit sa
+qualité apparente, ne peut pas devenir une connaissance de référence tant qu'un humain ne l'a pas
+reprise à son compte.
+
+Cette règle ferme la voie d'auto-contamination décrite à la section précédente. Sans elle, le
+système pourrait apprendre de ses propres sorties, et un écart introduit une fois se propagerait
+de recommandation en recommandation.
+
+\subsection{Le cycle de vie des connaissances}
+
+Une connaissance indexée porte un statut, et aucune suppression automatique n'intervient.
+
+Le statut \emph{actif} désigne une connaissance proposée par le moteur. Le statut \emph{remplacé}
+désigne une connaissance qu'un quasi-doublon plus récent a supplantée, sans l'effacer. Le statut
+\emph{obsolète} désigne une connaissance signalée par la supervision, notamment lorsqu'elle
+dépasse un an d'ancienneté sans avoir été reprise.
+
+L'absence de suppression automatique est un choix. Une résolution ancienne peut redevenir
+pertinente si un équipement remis en service ramène un incident oublié, et une décision de purge
+appartient au service, non au système.
+
+Un dernier détail traduit une exigence de compatibilité. Les entrées indexées avant l'introduction
+du cycle de vie ne portent aucun statut, et le filtrage les considère comme actives. Filtrer côté
+base les aurait exclues silencieusement, ce qui aurait vidé la base d'une partie de son contenu
+sans qu'aucune erreur ne soit levée.
+
+\FloatBarrier
+
+\section{Bilan du sprint}
+
+Le sprint livre une capacité de recherche opérationnelle et une boucle qui l'alimente. Le
+tableau~\ref{tab:bilan5} confronte les objectifs annoncés aux résultats.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Bilan du sprint 3}
+\label{tab:bilan5}
+\begin{tabular}{|Cp{0.8cm}|Lp{6.6cm}|Lp{6.2cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{N\textsuperscript{o}} & \textbf{Objectif} & \textbf{Résultat} \\
+\hline
+1 & Base de connaissances & 1\,357 résolutions sur huit catégories, issues du seul jeu
+d'entraînement \\
+\hline
+2 & Recherche par similarité de sens & Précision à trois passages portée de 0,1542 à 0,2917 \\
+\hline
+3 & Moteur hybride & Meilleure précision mesurée, 0,3542 \\
+\hline
+4 & Évaluation reproductible & Campagne rejouable, mais protocole approché faute de jeu annoté
+(R-22) \\
+\hline
+5 & Reformulation en français professionnel & Assistant opérationnel, avec repli automatique \\
+\hline
+6 & Confidentialité des tickets & Modèle exécuté sur site, aucun appel externe \\
+\hline
+7 & Alimentation par les solutions appliquées & Contrôle qualité et cycle de vie en place \\
+\hline
+\end{tabular}
+\end{table}
+
+Deux réserves accompagnent ce bilan. La première tient au protocole d'évaluation, dont
+l'approximation de la pertinence limite la portée des chiffres. La seconde tient au seuil de 0,50,
+que le moteur servi n'atteint jamais, et dont la section~\ref{sec:seuil5} a montré qu'il ne remplit
+plus sa fonction.
+
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
+
+Ce sprint a construit le second volet de la solution. Une base de 1\,357 résolutions, constituée à
+partir du seul jeu d'entraînement pour rester mesurable, alimente trois moteurs de recherche
+comparés sous un protocole unique.
+
+La recherche par similarité de sens améliore nettement la recherche par partage de vocabulaire,
+la précision à trois passages passant de 0,1542 à 0,2917. Leur combinaison porte cette précision à
+0,3542, meilleure valeur mesurée, au prix d'un classement légèrement moins bon que le sémantique
+seul. C'est ce moteur hybride qui est servi.
+
+L'analyse du seuil a révélé un défaut de conception que la mesure seule aurait laissé passer. Le
+seuil de pertinence de 0,50 a été calibré sur l'échelle du moteur sémantique et conservé lorsque
+la fusion a changé cette échelle. Le moteur servi ne l'atteint jamais, ce qui conduit
+l'application à traiter tout ticket comme un cas nouveau. L'effet obtenu se trouve être utile,
+puisqu'il garantit l'alimentation de la base, mais il résulte d'un accident de calibrage et non
+d'une décision.
+
+Un modèle de langage exécuté sur l'infrastructure du service reformule les résolutions retrouvées.
+Ce choix découle d'une contrainte de confidentialité et se paie en latence, de treize à vingt
+secondes selon la configuration matérielle. Deux garde-fous, ajoutés après un incident
+d'invention reproduit en exploitation, bornent le risque sans le supprimer : la fidélité du texte
+reformulé n'est pas vérifiée automatiquement.
+
+La boucle d'alimentation ferme le dispositif. Une solution rédigée par un administrateur, contrôlée
+puis indexée, devient candidate dès le ticket similaire suivant. L'exigence d'origine humaine
+interdit au système d'apprendre de ses propres sorties.
+
+La principale limite de ce chapitre reste l'absence de jeu d'évaluation annoté. Tant qu'il fait
+défaut, les valeurs rapportées comparent les moteurs entre eux sans mesurer la pertinence perçue.
+Le gabarit d'annotation est disponible, et le travail se compte en une demi-journée.
+
+Le chapitre~6 rassemble ces deux volets dans une application : les écrans par lesquels un
+utilisateur dépose un ticket, ceux par lesquels un administrateur le traite, et l'architecture qui
+les relie.

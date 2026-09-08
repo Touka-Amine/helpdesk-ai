@@ -5,6 +5,29 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Ajouté (2026-09-08, chapitre 5 du mémoire)
+
+- `Ajouté` : **chapitre 5 rédigé**, « Sprint 3 : système RAG et assistant LLM », 16 pages,
+  2 figures et 7 tableaux. Le mémoire passe à **94 pages**, sans erreur de compilation et sans
+  débordement nouveau.
+- `Ajouté` : deux figures produites, `ch05_moteurs.png` (comparaison des trois moteurs, tracée
+  depuis `metrics/rag_eval.json`) et `ch05_chaine_rag.png` (chaîne servie et boucle
+  d'alimentation).
+- `Trouvé` : **le moteur hybride servi n'atteint jamais le seuil de pertinence.** Son taux de
+  repli vaut 1,000 sur les 80 requêtes d'évaluation. Le score hybride étant la moyenne du score
+  sémantique (0,6099) et du score lexical (0,2117), il vaut 0,3551, très en dessous du seuil de
+  0,50. Ce seuil avait été calibré sur l'échelle du moteur sémantique et conservé tel quel lorsque
+  la fusion a changé cette échelle. Conséquence dans l'application : `NOVELTY_THRESHOLD = 0.50`
+  dans `api/routers/tickets.py` fait traiter **tout ticket comme un cas nouveau**, ce qui rend la
+  rédaction de la solution obligatoire à chaque clôture. L'effet sert la boucle d'alimentation,
+  mais il résulte d'un accident de calibrage. Deux corrections sont énoncées au chapitre sans être
+  tranchées, faute de trafic réel pour les calibrer (R-20).
+- `Modifié` : règle de citation des chiffres du RAG arrêtée. La campagne du 2026-08-22 sert de
+  référence unique, parce qu'elle mesure les trois moteurs sous un protocole identique et sur
+  l'index réellement servi. La valeur de 0,9321 des métadonnées est citée avec son index de
+  mesure (476 documents) et avec la précision qu'elle porte sur la similarité du meilleur passage,
+  non sur les trois retenus.
+
 ### Ajouté (2026-09-08, synchronisation du suivi de rédaction)
 
 - `Modifié` : **[PFE_PROGRESS.md](PFE_PROGRESS.md) entièrement réécrit.** Le fichier suivait

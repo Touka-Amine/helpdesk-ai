@@ -3,18 +3,18 @@
 > Suivi des livrables académiques : mémoire LaTeX, figures, soutenance.
 > Structure alignée sur [PLAN_RAPPORT.md](PLAN_RAPPORT.md), qui fait foi pour le plan détaillé.
 > Source de vérité projet : [PLAN.md](PLAN.md). Sources LaTeX : `../report/`.
-> Dernière mise à jour : **2026-09-08**.
+> Dernière mise à jour : **2026-09-08** (chapitre 5 rédigé).
 
 ## 1. Où en est le mémoire
 
 | | |
 |---|---|
-| **Compilation** | 77 pages, 0 erreur, 0 référence non résolue (`pdflatex` x2 + `bibtex` + `pdflatex`) |
-| **Chapitres rédigés** | 4 sur 7, plus l'introduction générale |
-| **Volume rédigé** | pages 1 à 55 du corps, sur une cible de 110 à 135 pages |
-| **Figures intégrées** | 9 |
-| **Tableaux intégrés** | 28 |
-| **Prochain chapitre** | Chapitre 5 — Sprint 3, système RAG et assistant LLM |
+| **Compilation** | 94 pages, 0 erreur, 0 référence non résolue (`pdflatex` x2 + `bibtex` + `pdflatex`) |
+| **Chapitres rédigés** | 5 sur 7, plus l'introduction générale |
+| **Volume rédigé** | pages 1 à 71 du corps, sur une cible de 110 à 135 pages |
+| **Figures intégrées** | 11 |
+| **Tableaux intégrés** | 35 |
+| **Prochain chapitre** | Chapitre 6 — Sprint 4, développement de l'application |
 
 ## 2. Avancement chapitre par chapitre
 
@@ -27,11 +27,11 @@
 | 2 | Concepts fondamentaux et spécification | `chap_02.tex` | 10–25 | 1 | 5 | 15–18 p. | ✅ repris le 2026-09-07 |
 | 3 | Sprint 1 — Données et gouvernance | `chap_03.tex` | 26–39 | 3 | 9 | 14–16 p. | ✅ vérifié et corrigé |
 | 4 | Sprint 2 — Modélisation IA | `chap_04.tex` | 40–55 | 3 | 10 | 16–18 p. | ✅ corrigé après l'audit des règles |
-| 5 | Sprint 3 — RAG et assistant LLM | `chap_05.tex` | 56 | 0 | 0 | 16–18 p. | 🔴 squelette — deux chiffres à trancher, voir §5 |
-| 6 | Sprint 4 — Développement de l'application | `chap_06.tex` | 57 | 0 | 0 | 16–18 p. | 🔴 squelette |
-| 7 | Sprint 5 — Industrialisation et validation | `chap_07.tex` | 58 | 0 | 0 | 14–16 p. | 🔴 squelette |
-| — | Conclusion générale | `conclusion.tex` | 59 | — | — | 2–3 p. | 🔴 balises seules |
-| — | Annexes | `annexes.tex` | 62 | — | — | — | 🔴 balises seules |
+| 5 | Sprint 3 — RAG et assistant LLM | `chap_05.tex` | 56–71 | 2 | 7 | 16–18 p. | ✅ rédigé le 2026-09-08 |
+| 6 | Sprint 4 — Développement de l'application | `chap_06.tex` | 72 | 0 | 0 | 16–18 p. | 🔴 **prochain à rédiger** |
+| 7 | Sprint 5 — Industrialisation et validation | `chap_07.tex` | 73 | 0 | 0 | 14–16 p. | 🔴 squelette |
+| — | Conclusion générale | `conclusion.tex` | 74 | — | — | 2–3 p. | 🔴 balises seules |
+| — | Annexes | `annexes.tex` | 77 | — | — | — | 🔴 balises seules |
 
 **Lecture** : les trois chapitres restants décrivent du travail déjà réalisé et testé dans le
 dépôt. Il s'agit de le documenter, pas de le construire. Le chapitre 1 est le seul dont
@@ -63,18 +63,21 @@ l'avancement dépend d'un tiers.
 | Comparaison des sept approches | `img/ch04_benchmark.png` | 4 | campagne du 2026-08-22 |
 | Matrice de confusion CamemBERT | `img/ch04_confusion_camembert.png` | 4 | notebook 05 |
 | Distribution de la confiance | `img/ch04_confiance.png` | 4 | notebook 05 |
+| Comparaison des trois moteurs de recherche | `img/ch05_moteurs.png` | 5 | `metrics/rag_eval.json` |
+| Chaîne RAG servie et boucle d'alimentation | `img/ch05_chaine_rag.png` | 5 | schéma rédigé |
 
-**Restant à produire** (voir PLAN_RAPPORT.md §Figures) : pipeline RAG servi et courbes RAGAS
-(ch. 5) ; C4, cas d'utilisation, classes, états, séquence et captures d'écran (ch. 6) ;
-déploiement Docker, pipeline DVC, interface MLflow et résultats de tests (ch. 7).
+**Restant à produire** (voir PLAN_RAPPORT.md §Figures) : C4, cas d'utilisation, classes, états,
+séquence et captures d'écran (ch. 6) ; déploiement Docker, pipeline DVC, interface MLflow et
+résultats de tests (ch. 7).
 
-## 5. Points à trancher avant le chapitre 5
+## 5. Points tranchés au chapitre 5
 
-| # | Point | Nature |
+| # | Point | Décision retenue |
 |---|---|---|
-| 1 | La comparaison « 0,93 contre 0,76 » entre recherche sémantique et lexicale provient de `models/semantic_rag_metadata.json`, qui décrit un index de **476 documents**. L'index réellement servi en contient **1 357** | Le chiffre est daté, pas faux. Soit on le republie en disant sur quel index il a été mesuré, soit on rejoue la mesure sur l'index courant |
-| 2 | `metrics/rag_eval.json` donne `recall_at_3 = 0,0277`, artefact du protocole proxy « même catégorie = pertinent » (R-22). Son notebook d'origine `07_rag_evaluation.ipynb` n'a **aucune sortie enregistrée** | Ne pas présenter les métriques de pertinence RAG comme des mesures tant que le jeu annoté n'existe pas |
-| 3 | Le moteur hybride réellement servi a été mesuré le 2026-08-22 : **P@3 = 0,354** contre 0,292 en sémantique et 0,154 en lexical | Chiffre récent, traçable, mesuré sur le moteur de production. C'est celui à mettre en avant |
+| 1 | La comparaison « 0,93 contre 0,76 » provient de `models/semantic_rag_metadata.json`, qui décrit un index de **476 documents** quand l'index servi en contient **1 357** | ✅ Citée en §5.5.4 avec son index de mesure, et accompagnée de la précision qu'elle porte sur la similarité du **meilleur** passage, non sur les trois retenus. La campagne du 2026-08-22 sert de référence unique |
+| 2 | `metrics/rag_eval.json` ne publie plus de rappel : le champ vaut `null` et porte une note expliquant qu'en protocole approché l'ensemble des pertinents est la catégorie entière | ✅ Le chapitre explique pourquoi le rappel n'est pas publié plutôt que de le citer |
+| 3 | Campagne du 2026-08-22 : P@3 **0,3542** hybride, 0,2917 sémantique, 0,1542 lexical | ✅ Référence unique du chapitre, protocole identique pour les trois moteurs |
+| 4 | **Trouvé en rédigeant** : le taux de repli du moteur hybride vaut **1,000**. Son score moyen (0,3551) n'atteint jamais le seuil de 0,50, calibré sur l'échelle du moteur sémantique | ✅ Analysé en §5.5.3. Conséquence : tout ticket est traité comme un cas nouveau. Deux corrections possibles, non tranchées faute de trafic réel (R-20) |
 
 ## 6. Écarts à assumer explicitement dans le mémoire
 
