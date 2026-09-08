@@ -25,10 +25,12 @@ configuration : sur les quatre-vingts requêtes d'évaluation, aucune n'a été 
 par le mécanisme de repli. La section~\ref{sec:seuil5} analyse cet écart et ses conséquences sur
 le comportement de l'application.
 
-Ce chapitre énonce également une limite qu'il ne dissimule pas. Le jeu d'évaluation annoté du
-système de recherche n'existe pas. Les mesures rapportées reposent sur un protocole indicatif,
-détaillé à la section~\ref{sec:eval5}, et ne doivent pas être lues comme des mesures de
-pertinence au sens strict.
+Ce chapitre énonce également deux limites qu'il ne dissimule pas. Le jeu d'évaluation annoté du
+système de recherche n'existe pas, si bien que les mesures rapportées reposent sur un protocole
+indicatif, détaillé à la section~\ref{sec:eval5}. Et le découpage anti-fuite, indispensable pour
+que la mesure ait un sens, place les scénarios du jeu de test hors de la base de connaissances :
+aucune requête d'évaluation n'admet de bonne réponse. Les valeurs rapportées constituent donc un
+plancher, ce que la section~\ref{sec:antifuite5} chiffre.
 
 \section{Objectifs du sprint}
 
@@ -47,8 +49,8 @@ s'enrichit.
 \rowcolor{enteteTab}
 \textbf{N\textsuperscript{o}} & \textbf{Objectif} & \textbf{Livrable} & \textbf{État} \\
 \hline
-1 & Constituer une base de connaissances à partir de l'historique & Corpus de 1\,357 résolutions
-& Atteint \\
+1 & Constituer une base de connaissances à partir de l'historique & 1\,357 tickets portant
+46 résolutions distinctes & Atteint \\
 \hline
 2 & Mettre en place une recherche par similarité de sens & Index vectoriel FAISS & Atteint \\
 \hline
@@ -76,7 +78,6 @@ que la section~\ref{sec:eval5} expose sans détour.
 \FloatBarrier
 
 \section{La base de connaissances}
-\label{sec:kb5}
 
 \subsection{Ce que nous y plaçons}
 
@@ -144,7 +145,47 @@ Elle fixe aussi une attente raisonnable pour le système. Le moteur ne remplace 
 l'administrateur : il lui épargne la recherche manuelle dans un historique de plusieurs milliers
 de lignes.
 
-\subsection{Une contrainte anti-fuite qui se paie}
+\subsection{Quarante-six réponses, pas mille trois cent cinquante-sept}
+\label{sec:diversite5}
+
+Le décompte de 1\,357 tickets décrit un volume, non une richesse. La redondance mise en évidence au
+chapitre~3 se retrouve intacte dans la base de connaissances, et il faut la chiffrer avant
+d'interpréter le moindre résultat.
+
+Les 1\,357 tickets indexés portent \textbf{46 résolutions distinctes}, pour 46 titres distincts.
+La correspondance est exacte : à chaque scénario du corpus d'entraînement répond une résolution et
+une seule, réinstanciée en médiane 31 fois, de 4 à 49 fois selon les cas. Le
+tableau~\ref{tab:diversite5} donne la répartition de ces réponses par catégorie.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Nombre de résolutions distinctes par catégorie dans la base de connaissances}
+\label{tab:diversite5}
+\begin{tabular}{|Bp{3.4cm}|Cp{3.0cm}|Bp{3.4cm}|Cp{3.0cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Catégorie} & \textbf{Réponses} & \textbf{Catégorie} & \textbf{Réponses} \\
+\hline
+Applicatifs & 8 & Microsoft & 6 \\
+\hline
+Réseau & 8 & Communication & 5 \\
+\hline
+Backup & 6 & Système & 5 \\
+\hline
+Infrastructure & 4 & Sécurité & 4 \\
+\hline
+\end{tabular}
+\end{table}
+
+Deux conséquences en découlent. La première est favorable : un incident récurrent trouve dans la
+base la réponse exacte que le service a déjà appliquée, ce qui est précisément l'usage visé. La
+seconde est une limite : un incident inédit ne trouve rien, puisque la base ne contient que
+quarante-six situations. Quatre réponses pour toute la catégorie \emph{Sécurité} laissent peu de
+marge à la variété des incidents que ce mot recouvre.
+
+\subsection{Une contrainte anti-fuite qui se paie cher}
+\label{sec:antifuite5}
 
 La base est constituée à partir du seul jeu d'entraînement. Aucun ticket du jeu de test n'y figure.
 
@@ -153,11 +194,22 @@ retrouverait elle-même dans l'index, avec une similarité proche de 1, et toute
 deviendrait sans objet. Le même raisonnement que celui appliqué au découpage du chapitre~3 vaut
 ici : un système évalué sur des données qu'il a mémorisées ne renseigne sur rien.
 
-Le coût de ce choix apparaît dans les mesures. Les requêtes d'évaluation portent sur des tickets
-absents de la base par construction, donc sur des cas où le moteur doit trouver un voisin
-différent plutôt que le ticket lui-même. Les scores rapportés à la section~\ref{sec:resultats5}
-constituent de ce fait une borne basse de ce que le système obtiendrait en exploitation, où un
-ticket récurrent peut retrouver une occurrence antérieure du même scénario.
+Son coût est cependant plus lourd qu'il n'y paraît, et le chiffrer change la lecture de tout ce
+qui suit. Le découpage étant groupé par titre, les 58 scénarios du corpus se répartissent en deux
+ensembles \textbf{disjoints} : 46 alimentent la base de connaissances, les 12 autres forment le jeu
+de test. Les 356 tickets de ce jeu appartiennent donc tous à des scénarios dont \textbf{aucune
+résolution ne figure dans la base}.
+
+Autrement dit, aucune requête d'évaluation n'admet de bonne réponse. Le moteur ne peut, au mieux,
+que proposer le voisin le plus plausible venu d'un autre scénario. Cette situation n'est pas un
+défaut du protocole, c'est la conséquence mécanique du choix anti-fuite sur un corpus qui ne compte
+que cinquante-huit scénarios.
+
+Deux règles de lecture s'imposent pour la suite. Les valeurs rapportées à la
+section~\ref{sec:resultats5} constituent un \textbf{plancher}, non une estimation de ce que le
+système obtient en exploitation, où un incident récurrent retrouve les instances antérieures de son
+propre scénario. Et les scores de similarité mesurés sont bas par construction, ce dont la
+section~\ref{sec:seuil5} tire les conséquences.
 
 \FloatBarrier
 
@@ -248,6 +300,14 @@ Le protocole retenu remplace donc la pertinence par une approximation. Est consi
 pertinent tout passage appartenant à la même catégorie que la requête. Cette règle est grossière.
 Deux tickets de la catégorie \emph{Réseau} peuvent décrire des incidents sans aucun rapport, et
 le protocole les comptera comme un succès.
+
+Une raison plus contraignante que la seule absence d'annotation impose cette approximation. La
+section~\ref{sec:antifuite5} a établi que les scénarios du jeu de test et ceux de la base de
+connaissances sont disjoints. Une définition stricte de la pertinence, qui exigerait que le passage
+retourné résolve effectivement l'incident de la requête, donnerait donc \textbf{zéro} pour les
+trois moteurs, non parce qu'ils échouent mais parce que la bonne réponse est absente de l'index par
+construction. L'appartenance à la même catégorie est la relation la plus fine qui reste mesurable
+dans ce cadre.
 
 Nous avons retenu cette approximation faute de mieux, en la déclarant dans le fichier de résultats
 lui-même, qui porte un avertissement explicite. Les valeurs rapportées servent à \textbf{comparer
@@ -355,6 +415,14 @@ Autrement dit, le seuil de 0,50 a été calibré sur l'échelle du moteur séman
 tel quel lorsque le moteur hybride a pris sa place. Or la fusion change l'échelle des scores en
 même temps qu'elle change le classement.
 
+Un second facteur pèse sur ces valeurs, et il convient de ne pas les confondre. Les scores mesurés
+sont bas en partie parce qu'aucune requête d'évaluation n'a sa réponse dans la base, comme la
+section~\ref{sec:antifuite5} l'a établi. En exploitation, un incident récurrent retrouverait les
+instances antérieures de son propre scénario, avec une similarité nettement plus élevée. Le
+diagnostic d'échelle reste néanmoins valable indépendamment de ce facteur : quelle que soit la
+qualité de l'appariement sémantique, la moyenne avec un score lexical borné vers 0,21 divise
+l'écart au seuil par deux.
+
 Cette observation a une conséquence directe sur le comportement de l'application. Le module de
 traitement des tickets utilise le même seuil de 0,50 pour décider qu'un ticket constitue un
 \emph{cas nouveau}, c'est-à-dire un cas pour lequel l'administrateur doit obligatoirement rédiger
@@ -401,16 +469,20 @@ associé à la coexistence de mesures anciennes est suivi sous la référence R-
 
 \subsection{Pourquoi un modèle exécuté sur site}
 
-Le moteur de recherche rend le texte brut d'une résolution passée. Ce texte a été saisi par un
-technicien pressé, dans un champ libre, sans relecture. Le corpus en porte la trace sous forme de
-fautes, d'abréviations et de formulations télégraphiques.
+Le moteur de recherche rend le texte brut d'une résolution passée. Les quarante-six résolutions du
+corpus initial sont propres, uniformes et correctement ponctuées, ce que la
+section~\ref{sec:diversite5} a établi. Il n'en va pas de même des solutions que l'administrateur
+saisit en exploitation : rédigées dans un champ libre, au fil du traitement, elles portent les
+fautes et les abréviations d'une saisie rapide. Or ce sont elles qui alimentent la base au fil de
+l'usage, par la boucle décrite à la section~\ref{sec:boucle5}.
 
 Présenter ce texte tel quel à un administrateur fonctionne, mais mal. Un modèle de langage capable
-de le reformuler en français professionnel améliore nettement la lisibilité de la suggestion.
+de le reformuler en français professionnel homogénéise la présentation, quelle que soit la qualité
+de la saisie d'origine.
 
 Le choix d'exécuter ce modèle sur l'infrastructure du service découle d'une contrainte du client,
 non d'une préférence technique. Un ticket contient le nom du demandeur, sa filiale, parfois des
-éléments d'architecture du système d'information. \otbs est certifié ISO/IEC 27001, et transmettre
+éléments d'architecture du système d'information. \otbs est certifié ISO 27001, et transmettre
 ces contenus à un service tiers aurait supposé une démarche contractuelle et un accord de
 traitement qui dépassent le cadre d'un projet de fin d'études.
 
@@ -639,8 +711,8 @@ tableau~\ref{tab:bilan5} confronte les objectifs annoncés aux résultats.
 \rowcolor{enteteTab}
 \textbf{N\textsuperscript{o}} & \textbf{Objectif} & \textbf{Résultat} \\
 \hline
-1 & Base de connaissances & 1\,357 résolutions sur huit catégories, issues du seul jeu
-d'entraînement \\
+1 & Base de connaissances & 1\,357 tickets et 46 résolutions distinctes sur huit catégories,
+issues du seul jeu d'entraînement \\
 \hline
 2 & Recherche par similarité de sens & Précision à trois passages portée de 0,1542 à 0,2917 \\
 \hline
@@ -666,9 +738,11 @@ plus sa fonction.
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
 
-Ce sprint a construit le second volet de la solution. Une base de 1\,357 résolutions, constituée à
+Ce sprint a construit le second volet de la solution. Une base de 1\,357 tickets, constituée à
 partir du seul jeu d'entraînement pour rester mesurable, alimente trois moteurs de recherche
-comparés sous un protocole unique.
+comparés sous un protocole unique. Ces 1\,357 tickets portent quarante-six réponses distinctes, une
+par scénario, ce qui dit à la fois la force du dispositif sur les incidents récurrents et son
+silence sur les incidents inédits.
 
 La recherche par similarité de sens améliore nettement la recherche par partage de vocabulaire,
 la précision à trois passages passant de 0,1542 à 0,2917. Leur combinaison porte cette précision à
@@ -692,9 +766,13 @@ La boucle d'alimentation ferme le dispositif. Une solution rédigée par un admi
 puis indexée, devient candidate dès le ticket similaire suivant. L'exigence d'origine humaine
 interdit au système d'apprendre de ses propres sorties.
 
-La principale limite de ce chapitre reste l'absence de jeu d'évaluation annoté. Tant qu'il fait
-défaut, les valeurs rapportées comparent les moteurs entre eux sans mesurer la pertinence perçue.
-Le gabarit d'annotation est disponible, et le travail se compte en une demi-journée.
+Deux limites bornent la portée de ces chiffres. L'absence de jeu d'évaluation annoté d'abord :
+tant qu'il fait défaut, les valeurs comparent les moteurs entre eux sans mesurer la pertinence
+perçue. Le gabarit est disponible et le travail se compte en une demi-journée. Le découpage
+anti-fuite ensuite, qui place les douze scénarios du jeu de test hors de la base et prive donc
+chaque requête d'évaluation de bonne réponse. Ce second point n'appelle pas de correction, puisque
+lever la contrainte reviendrait à évaluer le système sur des données qu'il a mémorisées. Il appelle
+une mesure complémentaire, sur du trafic réel, que le chapitre~7 porte aux perspectives.
 
 Le chapitre~6 rassemble ces deux volets dans une application : les écrans par lesquels un
 utilisateur dépose un ticket, ceux par lesquels un administrateur le traite, et l'architecture qui

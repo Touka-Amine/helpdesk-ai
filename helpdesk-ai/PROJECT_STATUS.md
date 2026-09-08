@@ -3,7 +3,7 @@
 > Résumé concis. **Source de vérité : [PLAN.md](PLAN.md)** (section 10 — Tableau de bord).
 > Suivi de la rédaction du mémoire : [PFE_PROGRESS.md](PFE_PROGRESS.md).
 > Dernière mise à jour : **2026-09-08** (rédaction du mémoire : introduction et chapitres 1 à 4
-> rédigés, chapitre 5 ajouté, 94 pages compilées — voir [PFE_PROGRESS.md](PFE_PROGRESS.md) et
+> rédigés, chapitre 5 ajouté et relu, 96 pages compilées — voir [PFE_PROGRESS.md](PFE_PROGRESS.md) et
 > [CHANGELOG.md](CHANGELOG.md) pour le détail daté).
 
 ## Bandeau
@@ -14,7 +14,7 @@
 | **Progression globale** | ~90 % |
 | **Périmètre** | Cœur rehaussé (Must) |
 | **Durée** | Stage 6 mois · GPU local |
-| **Mémoire** | 5 chapitres sur 7 rédigés · 94 pages compilées sur une cible de 110–135 |
+| **Mémoire** | 5 chapitres sur 7 rédigés · 96 pages compilées sur une cible de 110–135 |
 | **Prochaine étape** | Rédiger le chapitre 6 (développement de l'application) |
 
 ## ✅ Terminé
@@ -107,14 +107,14 @@
 - **Cartographie des notebooks (2026-08-22)** — rôle architectural de chacun, carte des
   dépendances, écarts à l'architecture cible :
   [../reports/analyse-notebooks/ANALYSE_NOTEBOOKS.md](../reports/analyse-notebooks/ANALYSE_NOTEBOOKS.md)
-- **Mémoire PFE — introduction et chapitres 1 à 5 (2026-08 → 2026-09)** — 94 pages compilées,
-  11 figures, 35 tableaux, chaque valeur citée renvoyant à un fichier du dépôt. Le chapitre 5 a
+- **Mémoire PFE — introduction et chapitres 1 à 5 (2026-08 → 2026-09)** — 96 pages compilées,
+  11 figures, 36 tableaux, chaque valeur citée renvoyant à un fichier du dépôt. Le chapitre 5 a
   mis au jour un défaut de calibrage : le moteur hybride servi n'atteint jamais le seuil de
   pertinence de 0,50, calibré sur l'échelle du moteur sémantique, ce qui conduit l'application à
   traiter tout ticket comme un cas nouveau
 
 ## 🟡 En cours
-- **Phase 14 (mémoire PFE) — ~65 %.** Introduction et chapitres 1 à 5 rédigés et relus, 94 pages
+- **Phase 14 (mémoire PFE) — ~65 %.** Introduction et chapitres 1 à 5 rédigés et relus, 96 pages
   compilées sans erreur. Prochain : chapitre 6 (développement de l'application). Détail et
   blocages dans [PFE_PROGRESS.md](PFE_PROGRESS.md)
 - Phase 13 (Optimisation) — Semaines 1–2 terminées (heuristiques + RAG hybride), Semaine 3
@@ -144,5 +144,5 @@
 | 11 Déploiement | ✅ 100 % (Docker 3 services + CI/CD) |
 | 12 Tests | ✅ 100 % (**133 tests** : unitaires, intégration, cycle de vie ChromaDB, charge, matrice exigences, étude utilisateur) |
 | 13 Optimisation | 🟡 ~65 % (Semaines 1–2 faites, Semaine 3 conditionnelle) |
-| 14 Doc/mémoire | 🟡 ~65 % (introduction + chapitres 1–5 rédigés, 94 p. compilées ; restent les chapitres 6 et 7, la conclusion, les annexes et les résumés) |
+| 14 Doc/mémoire | 🟡 ~65 % (introduction + chapitres 1–5 rédigés, 96 p. compilées ; restent les chapitres 6 et 7, la conclusion, les annexes et les résumés) |
 | 15 Soutenance | 🔴 0 % |

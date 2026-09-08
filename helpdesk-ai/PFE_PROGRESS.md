@@ -9,11 +9,11 @@
 
 | | |
 |---|---|
-| **Compilation** | 94 pages, 0 erreur, 0 référence non résolue (`pdflatex` x2 + `bibtex` + `pdflatex`) |
+| **Compilation** | 96 pages, 0 erreur, 0 référence non résolue (`pdflatex` x2 + `bibtex` + `pdflatex`) |
 | **Chapitres rédigés** | 5 sur 7, plus l'introduction générale |
-| **Volume rédigé** | pages 1 à 71 du corps, sur une cible de 110 à 135 pages |
+| **Volume rédigé** | pages 1 à 73 du corps, sur une cible de 110 à 135 pages |
 | **Figures intégrées** | 11 |
-| **Tableaux intégrés** | 35 |
+| **Tableaux intégrés** | 36 |
 | **Prochain chapitre** | Chapitre 6 — Sprint 4, développement de l'application |
 
 ## 2. Avancement chapitre par chapitre
@@ -27,11 +27,11 @@
 | 2 | Concepts fondamentaux et spécification | `chap_02.tex` | 10–25 | 1 | 5 | 15–18 p. | ✅ repris le 2026-09-07 |
 | 3 | Sprint 1 — Données et gouvernance | `chap_03.tex` | 26–39 | 3 | 9 | 14–16 p. | ✅ vérifié et corrigé |
 | 4 | Sprint 2 — Modélisation IA | `chap_04.tex` | 40–55 | 3 | 10 | 16–18 p. | ✅ corrigé après l'audit des règles |
-| 5 | Sprint 3 — RAG et assistant LLM | `chap_05.tex` | 56–71 | 2 | 7 | 16–18 p. | ✅ rédigé le 2026-09-08 |
-| 6 | Sprint 4 — Développement de l'application | `chap_06.tex` | 72 | 0 | 0 | 16–18 p. | 🔴 **prochain à rédiger** |
-| 7 | Sprint 5 — Industrialisation et validation | `chap_07.tex` | 73 | 0 | 0 | 14–16 p. | 🔴 squelette |
-| — | Conclusion générale | `conclusion.tex` | 74 | — | — | 2–3 p. | 🔴 balises seules |
-| — | Annexes | `annexes.tex` | 77 | — | — | — | 🔴 balises seules |
+| 5 | Sprint 3 — RAG et assistant LLM | `chap_05.tex` | 56–73 | 2 | 8 | 16–18 p. | ✅ rédigé et relu le 2026-09-08 |
+| 6 | Sprint 4 — Développement de l'application | `chap_06.tex` | 74 | 0 | 0 | 16–18 p. | 🔴 **prochain à rédiger** |
+| 7 | Sprint 5 — Industrialisation et validation | `chap_07.tex` | 75 | 0 | 0 | 14–16 p. | 🔴 squelette |
+| — | Conclusion générale | `conclusion.tex` | 76 | — | — | 2–3 p. | 🔴 balises seules |
+| — | Annexes | `annexes.tex` | 79 | — | — | — | 🔴 balises seules |
 
 **Lecture** : les trois chapitres restants décrivent du travail déjà réalisé et testé dans le
 dépôt. Il s'agit de le documenter, pas de le construire. Le chapitre 1 est le seul dont
@@ -77,7 +77,9 @@ résultats de tests (ch. 7).
 | 1 | La comparaison « 0,93 contre 0,76 » provient de `models/semantic_rag_metadata.json`, qui décrit un index de **476 documents** quand l'index servi en contient **1 357** | ✅ Citée en §5.5.4 avec son index de mesure, et accompagnée de la précision qu'elle porte sur la similarité du **meilleur** passage, non sur les trois retenus. La campagne du 2026-08-22 sert de référence unique |
 | 2 | `metrics/rag_eval.json` ne publie plus de rappel : le champ vaut `null` et porte une note expliquant qu'en protocole approché l'ensemble des pertinents est la catégorie entière | ✅ Le chapitre explique pourquoi le rappel n'est pas publié plutôt que de le citer |
 | 3 | Campagne du 2026-08-22 : P@3 **0,3542** hybride, 0,2917 sémantique, 0,1542 lexical | ✅ Référence unique du chapitre, protocole identique pour les trois moteurs |
-| 4 | **Trouvé en rédigeant** : le taux de repli du moteur hybride vaut **1,000**. Son score moyen (0,3551) n'atteint jamais le seuil de 0,50, calibré sur l'échelle du moteur sémantique | ✅ Analysé en §5.5.3. Conséquence : tout ticket est traité comme un cas nouveau. Deux corrections possibles, non tranchées faute de trafic réel (R-20) |
+| 4 | **Trouvé en rédigeant** : le taux de repli du moteur hybride vaut **1,000**. Son score moyen (0,3551) n'atteint jamais le seuil de 0,50, calibré sur l'échelle du moteur sémantique | ✅ Analysé au chapitre. Conséquence : tout ticket est traité comme un cas nouveau. Deux corrections possibles, non tranchées faute de trafic réel (R-20) |
+| 5 | **Trouvé en relecture** : la base de connaissances contient 1 357 tickets mais seulement **46 résolutions distinctes**, une par scénario, réinstanciée 31 fois en médiane | ✅ Chiffré au chapitre, avec la répartition par catégorie (4 à 8 réponses selon la catégorie) |
+| 6 | **Trouvé en relecture** : les 58 scénarios se répartissent en deux ensembles **disjoints**, 46 dans la base et 12 au jeu de test. **Aucune des 356 requêtes d'évaluation n'a sa réponse dans la base** | ✅ Les valeurs mesurées sont présentées comme un plancher. C'est aussi la raison pour laquelle le protocole approché est le seul mesurable : une définition stricte de la pertinence donnerait zéro pour les trois moteurs |
 
 ## 6. Écarts à assumer explicitement dans le mémoire
 

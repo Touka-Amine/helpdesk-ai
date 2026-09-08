@@ -5,6 +5,32 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Corrigé (2026-09-08, relecture du chapitre 5)
+
+- `Corrigé` : **affirmation fausse sur la qualité du corpus indexé.** Le chapitre écrivait que les
+  résolutions retrouvées portent « des fautes, des abréviations et des formulations
+  télégraphiques ». La mesure contredit cette description : les 1 357 tickets indexés portent
+  46 textes distincts, tous correctement ponctués, avec majuscule initiale et point final, sans
+  aucune apostrophe manquante. Le texte mal écrit vient des solutions saisies par l'administrateur
+  en exploitation, qui entrent dans la base par la boucle d'alimentation. La justification de
+  l'assistant de reformulation est réécrite sur cette base.
+- `Ajouté` : **la base de connaissances contient 46 résolutions distinctes, pas 1 357.** Le
+  décompte de tickets décrivait un volume et masquait la redondance. À chaque scénario du corpus
+  d'entraînement répond une résolution et une seule, réinstanciée 31 fois en médiane, de 4 à 49
+  fois. Un tableau donne la répartition par catégorie : 8 réponses pour *Applicatifs* et *Réseau*,
+  4 seulement pour *Infrastructure* et *Sécurité*.
+- `Ajouté` : **aucune requête d'évaluation n'a sa réponse dans la base.** Le découpage étant groupé
+  par titre, les 58 scénarios se répartissent en deux ensembles disjoints : 46 alimentent la base,
+  les 12 autres forment le jeu de test. Les 356 tickets de test appartiennent donc tous à des
+  scénarios absents de l'index. Deux conséquences sont désormais écrites au chapitre. Une
+  définition stricte de la pertinence donnerait zéro pour les trois moteurs, ce qui explique
+  pourquoi le protocole approché est le seul mesurable. Et les valeurs rapportées sont un plancher,
+  non une estimation du comportement en exploitation.
+- `Corrigé` : deux libellés de tableau confondaient tickets et résolutions ; `ISO/IEC 27001` aligné
+  sur `ISO 27001`, forme employée au chapitre 1 ; label `sec:kb5` retiré, jamais appelé.
+- `Modifié` : le chapitre passe de 16 à 18 pages, le mémoire de 94 à **96 pages**. Compilation sans
+  erreur, sans référence non résolue, sans débordement nouveau.
+
 ### Ajouté (2026-09-08, chapitre 5 du mémoire)
 
 - `Ajouté` : **chapitre 5 rédigé**, « Sprint 3 : système RAG et assistant LLM », 16 pages,

@@ -14,7 +14,7 @@
 ## ÉTAT DE LA RÉDACTION — au 2026-09-08
 
 > Suivi détaillé et figures restant à produire : [PFE_PROGRESS.md](PFE_PROGRESS.md).
-> Sources LaTeX : `../report/`. Le document compile à **94 pages, sans erreur**.
+> Sources LaTeX : `../report/`. Le document compile à **96 pages, sans erreur**.
 
 | # | Chapitre | Pages | Cible | État |
 |---|---|---|---|---|
@@ -23,11 +23,11 @@
 | 2 | Concepts fondamentaux et spécification | 10–25 | 15–18 p. | ✅ rédigé, repris le 2026-09-07 |
 | 3 | Sprint 1 — Données et gouvernance | 26–39 | 14–16 p. | ✅ rédigé et vérifié |
 | 4 | Sprint 2 — Modélisation IA | 40–55 | 16–18 p. | ✅ rédigé, corrigé après l'audit des règles |
-| 5 | Sprint 3 — RAG et assistant LLM | 56–71 | 16–18 p. | ✅ rédigé le 2026-09-08, 16 pages |
-| 6 | Sprint 4 — Développement de l'application | 72 | 16–18 p. | 🔴 **prochain à rédiger** |
-| 7 | Sprint 5 — Industrialisation et validation | 73 | 14–16 p. | 🔴 squelette |
-| — | Conclusion générale | 74 | 2–3 p. | 🔴 balises seules |
-| — | Annexes | 77 | — | 🔴 balises seules |
+| 5 | Sprint 3 — RAG et assistant LLM | 56–73 | 16–18 p. | ✅ rédigé et relu le 2026-09-08, 18 pages |
+| 6 | Sprint 4 — Développement de l'application | 74 | 16–18 p. | 🔴 **prochain à rédiger** |
+| 7 | Sprint 5 — Industrialisation et validation | 75 | 14–16 p. | 🔴 squelette |
+| — | Conclusion générale | 76 | 2–3 p. | 🔴 balises seules |
+| — | Annexes | 79 | — | 🔴 balises seules |
 | — | Résumés FR et EN | `global_config.tex` | 1 p. | 🔴 à rédiger en dernier |
 
 **Écart à l'ordre initialement recommandé.** Les chapitres 1 et 2 ont été rédigés avant le
