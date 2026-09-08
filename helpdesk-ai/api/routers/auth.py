@@ -19,7 +19,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 def register(data: UserCreate, db: Session = Depends(get_db)):
     email = data.email.lower()
     if db.query(User).filter(User.email == email).first():
-        raise HTTPException(400, "Email deja utilise")
+        raise HTTPException(400, "Email déjà utilisé")
 
     role = "admin" if email in settings.admin_email_set() else "client"
     user = User(
