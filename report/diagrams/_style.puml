@@ -1,0 +1,77 @@
+' Langage visuel commun aux diagrammes du mémoire.
+' Les quatre familles de couleurs reprennent celles des figures matplotlib du chapitre 6 :
+' acteur ou système tiers, interface, traitement, persistance.
+' À inclure en tête de chaque diagramme : !include _style.puml
+
+@startuml
+skinparam dpi 200
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam roundCorner 6
+skinparam ArrowColor #57606E
+skinparam ArrowFontColor #5A6472
+skinparam ArrowFontSize 12
+skinparam NoteBackgroundColor #FFFDF3
+skinparam NoteBorderColor #B9A46A
+skinparam NoteFontColor #6B5B2E
+skinparam NoteFontSize 12
+skinparam legendBackgroundColor #FBFCFD
+skinparam legendBorderColor #C7CDD6
+skinparam legendFontColor #3C4553
+skinparam legendFontSize 12
+
+skinparam class {
+  BackgroundColor #D6EFE7
+  BorderColor #1E7A64
+  FontColor #1B2430
+  AttributeFontColor #1B2430
+  AttributeFontSize 12
+  StereotypeFontColor #5A6472
+}
+
+skinparam actor {
+  BackgroundColor #FAEFD0
+  BorderColor #A67C1A
+  FontColor #1B2430
+}
+
+skinparam usecase {
+  BackgroundColor #DCE9F8
+  BorderColor #2F6DA8
+  FontColor #1B2430
+}
+
+skinparam participant {
+  BackgroundColor #E2E3F5
+  BorderColor #4B51A0
+  FontColor #1B2430
+}
+
+skinparam database {
+  BackgroundColor #D6EFE7
+  BorderColor #1E7A64
+  FontColor #1B2430
+}
+
+skinparam component {
+  BackgroundColor #E2E3F5
+  BorderColor #4B51A0
+  FontColor #1B2430
+}
+
+skinparam state {
+  BackgroundColor #E2E3F5
+  BorderColor #4B51A0
+  FontColor #1B2430
+  AttributeFontColor #5A6472
+}
+
+skinparam sequence {
+  LifeLineBorderColor #9AA3B0
+  LifeLineBackgroundColor #E2E3F5
+  DividerBackgroundColor #EDEFF2
+  DividerBorderColor #B9BFC9
+  DividerFontColor #5A6472
+}
+@enduml
