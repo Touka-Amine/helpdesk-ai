@@ -3,18 +3,18 @@
 > Suivi des livrables académiques : mémoire LaTeX, figures, soutenance.
 > Structure alignée sur [PLAN_RAPPORT.md](PLAN_RAPPORT.md), qui fait foi pour le plan détaillé.
 > Source de vérité projet : [PLAN.md](PLAN.md). Sources LaTeX : `../report/`.
-> Dernière mise à jour : **2026-09-08** (chapitre 5 rédigé).
+> Dernière mise à jour : **2026-09-08** (chapitre 6 rédigé).
 
 ## 1. Où en est le mémoire
 
 | | |
 |---|---|
-| **Compilation** | 96 pages, 0 erreur, 0 référence non résolue (`pdflatex` x2 + `bibtex` + `pdflatex`) |
-| **Chapitres rédigés** | 5 sur 7, plus l'introduction générale |
-| **Volume rédigé** | pages 1 à 73 du corps, sur une cible de 110 à 135 pages |
-| **Figures intégrées** | 11 |
-| **Tableaux intégrés** | 36 |
-| **Prochain chapitre** | Chapitre 6 — Sprint 4, développement de l'application |
+| **Compilation** | 115 pages, 0 erreur, 0 référence non résolue (`pdflatex` x2 + `bibtex` + `pdflatex`) |
+| **Chapitres rédigés** | 6 sur 7, plus l'introduction générale |
+| **Volume rédigé** | pages 1 à 93 du corps, sur une cible de 110 à 135 pages |
+| **Figures intégrées** | 17 |
+| **Tableaux intégrés** | 40 |
+| **Prochain chapitre** | Chapitre 7 — Sprint 5, industrialisation, tests et validation |
 
 ## 2. Avancement chapitre par chapitre
 
@@ -28,10 +28,10 @@
 | 3 | Sprint 1 — Données et gouvernance | `chap_03.tex` | 26–39 | 3 | 9 | 14–16 p. | ✅ vérifié et corrigé |
 | 4 | Sprint 2 — Modélisation IA | `chap_04.tex` | 40–55 | 3 | 10 | 16–18 p. | ✅ corrigé après l'audit des règles |
 | 5 | Sprint 3 — RAG et assistant LLM | `chap_05.tex` | 56–73 | 2 | 8 | 16–18 p. | ✅ rédigé et relu le 2026-09-08 |
-| 6 | Sprint 4 — Développement de l'application | `chap_06.tex` | 74 | 0 | 0 | 16–18 p. | 🔴 **prochain à rédiger** |
-| 7 | Sprint 5 — Industrialisation et validation | `chap_07.tex` | 75 | 0 | 0 | 14–16 p. | 🔴 squelette |
-| — | Conclusion générale | `conclusion.tex` | 76 | — | — | 2–3 p. | 🔴 balises seules |
-| — | Annexes | `annexes.tex` | 79 | — | — | — | 🔴 balises seules |
+| 6 | Sprint 4 — Développement de l'application | `chap_06.tex` | 74–93 | 6 | 4 | 16–18 p. | ✅ rédigé le 2026-09-08, 20 p. — dépasse la cible de 2 p., section Conception enrichie |
+| 7 | Sprint 5 — Industrialisation et validation | `chap_07.tex` | 94 | 0 | 0 | 14–16 p. | 🔴 **prochain à rédiger** |
+| — | Conclusion générale | `conclusion.tex` | 95 | — | — | 2–3 p. | 🔴 balises seules |
+| — | Annexes | `annexes.tex` | 98 | — | — | — | 🔴 balises seules |
 
 **Lecture** : les trois chapitres restants décrivent du travail déjà réalisé et testé dans le
 dépôt. Il s'agit de le documenter, pas de le construire. Le chapitre 1 est le seul dont
@@ -63,12 +63,28 @@ l'avancement dépend d'un tiers.
 | Comparaison des sept approches | `img/ch04_benchmark.png` | 4 | campagne du 2026-08-22 |
 | Matrice de confusion CamemBERT | `img/ch04_confusion_camembert.png` | 4 | notebook 05 |
 | Distribution de la confiance | `img/ch04_confiance.png` | 4 | notebook 05 |
+| Vue des conteneurs | `img/ch06_architecture.png` | 6 | `docker/docker-compose.yml`, `api/db/vector_store.py` |
+| Cas d'utilisation par rôle | `img/ch06_cas_utilisation.png` | 6 | backlog du sprint, `CADRAGE_SRS.md` |
+| Cycle de vie du ticket | `img/ch06_etats_ticket.png` | 6 | `api/routers/tickets.py:28` |
+| Séquence du dépôt d'une demande | `img/ch06_sequence.png` | 6 | `api/routers/tickets.py` |
+| Diagramme de classes | `img/ch06_classes.png` | 6 | `api/db/models.py` |
+| Diagramme de contexte | `img/ch06_contexte.png` | 6 | périmètre du chapitre 1 |
+
+**Les six figures du chapitre 6 sont décrites en PlantUML** dans `report/diagrams/`, et
+regénérées par `bash report/diagrams/render.sh`. Les deux vues d'architecture emploient la
+notation C4. Chaque source cite en commentaire le fichier de code dont elle tire ses faits.
+
+Deux affirmations du chapitre contredisaient le code et ont été corrigées sur pièce le
+2026-09-08 : le nombre de conteneurs (cinq et non six, `docker/docker-compose.yml`) et le
+mode de déploiement de ChromaDB (embarqué dans le processus de l'API,
+`api/db/vector_store.py:93`, et non serveur autonome).
 | Comparaison des trois moteurs de recherche | `img/ch05_moteurs.png` | 5 | `metrics/rag_eval.json` |
 | Chaîne RAG servie et boucle d'alimentation | `img/ch05_chaine_rag.png` | 5 | schéma rédigé |
 
-**Restant à produire** (voir PLAN_RAPPORT.md §Figures) : C4, cas d'utilisation, classes, états,
-séquence et captures d'écran (ch. 6) ; déploiement Docker, pipeline DVC, interface MLflow et
-résultats de tests (ch. 7).
+**Restant à produire** : **captures d'écran des 15 écrans** (ch. 6), bloquées sur la question Q2
+du questionnaire OTBS, celle qui dit quels champs anonymiser. Deux voies : obtenir l'accord, ou
+constituer un jeu de démonstration aux identités fictives (une demi-journée, ne dépend de
+personne). Puis déploiement Docker, pipeline DVC, interface MLflow et résultats de tests (ch. 7).
 
 ## 5. Points tranchés au chapitre 5
 

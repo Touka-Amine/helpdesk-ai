@@ -1,0 +1,53 @@
+' Diagramme de cas d'utilisation du sprint 4.
+' Faits : les identifiants EF proviennent du backlog du chapitre 2 (CADRAGE_SRS.md).
+' Deux rôles seulement, vérifiés dans api/db/models.py (role : client | admin).
+@startuml ch06_cas_utilisation
+!include _style.puml
+
+left to right direction
+skinparam nodesep 25
+skinparam ranksep 60
+skinparam packageStyle rectangle
+
+actor "Demandeur\n<size:11><color:#5A6472>employé</color></size>" as DEM
+actor "Administrateur\n<size:11><color:#5A6472>technicien informatique</color></size>" as ADM
+actor "Utilisateur\nauthentifié" as USR #FAEFD0
+
+rectangle "HelpDesk AI" as SYS {
+  usecase "S'authentifier\n<size:11><color:#5A6472>EF-01</color></size>" as UC01
+  usecase "Gérer son profil" as UC02
+
+  usecase "Déposer une demande\n<size:11><color:#5A6472>EF-02</color></size>" as UC03
+  usecase "Suivre l'avancement\n<size:11><color:#5A6472>EF-08</color></size>" as UC04
+  usecase "Signaler si la réponse\na été utile\n<size:11><color:#5A6472>EF-13</color></size>" as UC05
+
+  usecase "Examiner les cas\npeu assurés\n<size:11><color:#5A6472>EF-05</color></size>" as UC06
+  usecase "Qualifier et clôturer\nla demande\n<size:11><color:#5A6472>EF-06</color></size>" as UC07
+  usecase "Consulter l'historique\ndes modifications\n<size:11><color:#5A6472>EF-07</color></size>" as UC08
+  usecase "Consulter le tableau\nde bord\n<size:11><color:#5A6472>EF-15</color></size>" as UC09
+}
+
+DEM --|> USR
+ADM --|> USR
+
+USR -- UC01
+USR -- UC02
+
+DEM -- UC03
+DEM -- UC04
+DEM -- UC05
+
+ADM -- UC06
+ADM -- UC07
+ADM -- UC08
+ADM -- UC09
+
+
+note bottom of USR
+  Un acteur générique porte les cas communs
+  aux deux rôles, ce qui évite de dupliquer
+  les mêmes associations et sépare ce qui
+  relève de la session de ce qui relève
+  du métier.
+end note
+@enduml

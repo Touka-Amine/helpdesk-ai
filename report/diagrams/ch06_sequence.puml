@@ -1,0 +1,61 @@
+' Séquence du dépôt puis de la qualification d'un ticket.
+' Faits : api/routers/tickets.py — la création appelle classifieur puis moteur de
+' recherche dans la même requête ; le modèle de langage n'est pas sur ce chemin,
+' il est appelé par /tickets/{id}/rag-synthesis à la demande du technicien.
+@startuml ch06_sequence
+!include _style.puml
+
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 260
+hide footbox
+autonumber "<b>0)"
+
+actor "Demandeur" as DEM #FAEFD0
+actor "Technicien IT" as TEC #FAEFD0
+participant "Interface\nAngular" as UI #DCE9F8
+participant "API\nFastAPI" as API
+participant "Classifieur\nTF-IDF + règles" as CLF
+participant "Moteur hybride\nFAISS + TF-IDF" as RAG
+database "PostgreSQL" as DB
+
+== Dépôt de la demande : une seule requête synchrone ==
+
+DEM -> UI : saisit le titre et la description
+UI -> API : POST /api/v1/tickets
+activate API
+API -> CLF : classer(titre + description)
+activate CLF
+CLF --> API : catégorie, confiance, règle déclenchée
+deactivate CLF
+API -> RAG : rechercher(texte, top_k = 3)
+activate RAG
+RAG --> API : trois cas voisins et leur score de similarité
+deactivate RAG
+API -> DB : enregistrer le ticket, la prédiction et sa traçabilité
+activate DB
+DB --> API : identifiant attribué
+deactivate DB
+API --> UI : 201 — catégorie proposée et cas voisins
+deactivate API
+UI --> DEM : numéro de suivi et accusé de dépôt
+
+note over DEM, DB
+  Le modèle de langage n'intervient pas ici. La reformulation est demandée
+  plus tard par le technicien, sur un chemin distinct, pour ne pas faire
+  attendre le demandeur une vingtaine de secondes.
+end note
+
+== Plus tard : qualification par le technicien ==
+
+TEC -> UI : ouvre le ticket et corrige la catégorie
+UI -> API : PATCH /api/v1/tickets/{id}/approve
+activate API
+API -> API : vérifie la transition d'état
+API -> DB : met à jour et journalise chaque champ modifié
+activate DB
+DB --> API : ticket et historique
+deactivate DB
+API --> UI : 200 — ticket mis à jour
+deactivate API
+UI --> TEC : confirmation
+@enduml

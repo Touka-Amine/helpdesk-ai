@@ -5,6 +5,112 @@
 
 ## [Non publié] — branche `chore/gouvernance-pfe`
 
+### Modifié (2026-09-09, chapitre 6 réécrit, diagrammes portés sous PlantUML)
+
+- `Ajouté` : **chaîne PlantUML** branchée sur Claude Code. `plantuml.jar` 1.2026.8 hors du
+  dépôt, sources dans `report/diagrams/`, script `render.sh`, commande `/puml`, permission
+  dans `.claude/settings.json` et chemin du jar dans `.claude/settings.local.json`. Le jar
+  embarque Graphviz 2.44.1 et C4-PlantUML 2.13.0 : aucune installation système requise.
+- `Modifié` : les **six figures du chapitre 6** sont désormais décrites en PlantUML plutôt
+  qu'en matplotlib. Les deux vues d'architecture emploient la notation C4, reconnue par un
+  jury. Chaque source cite en commentaire d'en-tête le fichier de code dont elle tire ses
+  faits, ce qui rend la figure vérifiable.
+- `Modifié` : le **diagramme de cas d'utilisation** rattache les cas communs à un acteur
+  générique dont les deux rôles héritent, et porte l'identifiant EF de chaque exigence, ce
+  qui permet de vérifier qu'aucune n'a été perdue entre le backlog et la conception.
+- `Modifié` : le **diagramme d'états** se lit de gauche à droite, sans croisement, et le
+  **diagramme de séquence** numérote ses dix-sept messages en distinguant appels et réponses.
+- `Corrigé` : un `<<extend>>` entre « Qualifier et clôturer » et « Consulter l'historique »
+  a été retiré du diagramme de cas : la relation était fausse sur le fond.
+- `Modifié` : **sections 6.3 et 6.4 resserrées**. La spécification des besoins fonctionnels
+  se limite au diagramme de cas et à sa lecture ; les technologies passent d'une liste en
+  prose à un tableau à trois colonnes qui donne, pour chaque brique, le motif propre à ce
+  sprint. Les deux sections recoupaient le chapitre 2 et occupaient environ deux pages et
+  demie ; elles en occupent une.
+- `Modifié` : notes et légendes qui répétaient le paragraphe voisin retirées des figures.
+- `Supprimé` : les scripts matplotlib de `report/figures/` écrivent désormais dans
+  `report/img/_matplotlib/` et ne peuvent plus écraser les figures servies au mémoire.
+- Le chapitre reste à **20 pages**, le mémoire à **115 pages**, sans erreur de compilation
+  et sans débordement de boîte nouveau.
+
+### Modifié (2026-09-08, les six diagrammes du chapitre 6 refaits)
+
+- `Modifié` : les **six figures du chapitre 6** sont regénérées avec un langage visuel commun —
+  quatre familles de couleurs sémantiques (acteur, interface, traitement, persistance), connecteurs
+  tracés avant les nœuds, légende explicite. Scripts dans le répertoire de travail de session,
+  sortie à 200 ppp dans `report/img/`.
+- `Corrigé` : le **diagramme d'architecture annonçait six conteneurs et plaçait ChromaDB au même
+  rang que PostgreSQL**. La composition Docker n'en déclare que cinq (`frontend`, `api`,
+  `postgres`, `ollama`, `dashboard`) et ChromaDB fonctionne en mode embarqué
+  (`chromadb.PersistentClient`, `api/db/vector_store.py:93`), donc à l'intérieur du processus de
+  l'API. La figure et le paragraphe du chapitre sont repris en conséquence, et le tableau de bord
+  Streamlit, jusque-là absent, y figure désormais.
+- `Corrigé` : le **classifieur et le moteur de recherche** apparaissaient comme des conteneurs
+  distincts alors que le texte affirmait le contraire. Ils sont maintenant dessinés imbriqués dans
+  le conteneur de l'API.
+- `Modifié` : le **diagramme de cas d'utilisation** rattache les deux cas partagés à un acteur
+  générique dont les deux rôles héritent, ce qui supprime les croisements de traits.
+- `Modifié` : le **diagramme d'états** adopte une disposition en losange sans aucun croisement, et
+  distingue les deux états terminaux par un double contour.
+- `Modifié` : le **diagramme de classes** regroupe les vingt-sept attributs de `Ticket` en cinq
+  blocs correspondant à l'étape du traitement qui les écrit.
+- `Modifié` : le **diagramme de séquence** distingue appels et réponses, numérote les seize
+  messages et sépare les deux phases, dépôt puis qualification.
+
+### Ajouté (2026-09-08, section Conception du chapitre 6)
+
+- `Ajouté` : **diagramme de contexte** (`ch06_contexte.png`), premier niveau du modèle C4. La
+  section Conception passe de quatre à six pages et de quatre à cinq diagrammes.
+- `Ajouté` : **justification de l'absence d'entité Catégorie** dans le diagramme de classes. Les
+  huit catégories sont conservées comme chaînes de caractères, décision expliquée par la stabilité
+  du référentiel et par la chaîne d'apprentissage, avec son coût énoncé : la contrainte
+  d'intégrité repose sur le code et non sur le schéma.
+- `Ajouté` : **justification de l'absence d'annuaire d'entreprise** au diagramme de contexte, avec
+  ses deux contreparties, comptes en doublon et désactivation manuelle des accès.
+- `Ajouté` : au diagramme de séquence, mention explicite que le composant sollicité pour la
+  classification est la chaîne lexicale et non le transformer, avec le rappel de l'écart mesuré au
+  chapitre 4 (0,8343 contre 0,5829).
+- `Modifié` : le chapitre passe de 18 à **20 pages**, deux de plus que sa cible. Le mémoire atteint
+  **115 pages**.
+
+### Modifié (2026-09-08, chapitre 6 remis au format des chapitres de sprint)
+
+- `Modifié` : **chapitre 6 restructuré** sur la trame du rapport de référence de Rania Dridi
+  (`exemple_de_rapport/Rania-DRIDI-22159-2.pdf`), celle qu'attend le jury : objectifs, backlog,
+  spécification des besoins fonctionnels, technologies utilisées, **conception**, réalisation,
+  bilan. Le mot « Conception » n'apparaissait nulle part dans la table des matières et les
+  diagrammes étaient dispersés dans les sections de réalisation.
+- `Ajouté` : **section 6.5 Conception**, quatre pages, regroupant l'architecture générale, le
+  diagramme de classes, le diagramme de séquence et le diagramme d'états.
+- `Ajouté` : **diagramme de classes** (`ch06_classes.png`), les trois entités avec leurs attributs
+  typés et leurs cardinalités. Il remplace le tableau qui tenait lieu de modèle de données : la
+  première tentative avait échoué faute de place, la seconde adopte une disposition verticale.
+- `Ajouté` : **backlog du sprint** au format récits utilisateur, avec les références EF du dossier
+  de spécification et les priorités du cadrage. Aucune estimation en jours n'y figure : le dépôt
+  n'en contient pas, et les inventer aurait contredit la règle de traçabilité.
+- `Ajouté` : section « Technologies utilisées », chaque outil justifié par ce qu'il apporte au
+  projet plutôt que par sa notoriété.
+- `Modifié` : le chapitre passe de 15 à **18 pages**, dans sa cible de 16 à 18. Le mémoire atteint
+  **113 pages**.
+
+### Ajouté (2026-09-08, chapitre 6 du mémoire)
+
+- `Ajouté` : **chapitre 6 rédigé**, « Sprint 4 : développement de l'application », 15 pages,
+  4 figures et 6 tableaux. Le mémoire atteint **110 pages**, borne basse de la cible de 110 à 135.
+- `Ajouté` : quatre schémas produits — vue des conteneurs, cas d'utilisation par rôle, cycle de vie
+  du ticket et séquence du dépôt d'une demande.
+- `Modifié` : le diagramme de classes prévu au plan est remplacé par un tableau. Vingt-sept
+  colonnes ne tiennent pas dans une boîte UML lisible ; la tentative a été faite et abandonnée.
+- `Signalé` : **le chapitre ne comporte aucune capture d'écran** et reste de ce fait à 15 pages
+  pour une cible de 16 à 18. Les interfaces affichent des noms de demandeurs, des filiales et des
+  identifiants de configuration, et l'autorisation de publier ces éléments n'est pas obtenue
+  (question Q2 du questionnaire OTBS, risque R-26). Deux voies restent ouvertes : obtenir l'accord
+  du service, ou constituer un jeu de démonstration aux identités fictives. La seconde demande une
+  demi-journée et ne dépend de personne.
+- `Signalé` : deux dettes de conception écrites au chapitre plutôt que passées sous silence. Le
+  router des tickets compte 587 lignes et porte la logique de transition qui devrait résider dans
+  un service. Les repositories déclarent une intention d'architecture que le code n'a pas remplie.
+
 ### Corrigé (2026-09-08, relecture du chapitre 5)
 
 - `Corrigé` : **affirmation fausse sur la qualité du corpus indexé.** Le chapitre écrivait que les

@@ -1,0 +1,80 @@
+@startuml ch06_classes
+!include _style.puml
+
+left to right direction
+hide circle
+skinparam nodesep 60
+skinparam ranksep 70
+
+class User {
+  - id : int <<PK>>
+  - email : str <<unique>>
+  - nom : str
+  - prenom : str
+  - hashed_password : str
+  - role : str <<client | admin>>
+  - filiale : str
+  - is_active : bool
+  - first_login : bool
+  - created_at : datetime
+}
+
+class Ticket {
+  - id : int <<PK>>
+  - user_id : int <<FK>>
+  .. demande ..
+  - titre : str
+  - description : text
+  - priorite_saisie : str
+  - filiale : str
+  - equipement : str
+  - created_at : datetime
+  .. prédiction du système ..
+  - categorie_predite : str
+  - confiance : float
+  - model_version : str
+  - heuristic_applied : bool
+  - heuristic_rule : str
+  .. recommandation ..
+  - solution_rag : text
+  - knowledge_rag : text
+  - rag_score : float
+  .. décision humaine ..
+  - categorie_finale : str
+  - priorite_finale : str
+  - classification_finale : str
+  - statut : str
+  - assigne_a : str
+  - approved_by : str
+  - commentaire_admin : text
+  - resolved_at : datetime
+  .. retour du demandeur ..
+  - commentaire_client : text
+  - feedback_vote : str
+  - feedback_comment : text
+}
+
+class TicketHistory {
+  - id : int <<PK>>
+  - ticket_id : int <<FK>>
+  - changed_by : int <<FK>>
+  - champ_modifie : str
+  - ancienne_valeur : text
+  - nouvelle_valeur : text
+  - timestamp : datetime
+}
+
+User "1" -- "0..*" Ticket : dépose >
+Ticket "1" -- "0..*" TicketHistory : journalise >
+User "1" -- "0..*" TicketHistory : auteur du changement >
+
+note bottom of Ticket
+  L'ordre des attributs suit celui du traitement.
+  categorie_predite et categorie_finale coexistent :
+  le taux de correction se calcule en les comparant.
+  La catégorie n'est pas une entité, elle reste une
+  chaîne de caractères ; le coût de ce choix est
+  exposé dans le texte.
+end note
+
+@enduml

@@ -1,0 +1,57 @@
+' Vue des conteneurs, deuxième niveau du modèle C4. L'API est éclatée en composants
+' pour montrer ce qui vit dans son processus plutôt que dans un conteneur séparé.
+' Faits : docker/docker-compose.yml déclare cinq services (frontend, api, postgres,
+' ollama, dashboard) ; api/db/vector_store.py:93 ouvre ChromaDB en PersistentClient,
+' donc en mode embarqué ; params.yaml fixe hybrid_alpha = 0.5 et top_k = 3.
+@startuml ch06_architecture
+!include <C4/C4_Component>
+
+skinparam dpi 200
+skinparam defaultFontName DejaVu Sans
+skinparam nodesep 30
+skinparam ranksep 45
+skinparam wrapWidth 170
+HIDE_STEREOTYPE()
+
+AddElementTag("acteur", $bgColor="#0B4884", $fontColor="#FFFFFF", $borderColor="#073B6F")
+AddElementTag("tiers", $bgColor="#8A8A8A", $fontColor="#FFFFFF", $borderColor="#6F6F6F")
+
+Person(employe, "Employé", $tags="acteur")
+Person(technicien, "Technicien informatique", $tags="acteur")
+System_Ext(messagerie, "Circuit de messagerie", "Boîte du support", $tags="tiers")
+
+Boundary(otbs, "Infrastructure OTBS — aucune donnée de ticket ne quitte le réseau interne", "") {
+
+  Container(spa, "Application Angular", "Angular 21, port 8081", "Quinze écrans, deux espaces.")
+  Container(dash, "Tableau de bord", "Streamlit, port 8501", "Supervision, lecture seule.")
+
+  Boundary(api, "API FastAPI — un seul processus, port 8000", "") {
+    Component(http, "Interface REST", "contrat /api/v1", "33 chemins. Jeton signé, contrôle de rôle.")
+    Component(clf, "Classifieur", "TF-IDF + règles", "Chargé en mémoire au démarrage.")
+    Component(moteur, "Moteur hybride", "FAISS + TF-IDF, α = 0,5", "Chargé en mémoire au démarrage.")
+    ComponentDb(chroma, "ChromaDB", "embarqué, volume api-data", "1 357 tickets, 46 résolutions.")
+  }
+
+  ContainerDb(pg, "PostgreSQL", "volume postgres-data", "Utilisateurs, tickets, historique.")
+  Container(ollama, "Ollama", "llama3.2:3b", "Reformulation, à la demande.")
+}
+
+Rel(employe, spa, "Dépose et suit", "HTTPS")
+Rel(technicien, spa, "Qualifie et clôt", "HTTPS")
+Rel(technicien, dash, "Supervise", "HTTPS")
+Rel(messagerie, http, "Alimente", "clé X-Api-Key")
+Rel(spa, http, "Appelle", "REST, jeton JWT")
+Rel(dash, http, "Consulte", "REST")
+Rel(http, clf, "Classe")
+Rel(http, moteur, "Cherche")
+Rel(moteur, chroma, "Interroge")
+Rel(http, pg, "Lit et écrit", "SQLAlchemy")
+Rel(http, ollama, "Reformule", "HTTP local")
+
+legend bottom
+|<#0B4884><color:#FFFFFF>  Acteur humain  |
+|<#438DD5><color:#FFFFFF>  Conteneur déployable  |
+|<#85BBF0>  Composant interne au processus  |
+|<#8A8A8A><color:#FFFFFF>  Système tiers, hors périmètre  |
+endlegend
+@enduml
