@@ -3,212 +3,176 @@
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
 
-Le chapitre précédent a établi ce que le projet doit résoudre. Celui-ci expose les moyens dont nous
-disposons pour y parvenir, puis traduit le besoin en exigences vérifiables.
-
-Les cinq premières sections présentent les concepts sur lesquels repose la solution : la
-représentation numérique du texte et les modèles de langue, la classification supervisée en présence
-de classes déséquilibrées, la génération augmentée par récupération, les grands modèles de langage
-et leur exécution locale, enfin l'industrialisation des modèles d'apprentissage. La sixième recense
-l'environnement technologique retenu. La septième formalise les acteurs, les exigences et leur
-rattachement aux chapitres qui en rendent compte.
+Le chapitre précédent a posé le problème. Celui-ci expose les moyens techniques mobilisés, puis
+traduit le besoin en exigences vérifiables. Les cinq premières sections traitent la représentation du
+texte, la classification sous déséquilibre, la génération augmentée par récupération, les grands
+modèles de langage et l'industrialisation. La sixième recense la pile technologique, la septième
+formalise acteurs et exigences.
 
 \section{Traitement automatique du langage naturel}
 
-Un algorithme d'apprentissage ne sait traiter que des vecteurs de nombres. Toute chaîne de
-traitement en langue naturelle commence donc par une opération de représentation, et la qualité de
-cette représentation conditionne tout ce qui suit. Cette section retrace le passage des
-représentations fondées sur le décompte des mots à celles produites par les modèles de langue
-contemporains.
+Un algorithme d'apprentissage ne traite que des vecteurs numériques. Toute chaîne de traitement en
+langue naturelle commence donc par une opération de représentation, dont la qualité conditionne tout
+ce qui suit.
 
 \subsection{Représentations classiques : sac de mots et TF-IDF}
 
-L'approche la plus ancienne décrit un document par le décompte des termes qu'il contient, sans tenir
-compte de leur ordre. Cette représentation, dite du sac de mots, transforme un corpus en une matrice
-dont les lignes sont les documents et les colonnes le vocabulaire.
+Le sac de mots décrit un document par le décompte de ses termes, sans tenir compte de leur ordre. La
+pondération \emph{term frequency -- inverse document frequency}, ou TF-IDF~\cite{sparckjones1972},
+corrige ce décompte en
+multipliant la fréquence d'un terme par l'inverse du nombre de documents où il apparaît : un mot
+présent partout discrimine mal, un mot rare et localisé discrimine bien. Dans notre corpus,
+\emph{problème} reçoit un poids faible, tandis que \emph{spooler} ou \emph{VPN} identifient
+immédiatement une catégorie.
 
-Son raffinement le plus répandu corrige ce décompte brut. La pondération \emph{term frequency --
-inverse document frequency}, ou TF-IDF, multiplie la fréquence d'un terme dans un document par
-l'inverse du nombre de documents où il apparaît. L'intuition est simple : un mot présent partout
-distingue mal, un mot rare et localisé distingue bien. Dans notre corpus, un terme comme
-\emph{problème} apparaît dans presque tous les tickets et reçoit un poids faible, tandis que
-\emph{spooler} ou \emph{VPN} identifient immédiatement une catégorie.
-
-Cette représentation reste compétitive sur des corpus de taille modeste au vocabulaire stable, ce
-qui explique qu'elle serve encore de point de comparaison de référence en classification de textes
-courts. Elle est peu coûteuse à calculer, entièrement interprétable, et ne demande aucune donnée
-d'entraînement supplémentaire.
-
-Sa limite est structurelle. Deux formulations différentes d'une même idée produisent deux vecteurs
-sans rapport. \emph{Session Outlook bloquée} et \emph{messagerie qui ne s'ouvre plus} ne partagent
-aucun terme alors qu'elles désignent le même incident. Le sac de mots ignore par construction la
-synonymie, la polysémie et tout ce que l'ordre des mots véhicule.
+Peu coûteuse et entièrement interprétable, cette représentation sert de référence en classification
+de textes courts. Sa limite est structurelle : \emph{Session Outlook bloquée} et \emph{messagerie
+qui ne s'ouvre plus} ne partagent aucun terme alors qu'elles désignent le même incident. Synonymie,
+polysémie et ordre des mots échappent par construction à ce modèle.
 
 \subsection{Représentations denses}
 
-Les représentations denses répondent à cette difficulté en plaçant chaque mot dans un espace
-vectoriel continu de quelques centaines de dimensions, où la proximité géométrique traduit la
-proximité de sens~\cite{mikolov2013}. Le principe d'apprentissage repose sur une hypothèse
-distributionnelle : deux mots qui apparaissent dans des contextes semblables ont des sens
-semblables. En entraînant un modèle à prédire un mot à partir de son voisinage, on obtient des
-vecteurs où \emph{messagerie} et \emph{courriel} se retrouvent proches sans qu'aucune règle ne
-l'ait imposé.
-
-Ces vecteurs de mots ne suffisent cependant pas à représenter une phrase entière. Les modèles
-d'encodage de phrases comblent cet écart en produisant directement un vecteur unique pour un texte
-complet, entraînés de sorte que deux phrases de sens voisin reçoivent des vecteurs
-voisins~\cite{reimers2019}. C'est ce type de modèle que nous emploierons au chapitre~5 pour la
-recherche de tickets similaires.
+Les représentations denses placent chaque mot dans un espace continu de quelques centaines de
+dimensions, où la proximité géométrique traduit la proximité de sens~\cite{mikolov2013}. Deux mots
+employés dans des contextes semblables y reçoivent des vecteurs voisins, sans qu'aucune règle ne
+l'impose. Les modèles d'encodage de phrases étendent le principe à un texte
+complet~\cite{reimers2019} ; ce sont eux qui alimentent la recherche de tickets similaires du
+chapitre~5.
 
 Une limite subsiste dans les premières représentations denses : chaque mot reçoit un vecteur unique
-quel que soit son emploi. Le terme \emph{serveur} désigne indifféremment une machine physique, un
-processus logiciel ou un rôle applicatif, et un vecteur figé confond ces sens.
+quel que soit son emploi, et le terme \emph{serveur} confond alors la machine physique, le processus
+logiciel et le rôle applicatif.
 
 \subsection{Modèles transformers et BERT}
 
-L'architecture \emph{transformer} lève cette contrainte grâce au mécanisme d'attention, qui pondère
-l'influence de chaque mot d'une phrase sur la représentation des autres~\cite{vaswani2017}. Le
-vecteur d'un mot devient dépendant de son contexte immédiat : dans \emph{le serveur de messagerie
-ne répond plus}, la présence de \emph{messagerie} oriente la représentation de \emph{serveur}. Cette
-architecture se prête en outre au calcul parallèle, ce qui a rendu possible l'entraînement sur des
-corpus de très grande taille.
+L'architecture \emph{transformer} lève cette contrainte par le mécanisme d'attention, qui pondère
+l'influence de chaque mot d'une phrase sur la représentation des autres~\cite{vaswani2017}. Dans
+\emph{le serveur de messagerie ne répond plus}, la présence de \emph{messagerie} oriente la
+représentation de \emph{serveur}.
 
-Le modèle BERT exploite cette architecture selon une procédure de pré-entraînement particulière : il
-apprend à prédire des mots volontairement masqués à partir des mots qui les entourent, à gauche
-comme à droite~\cite{devlin2019}. Cette bidirectionnalité le distingue des modèles génératifs, qui
-ne considèrent que le contexte gauche, et le rend particulièrement adapté aux tâches de
-compréhension telles que la classification.
-
-L'intérêt pratique de ce pré-entraînement tient à ce qu'il s'effectue sans étiquettes. Le modèle
-acquiert une connaissance générale de la langue à partir de texte brut, puis se spécialise sur une
-tâche donnée avec un volume d'exemples annotés bien plus modeste que ce qu'exigerait un
-entraînement complet.
+Le modèle BERT y applique un pré-entraînement par masquage : il prédit des mots occultés à partir de
+leur contexte gauche et droit~\cite{devlin2019}. Cette bidirectionnalité le rend adapté aux tâches
+de compréhension telles que la classification. Le pré-entraînement s'effectuant sans étiquettes, le
+modèle acquiert une connaissance générale de la langue à partir de texte brut, puis se spécialise
+sur une tâche donnée avec un volume d'exemples annotés bien plus modeste.
 
 \subsection{CamemBERT, un transformer francophone}
 
 BERT ayant été entraîné sur des corpus majoritairement anglophones, son transfert direct au français
-donne des résultats médiocres. Les modèles multilingues atténuent le problème sans le résoudre :
-répartir la capacité du modèle sur une centaine de langues dégrade la qualité obtenue sur chacune.
+donne des résultats médiocres, et les modèles multilingues dégradent la qualité obtenue sur chaque
+langue en répartissant leur capacité sur une centaine d'entre elles.
 
-CamemBERT répond à ce besoin. Entraîné sur la partie française du corpus OSCAR, il applique au
-français la même architecture et la même procédure de pré-entraînement~\cite{martin2020}. Les
-auteurs montrent qu'il devance les modèles multilingues sur les tâches francophones de référence,
-notamment l'étiquetage morphosyntaxique, l'analyse syntaxique et la reconnaissance d'entités
-nommées.
-
-Ce choix s'impose dans notre contexte. Les tickets sont rédigés en français, dans un registre
-professionnel mêlé de vocabulaire technique anglais. Le chapitre~4 mesure ce que ce modèle apporte
-réellement sur notre corpus, et l'écart entre l'apport attendu et l'apport constaté y fait l'objet
-d'une analyse détaillée.
+CamemBERT applique au français la même architecture et la même procédure, sur la partie française du
+corpus OSCAR~\cite{martin2020}. Ses auteurs le montrent devant les modèles multilingues sur les
+tâches francophones de référence. Le choix s'impose ici, où les tickets sont rédigés en français
+dans un registre professionnel mêlé de vocabulaire technique anglais. Le chapitre~4 mesure ce que ce
+modèle apporte réellement sur notre corpus.
 
 \subsection{Fine-tuning et adaptation économe en paramètres}
 
-Spécialiser un modèle pré-entraîné sur une tâche particulière s'appelle le \emph{fine-tuning}. La
-méthode classique consiste à poursuivre l'entraînement sur les données de la tâche en mettant à jour
-l'ensemble des poids. Elle suppose d'héberger simultanément en mémoire graphique le modèle, ses
-gradients et les états de l'optimiseur, soit plusieurs fois la taille du modèle lui-même.
+Spécialiser un modèle pré-entraîné, ou \emph{fine-tuning}, suppose classiquement d'héberger en
+mémoire graphique le modèle, ses gradients et les états de l'optimiseur, soit plusieurs fois sa
+taille. Cette exigence dépassait notre matériel.
 
-Cette exigence dépassait les moyens matériels dont nous disposions. Les méthodes d'adaptation
-économe en paramètres, regroupées sous le sigle PEFT, contournent l'obstacle en gelant les poids
-d'origine et en n'entraînant qu'un petit nombre de paramètres additionnels.
-
-La technique LoRA, retenue dans ce travail, insère dans certaines couches du modèle deux matrices de
-rang faible dont le produit vient s'ajouter aux poids gelés~\cite{hu2022}. Une couche dont la
-matrice de poids $W_0$ reste figée voit sa sortie corrigée par un terme $BA$, où $A$ projette
-l'entrée sur un espace de dimension réduite $r$ et $B$ la ramène vers la dimension de sortie :
+Les méthodes d'adaptation économe en paramètres, regroupées sous le sigle PEFT, gèlent les poids
+d'origine et n'entraînent qu'un petit nombre de paramètres additionnels. La technique LoRA, retenue
+ici, insère dans certaines couches deux matrices de rang faible dont le produit s'ajoute aux poids
+gelés~\cite{hu2022} :
 
 \[
 h = W_0 x + \frac{\alpha}{r}\,B A x
 \]
 
-Seules les matrices $A$ et $B$ sont apprises. Le rang $r$, très inférieur à la dimension des couches
-d'origine, détermine le nombre de paramètres entraînables : il chute de plusieurs ordres de
-grandeur, et l'empreinte mémoire avec lui. Le facteur $\alpha$ règle l'amplitude de la correction
-apportée.
+La matrice $W_0$ reste figée ; seules $A$, qui projette l'entrée sur un espace de dimension réduite
+$r$, et $B$, qui la ramène vers la dimension de sortie, sont apprises. Le rang $r$ fixe le nombre de
+paramètres entraînables, qui chute de plusieurs ordres de grandeur, et le facteur $\alpha$ règle
+l'amplitude de la correction. Le prix est une capacité d'adaptation moindre, le modèle ne pouvant se
+réorganiser que dans le sous-espace autorisé par le rang choisi.
 
-Le prix de cette économie est une capacité d'adaptation moindre, puisque le modèle ne peut se
-réorganiser que dans le sous-espace autorisé par le rang choisi. Le chapitre~4 détaille la
-configuration retenue et discute l'effet de cette contrainte sur les résultats.
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{ch02_principe_lora.png}
+\caption{Principe de l'adaptation LoRA : les poids d'origine restent gelés}
+\label{fig:lora2}
+\end{figure}
+
+La figure~\ref{fig:lora2} montre le trajet d'une entrée. Elle traverse en parallèle les poids
+d'origine, qui ne bougent pas, et la paire de matrices de rang faible, seule partie apprise. Les
+deux contributions s'additionnent avant de sortir. Rien n'est retiré au modèle pré-entraîné, et
+l'adaptation se lit comme une correction ajoutée par-dessus. Le chapitre~4 applique ce dispositif à
+CamemBERT et en donne les paramètres retenus.
 
 \section{Classification supervisée et déséquilibre de classes}
 
-Attribuer une catégorie à un ticket relève de la classification supervisée : à partir d'exemples
-étiquetés, un algorithme apprend une fonction qui associe un texte à l'une des huit catégories du
-référentiel. La difficulté principale de notre corpus tient à la distribution très inégale de ces
-catégories, bien davantage qu'au choix de l'algorithme.
+Attribuer une catégorie à un ticket relève de la classification supervisée à étiquette unique sur
+huit modalités. La difficulté principale tient à la distribution très inégale de ces catégories,
+davantage qu'au choix de l'algorithme.
 
 \subsection{Algorithmes de référence}
 
-Plusieurs familles d'algorithmes conviennent à cette tâche sur des représentations TF-IDF et
-servent usuellement de point de comparaison.
+Trois familles conviennent sur des représentations TF-IDF et servent de point de comparaison.
 
-La régression logistique modélise la probabilité d'appartenance à chaque catégorie par une
-combinaison linéaire des variables explicatives. Sa simplicité en fait un modèle de référence
-naturel : elle s'entraîne rapidement, se règle avec peu d'hyperparamètres et fournit des
-probabilités directement interprétables, ce qui importe pour le calcul d'un score de confiance.
-
-Les machines à vecteurs de support cherchent l'hyperplan qui sépare les classes avec la plus grande
-marge possible. Leur variante linéaire se comporte bien en grande dimension, situation typique des
-représentations TF-IDF où le vocabulaire produit des milliers de colonnes. Elles ne fournissent
-toutefois pas de probabilité et demandent une étape de calibration supplémentaire.
-
-Les méthodes d'ensemble par arbres de décision, dont le gradient boosting est la forme la plus
-répandue, combinent un grand nombre d'arbres faibles construits séquentiellement, chacun corrigeant
-les erreurs du précédent. Elles capturent des interactions non linéaires entre variables, au prix
-d'un réglage plus délicat.
+\begin{puces}
+\item \textbf{Régression logistique} : probabilité d'appartenance modélisée par une combinaison
+linéaire des variables. Entraînement rapide, peu d'hyperparamètres, probabilités directement
+interprétables, ce qui importe pour le calcul d'un index de confiance.
+\item \textbf{Machines à vecteurs de support}~\cite{cortes1995} : hyperplan séparateur à marge
+maximale. La variante
+linéaire se comporte bien en grande dimension, situation typique du TF-IDF. Elles ne fournissent pas
+de probabilité et demandent une calibration.
+\item \textbf{Méthodes d'ensemble par arbres}, dont le gradient boosting : arbres faibles construits
+séquentiellement, chacun corrigeant les erreurs du précédent. Interactions non linéaires capturées,
+au prix d'un réglage plus délicat.
+\end{puces}
 
 \subsection{Métriques adaptées au déséquilibre}
 
-Notre corpus présente un rapport de 5,93 entre la catégorie la plus fréquente et la plus rare. Cette
-asymétrie rend trompeuse la métrique la plus intuitive, le taux de bonnes réponses. Un classifieur
-qui prédirait systématiquement les catégories majoritaires obtiendrait un score global honorable
-tout en étant inutilisable sur les catégories rares, qui comptent parmi les plus critiques puisque
-la sécurité en fait partie.
+Notre corpus présente un rapport de 5,93 entre la catégorie la plus fréquente et la plus rare. Le
+taux de bonnes réponses devient trompeur : un classifieur qui privilégie les catégories majoritaires
+obtient un score global honorable tout en restant inutilisable sur les catégories rares, dont la
+sécurité fait partie.
 
-Deux mesures par catégorie corrigent ce biais. La précision indique quelle proportion des tickets
-attribués à une catégorie lui appartient réellement. Le rappel indique quelle proportion des tickets
-d'une catégorie a effectivement été retrouvée. Le score F1 en fait la moyenne harmonique, qui
-pénalise fortement le déséquilibre entre les deux.
-
-Le F1-macro moyenne ensuite ces scores sur les catégories sans les pondérer par leurs
-effectifs. Une catégorie rare y pèse autant qu'une catégorie fréquente, et l'effondrement de l'une
-se voit immédiatement. C'est cette métrique que nous retenons comme critère principal au
-chapitre~4, complétée par le rappel de chaque catégorie prise séparément.
+La précision indique quelle proportion des tickets attribués à une catégorie lui appartient
+réellement, le rappel quelle proportion des tickets d'une catégorie a été retrouvée, et le score F1
+en est la moyenne harmonique. Le F1-macro moyenne ces scores sans les pondérer par les effectifs :
+une catégorie rare y pèse autant qu'une catégorie fréquente, et l'effondrement de l'une se voit
+immédiatement. C'est le critère principal du chapitre~4, complété par le rappel par catégorie.
 
 \subsection{Techniques de rééquilibrage}
 
-Agir sur la métrique révèle le problème sans le corriger. Deux leviers portent sur l'apprentissage
-lui-même.
+Agir sur la métrique révèle le problème sans le corriger. Deux leviers portent sur l'apprentissage.
 
-La pondération des classes modifie la fonction de coût pour que les erreurs commises sur les
-catégories rares comptent davantage. Elle ne demande aucune donnée supplémentaire et se règle par un
-simple paramètre dans la plupart des implémentations, ce qui en fait le premier réflexe.
-
-Le suréchantillonnage synthétique produit de nouveaux exemples minoritaires plutôt que de dupliquer
-les existants. La méthode SMOTE, la plus connue, interpole entre un exemple minoritaire et l'un de
-ses plus proches voisins de la même classe pour générer un point intermédiaire~\cite{chawla2002}.
-Appliquée à des représentations TF-IDF, elle crée des vecteurs qui ne correspondent à aucun texte
-réel, ce qui appelle une certaine prudence dans l'interprétation des gains observés.
+\begin{puces}
+\item \textbf{Pondération des classes} : la fonction de coût pénalise davantage les erreurs commises
+sur les catégories rares. Aucune donnée supplémentaire, un paramètre unique dans la plupart des
+implémentations.
+\item \textbf{Suréchantillonnage synthétique} : la méthode SMOTE interpole entre un exemple
+minoritaire et l'un de ses plus proches voisins de la même classe~\cite{chawla2002}. Appliquée au
+TF-IDF, elle crée des vecteurs qui ne correspondent à aucun texte réel, ce qui appelle de la
+prudence dans l'interprétation des gains.
+\end{puces}
 
 \section{Génération augmentée par récupération}
 
-Un modèle de langue restitue ce qu'il a appris pendant son pré-entraînement. Il ignore donc tout des
-documents propres à une organisation, et rien ne l'empêche de produire une réponse plausible mais
-fausse lorsqu'il est interrogé hors de son domaine de connaissance. La génération augmentée par
-récupération répond à cette double limite.
+Un modèle de langue restitue ce qu'il a appris pendant son pré-entraînement. Il ignore les documents
+propres à une organisation, et rien ne l'empêche de produire une réponse plausible mais fausse hors
+de son domaine de connaissance. La génération augmentée par récupération répond à cette double
+limite.
 
 \subsection{Principe et architecture}
 
-Plutôt que d'interroger la mémoire du modèle, l'architecture RAG commence par rechercher dans une
-base documentaire les passages les plus proches de la question, puis les fournit au modèle en même
-temps que la question~\cite{lewis2020}.
+Plutôt que d'interroger la mémoire du modèle, l'architecture RAG recherche d'abord dans une base
+documentaire les passages les plus proches de la question, puis les lui fournit avec
+celle-ci~\cite{lewis2020}. Deux phases s'exécutent à des fréquences différentes, distinction que la
+figure~\ref{fig:rag} met en évidence.
 
-Le déroulement se répartit sur deux phases qui ne s'exécutent ni au même moment ni à la même
-fréquence, distinction que la figure~\ref{fig:rag} met en évidence. La phase hors ligne transforme
-une fois pour toutes le corpus documentaire en vecteurs rangés dans un index ; elle n'est rejouée
-que lorsque le corpus change. La phase en ligne se déclenche à chaque question : celle-ci est
-encodée par le même modèle, comparée aux vecteurs de l'index, et les passages les plus proches
-accompagnent la question soumise au modèle de langue.
+\begin{puces}
+\item \textbf{Hors ligne} : le corpus est encodé une fois pour toutes en vecteurs rangés dans un
+index, rejoué seulement lorsque le corpus change.
+\item \textbf{En ligne} : à chaque question, celle-ci est encodée par le même modèle, comparée aux
+vecteurs de l'index, et les passages les plus proches accompagnent la question soumise au modèle de
+langue.
+\end{puces}
 
 \begin{figure}[!htbp]
 \centering
@@ -217,171 +181,173 @@ accompagnent la question soumise au modèle de langue.
 \label{fig:rag}
 \end{figure}
 
-L'encodage doit employer le même modèle dans les deux phases. Deux modèles différents placeraient
-les documents et les questions dans des espaces sans rapport, et la mesure de proximité perdrait
-tout sens.
+L'encodage doit employer le même modèle dans les deux phases : deux modèles différents placeraient
+documents et questions dans des espaces sans rapport, et la mesure de proximité perdrait tout sens.
 
-Un exemple mesuré sur notre corpus donne la mesure du procédé. Le ticket
-\og Erreur activation Office 365 \fg{} retrouve, avec une similarité de 0,78, la résolution
-\og vérifier la connexion, réactiver la licence avec l'outil de récupération Microsoft \fg{}, alors
-qu'aucun terme du premier ne figure dans la seconde. Le chapitre~5 détaille la construction de cet
-index et son évaluation.
+Un exemple mesuré sur notre corpus donne la mesure du procédé. Le ticket \og Erreur activation
+Office 365 \fg{} retrouve, avec une similarité sémantique de 0,78, la résolution \og vérifier la
+connexion, réactiver la licence avec l'outil de récupération Microsoft \fg{}, alors qu'aucun terme du
+premier ne figure dans la seconde.
 
-Plusieurs propriétés en découlent, toutes utiles à notre contexte. La réponse s'appuie sur des documents
-identifiables, donc citables et vérifiables par l'utilisateur. La base peut être enrichie sans
-réentraîner quoi que ce soit, ce qui autorise une mise à jour continue de la connaissance. Le modèle
-reste enfin cantonné à ce qu'on lui fournit, ce qui réduit le risque d'invention.
-
-Appliquée au support informatique, cette architecture répond directement à la limite constatée au
-chapitre~1 : l'historique des résolutions devient interrogeable en langage naturel, et chaque
-suggestion est accompagnée du ticket dont elle provient.
+Trois propriétés en découlent : la réponse s'appuie sur des documents identifiables, donc citables et
+vérifiables ; la base s'enrichit sans réentraîner quoi que ce soit ; le modèle reste cantonné à ce
+qu'on lui fournit, ce qui réduit le risque d'invention. Appliquée au support informatique, cette
+architecture rend l'historique des résolutions interrogeable en langage naturel.
 
 \subsection{Recherche lexicale et recherche sémantique}
 
 La qualité d'un système RAG dépend d'abord de l'étape de récupération, où deux approches s'opposent.
 
-La recherche lexicale compare les termes de la question à ceux des documents, généralement au moyen
-d'une pondération TF-IDF et d'une mesure de similarité cosinus. Elle est rapide, ne demande aucun
-modèle, et se comporte bien lorsque la question emploie le vocabulaire des documents. Elle échoue
-dès que ce vocabulaire diffère, ce qui est fréquent entre un demandeur non spécialiste et un ticket
-rédigé par un consultant.
+\begin{puces}
+\item \textbf{Recherche lexicale} : comparaison des termes par pondération TF-IDF et similarité
+cosinus, famille à laquelle appartient aussi la fonction BM25~\cite{robertson2009}. Rapide, sans modèle, efficace lorsque la question emploie le vocabulaire des documents.
+Elle échoue dès que ce vocabulaire diffère, situation fréquente entre un demandeur non spécialiste
+et un ticket rédigé par un consultant.
+\item \textbf{Recherche sémantique} : question et documents convertis en vecteurs denses, comparés
+par le cosinus de l'angle formé. Deux formulations d'un même problème deviennent proches. Le coût
+est un encodage préalable de chaque document et une dépendance au modèle d'encodage.
+\end{puces}
 
-La recherche sémantique convertit question et documents en vecteurs denses au moyen d'un modèle
-d'encodage de phrases, puis mesure leur similarité par le cosinus de l'angle qu'ils forment. Deux
-formulations différentes d'un même problème deviennent alors proches. Le coût est un calcul
-d'encodage préalable pour chaque document et une dépendance à la qualité du modèle d'encodage sur le
-domaine considéré.
-
-Les deux approches ont des défaillances complémentaires, ce qui suggère de les combiner. Une
-recherche hybride agrège les deux scores selon une pondération réglable. Le chapitre~5 met en œuvre
-et compare ces trois variantes.
+Ces défaillances étant complémentaires, une recherche hybride agrège les deux scores selon une
+pondération réglable. Le chapitre~5 met en œuvre et compare ces trois variantes.
 
 \subsection{Bases vectorielles}
 
-Rechercher les plus proches voisins d'un vecteur parmi des milliers d'autres devient coûteux si l'on
-procède par comparaison exhaustive. Les bibliothèques d'indexation vectorielle organisent les
-vecteurs de manière à restreindre la recherche à une fraction de la base, au prix d'une exactitude
-approchée mais contrôlée~\cite{johnson2021}.
-
-Deux outils se distinguent pour un projet de cette taille. Le premier est une bibliothèque
-d'indexation pure, très rapide, qui laisse à l'application la charge de gérer la persistance et les
-métadonnées associées aux vecteurs. Le second est une base vectorielle complète, qui stocke les
-vecteurs, leurs métadonnées et les documents d'origine, et se prête à une interrogation directe
-depuis un service applicatif.
-
-Le choix entre les deux se décide sur le mode d'exploitation attendu plutôt que sur la
-performance brute.
-Le chapitre~5 expose la décision retenue et ce qui l'a motivée.
+Rechercher les plus proches voisins d'un vecteur par comparaison exhaustive devient coûteux. Les
+bibliothèques d'indexation vectorielle restreignent la recherche à une fraction de la base, au prix
+d'une exactitude approchée mais contrôlée~\cite{johnson2021}. Deux outils conviennent à un projet de
+cette taille : une bibliothèque d'indexation pure, très rapide, qui laisse à l'application la charge
+de la persistance et des métadonnées, ou une base vectorielle complète, qui stocke vecteurs,
+métadonnées et documents d'origine. Le choix se décide sur le mode d'exploitation attendu plutôt que
+sur la performance brute ; le chapitre~5 expose la décision retenue.
 
 \subsection{Évaluation d'un système RAG}
 
 Évaluer un système RAG soulève une difficulté propre : il n'existe pas de réponse unique de
-référence à laquelle comparer la sortie. Le cadre RAGAS propose pour cela un ensemble de mesures
-dédiées, calculées séparément sur les deux étages du système~\cite{es2024}.
+référence. Le cadre RAGAS propose des mesures calculées séparément sur les deux
+étages~\cite{es2024}. Côté récupération, la précision sur les $k$ premiers résultats donne la
+proportion de passages pertinents, et le rang réciproque moyen la position du premier d'entre eux.
+Côté génération, la pertinence évalue l'adéquation de la réponse à la question, et la fidélité
+vérifie que chaque affirmation est soutenue par un passage récupéré.
 
-Du côté de la récupération, la précision sur les $k$ premiers résultats indique quelle proportion
-des passages remontés est pertinente, et le rang réciproque moyen mesure à quelle position apparaît
-le premier passage pertinent. Du côté de la génération, la pertinence de la réponse évalue son
-adéquation à la question, et la fidélité vérifie que chaque affirmation avancée est soutenue par un
-passage récupéré.
-
-Cette dernière mesure appelle une mise en garde méthodologique que le chapitre~5 développe. Une
-fidélité parfaite n'a de sens que si le système génère librement. Un système qui se contente
-d'assembler des extraits selon un gabarit obtient mécaniquement le score maximal, sans que cela
-renseigne en quoi que ce soit sur sa capacité à ne pas inventer.
+La fidélité appelle une mise en garde que le chapitre~5 développe : elle n'a de sens que si le
+système génère librement. Un système qui assemble des extraits selon un gabarit obtient
+mécaniquement le score maximal, sans que cela renseigne sur sa capacité à ne pas inventer.
 
 \section{Grands modèles de langage}
 
 Les grands modèles de langage prolongent l'architecture \emph{transformer} à des échelles très
-supérieures et savent rédiger un texte cohérent à partir d'une consigne. Leur intégration dans une
-application soulève des questions d'implantation, d'instruction et de fiabilité.
+supérieures et rédigent un texte cohérent à partir d'une consigne. Leur intégration soulève des
+questions d'implantation, d'instruction et de fiabilité.
 
 \subsection{Exécution locale et confidentialité}
 
-L'usage courant de ces modèles passe par des interfaces de programmation exploitées à distance, ce
-qui suppose de transmettre la requête au fournisseur du service. Cette modalité offre la meilleure
-qualité de rédaction et ne demande aucun matériel particulier.
-
-Elle était exclue ici. Le chapitre~1 a rappelé que les tickets contiennent des noms de
-collaborateurs, des éléments d'architecture réseau et des signalements de sécurité, et que la
-certification ISO 27001 d'\OTBS encadre strictement leur circulation. Transmettre ces contenus à un
-tiers aurait contrevenu à une obligation contractuelle de l'entreprise.
+L'usage courant de ces modèles passe par des interfaces exploitées à distance, ce qui suppose de
+transmettre la requête au fournisseur du service. Cette modalité était exclue ici : les tickets
+contiennent des noms de collaborateurs, des éléments d'architecture réseau et des signalements de
+sécurité, et les règles internes de confidentialité d'\otbs, rappelées dès l'accueil des
+stagiaires~\cite{otbs-integration}, encadrent la circulation de ces contenus.
 
 L'alternative consiste à exécuter un modèle ouvert sur l'infrastructure interne. Les modèles de
-taille modérée, de quelques milliards de paramètres, rendent cette exécution possible sur du
-matériel ordinaire. Le compromis est double : une qualité de rédaction inférieure à celle des
-modèles les plus volumineux, et une latence sensiblement plus élevée. Le chapitre~5 mesure ces deux
-effets sur la solution livrée.
+quelques milliards de paramètres le permettent sur du matériel ordinaire, au prix d'une qualité de
+rédaction inférieure et d'une latence sensiblement plus élevée. Le chapitre~5 mesure ces deux effets.
 
 \subsection{Conception des consignes}
 
-La formulation de la consigne adressée au modèle, communément désignée par le terme \emph{prompt},
-détermine largement la qualité de la sortie. Une consigne efficace précise le rôle attendu du
-modèle, le format de la réponse, les données sur lesquelles il doit s'appuyer et le comportement à
-adopter en cas d'information manquante.
-
-Cette formulation est un artefact à part entière du système, au même titre que le code. Elle
-se teste, se révise et gagne à être versionnée, car une modification apparemment anodine peut
-changer sensiblement le comportement observé.
+La consigne adressée au modèle, communément désignée par le terme \emph{prompt}, détermine largement
+la qualité de la sortie. Elle précise le rôle attendu, le format de la réponse, les données sur
+lesquelles s'appuyer et le comportement à adopter en cas d'information manquante. C'est un artefact
+du système au même titre que le code : elle se teste, se révise et gagne à être versionnée, une
+modification apparemment anodine pouvant changer sensiblement le comportement observé.
 
 \subsection{Hallucinations et garde-fous}
 
-Un modèle de langage produit le texte le plus vraisemblable au regard de sa consigne, sans disposer
-d'aucun mécanisme lui permettant de distinguer le vrai du plausible. Il peut ainsi énoncer avec
-assurance un identifiant de ticket qui n'existe pas ou une procédure qu'il a reconstituée. Ce
-comportement, appelé hallucination, est particulièrement dommageable dans un contexte de support où
-la réponse sera appliquée sur un système réel.
+Un modèle de langage produit le texte le plus vraisemblable au regard de sa consigne, sans mécanisme
+lui permettant de distinguer le vrai du plausible. Il peut énoncer avec assurance un identifiant de
+ticket inexistant ou une procédure reconstituée. Ce comportement, appelé
+hallucination~\cite{ji2023}, est
+particulièrement dommageable en support, où la réponse sera appliquée sur un système réel. Quatre
+garde-fous se combinent.
 
-Plusieurs garde-fous se combinent pour en limiter la portée. La consigne instruit le modèle de ne
-s'appuyer que sur les passages fournis et de signaler son incapacité à répondre plutôt que de
-combler un vide. Un filtrage des entrées écarte les tentatives de détournement de la consigne. Un
-contrôle des sorties vérifie que les identifiants cités figurent bien parmi les documents récupérés.
-La validation humaine, enfin, reste le garde-fou déterminant : aucune réponse n'est appliquée sans
-qu'un consultant l'ait examinée.
+\begin{puces}
+\item La consigne instruit le modèle de ne s'appuyer que sur les passages fournis et de signaler son
+incapacité à répondre plutôt que de combler un vide.
+\item Un filtrage des entrées écarte les tentatives de détournement de la consigne.
+\item Un contrôle des sorties vérifie que les identifiants cités figurent parmi les documents
+récupérés.
+\item La validation humaine reste déterminante : aucune réponse n'est appliquée sans qu'un
+consultant l'ait examinée.
+\end{puces}
 
 \section{Industrialisation et MLOps}
 
-Un modèle qui ne fonctionne que sur la machine de son auteur n'a pas de valeur industrielle. Plusieurs
-exigences distinguent un travail exploratoire d'un travail livrable, et le terme MLOps désigne
-l'ensemble des pratiques qui les satisfont.
+Un modèle qui ne fonctionne que sur la machine de son auteur n'a pas de valeur industrielle. Le
+terme MLOps désigne les pratiques qui séparent un travail exploratoire d'un travail livrable. La
+littérature a documenté ce qui distingue un système d'apprentissage d'un logiciel ordinaire : le
+code n'y est qu'une petite partie de l'ensemble, et l'essentiel de la dette s'accumule autour de
+lui, dans les données, la configuration et les dépendances~\cite{sculley2015,amershi2019se}.
 
 \subsection{Versionnement des données et des modèles}
 
-Le versionnement du code est une pratique acquise ; celui des données l'est beaucoup moins. Un dépôt
-Git conserve mal des fichiers volumineux et binaires, or un jeu de données et un modèle entraîné
-sont précisément cela.
-
-Les outils dédiés résolvent le problème en dissociant le contenu de sa référence : les fichiers sont
-stockés à l'extérieur du dépôt, qui ne conserve que des empreintes légères. Ils décrivent en outre
-la chaîne de traitement sous forme d'étapes enchaînées, chacune déclarant ses entrées, ses sorties
-et la commande qui les produit. Réexécuter la chaîne devient une commande unique, et seules les
-étapes dont les entrées ont changé sont recalculées.
-
-L'apport dépasse le simple gain de temps. Une chaîne ainsi décrite est reproductible par un tiers,
-ce qui est la condition d'une évaluation sérieuse des résultats annoncés.
+Un dépôt Git conserve mal des fichiers volumineux et binaires, or un jeu de données et un modèle
+entraîné sont précisément cela. Les outils dédiés dissocient le contenu de sa référence : les
+fichiers sont stockés hors du dépôt, qui ne conserve que des empreintes légères. Ils décrivent en
+outre la chaîne de traitement en étapes enchaînées, chacune déclarant ses entrées, ses sorties et sa
+commande. Réexécuter la chaîne devient une commande unique, et seules les étapes dont les entrées
+ont changé sont recalculées. Une chaîne ainsi décrite est reproductible par un tiers, condition
+d'une évaluation sérieuse des résultats annoncés.
 
 \subsection{Suivi des expérimentations}
 
-Un projet d'apprentissage automatique produit des dizaines d'exécutions différant par un
-hyperparamètre, une variante de prétraitement ou une version des données. Retrouver, deux mois plus
-tard, quelle combinaison a produit tel résultat devient rapidement impossible sans outil.
-
-Un système de suivi enregistre pour chaque exécution les hyperparamètres employés, les métriques
-obtenues et les artefacts produits, puis permet de comparer les exécutions entre elles. Il tient
+Un projet d'apprentissage produit des dizaines d'exécutions différant par un hyperparamètre, une
+variante de prétraitement ou une version des données. Un système de suivi enregistre pour chacune
+les hyperparamètres, les métriques et les artefacts produits, puis permet de les comparer. Il tient
 également lieu de registre de modèles, où chaque version est conservée avec le contexte qui l'a
 produite.
 
 \subsection{Conteneurisation et intégration continue}
 
 La portabilité passe par la conteneurisation : chaque service est décrit avec ses dépendances dans
-une image reproductible, et l'orchestration de plusieurs services se déclare dans un fichier unique.
-L'application entière se lance alors par une commande, indépendamment de la configuration de la
-machine hôte.
+une image reproductible, et l'orchestration se déclare dans un fichier unique. L'application se
+lance par une commande, indépendamment de la machine hôte. L'intégration continue exécute
+automatiquement, à chaque modification du code, les contrôles de qualité et la campagne de tests,
+détectant les régressions au moment où elles sont introduites. Sa mise en place effective n'a pas
+été conduite dans ce travail, et la conclusion la range parmi les suites immédiates.
 
-L'intégration continue complète le dispositif en exécutant automatiquement, à chaque modification du
-code, les contrôles de qualité et la campagne de tests. Elle détecte les régressions au moment où
-elles sont introduites, et non lors de la livraison. Le chapitre~7 rend compte de la mise en œuvre
-effective de ces exigences ainsi que de ses limites.
+\section{Positionnement du travail}
+\label{sec:positionnement2}
+
+Les concepts réunis dans ce chapitre sont d'usage courant. Ce qui distingue ce travail tient aux
+conditions dans lesquelles ces techniques sont mises en œuvre, et à ce que nous avons choisi de
+mesurer.
+
+La première condition est une interdiction. Aucune donnée de ticket ne peut sortir du réseau de
+l'entreprise, contrainte posée au chapitre~1 et jamais levée depuis. Elle écarte les services
+d'inférence hébergés par un tiers, impose que le modèle de langage s'exécute sur place, et pèse sur
+le temps de réponse dont le chapitre~7 rend compte.
+
+La seconde tient au corpus. Les 1\,800 lignes disponibles ne recouvrent que cinquante-huit types de
+demandes distincts, répartis en huit catégories dont deux réunissent moins de cinq pour cent des
+tickets chacune. Ce format écarte l'entraînement d'un modèle depuis zéro et oriente vers
+l'adaptation d'un modèle déjà pré-entraîné.
+
+De ces conditions découle ce que le mémoire établit et qui lui appartient en propre.
+
+Nous mesurons ce qu'ajoutent des règles métier appliquées par-dessus un modèle statistique, au lieu
+de les supposer utiles. Sous un protocole unique, la chaîne lexicale passe de 0,3753 à 0,5827 de
+F1-macro lorsque les règles s'y ajoutent, et le transformer francophone de 0,5685 à 0,8343. Le
+chapitre~4 détaille ces configurations et les conditions dans lesquelles elles se reproduisent.
+
+Nous rapportons ensuite des scores obtenus sous un découpage qui regroupe les tickets par type avant
+le tirage. Cette précaution empêche qu'un même type de demande figure à la fois dans l'apprentissage
+et dans l'évaluation, situation qui gonflerait les résultats sans que rien ne le signale. Un score
+obtenu de cette manière est structurellement plus bas qu'un score obtenu par tirage aléatoire sur
+les lignes, et il ne se compare pas à lui.
+
+Ces mesures valent dans les limites de leur cadre. Le corpus provient d'un seul service et d'une
+seule entreprise, il est francophone, et sa faible diversité de types interdit de présumer que les
+résultats se transporteraient tels quels ailleurs. Le chapitre~7 confronte les exigences aux mesures
+obtenues et énonce ce qui reste hors d'atteinte.
 
 \section{Outils technologiques utilisés}
 
@@ -415,23 +381,19 @@ Industrialisation & DVC, MLflow, Docker, pytest & Reproductibilité, suivi, dép
 \end{tabular}
 \end{table}
 
-Deux choix méritent d'être commentés dès à présent. Le modèle d'encodage retenu pour la recherche
-sémantique produit des vecteurs de 768 dimensions et gère plusieurs langues, ce qui convient à des
-tickets rédigés en français mais parsemés de termes techniques anglais. Le modèle de langage a été
-choisi pour tenir sur le matériel disponible plutôt que pour ses performances de rédaction :
-l'arbitrage est assumé et ses conséquences sont mesurées au chapitre~5.
+Deux choix appellent un commentaire immédiat. Le modèle d'encodage produit des vecteurs de
+768 dimensions et gère plusieurs langues, ce qui convient à des tickets rédigés en français mais
+parsemés de termes techniques anglais. Le modèle génératif a été choisi pour tenir sur le matériel
+disponible plutôt que pour ses performances de rédaction : l'arbitrage est assumé et ses
+conséquences sont mesurées au chapitre~5.
 
 \FloatBarrier
 \section{Spécification des besoins}
 
-Les concepts et les outils étant posés, il reste à formaliser ce que la plateforme doit accomplir.
-Cette section traduit les besoins identifiés au chapitre~1 en exigences vérifiables.
-
 \subsection{Acteurs du système}
 
-La plateforme distingue deux profils, récapitulés au tableau~\ref{tab:acteurs}. Cette
-distinction se traduit directement dans le contrôle d'accès de l'application, qui ne connaît que
-deux rôles.
+La plateforme distingue deux profils, récapitulés au tableau~\ref{tab:acteurs}. Cette distinction se
+traduit directement dans le contrôle d'accès RBAC de l'application, qui ne connaît que deux rôles.
 
 \begin{table}[!htbp]
 \centering
@@ -453,141 +415,173 @@ l'activité : volumes, catégories, délais, gestion des comptes \\
 \end{tabular}
 \end{table}
 
-Les administrateurs sont les consultants du service support eux-mêmes. Le terme désigne leur rôle
-dans l'application, non une fonction distincte dans l'organisation.
-
-Ce regroupement du traitement et de la supervision sous un même profil mérite d'être justifié, car
-les référentiels de gestion de services informatiques distinguent habituellement l'agent qui traite
-le ticket du responsable qui pilote l'activité. Cette séparation n'aurait ici aucun sens. Le service
-compte onze consultants qui traitent les demandes et suivent collectivement l'activité, sans
-échelon intermédiaire. Introduire un troisième rôle aurait créé une hiérarchie que l'organisation
-réelle ne comporte pas, et alourdi la gestion des comptes sans contrepartie.
+Les administrateurs sont les consultants du service support eux-mêmes ; le terme désigne leur rôle
+dans l'application, non une fonction distincte dans l'organisation. Ce regroupement du traitement et
+de la supervision s'écarte des référentiels de gestion de services informatiques, qui séparent
+l'agent du responsable. Cette séparation n'aurait ici aucun objet : le service compte onze
+consultants qui traitent les demandes et suivent collectivement l'activité, sans échelon
+intermédiaire.
 
 Le demandeur n'a délibérément aucune visibilité sur les mécanismes de classification : ni la
-catégorie prédite ni le score de confiance ne lui sont présentés. Exposer une prédiction incertaine
-à un utilisateur non spécialiste reviendrait à lui faire porter un arbitrage qui ne lui revient pas,
-et à dégrader la confiance dans l'outil au premier écart constaté.
+catégorie prédite ni l'index de confiance ne lui sont présentés. Exposer une prédiction incertaine à
+un utilisateur non spécialiste reviendrait à lui faire porter un arbitrage qui ne lui revient pas.
 
 \subsection{Exigences fonctionnelles}
 
-Les besoins fonctionnels ont été formalisés sous forme d'exigences numérotées. Chacune porte un
-identifiant stable, un critère d'acceptation vérifiable et un niveau de priorité. Trois niveaux
-sont employés. Une exigence de priorité \textbf{élevée} conditionne la livraison : son absence
-rendrait la plateforme inutilisable pour l'usage visé. Une priorité \textbf{moyenne} désigne une
-fonction attendue dont le report resterait acceptable. Une priorité \textbf{faible} marque un
-apport de confort, traité si les conditions le permettent.
-
-Le tableau~\ref{tab:ef} présente les exigences par domaine fonctionnel. La numérotation reprend
-celle du dossier de spécification, ce qui permet de suivre chaque exigence jusqu'à son évaluation
-au chapitre~7.
+Chaque exigence porte un critère d'acceptation vérifiable et un niveau de priorité : \textbf{élevée}
+lorsqu'elle conditionne la livraison, \textbf{moyenne} lorsque son report resterait acceptable,
+\textbf{faible} pour un apport de confort. Le tableau~\ref{tab:ef} les regroupe par niveau ; la
+colonne \emph{Domaine} rappelle à quelle partie du parcours du ticket chacune se rattache.
 
 \begin{table}[!htbp]
 \centering
 \styletableau
 \caption{Exigences fonctionnelles et critères d'acceptation}
 \label{tab:ef}
-\begin{tabular}{|Cp{1.2cm}|Lp{4.6cm}|Lp{5.4cm}|Cp{1.9cm}|}
+% Meme interligne resserre que le tableau des exigences non fonctionnelles :
+% les deux tableaux de specification gardent ainsi la meme densite.
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{|Cp{1.3cm}|Lp{4.2cm}|Lp{5.1cm}|Lp{2.5cm}|}
 \hline
 \rowcolor{enteteTab}
-\textbf{Réf.} & \textbf{Exigence} & \textbf{Critère d'acceptation} & \textbf{Priorité} \\
+\textbf{Réf.} & \textbf{Exigence} & \textbf{Critère d'acceptation} & \textbf{Domaine} \\
 \hline
-\multicolumn{4}{|l|}{\cellcolor{white}\textit{Accès et cycle de vie du ticket}} \\
+\multicolumn{4}{|l|}{\cellcolor{enteteTab}\textbf{Priorité élevée} : conditionne la livraison} \\
 \hline
-EF-01 & Authentification et gestion des rôles & Accès restreint selon le rôle, jeton vérifié à
-chaque appel & Élevée \\
+EF-01 & Authentification et gestion des rôles & Accès restreint selon le rôle, jeton vérifié à chaque appel & Cycle de vie \\
 \hline
-EF-02 & Création d'un ticket par le demandeur & Ticket persisté, statut initial renseigné & Élevée \\
+EF-02 & Création d'un ticket par le demandeur & Ticket persisté, statut initial renseigné & Cycle de vie \\
 \hline
-EF-07 & Journal d'audit des modifications & Chaque changement tracé avec son auteur et sa date &
-Élevée \\
+EF-03 & Journal d'audit des modifications & Chaque changement tracé avec son auteur et sa date & Cycle de vie \\
 \hline
-EF-08 & Suivi du ticket par le demandeur & Statut et réponse consultables & Élevée \\
+EF-04 & Suivi du ticket par le demandeur & Statut et réponse consultables & Cycle de vie \\
 \hline
-\multicolumn{4}{|l|}{\cellcolor{white}\textit{Traitement automatique}} \\
+EF-05 & Classification automatique en catégorie & Catégorie et index de confiance retournés & Traitement \\
 \hline
-EF-03 & Classification automatique en catégorie & Catégorie et score de confiance retournés &
-Élevée \\
+EF-06 & Recherche de cas comparables & Trois résolutions proposées avec leurs sources & Traitement \\
 \hline
-EF-04 & Recherche de cas comparables & Trois résolutions proposées avec leurs sources & Élevée \\
+EF-07 & Orientation selon l'index de confiance & Cas peu assurés dirigés vers une revue humaine & Traitement \\
 \hline
-EF-05 & Orientation selon le score de confiance & Cas peu assurés dirigés vers une revue humaine &
-Élevée \\
+EF-08 & Validation ou correction par l'administrateur & Catégorie finale et solution enregistrées & Qualité \\
 \hline
-EF-14 & Synthèse rédigée à l'attention du consultant & Réponse formulée, sources citées, garde-fous
-actifs & Moyenne \\
+\multicolumn{4}{|l|}{\cellcolor{enteteTab}\textbf{Priorité moyenne} : le report resterait acceptable} \\
 \hline
-\multicolumn{4}{|l|}{\cellcolor{white}\textit{Boucle de qualité et enrichissement}} \\
+EF-09 & Synthèse rédigée à l'attention du consultant & Réponse formulée, sources citées, garde-fous actifs & Traitement \\
 \hline
-EF-06 & Validation ou correction par l'administrateur & Catégorie finale et solution enregistrées &
-Élevée \\
+EF-10 & Recueil du retour du demandeur & Avis persisté et exploitable & Qualité \\
 \hline
-EF-13 & Recueil du retour du demandeur & Avis persisté et exploitable & Moyenne \\
+EF-11 & Résumé automatique du ticket & Résumé affiché à l'administrateur & Qualité \\
 \hline
-EF-09 & Résumé automatique du ticket & Résumé affiché à l'administrateur & Moyenne \\
+EF-12 & Suggestion de priorité & Niveau proposé à la prise en charge & Qualité \\
 \hline
-EF-11 & Suggestion de priorité & Niveau proposé à la prise en charge & Moyenne \\
+\multicolumn{4}{|l|}{\cellcolor{enteteTab}\textbf{Priorité faible} : apport de confort} \\
 \hline
-EF-12 & Analyse de tonalité du message & Indicateur d'urgence affiché & Faible \\
+EF-13 & Analyse de tonalité du message & Indicateur d'urgence affiché & Qualité \\
 \hline
-EF-15 & Tableau de bord d'activité & Volumes, catégories et délais consultables & Faible \\
+EF-14 & Tableau de bord d'activité & Volumes, catégories et délais consultables & Qualité \\
 \hline
 \end{tabular}
 \end{table}
 
-Deux de ces exigences appellent une réserve, formulée ici plutôt que laissée à la découverte du
-chapitre~7. Le routage différencié selon la confiance est bien calculé, mais la version livrée
-n'oriente pas les tickets vers des files distinctes selon ce score. La synthèse rédigée s'appuie
-quant à elle sur des gabarits de texte et non sur une génération libre par le modèle de langage.
-Ces écarts sont documentés et analysés en temps voulu.
+% Le commentaire qui suit porte sur le tableau : la barriere empeche le flottant
+% de deriver apres lui, ce qui ferait lire l'explication avant la piece expliquee.
+\FloatBarrier
+
+Le classement en trois niveaux suit les dépendances du parcours d'un ticket. Les huit exigences de
+priorité élevée forment la chaîne minimale sans laquelle une demande ne peut ni exister, ni être
+qualifiée, ni être tranchée : la déposer (EF-02), la qualifier (EF-05, EF-06, EF-07), décider de son
+sort (EF-08), la suivre (EF-04) et savoir qui est intervenu (EF-01, EF-03). En retirer une seule
+interrompt le parcours décrit au chapitre~1, et la solution cesse alors de répondre au problème qui
+l'a motivée.
+
+Les exigences de priorité moyenne allègent le travail du consultant sans conditionner ce parcours.
+Un ticket se traite sans synthèse rédigée ni résumé automatique : le consultant lit la description
+lui-même, comme il le faisait avant l'outil. Celles de priorité faible n'interviennent pas dans le
+traitement d'une demande ; elles servent à observer l'activité une fois celle-ci traitée.
+
+Ce classement a été arrêté avant le développement, et le chapitre~7 montre qu'il a tenu. Les trois
+exigences finalement non traitées sont toutes de priorité moyenne ou faible, et aucune des huit
+exigences de priorité élevée n'a été abandonnée.
+
+Chaque ligne porte enfin un critère d'acceptation rédigé pour être constaté plutôt qu'apprécié.
+Cette contrainte de rédaction est ce qui permet au chapitre~7 de conclure exigence par exigence sans
+avoir à juger du résultat.
+
+Deux exigences appellent une réserve, posée ici plutôt que laissée à la découverte du lecteur.
+L'exigence EF-07 est bien calculée, mais la version livrée n'oriente pas les tickets vers des files
+distinctes selon l'index de confiance. L'exigence EF-09 s'appuie sur des gabarits de texte et non sur
+une génération libre par le modèle de langage.
 
 \subsection{Exigences non fonctionnelles}
 
-Les exigences non fonctionnelles encadrent la réalisation sans décrire de fonctionnalité. Le
-tableau~\ref{tab:enf} les résume.
-
-\begin{table}[!htbp]
+% Placement [H] : le tableau doit suivre immediatement le titre de la sous-section.
+% En [!htbp] il flottait vers la page suivante et laissait une demi-page blanche.
+\begin{table}[H]
 \centering
 \styletableau
 \caption{Exigences non fonctionnelles}
 \label{tab:enf}
-\begin{tabular}{|Bp{3.4cm}|Lp{10.4cm}|}
+% Interligne resserre et colonne d'exigence elargie : neuf lignes tiennent ainsi
+% sous le titre de la sous-section, au lieu d'imposer une page a elles seules.
+\renewcommand{\arraystretch}{1.05}
+\begin{tabular}{|Cp{1.4cm}|Bp{3.2cm}|Lp{9.4cm}|}
 \hline
 \rowcolor{enteteTab}
-\textbf{Catégorie} & \textbf{Exigence} \\
+\textbf{Réf.} & \textbf{Catégorie} & \textbf{Exigence} \\
 \hline
-Performance & Temps de réponse de la prédiction et de la recherche compatible avec un usage
-interactif \\
+ENF-01 & Performance & Prédiction et recherche servies sous 300\,ms au quatre-vingt-quinzième centile \\
 \hline
-Qualité de l'IA & Niveau de performance cible du classifieur et du moteur de recherche, mesuré selon
-un protocole défini avant l'expérimentation \\
+ENF-02 & Qualité de l'IA & F1-macro du classifieur d'au moins 0,85, mesuré selon un protocole arrêté
+avant l'expérimentation \\
 \hline
-Confidentialité & Aucune donnée de ticket transmise à un service externe ; traitement des données
-personnelles conforme à la réglementation \\
+ENF-03 & Qualité de l'IA & Rappel d'au moins 0,70 sur la catégorie \emph{Sécurité} \\
 \hline
-Sécurité & Authentification par jeton, contrôle d'accès fondé sur les rôles, secrets non exposés \\
+ENF-04 & Confidentialité & Aucune donnée de ticket transmise à un service externe ; traitement des
+données personnelles conforme à la réglementation \\
 \hline
-Fiabilité & Fonctionnement dégradé mais opérationnel en cas d'indisponibilité du modèle de langage \\
+ENF-05 & Sécurité & Authentification par jeton, contrôle d'accès RBAC, secrets non exposés \\
 \hline
-Maintenabilité & Code structuré en couches et couvert par des tests automatisés \\
+ENF-06 & Fiabilité & Fonctionnement dégradé mais opérationnel en cas d'indisponibilité du modèle de
+langage \\
 \hline
-Reproductibilité & Chaîne de traitement des données et des modèles réexécutable à l'identique \\
+ENF-07 & Maintenabilité & Code structuré en couches et couvert par des tests automatisés \\
 \hline
-Portabilité & Déploiement conteneurisé sur une infrastructure standard \\
+ENF-08 & Reproductibilité & Chaîne de traitement des données et des modèles réexécutable à l'identique \\
+\hline
+ENF-09 & Portabilité & Déploiement conteneurisé sur une infrastructure standard \\
 \hline
 \end{tabular}
 \end{table}
 
-L'exigence de confidentialité occupe une place à part. Les autres se négocient : une latence peut
-être améliorée, une couverture de tests complétée. Celle-ci découle d'une obligation contractuelle
-et réglementaire de l'entreprise. Elle a donc été traitée comme un axiome de conception, et c'est
-elle qui a imposé l'exécution locale du modèle de langage.
+Le tableau~\ref{tab:enf} référence les exigences non fonctionnelles sur le même principe que les
+exigences fonctionnelles, de sorte que les chapitres suivants puissent s'y référer sans ambiguïté.
+
+Ces neuf exigences ne proviennent pas d'un référentiel appliqué par principe. Chacune répond à une
+propriété que le service attendait ou à une contrainte qui s'imposait au projet. Le temps de réponse
+(ENF-01) tient à ce qu'un outil plus lent que la lecture directe d'un ticket ne serait pas adopté.
+Le rappel sur la catégorie \emph{Sécurité} (ENF-03) tient à ce qu'elle compte parmi les plus rares du
+référentiel et que l'erreur y coûte le plus cher. Le fonctionnement dégradé (ENF-06) tient à ce que
+le modèle de langage s'exécute sur une machine de l'entreprise, donc peut cesser de répondre.
+
+Elles se répartissent ensuite selon la manière dont elles se vérifient. Trois portent une cible
+chiffrée et se constatent par la mesure, ce à quoi s'emploient les chapitres~4 et~7. Les six autres
+se constatent par examen de la solution livrée : on lit le code, la configuration ou le déploiement,
+et la réponse est oui ou non. Cette distinction commande la forme de leur évaluation au chapitre~7,
+où les premières apparaissent avec un chiffre et les secondes avec une preuve.
+
+Les exigences ENF-02 et ENF-03 fixent des seuils chiffrés parce que le chapitre~4 doit pouvoir conclure. Le
+moteur de recherche du chapitre~5 ne reçoit aucune cible numérique : aucune valeur de référence
+n'existait pour cette tâche sur ce corpus, et en poser une arbitrairement n'aurait rien mesuré.
+
+L'exigence ENF-04 occupe une place à part. Les autres se négocient, une latence pouvant être améliorée ou
+une couverture de tests complétée. Celle-ci traduit une règle interne de l'entreprise et une
+obligation réglementaire sur les données personnelles. Elle a été traitée comme un axiome de
+conception, et c'est elle qui a imposé l'exécution locale du modèle de langage.
 
 \subsection{Traçabilité des exigences}
 
-Le tableau~\ref{tab:tracabilite} rattache chaque domaine d'exigences au chapitre qui en rend
-compte, de manière à ce que le lecteur puisse vérifier qu'aucun n'a été abandonné en cours de
-route. Les résultats mesurés et le bilan de conformité, exigence par exigence, sont présentés au
-chapitre~7.
+Le tableau~\ref{tab:tracabilite} rattache chaque domaine d'exigences au chapitre qui en rend compte.
+La conclusion générale revient sur celles que la solution livrée ne tient pas.
 
 \begin{table}[!htbp]
 \centering
@@ -608,29 +602,29 @@ Assistance à la résolution, confidentialité & 5 & Moteur de similarité, mod�
 \hline
 Cycle de vie, accès, boucle de qualité & 6 & Application web, workflow, validation humaine \\
 \hline
-Sécurité, fiabilité, reproductibilité, portabilité & 7 & Industrialisation, tests, conformité \\
+Sécurité, fiabilité, reproductibilité, portabilité & 3, 6 et 7 & Traitement transverse au fil des
+chapitres, bilan de conformité au chapitre~7 \\
 \hline
 \end{tabular}
 \end{table}
 
+\FloatBarrier
+
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
 
-Ce chapitre a réuni les moyens et les fins. Du côté des moyens, la représentation du texte conduit
-des décomptes lexicaux aux vecteurs contextuels produits par les modèles \emph{transformers}, dont
-CamemBERT est la déclinaison francophone. L'adaptation par matrices de rang faible rend le
-\emph{fine-tuning} accessible sur du matériel ordinaire. Le F1-macro et le rééquilibrage des classes
-répondent au déséquilibre du corpus. La génération augmentée par récupération permet d'interroger
-un historique documentaire en langage naturel tout en gardant des réponses vérifiables, et
-l'exécution locale du modèle de langage satisfait la contrainte de confidentialité posée au
-chapitre~1. Les pratiques d'industrialisation, enfin, conditionnent la reproductibilité de
-l'ensemble.
+Ce chapitre a réuni les moyens et les fins. La représentation du texte conduit des décomptes
+lexicaux aux vecteurs contextuels des \emph{transformers}, dont CamemBERT est la déclinaison
+francophone, et l'adaptation par matrices de rang faible rend le \emph{fine-tuning} accessible sur
+du matériel ordinaire. Le F1-macro et le rééquilibrage des classes répondent au déséquilibre du
+corpus. La génération augmentée par récupération rend un historique documentaire interrogeable en
+langage naturel tout en gardant des réponses vérifiables, et l'exécution locale du modèle de langage
+satisfait la contrainte de confidentialité.
 
-Du côté des fins, les besoins sont désormais formalisés en exigences fonctionnelles priorisées et en
+Les besoins sont désormais formalisés en quatorze exigences fonctionnelles priorisées et neuf
 exigences non fonctionnelles, chacune rattachée au chapitre qui en rendra compte. Deux réserves ont
 été posées d'emblée sur le routage par confiance et sur la nature de la génération, afin qu'elles
 soient lues comme des décisions de périmètre.
 
-Le chapitre suivant ouvre le déroulement du projet par son premier sprint : la constitution du jeu
-de données, son diagnostic de qualité et la mise en place de la gouvernance qui garantit la
-reproductibilité de tout ce qui suit.
+Le chapitre suivant ouvre le déroulement du projet par les données : constitution du jeu de données,
+diagnostic de qualité et gouvernance garantissant la reproductibilité de tout ce qui suit.

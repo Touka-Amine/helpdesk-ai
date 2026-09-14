@@ -2,40 +2,50 @@
 \addcontentsline{toc}{chapter}{Introduction générale} % to include the introduction to the table of content
 \markboth{Introduction générale}{} %To redefine the section page head
 
-La transformation numérique a rendu les organisations dépendantes de leur système d'information.
-Messagerie, applications métier, accès distants, sauvegardes : la quasi-totalité des activités
-repose sur une chaîne technique dont l'interruption, même brève, se traduit par un arrêt de
-production. Longtemps considéré comme une activité de second plan, le support informatique est
-devenu une fonction critique.
+La transformation numérique a fait du système d'information un support quotidien de l'activité des
+entreprises, si bien qu'une interruption de service se répercute aussitôt sur le travail des
+collaborateurs. Les équipes de support informatique absorbent à ce titre un flux continu de
+demandes portant sur les applications, le réseau, les systèmes, la messagerie ou la sécurité. Une
+part importante de ces demandes reprend des situations déjà traitées, et l'historique des tickets
+conserve à la fois la description des incidents, leur classification et les solutions apportées par
+les consultants. Exploité manuellement, ce gisement rend peu de services : retrouver un cas
+comparable prend du temps et dépend de l'expérience de chaque intervenant.
 
-Cette évolution s'accompagne des progrès rapides du traitement automatique du langage naturel. Les
-modèles de langage pré-entraînés savent aujourd'hui classer un texte court et bruité avec une
-fiabilité utile en production, et les architectures de génération augmentée par récupération,
-désignées par le sigle RAG, permettent d'interroger un historique documentaire en langage naturel
-en restituant ses sources.
+Les progrès du traitement automatique du langage ouvrent une voie. La classification automatique
+analyse le texte d'un ticket pour en proposer la catégorie, et la génération augmentée par
+récupération, désignée par le sigle RAG (\textit{Retrieval-Augmented Generation}), retrouve dans un
+historique les cas proches d'une demande nouvelle. Le contexte professionnel impose toutefois une
+contrainte, car les tickets décrivent des utilisateurs, des applications et une architecture
+technique, ce qui conduit à écarter les services d'intelligence artificielle hébergés à l'extérieur
+de l'entreprise.
 
-Le support informatique interne s'y prête particulièrement. Un service support traite peu de
-problèmes inédits ; il traite surtout des variantes de cas déjà rencontrés, et chaque ticket laisse
-une trace : un capital de connaissance, en principe. Ce capital reste largement inexploité, faute
-d'un outil capable de qualifier les demandes et de retrouver les cas comparables. S'y ajoute une
-contrainte de confidentialité, les tickets contenant des données nominatives et des éléments
-d'architecture réseau.
+C'est dans ce cadre que s'inscrit le présent projet de fin d'études, réalisé au sein de
+\textbf{OneTech Business Solutions} et consacré à la plateforme \textbf{HelpDesk AI}. Le service
+support étudié est mutualisé : onze consultants traitent les demandes de huit filiales du groupe, et
+l'historique disponible compte 1\,800 tickets répartis en huit catégories. La plateforme poursuit
+deux objectifs, qualifier une demande déposée en texte libre et lui associer les cas déjà résolus
+les plus proches, dans une application qui centralise le traitement des tickets et conserve la
+validation des utilisateurs habilités.
 
-C'est dans ce contexte que s'inscrit ce projet de fin d'études, réalisé au sein
-d'OneTech Business Solutions autour de la plateforme HelpDesk AI. L'objectif est
-de classer automatiquement les demandes entrantes, de retrouver dans l'historique les résolutions
-comparables et d'assister la formulation de la réponse, sans qu'aucune donnée ne quitte
-l'infrastructure de l'entreprise. Le service support concerné est mutualisé : onze consultants
-traitent les demandes de huit entités du groupe, et l'historique de leurs interventions, soit
-1\,800 tickets répartis en huit catégories, forme la matière première du travail.
+La décision finale reste humaine : le système analyse, prédit et recommande, tandis que le
+consultant valide et résout. Le travail couvre l'ensemble de la chaîne, de la préparation des
+données jusqu'à l'intégration applicative, et s'inscrit dans une démarche d'industrialisation
+destinée à assurer la reproductibilité et le suivi des composants d'apprentissage.
 
-Les travaux couvrent toute la chaîne, de l'analyse du besoin métier jusqu'à l'industrialisation de
-la solution. Le principe directeur est le maintien de la décision humaine : l'intelligence
-artificielle propose, le consultant tranche.
+Ce mémoire est structuré en sept chapitres :
 
-Le présent rapport est structuré en sept chapitres. Le premier présente l'organisme d'accueil et la
-démarche de conduite retenue. Le deuxième réunit les concepts mobilisés et la spécification des
-besoins. Le troisième décrit la constitution et la gouvernance du jeu de données. Le quatrième
-compare plusieurs approches de classification. Le cinquième construit le système d'assistance à la
-résolution. Le sixième porte sur le développement de l'application. Enfin, le septième expose
-l'industrialisation et la validation de la solution.
+\begin{puces}
+\item le \textbf{chapitre 1} : le contexte du projet, l'organisme d'accueil, le fonctionnement du
+service support avant notre intervention et la problématique qui en découle ;
+\item le \textbf{chapitre 2} : les concepts techniques mobilisés et la spécification des besoins ;
+\item le \textbf{chapitre 3} : la constitution, la préparation et la gouvernance du jeu de
+données ;
+\item le \textbf{chapitre 4} : le développement et l'évaluation des approches de classification ;
+\item le \textbf{chapitre 5} : la recherche de cas similaires et l'assistance à la résolution ;
+\item le \textbf{chapitre 6} : la conception, le développement et l'intégration de la plateforme ;
+\item le \textbf{chapitre 7} : le déploiement, l'industrialisation de la chaîne d'apprentissage,
+les tests et la campagne de charge.
+\end{puces}
+
+La conclusion générale revient sur les résultats obtenus, expose les limites du travail et propose
+des perspectives d'évolution.

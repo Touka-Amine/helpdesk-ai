@@ -1,36 +1,37 @@
-' Diagramme de contexte, premier niveau du modèle C4.
-' Faits : périmètre du chapitre 1 (circuit de messagerie existant) ;
-' absence d'annuaire vérifiée dans api/routers/auth.py (comptes locaux, bcrypt).
+' Diagramme de contexte, en etoile : le systeme etudie au centre, ses
+' interlocuteurs autour. Habillage aligne sur les autres diagrammes du
+' chapitre : fond blanc, bordures noires, fleches noires, bloc central bleu.
+' Deux acteurs seulement : le connecteur d'ingestion existe dans le code mais son
+' declencheur cote messagerie n'est pas installe, aucun flux reel ne le traverse.
+' Absence d'annuaire verifiee dans api/routers/auth.py (comptes locaux, bcrypt).
 @startuml ch06_contexte
-!include <C4/C4_Context>
+!include _charte.puml
 
-skinparam dpi 200
-skinparam defaultFontName DejaVu Sans
-HIDE_STEREOTYPE()
+skinparam rectangle {
+  BackgroundColor #B4DFF0
+  BorderColor #000000
+  FontColor #000000
+  FontSize 17
+  FontStyle bold
+  roundCorner 0
+}
 
-AddElementTag("acteur", $bgColor="#0B4884", $fontColor="#FFFFFF", $borderColor="#073B6F")
-AddElementTag("etudie", $bgColor="#1168BD", $fontColor="#FFFFFF", $borderColor="#0B4884")
-AddElementTag("tiers", $bgColor="#8A8A8A", $fontColor="#FFFFFF", $borderColor="#6F6F6F")
+skinparam ArrowColor #000000
+skinparam ArrowFontColor #000000
+skinparam ArrowFontSize 12
+skinparam ArrowThickness 1
+skinparam nodesep 50
+skinparam ranksep 60
 
-Person(employe, "Employé", "Déclare un incident ou formule une demande, en suit l'avancement et signale si la réponse a été utile.", $tags="acteur")
-System(helpdesk, "HelpDesk AI", "Classe la demande, retrouve les cas comparables déjà résolus, en propose une reformulation. Gère ses propres comptes.", $tags="etudie")
-Person(technicien, "Technicien informatique", "Qualifie la demande, corrige la catégorie proposée, rédige la solution appliquée et clôt le ticket.", $tags="acteur")
-System_Ext(messagerie, "Circuit de messagerie existant", "Boîte du support et liste SharePoint décrites au chapitre 1. Reste en service pendant la transition.", $tags="tiers")
+actor "Demandeur" as DEM
+actor "Admin" as ADM
 
-Rel_R(employe, helpdesk, "Dépose une demande, suit son état", "HTTPS")
-Rel_L(helpdesk, employe, "Notifie la réponse et le changement d'état")
-Rel_L(technicien, helpdesk, "Qualifie, corrige, clôt", "HTTPS")
-Rel_R(helpdesk, technicien, "Propose une catégorie et des cas comparables")
-Rel_U(messagerie, helpdesk, "Transmet les demandes reçues", "connecteur d'ingestion")
+rectangle "  HelpDesk AI  " as SYS
 
-note bottom of helpdesk
-  Aucun annuaire d'entreprise ne figure ici :
-  l'application conserve ses propres comptes.
-end note
+DEM --> SYS : dépose une demande
+SYS --> DEM : présente l'avancement\net la réponse
 
-legend bottom
-|<#0B4884><color:#FFFFFF>  Acteur humain  |
-|<#1168BD><color:#FFFFFF>  Système étudié  |
-|<#8A8A8A><color:#FFFFFF>  Système tiers, hors périmètre  |
-endlegend
+ADM --> SYS : qualifie, corrige,\nclôture
+SYS --> ADM : propose une catégorie\net des cas comparables
+
 @enduml

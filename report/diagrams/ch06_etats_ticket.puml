@@ -4,24 +4,18 @@
 ' Le contrôle ligne 268 ne s'applique que si le statut soumis diffère du courant,
 ' ce qui laisse un ticket clos modifiable sans réouverture.
 @startuml ch06_etats_ticket
-!include _style.puml
+!include _charte.puml
 
-skinparam state {
-  BackgroundColor #E2E3F5
-  BorderColor #4B51A0
-  FontColor #1B2430
-  ArrowColor #57606E
-}
 
-left to right direction
+
 
 [*] --> Attente
 
 state "En attente" as Attente : dépôt enregistré,\naucun administrateur affecté
 state "Prise en Charge" as Charge : un administrateur traite\net a été affecté au ticket
 state "Problème" as Probleme : traitement bloqué,\nen attente d'un tiers
-state "Résolu" as Resolu #D6EFE7 : solution appliquée,\nrédigée par un humain
-state "Rejeté" as Rejete #D6EFE7 : demande écartée
+state "Résolu" as Resolu : solution appliquée,\nrédigée par un humain
+state "Rejeté" as Rejete : demande écartée
 
 Attente --> Charge : prise en charge
 Charge --> Attente : remise en file d'attente

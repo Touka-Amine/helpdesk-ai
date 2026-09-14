@@ -1,0 +1,84 @@
+' Diagramme de deploiement du chapitre 7.
+'
+' Tout ce qui figure ici est lu dans helpdesk-ai/docker/docker-compose.yml :
+'   frontend .... build Dockerfile.front, image helpdesk-front, ports 8081:80
+'   api ......... build Dockerfile.api,   image helpdesk-api,   ports 8000:8000
+'   postgres .... image postgres:16-alpine, AUCUN port hote
+'   ollama ...... image ollama/ollama:latest, AUCUN port hote
+'   volumes ..... api-data (/app/data), postgres-data, ollama-data
+'   reseau ...... helpdesk-net, pilote bridge
+'   sante ....... postgres -> api (service_healthy), api -> frontend
+'
+' Les deux ports publies sont les seuls points d'entree depuis la machine hote.
+' Aucun service ne declare de connexion sortante : c'est la propriete que le
+' diagramme doit rendre visible, et elle se lit a l'absence de fleche vers
+' l'exterieur du cadre.
+
+@startuml ch07_deploiement
+!include _charte.puml
+
+skinparam linetype ortho
+skinparam nodesep 24
+skinparam ranksep 40
+
+skinparam node {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  FontSize 13
+}
+skinparam database {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  FontSize 12
+}
+skinparam artifact {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  FontSize 12
+}
+
+node "Poste de travail\n(réseau local de l'entreprise)" as POSTE #F3F3F3 {
+  artifact "Navigateur" as NAV
+}
+
+node "Serveur du service support" as HOTE #FAFAFA {
+
+  node "Réseau Docker interne  «helpdesk-net»" as NET #EAF2FA {
+
+    node "frontend\nNginx + Angular compilé" as FRONT #EDF5EC
+    node "api\nFastAPI, Python 3.11\nclassifieur et moteur de recherche\nchargés en mémoire" as API #EDF5EC
+    node "postgres\nPostgreSQL 16" as PG #FDF4E6
+    node "ollama\nllama3.2:3b" as OLL #FDF4E6
+
+    database "postgres-data" as VPG #FFFFFF
+    database "api-data\nChromaDB et modèles" as VAPI #FFFFFF
+    database "ollama-data\npoids du modèle" as VOLL #FFFFFF
+  }
+}
+
+' Les numeros de port sont portes par la legende : poses sur les fleches,
+' ils se superposaient au titre du cadre reseau.
+NAV --> FRONT
+NAV --> API
+
+FRONT --> API  : HTTP interne
+API   --> PG   : TCP 5432
+API   --> OLL  : HTTP 11434
+
+PG  -right-> VPG
+API -right-> VAPI
+OLL -right-> VOLL
+
+legend bottom
+  Deux ports seulement sont publiés sur la machine hôte : 8081 vers frontend
+  et 8000 vers api.
+  PostgreSQL et Ollama n'en publient aucun et ne sont joignables que depuis le
+  réseau interne de la composition. Aucun service ne sort vers l'extérieur :
+  aucune donnée de ticket ne quitte le serveur.
+  Les trois volumes nommés survivent à la destruction des conteneurs.
+endlegend
+
+@enduml

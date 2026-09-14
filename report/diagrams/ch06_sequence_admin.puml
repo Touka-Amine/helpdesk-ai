@@ -1,0 +1,87 @@
+' Sequence B — cloture d'un ticket par l'administrateur.
+' Meme structure que la sequence A : acteur a gauche, lignes de vie
+' ":Interface utilisateur", ":Service de tickets", entites, messages numerotes,
+' barres d'activation, fragment alt avec ses deux gardes.
+'
+' Faits verifies dans api/routers/tickets.py, PATCH /tickets/{id}/approve (ligne 246) :
+'   ligne 268  la transition d'etat demandee est validee contre STATUS_TRANSITIONS ;
+'   ligne 278  la cloture est refusee lorsque aucun cas similaire fiable n'a ete
+'              trouve et que la solution appliquee n'a pas ete saisie : c'est la
+'              garde du fragment alt ;
+'   lignes 288 a 366  chaque champ reellement modifie ecrit une ligne d'historique ;
+'   ligne 356  le message affiche au demandeur est inscrit sur le ticket a la cloture ;
+'   ligne 369  resolved_at n'est fixe qu'une seule fois ;
+'   ligne 392  la solution redigee par l'administrateur est versee a la base de
+'              connaissances en tache de fond, apres controle de qualite.
+@startuml ch06_sequence_admin
+!include _charte.puml
+
+skinparam maxMessageSize 200
+
+skinparam participant {
+  BackgroundColor #B4DFF0
+  BorderColor #000000
+  FontColor #000000
+}
+
+skinparam sequence {
+  LifeLineBorderColor #000000
+  GroupBackgroundColor #FFFFFF
+  GroupBorderColor #000000
+  GroupHeaderFontColor #000000
+  GroupBodyBackgroundColor #FFFFFF
+}
+
+hide footbox
+
+actor "Admin" as ADM
+participant "<u>:Interface utilisateur</u>" as UI
+participant "<u>:Service de tickets</u>" as SRV
+participant "<u>:Ticket</u>" as TCK
+participant "<u>:Historique</u>" as HIS
+
+ADM -> UI : (1) Ouvrir un ticket pris en charge ()
+activate UI
+UI --> ADM : (2) Afficher le détail du ticket ()
+deactivate UI
+
+ADM -> UI : (3) Saisir la solution appliquée (texte)
+activate UI
+ADM -> UI : (4) Demander la clôture ()
+UI -> SRV : (5) Clôturer (solution appliquée)
+activate SRV
+
+SRV -> TCK : (6) Vérifier (transition, solution)
+activate TCK
+TCK -> TCK : (7) Vérification
+TCK --> SRV : (8) Ticket vérifié
+deactivate TCK
+
+alt solution appliquée renseignée
+
+  SRV -> TCK : (9.1) Enregistrer la clôture ()
+  activate TCK
+  TCK --> SRV : (9.1.1) Ticket résolu ()
+  deactivate TCK
+
+  SRV -> HIS : (9.1.2) Journaliser les champs modifiés ()
+  SRV -> SRV : (9.1.3) Archiver la solution validée ()
+  SRV --> UI : (9.1.4) Confirmer la clôture ()
+  UI --> ADM : (9.1.5) Afficher le ticket résolu ()
+
+else solution absente sur un cas nouveau
+
+  SRV --> UI : (9.2) Refuser la clôture ()
+  UI --> ADM : (9.2.1) Afficher un message d'erreur ()
+
+end
+
+deactivate SRV
+deactivate UI
+
+note over SRV, HIS
+  Seule une solution rédigée par un humain entre
+  dans la base de connaissances.
+end note
+
+@enduml

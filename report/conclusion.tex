@@ -2,3 +2,42 @@
 \addcontentsline{toc}{chapter}{Conclusion générale}
 \markboth{\textbf{Conclusion générale}}{}
 
+Le service support de \otbs réunit onze consultants au service de huit filiales du groupe. En
+quatorze mois, il avait accumulé 1\,800 tickets résolus dont aucun n'était réutilisé. La question
+posée en introduction était de savoir si cet historique pouvait devenir un actif exploitable, sans
+qu'aucune donnée ne sorte de l'infrastructure interne et sans dessaisir le consultant de sa
+décision.
+
+HelpDesk AI y répond. Une demande déposée en texte libre reçoit une catégorie proposée par un
+modèle, accompagnée des tickets déjà résolus les plus proches. L'administrateur corrige, traite et
+rédige la solution appliquée, laquelle rejoint la base de connaissances interrogée par la demande
+suivante. La plateforme compte dix-sept écrans, quatre composants conteneurisés, et cent cinquante
+tests automatisés en protègent le comportement.
+
+Le meilleur système de classification obtenu, un transformer francophone adapté par LoRA et complété
+de règles métier, atteint 0,8343 de F1-macro, à seize millièmes de l'objectif fixé avant
+l'expérimentation. La version servie repose sur une chaîne lexicale plus légère, à 0,5829, parce que
+l'inférence du transformer coûte 325,8\,ms par ticket sur processeur contre 5,0\,ms, davantage à
+elle seule que le budget de latence entier. Le moteur de recherche hybride obtient 0,3542 de
+précision à trois passages, et le modèle de langage s'exécute localement sans intervenir sur aucun
+chemin obligatoire.
+
+Deux exigences chiffrées ne sont pas tenues, et nous les énonçons plutôt que de les laisser
+découvrir : le temps de réponse atteint 330\,ms au quatre-vingt-quinzième centile pour un budget de
+300, et le rappel sur la catégorie \emph{Sécurité} plafonne à 0,60 pour une cible de 0,70. La
+limite de fond tient au corpus, dont les 1\,800 tickets ne portent que cinquante-huit titres
+distincts, si bien que le jeu de test gelé ne couvre que cinq des huit catégories. Trois réserves
+subsistent enfin : la conformité au règlement sur les données personnelles attend un arbitrage
+écrit du service, l'interface n'est couverte par aucun test automatique, et la valeur d'usage n'a
+pas été mesurée auprès des consultants.
+
+Servir le transformer redeviendra défendable dès que la machine hôte disposera d'une carte
+graphique, où son coût retombe à 58,7\,ms par ticket. La perspective de fond reste l'enrichissement
+du corpus par l'exploitation elle-même, chaque ticket traité produisant une étiquette vérifiée :
+c'est le seul chemin qui lève la limite de diversité, et le mécanisme est déjà en place.
+
+Ce travail nous a conduits à couvrir une chaîne complète, de la préparation des données jusqu'au
+déploiement. Il nous a surtout appris à distinguer un résultat d'une mesure, et à préférer un
+chiffre plus bas qui tient à un chiffre flatteur qui ne tient pas. Un service support ne manque pas
+de données, il manque de moyens de s'en servir. La plateforme livrée en fournit un, qui propose sans
+décider : elle qualifie, retrouve et suggère, elle ne clôt aucun ticket.

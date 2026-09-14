@@ -1,135 +1,93 @@
-\chapter{Sprint 4 --- Développement de l'application}
+\chapter{Développement et intégration de la plateforme}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
 
-Les deux sprints précédents ont livré des composants isolés. Un classifieur affecte une catégorie,
-un moteur de recherche retrouve des cas comparables, un modèle de langage les reformule. Aucun de
-ces éléments n'est utilisable par le service support tant qu'il faut ouvrir un carnet de notes pour
-s'en servir.
+Les deux chapitres précédents ont livré des composants isolés : un classifieur affecte une
+catégorie, un moteur de recherche retrouve des cas comparables, un modèle de langage les reformule.
+Ce chapitre construit l'application qui les rassemble, un service exposant un contrat stable, une
+interface web à deux espaces, et le parcours métier qui relie le dépôt d'une demande à sa clôture.
+Une exigence a orienté chaque décision de conception : le système ne décide rien, il propose une
+catégorie et des cas voisins, l'administrateur tranche. Toutes les prédictions sont enregistrées à
+côté des décisions humaines, jamais à leur place, ce que montrent les sections~\ref{sec:classes6}
+et~\ref{sec:bouclage6}.
 
-Ce sprint construit l'application qui les rassemble. Il livre un service applicatif exposant un
-contrat REST, une interface web à deux espaces, et le parcours métier qui relie le dépôt d'une
-demande à sa clôture.
+Le dossier de spécification du chapitre~2 confie onze de ses quatorze exigences fonctionnelles à
+cette étape, les trois autres relevant des chapitres~4 et~5. Le bilan est annoncé d'emblée.
 
-Une exigence a orienté chaque décision de conception, et il vaut mieux l'énoncer avant les autres.
-Le système ne décide rien. Il propose une catégorie, il propose des cas voisins, et
-l'administrateur tranche. Toutes les prédictions sont enregistrées à côté des décisions humaines,
-jamais à leur place, ce que la section~\ref{sec:classes6} montre au niveau du modèle de données et
-la section~\ref{sec:humain6} au niveau du parcours.
+\begin{puces}
+  \item \textbf{Sept sont pleinement satisfaites} : contrôle d'accès RBAC, dépôt d'une demande
+        décrite librement, traçabilité de chaque modification, suivi de l'avancement par le
+        demandeur, correction de la catégorie par l'administrateur, recueil de son avis,
+        consultation des volumes et des catégories traitées.
+  \item \textbf{Une l'est en partie}, l'orientation selon l'index de confiance : l'index est
+        calculé et enregistré pour chaque ticket sans qu'aucun routage automatique ne s'en serve,
+        si bien que toute demande passe par la file d'approbation. Le dispositif technique étant en
+        place, ce point relève d'un arbitrage de produit.
+  \item \textbf{Trois n'ont pas été traitées} : le résumé automatique du ticket, la suggestion de
+        priorité et l'analyse de tonalité, toutes rangées en priorité moyenne ou faible. Le champ
+        de priorité prédite existe dans le schéma d'échange, aucun modèle ne le renseigne.
+\end{puces}
 
-Le chapitre suit la trame des sprints précédents : objectifs, backlog, besoins fonctionnels,
-technologies, conception, réalisation, puis bilan.
+S'y ajoute une capacité qui ne figure dans aucune exigence, un chemin d'ingestion des demandes
+arrivées par messagerie, fonctionnel et protégé par une clé, dont le déclencheur reste à installer
+du côté du service.
 
-\section{Objectifs du sprint}
+\section{Architecture applicative}
+\label{sec:archi6}
 
-Le sprint vise à rendre exploitable, par le service support, ce que les deux sprints précédents ont
-produit en laboratoire. Il comprend le développement de :
-
-\begin{itemize}
-  \item une interface de programmation REST versionnée, exposant la classification et la recherche
-        de cas derrière un contrat stable ;
-  \item une architecture serveur en couches, séparant l'exposition HTTP, la logique métier et
-        l'accès aux données ;
-  \item un mécanisme d'authentification par jeton, assorti d'un contrôle d'accès par rôle ;
-  \item un portail permettant au demandeur de déposer une demande et d'en suivre l'avancement ;
-  \item une console d'administration outillant la qualification et la clôture des tickets ;
-  \item une machine à états contrôlée côté serveur, accompagnée d'un journal d'audit ;
-  \item un dispositif garantissant qu'aucune clôture n'intervient sans intervention humaine.
-\end{itemize}
-
-\section{Backlog du sprint}
-
-Le tableau~\ref{tab:backlog6} présente le backlog du sprint. Les références et les priorités
-reprennent celles du dossier de spécification introduit au chapitre~2, ce qui permet de suivre
-chaque exigence jusqu'à son évaluation au chapitre~7. Les priorités traduisent la classification
-MoSCoW retenue au cadrage.
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Backlog du sprint 4}
-\label{tab:backlog6}
-\begin{tabular}{|Cp{1.2cm}|Lp{7.4cm}|Cp{1.7cm}|Lp{3.0cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Réf.} & \textbf{Fonctionnalité attendue} & \textbf{Priorité} & \textbf{Critère de
-recette} \\
-\hline
-EF-01 & En tant qu'utilisateur, je veux accéder à un espace qui ne montre que les demandes qui me
-concernent & Élevée & Jeton vérifié à chaque appel \\
-\hline
-EF-02 & En tant que demandeur, je veux déposer une demande décrite librement pour obtenir de
-l'aide & Élevée & Ticket persisté, statut initial renseigné \\
-\hline
-EF-05 & En tant qu'administrateur, je veux que les cas peu assurés soient signalés pour les
-examiner en priorité & Élevée & Indicateur calculé et enregistré \\
-\hline
-EF-06 & En tant qu'administrateur, je veux corriger la catégorie proposée pour que la
-qualification finale soit juste & Élevée & Catégorie finale et solution enregistrées \\
-\hline
-EF-07 & En tant que responsable, je veux retrouver l'auteur et la date de chaque modification pour
-assurer la traçabilité & Élevée & Chaque changement journalisé \\
-\hline
-EF-08 & En tant que demandeur, je veux suivre l'avancement de ma demande sans relancer le service
-& Élevée & Statut et réponse consultables \\
-\hline
-EF-13 & En tant que demandeur, je veux signaler si la réponse m'a été utile pour aider le service à
-s'améliorer & Moyenne & Avis persisté et exploitable \\
-\hline
-EF-15 & En tant qu'administrateur, je veux consulter les volumes et les catégories pour piloter
-l'activité & Faible & Indicateurs affichés au tableau de bord \\
-\hline
-EF-16 & En tant que service, je veux recevoir les demandes arrivées par messagerie sans ressaisie
-manuelle & Faible & Chemin d'ingestion fonctionnel et protégé \\
-\hline
-\end{tabular}
-\end{table}
-
-Deux exigences du dossier de spécification ne figurent pas dans ce backlog et méritent une
-explication. L'exigence EF-03, la classification automatique, et l'exigence EF-04, la recherche de
-cas comparables, ont été livrées aux sprints 2 et 3. Le présent sprint les intègre sans les
-redévelopper.
-
-\FloatBarrier
-
-\section{Spécification des besoins fonctionnels}
-
-Deux rôles suffisent à décrire les usages. Le demandeur dépose et suit ses demandes,
-l'administrateur les traite. La figure~\ref{fig:cas6} rapporte chaque cas d'utilisation à
-l'exigence du backlog dont il découle, ce qui permet de vérifier qu'aucune n'a été perdue en
-chemin.
+L'application s'organise en quatre couches, présentées de haut en bas à la
+figure~\ref{fig:archi6} : les acteurs entrent par le haut, l'interface recueille et présente, la
+couche de traitement décide et sollicite les composants d'intelligence artificielle, les données se
+conservent en bas. L'ensemble tient dans le réseau interne de l'entreprise et aucune donnée de
+ticket n'en sort. Les flux du chemin principal sont numérotés de un à sept.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.78\textwidth]{ch06_cas_utilisation.png}
-\caption{Diagramme de cas d'utilisation du sprint 4}
-\label{fig:cas6}
+\includegraphics[width=0.94\textwidth]{ch06_architecture.png}
+\caption{Architecture applicative en quatre couches}
+\label{fig:archi6}
 \end{figure}
 
-L'authentification et la gestion du profil sont rattachées à un acteur générique dont les deux
-rôles héritent. Cette généralisation évite de dupliquer les mêmes associations et rend visible ce
-qui relève de la session plutôt que du métier.
+\begin{puces}
+  \item L'\textbf{interface} est le seul point d'entrée du demandeur et de l'administrateur, une
+        application web portant le dépôt, le suivi et le traitement, plus un tableau de bord
+        réservé à la supervision. Ni l'un ni l'autre n'accède directement aux données.
+  \item La couche de \textbf{traitement} porte tout ce qui décide. Le service de tickets y tient
+        les règles métier, le contrôle d'accès et la traçabilité des états, et constitue le seul
+        point d'entrée vers les données. Trois composants d'intelligence artificielle travaillent
+        sous son contrôle sans rien décider : le classificateur propose une catégorie assortie d'un
+        index de confiance, le moteur de recherche retrouve les tickets résolus comparables, le
+        modèle de langage les reformule à la demande.
+  \item La couche de \textbf{données} distingue deux fonds. La base applicative conserve les
+        comptes, les tickets et l'historique des modifications ; la base de connaissances conserve
+        les résolutions passées, indexées pour la recherche par similarité sémantique, et reçoit
+        chaque solution validée par un administrateur, ce qui referme la boucle décrite à la
+        section~\ref{sec:workflow6}.
+\end{puces}
 
-Le service support d'\otbs distingue en pratique plusieurs niveaux de traitement. Nous n'avons pas
-transposé cette hiérarchie dans les rôles applicatifs, faute de description formelle de son
-fonctionnement, et parce qu'un troisième rôle aurait démultiplié les combinaisons de droits à
-tester sans répondre à un besoin exprimé. Le contrôle d'accès reposant sur une chaîne de
-dépendances plutôt que sur des conditions dispersées dans le code, un rôle intermédiaire reste
-implémentable sans refonte.
+Ce découpage logique ne dit rien du déploiement, et deux décisions méritent d'être explicitées.
 
-\FloatBarrier
+\begin{puces}
+  \item Le classifieur et le moteur de recherche sont chargés en mémoire dans le processus du
+        service applicatif. Les isoler aurait imposé un appel réseau sur le chemin de création d'un
+        ticket, là où un appel de fonction suffit ; le service et ses modèles partagent donc le
+        même cycle de vie et la même consommation de mémoire.
+  \item ChromaDB fonctionne en mode embarqué, ouvert par une bibliothèque intégrée au service et
+        non par un serveur autonome. La base persiste sur un volume dédié, ce qui la rend durable
+        sans la rendre indépendante. Aucun autre processus ne peut l'interroger simultanément, ce
+        qui interdirait de répliquer le service applicatif sans passer au mode serveur.
+\end{puces}
 
-\section{Technologies utilisées}
-
-Le chapitre~2 a présenté l'état de l'art et justifié le socle technique. Le
-tableau~\ref{tab:techno6} rappelle ce qui a effectivement servi au développement de l'application
-et la raison propre à ce sprint qui a fait retenir chaque brique.
+Le style retenu est celui du monolithe modulaire. Le découpage en microservices aurait multiplié
+les interfaces réseau et les points de défaillance pour un service qui traite quelques dizaines de
+tickets par jour. La séparation des responsabilités est obtenue par les couches internes plutôt que
+par des frontières de processus.
 
 \begin{table}[!htbp]
 \centering
 \styletableau
-\caption{Technologies mobilisées par le sprint et motif de leur choix}
+\caption{Technologies mobilisées et motif de leur choix}
 \label{tab:techno6}
 \begin{tabular}{|Bp{2.8cm}|Lp{3.4cm}|Lp{6.8cm}|}
 \hline
@@ -139,7 +97,7 @@ et la raison propre à ce sprint qui a fait retenir chaque brique.
 Service applicatif & FastAPI, Python & Engendre la documentation du contrat à partir des
 signatures typées, ce qui a permis de valider les échanges sans rédiger de spécification séparée \\
 \hline
-Interface & Angular 21, Material, Tailwind & Typage strict et injection de dépendances, utiles sur
+Interface & Angular, Material, Tailwind & Typage strict et injection de dépendances, utiles sur
 une application à quinze écrans et deux espaces de droits distincts \\
 \hline
 Base relationnelle & PostgreSQL, SQLAlchemy & Transactions et contraintes d'intégrité pour les
@@ -159,611 +117,550 @@ l'environnement de démonstration reproduit celui de développement \\
 
 \FloatBarrier
 
-\section{Conception}
+\section{Conception et modélisation UML}
 \label{sec:conception6}
 
-La conception est présentée selon cinq vues, ordonnées du plus général au plus détaillé. Le
-diagramme de contexte situe le système parmi ses interlocuteurs. La vue des conteneurs le décompose
-en unités déployables. Le diagramme de classes décrit les données persistées. Le diagramme de
-séquence retrace le déroulement d'un traitement. Le diagramme d'états décrit enfin le cycle de vie
-de l'objet central du domaine.
+La conception est présentée selon cinq vues, du plus général au plus détaillé : le contexte et les
+cas d'utilisation, le domaine, les deux moments décisifs du cycle, puis la traçabilité des états.
 
-Les deux premières vues suivent le modèle C4, qui propose de décrire une architecture par niveaux
-d'échelle successifs plutôt que par un schéma unique cherchant à tout montrer.
-
-\subsection{Diagramme de contexte}
+\subsection{Contexte et cas d'utilisation}
 \label{sec:contexte6}
 
-La figure~\ref{fig:contexte6} délimite le périmètre du système et recense les entités extérieures
-avec lesquelles il échange.
+Un diagramme de contexte est une vue statique qui délimite le périmètre d'un système en le
+représentant comme une entité unique, entourée des acteurs et des systèmes extérieurs avec lesquels
+il échange. Il ne décrit aucun traitement interne : son objet est de fixer ce qui appartient au
+système et ce qui lui reste extérieur. Il sert de point de départ à la spécification, en rendant
+explicites les frontières que les diagrammes suivants viendront détailler.
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{ch06_contexte.png}
-\caption{Diagramme de contexte, premier niveau du modèle C4}
+\caption{Diagramme de contexte : le système et ses interlocuteurs}
 \label{fig:contexte6}
 \end{figure}
 
-Trois entités extérieures sont identifiées. L'\textbf{employé} dépose une demande, en suit
-l'avancement et signale si la réponse lui a été utile. Le \textbf{technicien informatique} qualifie
-la demande, la clôt et consulte les indicateurs de supervision. Le \textbf{circuit de messagerie
-existant}, décrit au chapitre~1, constitue le seul système tiers en relation avec l'application :
-les demandes reçues dans la boîte du support peuvent lui être transmises par le connecteur
-d'ingestion présenté à la section~\ref{sec:ingestion6}.
+La figure~\ref{fig:contexte6} délimite le périmètre. Deux entités extérieures sont identifiées et
+aucune n'est un système tiers : le \textbf{demandeur} dépose une demande, en suit l'avancement et
+signale si la réponse lui a été utile ; l'\textbf{administrateur} qualifie la demande, la clôt et
+consulte les indicateurs de supervision.
 
-Une absence caractérise ce diagramme et mérite d'être commentée, car elle constitue une décision de
-conception à part entière. Aucun annuaire d'entreprise n'y figure. L'authentification est assurée
-par l'application elle-même, qui conserve ses propres comptes et ses propres empreintes de mots de
-passe. Ce choix a été dicté par le périmètre du projet : l'intégration à un annuaire suppose des
-droits d'accès à l'infrastructure d'\otbs et une procédure de validation qui excèdent le cadre d'un
-projet de fin d'études.
+Le circuit de messagerie du service n'y figure pas. Le chemin d'ingestion existe dans l'application,
+son déclencheur côté messagerie n'a pas été installé, et aucun flux ne le traverse : le représenter
+reviendrait à faire figurer sur un diagramme de périmètre un échange qui n'a pas lieu.
 
-La contrepartie est double et doit être assumée devant toute perspective de mise en service. Chaque
-utilisateur dispose d'un compte supplémentaire à retenir, distinct de son compte d'entreprise, ce
-qui augmente la charge d'administration et le risque de mots de passe faibles. Par ailleurs, la
-sortie d'un collaborateur ne désactive pas automatiquement son accès à l'application, opération qui
-demeure manuelle. Le raccordement à un annuaire par un protocole standard constitue de ce fait la
-première évolution à envisager en cas de déploiement réel, et il figure à ce titre parmi les
-perspectives de la conclusion générale.
+Une absence constitue une décision de conception à part entière : aucun annuaire d'entreprise ne
+figure ici. L'application conserve ses propres comptes et ses propres empreintes de mots de passe,
+l'intégration à un annuaire supposant des droits d'accès à l'infrastructure d'\otbs et une
+procédure de validation qui excèdent le cadre d'un projet de fin d'études. La contrepartie doit
+être assumée : chaque utilisateur dispose d'un compte supplémentaire, ce qui augmente la charge
+d'administration et le risque de mots de passe faibles, et la sortie d'un collaborateur ne
+désactive pas automatiquement son accès. Le raccordement à un annuaire par un protocole standard
+constitue de ce fait la première évolution à envisager.
 
-\subsection{Architecture générale}
-
-La figure~\ref{fig:archi6} donne la vue d'ensemble au niveau des conteneurs. Le processus
-applicatif y est éclaté en composants, écart volontaire au niveau d'abstraction : c'est
-précisément à l'intérieur de ce processus que se joue la décision de conception la plus lourde du
-sprint.
+Un diagramme de cas d'utilisation représente les fonctionnalités offertes par un système du point de
+vue de ceux qui s'en servent. Il associe des acteurs, rôles tenus par des personnes ou par des
+systèmes extérieurs, à des cas d'utilisation qui décrivent chacun un service rendu. Les relations
+d'inclusion, d'extension et de généralisation y expriment le comportement partagé entre plusieurs
+cas. Ce diagramme fixe ce que le système doit offrir sans préjuger de la façon dont il le réalisera,
+et sert de référence commune entre les besoins exprimés et la conception.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.94\textwidth]{ch06_architecture.png}
-\caption{Architecture générale, vue des conteneurs avec le détail du processus applicatif}
-\label{fig:archi6}
+\includegraphics[width=0.92\textwidth]{ch06_cas_utilisation.png}
+\caption{Diagramme de cas d'utilisation}
+\label{fig:cas6}
 \end{figure}
 
-Cinq conteneurs composent le système. L'application Angular sert les deux espaces d'interface. Le
-tableau de bord Streamlit expose les indicateurs de supervision. Le service FastAPI porte
-l'ensemble de la logique et constitue le seul point d'entrée vers les données. PostgreSQL conserve
-les utilisateurs, les tickets et l'historique des modifications. Ollama exécute le modèle de
-langage.
+La figure~\ref{fig:cas6} recense ce que chaque rôle peut faire. L'administrateur dispose des mêmes
+possibilités de dépôt que le demandeur, auxquelles s'ajoutent la consultation de la file, le
+traitement, la clôture, la modification et la suppression d'un ticket, la consultation de son
+historique, la supervision de l'activité et la gestion des comptes. La modification se distingue du
+traitement : elle porte sur les champs de qualification, sans changement de statut, et reste
+ouverte après la clôture pour corriger une erreur découverte après coup.
 
-Deux composants que l'on s'attendrait à voir apparaître comme conteneurs n'en sont pas, et cette
-absence traduit deux décisions distinctes.
+Le cas \emph{S'authentifier} est relié à tous les autres par une relation d'inclusion, ce qui
+exprime une propriété du système : aucune action n'est possible sans session valide, et le contrôle
+est porté par le service, non par l'interface, donc s'applique à tout appel y compris hors du
+navigateur.
 
-Le classifieur et le moteur de recherche sont chargés en mémoire dans le processus du service
-applicatif. Les isoler aurait imposé un appel réseau sur le chemin de création d'un ticket, là où
-un appel de fonction suffit. La section~\ref{sec:integration6} détaille cet arbitrage et son coût.
+Le service support d'\otbs distingue en pratique plusieurs niveaux de traitement. Cette hiérarchie
+n'a pas été transposée dans les rôles applicatifs, faute de description formelle et parce qu'un
+troisième rôle aurait démultiplié les combinaisons de droits à tester sans répondre à un besoin
+exprimé. Le contrôle d'accès reposant sur une chaîne de dépendances déclaratives, un rôle
+intermédiaire reste implémentable sans refonte.
 
-ChromaDB fonctionne en mode embarqué : la base vectorielle est ouverte par une bibliothèque
-intégrée au service, et non par un serveur autonome. Elle persiste sur un volume dédié, ce qui la
-rend durable sans la rendre indépendante. La contrepartie est qu'aucun autre processus ne peut
-l'interroger simultanément, ce qui interdirait de répliquer le service applicatif sans passer
-préalablement au mode serveur.
-
-Le style retenu est celui du monolithe modulaire. Le découpage en microservices aurait multiplié
-les interfaces réseau et les points de défaillance pour un service qui traite quelques dizaines de
-tickets par jour, sans bénéfice observable à cette échelle. La séparation des responsabilités est
-obtenue par les couches internes plutôt que par des frontières de processus.
+\FloatBarrier
 
 \subsection{Diagramme de classes}
 \label{sec:classes6}
 
-La figure~\ref{fig:classes6} présente les trois entités persistées et leurs associations.
+Un diagramme de classes est une vue statique qui représente la structure d'un système en modélisant
+ses classes, leurs attributs, leurs méthodes ainsi que les relations qui les unissent. Il en montre
+le contenu, propriétés et opérations, et les associations qui les relient : héritage, agrégation,
+composition. Central dans la conception orientée objet et dans la notation UML, il sert à
+comprendre et à communiquer la structure d'un système logiciel avant d'en écrire le code.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{ch06_classes.png}
-\caption{Diagramme de classes du sprint 4}
+\includegraphics[width=0.95\textwidth]{ch06_classes.png}
+\caption{Diagramme de classes du domaine}
 \label{fig:classes6}
 \end{figure}
 
-La classe \textbf{User} porte l'identité et les droits : adresse, nom, filiale, rôle, empreinte du
-mot de passe et deux indicateurs d'état. La classe \textbf{Ticket} porte la demande et tout ce que
-son traitement produit. La classe \textbf{TicketHistory} enregistre chaque modification champ par
-champ, avec son auteur et son horodatage.
+La figure~\ref{fig:classes6} donne la vue d'analyse du domaine, sans les identifiants ni les clés
+étrangères qui appartiennent à la couche de persistance. La classe \textsc{User} porte l'identité
+et les droits communs ; \textsc{Demandeur} et \textsc{Administrateur} la spécialisent et se
+distinguent par ce qu'elles savent faire ; \textsc{Ticket} porte la demande et tout ce que son
+traitement produit ; \textsc{Historique} conserve la trace horodatée des modifications successives.
 
-L'ordre des attributs de la classe \emph{Ticket} suit celui du traitement, et cet ordre traduit une
-décision de conception plutôt qu'une commodité de lecture.
+Cette spécialisation est une vue d'analyse. L'implémentation conserve une seule table
+d'utilisateurs porteuse d'un attribut de rôle, forme suffisante pour deux profils dont les données
+sont identiques. Le diagramme dit ce que le domaine distingue, le schéma dit comment il est rangé.
+Deux choix de placement traduisent des règles du service.
 
-Viennent d'abord les champs de la \textbf{demande}, saisis par le demandeur. Puis les champs de la
-\textbf{prédiction}, écrits par le système : la catégorie proposée, le score de confiance, la
-version du modèle et la règle métier éventuellement déclenchée. Puis les champs de la
-\textbf{recommandation}, issus du moteur de recherche. Enfin les champs de la \textbf{décision
-humaine}, écrits par l'administrateur, et ceux du \textbf{retour du demandeur}.
+\begin{puces}
+  \item La \emph{filiale} est portée par \textsc{Demandeur} et non par \textsc{User} : elle
+        qualifie l'origine d'une demande, qu'un administrateur ne formule pas.
+  \item Le \emph{demandeur} figure à la fois comme attribut du ticket et comme extrémité de
+        l'association \emph{dépose}. La redondance est assumée, elle permet de lire la classe
+        isolément.
+\end{puces}
 
-Deux traits de ce découpage méritent un commentaire.
+Les attributs de \textsc{Ticket} sont ceux que porte toute demande. Le titre, la description et la
+date de dépôt viennent du demandeur ; la catégorie, la classification et la priorité qualifient la
+demande, renseignées dès l'arrivée par le système et corrigées si besoin par l'administrateur ; le
+statut situe le ticket dans son cycle de vie, dont la section~\ref{sec:etats6} détaille les
+transitions.
 
-Le premier est la séparation entre \texttt{categorie\_predite} et \texttt{categorie\_finale}. Le
-système écrit sa proposition dans le premier champ, l'administrateur écrit sa décision dans le
-second, et les deux subsistent. Confondre les deux dans une seule colonne aurait rendu impossible
-de savoir, après coup, si le modèle avait vu juste. Le taux de correction, qui mesure la fréquence
-à laquelle l'administrateur contredit la proposition, se calcule directement par comparaison de ces
-deux colonnes.
+La \emph{catégorie} apparaît comme un attribut unique, alors que la base en conserve deux, la
+proposition du système et la valeur retenue après relecture. La distinction est indispensable au
+niveau du schéma : le taux de correction, qui mesure la fréquence à laquelle l'administrateur
+contredit la proposition, se calcule par comparaison de ces deux valeurs et sert à évaluer le
+modèle en service.
 
-Le second est le trio \texttt{model\_version}, \texttt{heuristic\_applied} et
-\texttt{heuristic\_rule}. Ces champs indiquent quel modèle a produit la catégorie et si une règle
-métier l'a corrigée. Sans eux, une prédiction ancienne serait indiscernable d'une prédiction
-récente, et il deviendrait impossible d'attribuer une dérive de qualité à un changement de modèle.
-Ils conditionnent aussi la collecte décrite au chapitre~7 : un ticket dont on ignore l'origine de
-l'étiquette ne peut pas servir au réentraînement.
+La classe \textsc{Historique} sert trois usages, reconstituer le déroulé d'un traitement, qualifier
+la force d'une étiquette pour la collecte des données de réentraînement, et fournir la trace
+demandée par une démarche de gouvernance. Son attribut \emph{modification} réunit ce que la base
+range en trois colonnes, le champ touché, sa valeur avant et sa valeur après. Trois précisions
+évitent de lui prêter plus qu'elle ne fait.
 
-La classe \emph{TicketHistory} sert trois usages distincts : reconstituer le déroulé d'un
-traitement, qualifier la force d'une étiquette pour la collecte, et fournir la trace demandée par
-une démarche de gouvernance.
+\begin{puces}
+  \item Le journal couvre huit champs, dont le statut, la catégorie, la priorité, l'affectation et
+        la solution appliquée.
+  \item Une écriture qui ne change rien n'y laisse aucune trace, l'enregistrement étant ignoré
+        lorsque l'ancienne valeur égale la nouvelle.
+  \item L'auteur du changement n'est pas toujours renseigné : un dépôt effectué par un demandeur
+        inscrit sa première ligne avant toute intervention d'un administrateur.
+\end{puces}
 
-Une quatrième entité aurait pu figurer sur ce diagramme, celle de la \emph{catégorie}. Le
-référentiel compte huit catégories, et les représenter par une table distincte reliée au ticket
-constituerait la modélisation attendue d'un référentiel métier. Ce choix n'a pas été retenu, et son
-absence appelle une justification.
+Une lacune doit être signalée au même titre : l'avis du demandeur est écrit sur le ticket sans
+laisser de ligne d'historique. La traçabilité du « qui a changé quoi », complète sur le parcours de
+traitement, s'arrête donc au retour de l'utilisateur.
 
-La catégorie est ici conservée sous forme de chaîne de caractères, dans les attributs
-\texttt{categorie\_predite} et \texttt{categorie\_finale}. Deux raisons expliquent cette décision.
-La première tient à la stabilité du référentiel : les huit catégories proviennent du service et
-n'ont pas varié sur les quatorze mois du corpus analysé au chapitre~3. La seconde tient à la chaîne
-d'apprentissage : le classifieur produit une étiquette textuelle, et introduire une table
-intermédiaire imposerait une traduction à chaque prédiction comme à chaque évaluation, pour un
-bénéfice nul tant que le référentiel ne porte ni description, ni règle d'affectation, ni
-responsable désigné.
+L'entité \emph{catégorie} aurait pu figurer sur ce diagramme sous forme de classe reliée au ticket.
+Elle reste une valeur portée par le ticket : le référentiel provient du service et n'a pas varié
+sur les quatorze mois du corpus, et le classifieur produit une étiquette textuelle qu'une entité
+intermédiaire obligerait à traduire à chaque prédiction comme à chaque évaluation. La
+simplification deviendrait coûteuse si le référentiel évoluait, puisque renommer une catégorie
+exigerait une migration de données et que rien n'empêche aujourd'hui l'enregistrement d'une valeur
+absente du référentiel, la contrainte d'intégrité reposant sur le code et non sur le schéma.
 
-Cette simplification a un coût, qui deviendrait sensible si le référentiel évoluait. Renommer une
-catégorie exigerait une migration de données plutôt qu'une simple mise à jour de ligne, et rien
-n'empêche aujourd'hui l'enregistrement d'une valeur absente du référentiel. La contrainte
-d'intégrité repose sur le code applicatif et non sur le schéma, ce qui constitue une faiblesse
-reconnue de cette modélisation.
+\FloatBarrier
 
-\subsection{Diagramme de séquence --- dépôt et qualification d'un ticket}
+\subsection{Diagramme de séquence : dépôt d'une demande}
+\label{sec:seqdemandeur6}
 
-La figure~\ref{fig:seq6} retrace les interactions successives entre le demandeur, l'interface, le
-service applicatif, les composants d'intelligence artificielle et la base de données, du dépôt
-d'une demande jusqu'à sa qualification par le technicien.
+Un diagramme de séquence est une vue dynamique qui décrit l'enchaînement des messages échangés entre
+des participants au cours d'un scénario précis. Le temps s'y lit verticalement : chaque participant
+dispose d'une ligne de vie sur laquelle apparaissent ses périodes d'activité, et chaque flèche porte
+un appel ou une réponse. Il rend visible l'ordre des échanges, ce que chacun attend de l'autre et
+les chemins alternatifs, ce qui en fait l'outil de choix pour détailler un cas d'utilisation au
+niveau des interactions. Les deux diagrammes qui suivent couvrent les deux extrémités du cycle de
+vie d'un ticket.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=\textwidth]{ch06_sequence.png}
-\caption{Diagramme de séquence : dépôt puis qualification d'un ticket}
-\label{fig:seq6}
+\includegraphics[width=\textwidth]{ch06_sequence_demandeur.png}
+\caption{Dépôt d'une demande par le demandeur}
+\label{fig:seqdem6}
 \end{figure}
 
-Trois points de cet enchaînement écartent le déroulement effectif de celui qu'on pourrait supposer.
+La figure~\ref{fig:seqdem6} suit le dépôt d'une demande, de l'ouverture du formulaire à la remise
+du numéro de suivi, sur cinq lignes de vie : le demandeur, l'interface, le service de tickets, le
+classificateur et le moteur de recherche. Le fragment alternatif traduit une règle de saisie, un
+titre d'au moins cinq caractères et une description d'au moins trente étant exigés avant tout
+traitement, ce qui écarte les demandes trop brèves pour être classées.
 
-Le classement et la recherche sont appelés dans la même requête que l'enregistrement. Le demandeur
-obtient donc sa catégorie et ses cas voisins sans attendre un traitement différé. Cette
-synchronicité a un coût, mesuré au chapitre~7 : sous charge concurrente, la latence se dégrade
-nettement, le traitement occupant le processeur dans un interpréteur qui ne parallélise pas les
-appels.
+Le message~(6.1) porte le point notable de ce parcours. L'analyse n'est pas reportée à un
+traitement différé : le classement et la recherche de cas comparables interviennent dans la même
+opération que l'enregistrement, pendant que le demandeur valide son formulaire, et cette
+synchronicité se paie sur la latence, qui se dégrade nettement sous charge concurrente. Le modèle
+de langage n'intervient pas ici, faire attendre le demandeur une vingtaine de secondes pour une
+reformulation qui ne lui est pas destinée constituant un mauvais échange ; cet appel est déclenché
+plus tard par l'administrateur.
 
-Le composant sollicité pour la classification est la chaîne lexicale complétée par les règles
-métier, et non le transformer adapté par LoRA. Le chapitre~4 a établi que la seconde approche
-obtient un F1-macro de 0,8343 contre 0,5829 pour celle qui est servie. La chaîne lexicale a été
-retenue à un moment où les deux approches paraissaient équivalentes, pour sa latence et sa
-légèreté. L'écart désormais mesuré invite à rouvrir cet arbitrage, ce que le chapitre~7 porte aux
-perspectives d'industrialisation.
+Un arbitrage discutable se loge dans ce même message. Le composant sollicité pour la classification
+est la chaîne lexicale complétée par les règles métier, non le transformer adapté par LoRA, alors
+que le chapitre~4 a établi que la seconde approche obtient un F1-macro de 0,8343 contre 0,5829 pour
+celle qui est servie. La chaîne lexicale a été retenue à un moment où les deux approches
+paraissaient équivalentes, pour sa latence et sa légèreté ; l'écart désormais mesuré invite à
+rouvrir ce choix, ce que la conclusion générale porte aux perspectives.
 
-L'appel au modèle de langage ne figure pas dans cette séquence. La reformulation intervient plus
-tard, à la demande explicite du technicien, par un chemin distinct que la
-section~\ref{sec:integration6} décrit. Faire attendre le demandeur une vingtaine de secondes pour
-une reformulation qui ne lui est pas destinée aurait constitué un mauvais échange.
+\FloatBarrier
 
-\subsection{Diagramme d'états du ticket}
+\subsection{Diagramme de séquence : clôture d'un ticket}
+\label{sec:seqadmin6}
 
-Un ticket occupe l'un de cinq états. La figure~\ref{fig:etats6} présente la machine à états
-complète, avec les neuf transitions autorisées et leurs déclencheurs.
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_sequence_admin.png}
+\caption{Clôture d'un ticket par l'administrateur}
+\label{fig:seqadmin6}
+\end{figure}
+
+La figure~\ref{fig:seqadmin6} prend le point de vue de l'administrateur au moment où il clôt un
+ticket, moment qui porte les garanties du dispositif : la plateforme y vérifie ce qu'on lui
+demande, journalise ce qui change et décide de ce qui entre dans la base de connaissances.
+
+Deux vérifications précèdent l'enregistrement, réunies dans le message~(6). La première porte sur
+la transition d'état, le passage demandé devant figurer parmi ceux qu'autorise l'état courant. La
+seconde porte sur la solution appliquée et commande le fragment alternatif : lorsque la recherche
+n'a trouvé aucun cas voisin suffisamment proche, la clôture est refusée tant que l'administrateur
+n'a pas décrit ce qu'il a fait.
+
+La branche supérieure enchaîne trois effets. Le ticket passe à l'état résolu et reçoit le message
+destiné au demandeur, chaque champ réellement modifié écrit sa ligne d'historique, et la solution
+rédigée est versée à la base de connaissances en tâche de fond pour ne pas retarder l'affichage.
+Seule une solution écrite par un humain y entre, ce qui interdit au système d'apprendre de ses
+propres suggestions.
+
+Ces deux figures ne couvrent pas tout le cycle : la prise en charge, la correction de la catégorie
+et la reformulation des cas voisins se placent entre elles, et la section~\ref{sec:workflow6} les
+remet en ordre. Le dépôt et la clôture ont été retenus parce que le premier montre où l'automatique
+intervient, le second où l'humain tranche. Cette répartition suit deux principes que les recommandations
+sur l'interaction entre un humain et un système automatique énoncent explicitement~\cite{amershi2019chi} :
+rendre lisible ce que le système sait faire, et permettre de corriger sa proposition sans quitter la
+tâche en cours.
+
+\FloatBarrier
+
+\subsection{Traçabilité des états du ticket}
+\label{sec:etats6}
+
+Un diagramme d'états-transitions décrit le cycle de vie d'un objet en énumérant les états qu'il peut
+prendre et les événements qui le font passer de l'un à l'autre. Chaque transition porte l'événement
+qui la déclenche et, le cas échéant, la condition qui l'autorise. Appliqué à une entité dont le
+statut évolue, il permet de vérifier qu'aucun état n'est atteint sans transition d'entrée, ni
+bloquant faute de transition de sortie.
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{ch06_etats_ticket.png}
-\caption{Diagramme d'états du ticket}
+\caption{Cycle de vie du ticket et transitions autorisées}
 \label{fig:etats6}
 \end{figure}
 
-Les transitions autorisées sont déclarées dans une table du code, et toute demande de changement
-d'état est confrontée à cette table avant d'être appliquée. Une transition non prévue est refusée
-par le serveur, indépendamment de ce que l'interface propose. Placer ce contrôle côté serveur
-plutôt que côté interface est ce qui le rend effectif : un appel direct au service, hors du
-navigateur, se heurte à la même règle.
+Un ticket occupe l'un de cinq états, et la figure~\ref{fig:etats6} présente la machine à états
+complète avec les neuf transitions autorisées et leurs déclencheurs. Ces transitions sont déclarées
+dans une table du code, à laquelle toute demande de changement d'état est confrontée avant d'être
+appliquée. Une transition non prévue est refusée par le serveur, indépendamment de ce que
+l'interface propose : placer ce contrôle côté serveur est ce qui le rend effectif, un appel direct
+hors du navigateur se heurtant à la même règle.
 
-Les états \emph{Résolu} et \emph{Rejeté} n'ont aucune transition sortante. Ils restent pourtant
-modifiables : la catégorie, la priorité et la solution appliquée peuvent être corrigées après
-clôture. Le contrôle n'exige un changement d'état permis que si le statut soumis diffère
-réellement du statut courant. Ce comportement répond à une situation observée, où une erreur de
-qualification découverte après clôture n'aurait pu être corrigée qu'en rouvrant le ticket, ce qui
-aurait faussé les délais de traitement.
+Les états \emph{Résolu} et \emph{Rejeté} n'ont aucune transition sortante et restent pourtant
+modifiables, la catégorie, la priorité et la solution appliquée pouvant être corrigées après
+clôture, le contrôle n'exigeant une transition permise que si le statut soumis diffère réellement
+du statut courant. Ce comportement répond à une situation observée, où une erreur de qualification
+découverte après clôture n'aurait pu être corrigée qu'en rouvrant le ticket, ce qui aurait faussé
+les délais de traitement.
 
 \FloatBarrier
 
-\section{Réalisation}
+\section{Développement du backend}
+\label{sec:backend6}
 
-\subsection{Architecture du service applicatif}
+Le service compte environ 3\,000 lignes de Python, organisées en trois couches.
 
-Le service compte environ 1\,700 lignes de Python, organisées en trois couches.
+\begin{puces}
+  \item Les \emph{routers} exposent les chemins, valident les entrées et les sorties par des
+        schémas typés et déclarent leurs dépendances de sécurité, sans porter de règle métier. Cinq
+        routers couvrent trente-quatre chemins : authentification, tickets, administration,
+        ingestion externe et diagnostic des prédictions.
+  \item Les \emph{services} portent la logique, également au nombre de cinq : authentification,
+        tickets, intelligence artificielle, recherche et modèle de langage.
+  \item Les \emph{repositories} encapsulent l'accès aux données, par SQLAlchemy pour la base
+        relationnelle et par un module dédié pour la base vectorielle.
+\end{puces}
 
-Les \emph{routers} exposent les chemins HTTP, valident les entrées et les sorties par des schémas
-typés, et déclarent leurs dépendances de sécurité. Ils ne contiennent aucune règle métier. Cinq
-routers couvrent l'ensemble : authentification, tickets, administration, ingestion externe et
-diagnostic des prédictions.
+Cette organisation reste inégalement épaisse, et nous le signalons parce qu'une revue attentive le
+verra. Le router des tickets compte 587 lignes, la logique de transition de statut y étant restée
+au lieu de descendre dans un service ; les repositories, à l'inverse, sont pratiquement vides et
+déclarent une intention d'architecture que le code n'a pas encore remplie. C'est la principale
+dette de conception du service.
 
-Les \emph{services} portent la logique. Cinq modules s'y répartissent : le service
-d'authentification, le service de tickets, le service d'intelligence artificielle qui appelle le
-classifieur, le service de recherche, et le service de langage qui appelle Ollama.
+Le contrôle d'accès RBAC s'appuie sur ce découpage. L'authentification repose sur un jeton signé,
+délivré à la connexion et valable huit heures, et les droits s'expriment par des dépendances
+déclaratives : un chemin réservé à l'administration vérifie le rôle porté par le jeton avant même
+que le corps de la fonction ne s'exécute, ce qui rend le contrôle visible à la lecture de la
+signature et évite l'oubli silencieux. Les mots de passe sont conservés sous forme d'empreintes
+bcrypt, et un compte créé par un administrateur reçoit un mot de passe temporaire que son titulaire
+doit changer au premier accès. Trois réserves doivent être énoncées.
 
-Les \emph{repositories} et la couche de persistance encapsulent l'accès aux données, par
-SQLAlchemy pour la base relationnelle et par un module dédié pour la base vectorielle.
+\begin{puces}
+  \item Le fichier d'environnement d'exemple ne porte aucun secret exploitable, et le service
+        refuse de démarrer en mode production tant qu'un marqueur y subsiste ; la génération des
+        valeurs reste à la charge de la procédure de mise en service.
+  \item La limitation des tentatives de connexion, fixée à dix par minute et par adresse, conserve
+        son décompte en mémoire du processus : un second processus serveur double le quota réel, et
+        un redémarrage remet le compteur à zéro.
+  \item Aucune analyse de vulnérabilité n'est menée sur les images conteneurisées, ce qui reste à
+        faire avant toute mise en production.
+\end{puces}
 
-Cette organisation reste inégalement épaisse. Le router des tickets compte 587 lignes, davantage
-que les cinq services réunis pour certains traitements, parce que la logique de transition de
-statut y est restée. Les repositories, à l'inverse, sont pratiquement vides : ils déclarent une
-intention d'architecture que le code n'a pas encore remplie. Nous le signalons parce qu'une revue
-attentive le verra, et parce que ce déséquilibre constitue la principale dette de conception du
-service.
+\section{Développement du frontend}
+\label{sec:frontend6}
 
-\subsection{Le contrat REST}
+L'interface est développée avec Angular et compte dix-sept écrans, cinq communs d'authentification,
+cinq pour l'espace du demandeur et sept pour la console d'administration. Deux gardes protègent le
+routage, l'une exigeant une session valide, l'autre le rôle d'administration, et un intercepteur
+ajoute le jeton à chaque appel sortant puis déclenche la déconnexion lorsque le serveur signale que
+la session a expiré.
 
-L'interface expose trente-trois chemins sous le préfixe \texttt{/api/v1}. La version dans le
-chemin permet de faire évoluer le contrat sans casser un client existant, précaution utile dès
-lors qu'un connecteur externe consomme l'interface. Le tableau~\ref{tab:api6} recense les chemins
-principaux.
+\subsection{Accès à la plateforme}
+\label{sec:acces6}
 
-\begin{table}[!htbp]
+Les cinq écrans communs couvrent l'entrée dans l'application : la connexion, la création de compte,
+le changement de mot de passe imposé au premier accès, la demande de réinitialisation et la saisie
+du nouveau mot de passe. Ils partagent un cadre unique, décliné en un panneau latéral sur écran
+large et en un bandeau sur écran étroit, de sorte que l'identité de l'entreprise reste présente à
+toutes les largeurs.
+
+\begin{figure}[!htbp]
 \centering
-\styletableau
-\caption{Principaux chemins de l'interface REST}
-\label{tab:api6}
-\begin{tabular}{|Bp{1.6cm}|Lp{5.4cm}|Lp{6.4cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Verbe} & \textbf{Chemin} & \textbf{Rôle} \\
-\hline
-\multicolumn{3}{|l|}{\cellcolor{white}\textit{Authentification}} \\
-\hline
-POST & \texttt{/auth/login} & Délivre un jeton, sous limitation de débit \\
-\hline
-POST & \texttt{/auth/change-password} & Impose le changement au premier accès \\
-\hline
-GET & \texttt{/auth/me} & Renvoie le profil du porteur du jeton \\
-\hline
-\multicolumn{3}{|l|}{\cellcolor{white}\textit{Tickets, côté demandeur}} \\
-\hline
-POST & \texttt{/tickets/} & Dépose une demande, déclenche classement et recherche \\
-\hline
-GET & \texttt{/tickets/me} & Liste les demandes de l'utilisateur \\
-\hline
-POST & \texttt{/tickets/\{id\}/feedback} & Enregistre un avis sur la réponse \\
-\hline
-\multicolumn{3}{|l|}{\cellcolor{white}\textit{Tickets, côté administrateur}} \\
-\hline
-GET & \texttt{/tickets/admin/all} & Liste complète avec filtres \\
-\hline
-PATCH & \texttt{/tickets/\{id\}/approve} & Change le statut, contrôle la transition \\
-\hline
-GET & \texttt{/tickets/\{id\}/rag-synthesis} & Demande la reformulation des cas voisins \\
-\hline
-POST & \texttt{/tickets/\{id\}/chat} & Pose une question de suivi à l'assistant \\
-\hline
-GET & \texttt{/tickets/\{id\}/history} & Renvoie le journal des modifications \\
-\hline
-\multicolumn{3}{|l|}{\cellcolor{white}\textit{Administration et supervision}} \\
-\hline
-POST & \texttt{/admin/users} & Crée un compte avec mot de passe temporaire \\
-\hline
-GET & \texttt{/admin/model-info} & Renvoie la version du modèle servi \\
-\hline
-POST & \texttt{/admin/model/reload} & Recharge le modèle sans redémarrer le service \\
-\hline
-GET & \texttt{/admin/monitoring/ml} & Renvoie les indicateurs de dérive \\
-\hline
-\end{tabular}
-\end{table}
+\includegraphics[width=\textwidth]{ch06_ecran_connexion.jpg}
+\caption{Écran de connexion}
+\label{fig:ecran_connexion6}
+\end{figure}
 
-Deux chemins de ce tableau relèvent du chapitre~7 et sont mentionnés ici pour la complétude du
-contrat. Le rechargement du modèle et les indicateurs de dérive appartiennent à la chaîne
-d'industrialisation. Leur présence dans l'interface applicative traduit un choix : la supervision
-se consulte depuis la console d'administration, sans outil séparé à installer.
+La figure~\ref{fig:ecran_connexion6} donne l'écran de connexion. Le formulaire ne demande que
+l'adresse et le mot de passe ; aucun mécanisme d'authentification tierce n'est proposé, l'annuaire
+d'entreprise n'étant pas raccordé, comme la section~\ref{sec:contexte6} l'a exposé. Le lien
+\emph{Oublié ?} ouvre le parcours de réinitialisation.
 
-\subsection{Authentification et contrôle d'accès}
-
-L'authentification repose sur un jeton signé, délivré à la connexion et valable huit heures. La
-signature emploie l'algorithme HS256 et une clé partagée.
-
-Le contrôle d'accès s'exprime par des dépendances déclaratives plutôt que par des conditions
-disséminées. Un chemin réservé à l'administration déclare la dépendance correspondante, qui vérifie
-le rôle porté par le jeton et refuse l'accès avant même que le corps de la fonction ne s'exécute.
-Cette forme rend le contrôle visible à la lecture de la signature et évite l'oubli silencieux.
-
-Un mécanisme complète le dispositif côté comptes. Un compte créé par un administrateur reçoit un
-mot de passe temporaire engendré aléatoirement, et porte un indicateur de premier accès. Tant que
-cet indicateur est levé, l'interface redirige l'utilisateur vers le changement de mot de passe,
-quelle que soit la page demandée. L'administrateur ne connaît donc pas durablement le mot de passe
-des comptes qu'il crée.
-
-\subsection{Les mesures de sécurité}
-\label{sec:securite6}
-
-Le tableau~\ref{tab:secu6} récapitule les protections en place et celles qui manquent.
-
-\begin{table}[!htbp]
+\begin{figure}[!htbp]
 \centering
-\styletableau
-\caption{Mesures de sécurité, état réel}
-\label{tab:secu6}
-\begin{tabular}{|Bp{3.4cm}|Lp{6.0cm}|Cp{3.6cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Mesure} & \textbf{Mise en œuvre} & \textbf{État} \\
-\hline
-Hachage des mots de passe & bcrypt, coût de calcul élevé & En place \\
-\hline
-Jetons signés & HS256, expiration à huit heures & En place \\
-\hline
-Contrôle de rôle & Dépendance déclarative par chemin & En place \\
-\hline
-Limitation de débit & Dix tentatives de connexion par minute et par adresse & En place, portée
-limitée \\
-\hline
-Origines autorisées & Liste blanche configurable & En place \\
-\hline
-Clé d'ingestion & Clé partagée pour le connecteur externe & En place, valeur par défaut \\
-\hline
-Secrets de déploiement & Clé de signature et mot de passe de base & \textbf{Valeurs par défaut}
-\\
-\hline
-Analyse des images & Recherche de vulnérabilités dans les images Docker & \textbf{Absente} \\
-\hline
-\end{tabular}
-\end{table}
+\includegraphics[width=\textwidth]{ch06_ecran_inscription.jpg}
+\caption{Création de compte}
+\label{fig:ecran_inscription6}
+\end{figure}
 
-Ce tableau appelle des réserves que nous préférons énoncer plutôt que laisser découvrir.
+La figure~\ref{fig:ecran_inscription6} présente la création de compte. Le rôle n'y figure pas : il
+est déterminé par le serveur à partir de l'adresse, les adresses déclarées comme administratives
+recevant ce rôle et toutes les autres celui de demandeur. Un demandeur ne peut donc pas s'attribuer
+de droits en remplissant un formulaire.
 
-La limitation de débit conserve son décompte en mémoire du processus. Avec deux processus
-serveurs, un attaquant dispose en pratique du double du quota annoncé, et un redémarrage remet le
-compteur à zéro. Une mise en œuvre partagée, appuyée sur un magasin externe, corrigerait ce point.
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_motdepasse.jpg}
+\caption{Demande de réinitialisation du mot de passe}
+\label{fig:ecran_motdepasse6}
+\end{figure}
 
-Les secrets de déploiement portent encore leur valeur par défaut dans les fichiers d'exemple. Le
-risque est suivi au registre sous la référence R-09. Sa correction relève de la procédure de mise
-en production plutôt que du code, et elle conditionne tout usage réel.
+La figure~\ref{fig:ecran_motdepasse6} ouvre le parcours de réinitialisation. L'écran annonce qu'un
+lien sera envoyé si l'adresse correspond à un compte, formulation prudente qui reprend celle du
+serveur : répondre différemment selon l'existence du compte transformerait ce point d'entrée en
+annuaire des collaborateurs. Le lien reçu expire au bout de trente minutes et ne sert qu'une fois,
+et seule son empreinte est conservée en base.
 
-Aucune analyse de vulnérabilité n'est menée sur les images conteneurisées. Cette absence est
-mentionnée au chapitre~7 parmi les travaux d'industrialisation restants.
+\subsection{Portail du demandeur}
 
-\subsection{L'intégration des services d'intelligence artificielle}
-\label{sec:integration6}
+Le portail comporte un accueil, un formulaire de dépôt, la liste des demandes, le détail d'une
+demande et le profil.
 
-Le classifieur et le moteur de recherche sont chargés une fois au démarrage du service et
-conservés en mémoire. Ce choix évite de recharger un modèle à chaque requête, opération qui
-coûterait plusieurs secondes, et il évite un appel réseau supplémentaire par prédiction.
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_depot.jpg}
+\caption{Portail du demandeur, formulaire de dépôt guidé}
+\label{fig:ecran_depot6}
+\end{figure}
 
-Il a une contrepartie. Deux processus serveurs détiennent chacun leur copie du modèle, ce qui
-double l'empreinte mémoire, et un changement de modèle demande une action explicite sur chacun.
-Le chemin de rechargement mentionné plus haut répond à ce besoin, sous un verrou qui empêche
-qu'une requête lise un modèle déjà remplacé alors que son seuil de décision ne l'est pas encore.
-
-\subsection{Une porte d'entrée pour l'existant}
-\label{sec:ingestion6}
-
-Le chapitre~1 a montré que les demandes arrivent aujourd'hui par messagerie avant d'être reportées
-à la main dans une liste SharePoint. Exiger du service qu'il abandonne ce circuit du jour au
-lendemain aurait condamné l'adoption de l'outil.
-
-Un chemin d'ingestion distinct répond à ce besoin. Il accepte un ticket décrit par un titre, une
-description, un demandeur, une priorité et une filiale, le fait passer par le même classement et la
-même recherche que le formulaire web, puis l'enregistre avec son journal d'historique. Un flux
-d'automatisation branché sur la boîte du support peut donc alimenter l'application sans que le
-demandeur change d'habitude.
-
-Ce chemin n'est pas protégé par un jeton de session, puisqu'aucun humain ne s'y authentifie. Il
-exige une clé partagée transmise dans un en-tête dédié, vérifiée avant tout traitement. Le corps de
-la requête est validé par un schéma typé qui impose un titre d'au moins trois caractères et une
-description d'au moins dix, garde-fou minimal contre les messages vides que le circuit par
-messagerie produit régulièrement.
-
-Deux réserves accompagnent ce dispositif. La clé porte encore sa valeur par défaut, comme les
-autres secrets recensés à la section~\ref{sec:securite6}. Et le flux d'automatisation lui-même n'a
-pas été construit : le chemin est fonctionnel et testé, son déclencheur côté messagerie reste à
-mettre en place par le service, ce qui relève de son environnement et non du présent travail.
-
-\subsection{Le portail du demandeur}
-
-L'application compte trente-neuf modules TypeScript et vingt-deux gabarits, répartis sur quinze
-écrans. Deux gardes protègent le routage, l'une exigeant une session valide, l'autre le rôle
-d'administration. Un intercepteur ajoute le jeton à chaque appel sortant et déclenche la
-déconnexion lorsque le serveur répond que la session a expiré. Un service de thème gère
-l'alternance entre présentation claire et sombre, avec conservation du choix entre deux sessions.
-
-Le portail du demandeur comporte cinq écrans : un accueil, un formulaire de dépôt, la liste des
-demandes, le détail d'une demande et le profil.
-
-Le formulaire de dépôt a été reconstruit après une observation d'usage. Sa première version
+Le formulaire de dépôt a été reconstruit après une observation d'usage : sa première version
 demandait un titre et une description sans indication, et produisait des descriptions d'un ou deux
-mots, inexploitables aussi bien par le classifieur que par le technicien. La version actuelle
-propose des exemples de formulation par type de demande. Le corpus analysé au chapitre~3 montrait
-déjà une longueur médiane de description de trente-trois mots, ce qui laissait peu de matière au
-modèle.
+mots, inexploitables par le classifieur comme par l'administrateur. La version reproduite ci-dessus
+remplace la zone libre par quatre questions, dont une seule est obligatoire : ce qui ne va pas,
+depuis quand, quel message d'erreur s'affiche, et ce qui a déjà été tenté. Chaque champ porte un
+exemple de formulation, un sélecteur permet de partir d'un cas courant, et le choix de la filiale
+complète la saisie.
 
-L'écran de détail a fait l'objet d'un arbitrage que la section~\ref{sec:visibilite6} développe. Il
-n'affiche ni la catégorie prédite, ni le score de confiance, ni le score de similarité. Le
-demandeur y trouve l'état d'avancement en langage courant, les cas comparables déjà traités par le
-service, et un moyen de contact.
+Ce découpage n'est pas une simple commodité d'écran. Les réponses fournies sont assemblées en un
+texte unique qui devient la description transmise au service, et c'est ce texte que le classifieur
+lit pour proposer une catégorie, le titre ne lui étant pas soumis ; une question laissée vide
+n'ajoute rien à l'assemblage. Le corpus du chapitre~3 montrait une longueur médiane de description
+de trente-trois mots : la qualité de la saisie conditionne directement celle de la proposition.
 
-Un bouton d'avis permet de signaler si la réponse apportée a été utile. Ce retour est enregistré
-en base et destiné à alimenter l'évaluation du système. Sa première version affichait un
-remerciement sans rien transmettre au serveur, défaut trouvé en vérification et corrigé, enregistré
-au registre sous la référence R-15.
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_suivi.jpg}
+\caption{Portail du demandeur, suivi d'une demande}
+\label{fig:ecran_suivi6}
+\end{figure}
 
-\subsection{La console d'administration}
+L'écran de suivi répond à l'attente la plus simple du demandeur, savoir où en est son dossier sans
+relancer le service, en présentant l'état d'avancement en langage courant, les cas comparables déjà
+traités et un moyen de contact.
 
-La console comporte dix écrans, dont sept structurent le travail quotidien : un tableau de bord,
-la file d'approbation, la liste complète des tickets, le détail d'un ticket, les notifications, la
-gestion des comptes et la supervision.
+Ce qu'il ne montre pas résulte d'une décision : ni la catégorie proposée, ni l'index de confiance,
+ni le score de similarité. Une première version les affichait. Un index de confiance n'a pas de
+signification pour qui ignore comment il est calculé, et il inquiète plus qu'il n'informe ; surtout,
+afficher une catégorie proposée avant qu'un administrateur ne l'ait confirmée revient à annoncer un
+diagnostic que le service peut contredire devant l'utilisateur.
 
-L'écran de détail concentre l'essentiel du travail. Il présente la demande, la catégorie proposée
-avec son score, les cas voisins retrouvés, la reformulation produite par l'assistant, et les
-champs de clôture. Un espace de dialogue permet de poser des questions de suivi à l'assistant sur
-le ticket courant, dans les limites décrites au chapitre~5.
-
-L'écran de supervision expose la version du modèle servi, la décision de promotion la plus
-récente, les indicateurs de dérive et l'état de la base de connaissances. Il lit les mêmes
-fichiers que la chaîne d'industrialisation décrite au chapitre~7, sans les recalculer.
-
-La liste des tickets autorise l'édition directe des champs de qualification, sans passer par
-l'écran de détail. Cette possibilité répond à une demande formulée en cours de projet, pour les
-corrections en série sur des tickets déjà traités.
-
-\subsection{Le parcours de traitement}
-
-Le traitement d'un ticket se déroule en deux temps, la prise en charge puis la clôture.
-
-\subsubsection{La file d'approbation}
-
-La file d'approbation liste les demandes en attente. Sa première version présentait un formulaire
-de décision avec message client, note interne et boutons de validation ou de refus.
-
-L'observation d'usage a montré que ce formulaire dupliquait l'écran de détail sans rien apporter :
-l'administrateur validait sans lire, puis rouvrait le ticket pour le traiter réellement. Il a été
-retiré. Un simple clic sur une ligne déclenche désormais quatre effets enchaînés. Le statut passe
-à la prise en charge, un message d'information standard est envoyé au demandeur, le ticket est
-affecté à l'administrateur qui a cliqué, et l'interface redirige vers l'écran de détail.
-
-Le message envoyé au demandeur est volontairement générique à ce stade. Il l'informe que sa demande
-est traitée, sans promesse de délai. Le message personnalisé intervient à la clôture, moment où
-l'administrateur dispose effectivement de quelque chose à annoncer.
-
-\subsubsection{La clôture en trois temps}
-
-Le traitement se déroule en trois étapes successives sur un même écran.
-
-La \textbf{revue} présente la demande, la catégorie proposée, les cas voisins et la reformulation.
-L'administrateur y forme son diagnostic sans rien saisir.
-
-Les \textbf{champs de clôture} rassemblent la catégorie finale, la priorité finale, la
-classification et le statut visé. Regrouper ces champs au moment de la clôture, plutôt que de les
-demander à la prise en charge, correspond à l'ordre réel du travail : ils ne sont connus qu'une
-fois le problème compris.
-
-La \textbf{solution appliquée} fait l'objet d'une fenêtre distincte, ouverte à l'enregistrement.
-Cette séparation matérialise le fait qu'il s'agit de la contribution durable de l'administrateur,
-celle qui alimentera la base de connaissances.
-
-\subsubsection{L'humain reste décideur}
-\label{sec:humain6}
-
-Le point précédent conduit à la garantie centrale du dispositif.
-
-Lorsqu'un ticket est clos avec le statut \emph{Résolu} et que son score de similarité n'atteint pas
-le seuil de nouveauté, la rédaction de la solution appliquée est obligatoire. Le service refuse la
-clôture sans elle. Le chapitre~5 a montré que le moteur servi n'atteint jamais ce seuil en
-évaluation, ce qui revient à dire que la solution est en pratique exigée à chaque clôture.
-
-Cette obligation sert deux fins. Elle garantit que la base de connaissances reçoit une solution
-rédigée par un humain, condition sans laquelle le contrôle qualité décrit au chapitre~5 la
-refuserait. Et elle interdit qu'une suggestion produite par le système soit acceptée sans qu'un
-technicien l'ait reprise à son compte.
-
-La séparation des champs de prédiction et de décision, exposée à la section~\ref{sec:classes6},
-complète le dispositif au niveau des données. Le système propose, l'administrateur dispose, et le
-schéma conserve les deux.
-
-\subsubsection{Ce que chacun voit}
-\label{sec:visibilite6}
-
-Le demandeur et l'administrateur ne voient pas la même chose du même ticket, et cet écart résulte
-d'une décision plutôt que d'un oubli.
-
-L'interface du demandeur masque la catégorie prédite, le score de confiance et le score de
-similarité. Une première version les affichait. Deux difficultés sont apparues à l'usage. Un score
-de confiance de 0,62 n'a pas de signification pour qui ignore comment il est calculé, et il
-inquiète plus qu'il n'informe. Surtout, afficher une catégorie prédite avant qu'un technicien ne
-l'ait confirmée revient à annoncer un diagnostic que le service peut contredire, ce qui expose à
-une contradiction visible.
-
-L'administrateur voit l'ensemble. Il dispose de la catégorie proposée, du score, de la règle métier
-éventuellement déclenchée, des cas voisins avec leur similarité et du journal complet des
-modifications. Ces éléments lui servent à juger de la fiabilité de la proposition, jugement pour
-lequel il est outillé.
+Un bouton d'avis permet de signaler si la réponse apportée a été utile. Il n'apparaît qu'une fois la
+demande résolue, et seulement tant qu'aucun avis n'a été donné, ce qui explique son absence sur la
+figure~\ref{fig:ecran_suivi6}, prise sur un ticket encore en cours de traitement. Sa première
+version affichait un remerciement sans rien transmettre au serveur, défaut trouvé en vérification
+et corrigé.
 
 \FloatBarrier
 
-\section{Bilan du sprint}
-\label{sec:bilan6}
+\subsection{Console d'administration et file d'approbation}
 
-Le tableau~\ref{tab:bilan6} confronte les exigences du backlog aux résultats.
+La console comporte un tableau de bord, la file d'approbation, la liste complète des tickets, le
+détail d'un ticket, un écran de veille, la gestion des comptes et la supervision.
 
-\begin{table}[!htbp]
+\begin{figure}[!htbp]
 \centering
-\styletableau
-\caption{Bilan du sprint 4}
-\label{tab:bilan6}
-\begin{tabular}{|Cp{1.2cm}|Lp{5.4cm}|Lp{5.6cm}|Cp{1.6cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Réf.} & \textbf{Fonctionnalité} & \textbf{Réalisation} & \textbf{État} \\
-\hline
-EF-01 & Authentification et rôles & Jetons signés, bcrypt, dépendances déclaratives par chemin &
-Atteint \\
-\hline
-EF-02 & Dépôt d'une demande & Formulaire guidé, classement et recherche dans la même requête &
-Atteint \\
-\hline
-EF-05 & Signalement des cas peu assurés & Score calculé et enregistré, sans automatisation du
-routage (R-16) & Partiel \\
-\hline
-EF-06 & Correction par l'administrateur & Clôture en trois temps, prédiction et décision
-conservées séparément & Atteint \\
-\hline
-EF-07 & Journal d'audit & Chaque modification tracée avec son auteur et sa date & Atteint \\
-\hline
-EF-08 & Suivi par le demandeur & Cinq écrans, avancement en langage courant & Atteint \\
-\hline
-EF-13 & Recueil du retour & Avis persisté après correction du défaut R-15 & Atteint \\
-\hline
-EF-15 & Tableau de bord & Volumes, catégories et délais affichés & Atteint \\
-\hline
-EF-16 & Ingestion depuis la messagerie & Chemin fonctionnel et protégé par clé ; flux
-d'automatisation à construire côté service & Partiel \\
-\hline
-\end{tabular}
-\end{table}
+\includegraphics[width=\textwidth]{ch06_ecran_file.jpg}
+\caption{Console d'administration, file d'approbation}
+\label{fig:ecran_file6}
+\end{figure}
 
-Trois limites tempèrent ce bilan.
+La file d'approbation est le point d'entrée de l'administrateur. Sa première version présentait un
+formulaire de décision qui dupliquait l'écran de détail sans rien apporter, l'administrateur
+validant sans lire puis rouvrant le ticket pour le traiter réellement ; il a été retiré.
 
-La première est documentaire. Ce chapitre ne comporte aucune copie d'écran, alors que la trame des
-sprints en prévoit à l'appui de la réalisation. Les interfaces affichent des noms de demandeurs,
-des filiales et des identifiants de configuration, et l'autorisation de publier ces éléments n'a
-pas été obtenue. Deux voies restent ouvertes : obtenir l'accord du service, ou constituer un jeu de
-démonstration aux identités fictives. La seconde demande une demi-journée et ne dépend de personne,
-ce qui en fait la voie à privilégier si la réponse tarde.
+Un simple clic sur une ligne déclenche désormais quatre effets enchaînés : le statut passe à la
+prise en charge, un message d'information est déposé sur le ticket à l'intention du demandeur, le
+ticket est affecté à l'administrateur qui a cliqué, et l'interface redirige vers l'écran de détail. Le message reste
+volontairement générique à ce stade, informant que la demande est traitée sans promesse de délai ;
+le message personnalisé intervient à la clôture, moment où l'administrateur dispose effectivement
+de quelque chose à annoncer.
 
-La deuxième est architecturale. Les repositories déclarent une intention que le code n'a pas
-remplie, et la logique de transition réside dans le router plutôt que dans un service. Le
-fonctionnement n'en souffre pas, la lisibilité si.
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_bord.jpg}
+\caption{Console d'administration, tableau de bord}
+\label{fig:ecran_bord6}
+\end{figure}
 
-La troisième concerne le routage automatique. Le score de confiance est calculé et enregistré pour
-chaque ticket, et les indicateurs correspondants sont produits, sans qu'aucune automatisation ne
-s'y appuie : toute demande passe par la file d'approbation, quelle que soit la confiance. Ce point
-est suivi au registre sous la référence R-16. Il appelle un arbitrage de produit, le dispositif
-technique étant en place.
+Le tableau de bord donne au responsable du service la vue d'ensemble que le circuit par messagerie
+ne permettait pas : combien de demandes, de quelle nature, et en combien de temps traitées. Les
+valeurs lisibles sur la figure~\ref{fig:ecran_bord6} proviennent de l'environnement de recette et
+n'ont aucun rapport avec le corpus étudié au chapitre~3, elles illustrent la forme de l'écran.
+
+Un écran de supervision distinct expose la version du modèle servi, la décision de promotion la
+plus récente, les indicateurs de dérive et l'état de la base de connaissances. Il lit les mêmes
+fichiers que la chaîne de traitement des données et des modèles, sans les recalculer.
+
+L'écran de veille rassemble ce qui appelle l'attention de l'administrateur au moment où il se
+connecte : les demandes en attente, celles ouvertes depuis plus de vingt-quatre heures, les
+derniers avis déposés par les demandeurs et les comptes créés dans la semaine. Ces listes sont
+calculées à partir des tickets et des comptes déjà chargés dans la console. Aucun courriel ni
+aucune alerte n'est émis vers le demandeur, conformément au périmètre posé au chapitre~1.
+
+\FloatBarrier
+
+\subsection{Validation humaine et bouclage de la résolution}
+\label{sec:bouclage6}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_detail.jpg}
+\caption{Console d'administration, traitement d'un ticket}
+\label{fig:ecran_detail6}
+\end{figure}
+
+L'écran de détail concentre l'essentiel du travail de l'administrateur et matérialise la garantie
+énoncée en introduction. Le traitement s'y déroule en trois temps.
+
+\begin{puces}
+  \item La \textbf{revue} présente la demande, la catégorie proposée, les cas voisins et leur
+        reformulation ; l'administrateur y forme son diagnostic sans rien saisir. C'est ce moment
+        que reproduit la figure~\ref{fig:ecran_detail6}, où la fenêtre de solution suggérée expose
+        deux tickets historiques voisins et la reformulation qui les accompagne.
+  \item Les \textbf{champs de clôture} rassemblent la catégorie finale, la priorité finale et le
+        statut visé. Les regrouper à ce moment plutôt qu'à la prise en charge correspond à l'ordre
+        réel du travail, puisqu'ils ne sont connus qu'une fois le problème compris.
+  \item La \textbf{solution appliquée} fait l'objet d'une fenêtre distincte, ouverte à
+        l'enregistrement, ce qui matérialise le fait qu'il s'agit de la contribution durable de
+        l'administrateur.
+\end{puces}
+
+Cette dernière étape est obligatoire. Lorsqu'un ticket est clos avec le statut \emph{Résolu} et que
+son score de similarité n'atteint pas le seuil de nouveauté, le service refuse la clôture tant que
+la solution n'est pas rédigée ; le chapitre~5 a montré que le moteur servi n'atteint jamais ce
+seuil en évaluation, ce qui revient à dire que la solution est en pratique exigée à chaque clôture.
+
+L'obligation sert deux fins. Elle garantit que la base de connaissances reçoit une solution rédigée
+par un humain, condition sans laquelle le contrôle qualité du chapitre~5 la refuserait, et elle
+interdit qu'une suggestion produite par le système soit acceptée sans qu'un administrateur l'ait
+reprise à son compte. La séparation des attributs de proposition et de décision, exposée à la
+section~\ref{sec:classes6}, complète le dispositif au niveau des données.
+
+Un espace de dialogue permet de poser des questions de suivi à l'assistant sur le ticket courant,
+dans les limites décrites au chapitre~5. La liste des tickets autorise par ailleurs l'édition
+directe des champs de qualification, sans passer par l'écran de détail, possibilité demandée en
+cours de projet pour les corrections en série sur des tickets déjà traités.
+
+\FloatBarrier
+
+\section{Workflow global de traitement d'un ticket}
+\label{sec:workflow6}
+
+Une demande naît dans le formulaire du portail. Le classement et la recherche de cas voisins
+s'appliquent aussitôt, et le ticket est enregistré avec sa proposition, son index de confiance et
+la règle métier éventuellement déclenchée, puis le demandeur reçoit son numéro de suivi. Le
+connecteur d'ingestion constitue un second chemin d'entrée qui rejoint exactement le même
+traitement, sans qu'aucune demande ne l'emprunte à ce jour.
+
+Le ticket rejoint la file d'approbation, où toutes les demandes passent quelle que soit la
+confiance du classifieur. La prise en charge fait basculer le statut, affecte le ticket et prévient
+le demandeur. L'administrateur revoit ensuite le dossier, corrige la qualification si la
+proposition était fausse, demande au besoin une reformulation des cas voisins, et rédige la
+solution qu'il a appliquée. Le serveur contrôle la transition d'état demandée, refuse la clôture
+sans solution, puis journalise champ par champ ce qui a changé, avec son auteur et son horodatage.
+
+La clôture ne termine pas le parcours. La solution rédigée passe par le contrôle qualité du
+chapitre~5, qui vérifie notamment qu'elle provient bien d'un humain, puis rejoint la base de
+connaissances où elle devient candidate dès le ticket similaire suivant. Le ticket clos reste
+modifiable, une erreur de qualification découverte après coup se corrigeant sans rouvrir le
+dossier.
+
+Le parcours se referme ainsi sur lui-même. Le service résout une demande, la résolution enrichit la
+base, et la demande suivante en bénéficie. C'est le seul mécanisme par lequel la plateforme
+s'améliore sans intervention sur son code.
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
 
-Ce sprint a transformé trois composants isolés en une application utilisable. Un service en trois
-couches expose trente-trois chemins sous un contrat versionné, protégés par des jetons signés et
-un contrôle de rôle déclaratif. Une interface Angular de quinze écrans sert deux espaces distincts.
+Ce chapitre a transformé trois composants isolés en une application utilisable. Un service en trois
+couches expose trente-quatre chemins sous un contrat typé, protégés par des jetons signés et un
+contrôle d'accès RBAC déclaratif ; une interface de quinze écrans sert deux espaces distincts, et
+un parcours métier contrôlé côté serveur relie le dépôt à la clôture. La conception a été gouvernée
+par une exigence unique, celle de ne jamais laisser le système décider, qui se traduit dans le
+diagramme de classes où proposition et décision occupent des attributs séparés, dans la traçabilité
+des états où la solution rédigée par un humain conditionne la clôture, et dans l'interface où le
+demandeur ne voit pas une catégorie que le service n'a pas encore confirmée.
 
-La conception a été gouvernée par une exigence unique, celle de ne jamais laisser le système
-décider. Elle se traduit dans le diagramme de classes, où prédiction et décision occupent des
-attributs séparés, dans le diagramme d'états, où la solution rédigée par un humain conditionne la
-clôture, et dans l'interface, où le demandeur ne voit pas une catégorie que le service n'a pas
-encore confirmée.
+Plusieurs choix rapportés ici sont des corrections issues d'un usage qui a contredit une hypothèse
+de départ : le formulaire de dépôt reconstruit après avoir produit des descriptions inexploitables,
+la file d'approbation simplifiée après avoir dupliqué l'écran de détail, l'affichage client épuré
+après avoir exposé des scores mal interprétés.
 
-Plusieurs choix rapportés ici sont des corrections. Le formulaire de dépôt a été reconstruit après
-avoir produit des descriptions inexploitables, la file d'approbation a été simplifiée après avoir
-dupliqué l'écran de détail, l'affichage client a été épuré après avoir exposé des scores mal
-interprétés. Chacune de ces révisions vient d'un usage qui a contredit une hypothèse de départ, ce
-qui est le fonctionnement attendu d'une méthode itérative.
-
-Le chapitre laisse trois questions ouvertes. Les copies d'écran attendent une décision sur
-l'anonymisation. Les repositories attendent le code qu'ils annoncent. Le routage par confiance
-attend un arbitrage de produit.
-
-Le chapitre~7 met cette application en conditions d'exploitation : conteneurisation, chaîne
-d'intégration, tests automatisés, supervision et boucles d'amélioration. Il y confronte aussi les
-exigences non fonctionnelles du cahier des charges aux mesures réelles, et l'une d'entre elles n'y
-résiste pas.
+Quatre limites tempèrent ce bilan. Les repositories attendent le code qu'ils annoncent, et la
+logique de transition réside toujours dans le router. Le routage par index de confiance attend un
+arbitrage de produit. Trois exigences de priorité moyenne ou faible n'ont pas été traitées. Le
+classifieur servi reste enfin la chaîne lexicale, moins performante de 0,25 point de F1-macro que
+le transformer disponible, arbitrage que le chapitre suivant mesure et justifie. Le chapitre~7 met
+la plateforme à l'épreuve : déploiement, chaîne d'apprentissage, tests, campagne de charge et bilan
+de conformité aux exigences.

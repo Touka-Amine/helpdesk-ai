@@ -1,0 +1,16 @@
+Images produites puis ecartees du memoire, conservees au cas ou.
+
+  ch01_otbs_groupe.png     diapositive 3 de la session d'integration
+  ch01_otbs_identite.png   diapositive 4, elements d'identite
+  ch01_otbs_metiers.png    diapositive 6, lignes de metier
+
+Les trois ont ete retirees du memoire : les sections 1.1.1 et 1.1.2 sont
+revenues a la redaction en francais. Elles restent utilisables pour les
+diapositives de la soutenance.
+
+Elles sont regenerables : exporter les diapositives du fichier
+presentation_otbs/ en PNG, puis copier les numeros 3, 4 et 6.
+
+  ch01_organigramme.png    reconstruction PlantUML de la partie droite de
+     l'organigramme, remplacee par le document original recadre
+     (img/ch01_organigramme.pdf). Source : diagrams/ch01_organigramme.puml

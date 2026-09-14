@@ -7,6 +7,17 @@
 % on laisse un \todo{...} qui apparaît en rouge dans le PDF.
 \newcommand{\todo}[1]{\textcolor{red}{\textbf{[EN ATTENTE : #1]}}}
 
+% Emplacement reserve a une copie d'ecran non encore disponible.
+% Meme regle : on ne fabrique pas une illustration, on reserve la place.
+% A remplacer par \includegraphics des que la capture est autorisee.
+\newcommand{\captureattendue}[1]{%
+  \setlength{\fboxrule}{1pt}%
+  \textcolor{red}{\fbox{%
+    \parbox[c][3.4cm][c]{0.84\textwidth}{\centering
+      \textbf{[Insérer la capture d'écran]}\\[0.4em]
+      \normalfont\itshape #1}}}%
+}
+
 % Raccourcis de nommage récurrents
 \newcommand{\otbs}{OneTech Business Solutions\xspace}
 \newcommand{\OTBS}{OTBS\xspace}
@@ -21,6 +32,13 @@
   \renewcommand{\arraystretch}{1.45}%
   \setlength{\tabcolsep}{6pt}%
 }
+
+%=================== Listes a puces =======================%
+% Liste resserree, employee dans les chapitres techniques pour
+% les enumerations que la prose alourdirait inutilement.
+\newlist{puces}{itemize}{1}
+\setlist[puces]{label=\textbullet, leftmargin=1.5em, itemsep=1.5pt,
+                parsep=0pt, topsep=4pt, partopsep=0pt}
 
 %================ Reglages de composition ================%
 % Autorise TeX a etirer legerement les espaces plutot qu'a

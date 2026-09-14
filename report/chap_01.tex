@@ -8,69 +8,294 @@ les travaux se sont déroulés, analyse le fonctionnement du support informatiqu
 intervention, en déduit la problématique et expose la solution retenue. Il décrit ensuite la
 démarche de conduite adoptée, qui commande le découpage des chapitres suivants.
 
-\section{Présentation du projet}
+Une précision de méthode s'impose d'emblée, car elle vaut pour tout le chapitre. Les éléments
+relatifs au groupe et à la filiale proviennent de deux sources nommément citées : la présentation
+remise lors de la session d'intégration~\cite{otbs-integration} et le site institutionnel de
+l'entreprise~\cite{otbs-site}. Tout ce qui concerne le service support et son fonctionnement est
+déduit du fichier d'export des tickets, dont le chapitre~3 détaille la constitution. Lorsqu'une
+information nous a manqué, nous le disons plutôt que de la combler.
 
-\subsection*{L'organisme d'accueil}
+\section{Présentation de l'organisme d'accueil}
+
+\subsection{Le groupe OneTech}
 
 OneTech Group est un groupe industriel tunisien présent sur les marchés de l'automobile, de
-l'énergie et de l'industrie. Actif depuis quarante ans, il emploie plus de 4\,500 collaborateurs,
-opère dans plus de cinquante pays et a réalisé un chiffre d'affaires de 325 millions d'euros en
-2023. Son organisation repose sur trois métiers, le câble, la mécatronique et les technologies de
-l'information et de la communication, portés par des filiales spécialisées.
+l'énergie et de l'industrie. Il revendique quarante années d'expertise sur trois métiers, le câble,
+la mécatronique et les technologies de l'information et de la communication, portés par des filiales
+spécialisées.
+
+Le groupe déclare un chiffre d'affaires de 325 millions d'euros au titre de l'exercice 2023, une
+présence dans plus de cinquante pays et plus de 4\,500 collaborateurs~\cite{otbs-integration}. Ces
+trois ordres de grandeur situent l'échelle de l'ensemble auquel appartient notre structure
+d'accueil, et expliquent la diversité des filiales que le service support dessert.
+
+\subsection{OneTech Business Solutions}
 
 \otbs, désignée par le sigle \OTBS dans la suite du mémoire, est la filiale qui porte l'activité des
-technologies de l'information. Son métier est l'intégration de solutions informatiques et télécom,
-du conseil jusqu'à l'exploitation, sur six domaines : réseaux, communications et collaboration,
-sécurité et conformité, centres de données et systèmes, gestion et exploitation informatique,
-conformité financière. L'entreprise compte 150 collaborateurs et plus de 300 clients, issus
-principalement des secteurs bancaire, financier et industriel~\cite{otbs-site}.
+technologies de l'information. Elle se présente comme un intégrateur indépendant de solutions à
+forte valeur ajoutée, du conseil jusqu'à l'exploitation.
 
-Certifiée ISO 9001 et ISO 27001, et intervenant majoritairement auprès de métiers réglementés, \OTBS
-encadre strictement la circulation de ses données internes. Il en découle une contrainte que nous
-avons intégrée dès la conception : aucune donnée de ticket ne peut être transmise à un service
-d'intelligence artificielle hébergé par un tiers.
+% Logo institutionnel, repris de la page de garde (tpl/cover_page.tex, img/logoSociete.png).
+% Bloc centre plutot que flottant : il doit rester sous le paragraphe de presentation.
+\begin{center}
+\includegraphics[width=0.45\textwidth]{logoSociete.png}
+\end{center}
 
-\subsection*{Le service support et son fonctionnement}
+% Le tableau d'identite ouvre la page suivante (demande de mise en page).
+\newpage
+
+Le tableau~\ref{tab:otbs} rassemble les éléments d'identité de l'entreprise, tels que la
+présentation d'intégration les énonce.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Éléments d'identité de \OTBS}
+\label{tab:otbs}
+\begin{tabular}{|Bp{4.6cm}|Lp{9.4cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Élément} & \textbf{Valeur déclarée} \\
+\hline
+Effectif & 150 collaborateurs \\
+\hline
+Clients & Plus de 300 \\
+\hline
+Projets & Plus de 100 par an \\
+\hline
+Chiffre d'affaires & 37 millions de dinars, soit environ 11 millions d'euros \\
+\hline
+Ancienneté et implantation & Quarante ans, Afrique et Europe \\
+\hline
+Siège & 16, rue des Entrepreneurs, Z.I. Charguia II, 2035 Tunis \\
+\hline
+\end{tabular}
+\end{table}
+
+L'activité se répartit sur cinq lignes de métier : les réseaux, les communications et la
+collaboration, la sécurité et la conformité, les centres de données et les systèmes, enfin la
+gestion et l'exploitation informatique. Sur chacune, l'entreprise intervient depuis l'audit et la
+conception jusqu'au déploiement, à la formation et à l'ingénierie logicielle.
+
+Sa clientèle se répartit entre les télécommunications, le pétrole et le gaz, le secteur public et le
+secteur financier. Ces domaines partagent une sensibilité marquée à la circulation de leurs données,
+ce qui pèse directement sur les choix techniques que nous exposons plus loin.
+
+\FloatBarrier
+
+\subsection{Organisation interne}
+\label{sec:organigramme1}
+
+Six directions se rattachent à la direction générale : les opérations, les systèmes d'information,
+la transformation digitale et la communication, les ressources humaines, la direction financière et
+la direction Software Solutions.
+
+La figure~\ref{fig:organigramme1} reproduit le document remis par le service, restreint aux cinq
+dernières. La branche des opérations, qui réunit à elle seule les directions des projets, des achats
+et de la logistique, technique et commerciale, occupe l'autre moitié du document ; la faire tenir
+sur la même page ramènerait les libellés sous le seuil de lisibilité, et ce sont les cinq autres qui
+situent le projet.
+
+La \textbf{direction des systèmes d'information} héberge ce travail. Placée sous l'autorité de
+M. Maher Daassi, elle réunit deux consultants en systèmes d'information, dont notre encadrante
+Mme Rahma Oueslati, et une responsable qualité. C'est une équipe de trois personnes, ce qui explique
+qu'un projet de cette ampleur y ait été confié à un stagiaire.
+
+Une seconde unité compte pour la suite sans figurer ici. La \textbf{direction technique}, rattachée
+aux opérations, porte les compétences que le support mobilise : quatre équipes conduites chacune par
+un responsable, Système avec six consultants, Sécurité avec dix dont le responsable de la sécurité
+des systèmes d'information, R\&S avec neuf, Voix avec six, complétées d'une coordination BackOffice
+et d'une coordination Support. Le découpage de ces quatre équipes recoupe le référentiel de huit
+catégories selon lequel le service classe ses tickets.
+
+Une réserve doit être posée sur ce rapprochement. Le service support traite les demandes internes de
+l'entreprise et des filiales du groupe, tandis que les équipes de la direction technique
+interviennent aussi en prestation chez les clients. L'organigramme dit qui existe et sous quelle
+autorité ; il ne dit pas qui prend en charge tel ticket un jour donné. Seul l'export de l'outil de
+suivi répond à cette question, et la section~\ref{sec:perimetre1} s'y emploie.
+
+% Figure placee en fin de sous-section : le commentaire qui l'accompagne se lit
+% d'abord, l'organigramme le referme. [H] l'empeche de deriver ailleurs.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{ch01_organigramme.pdf}
+\caption[Organigramme de \OTBS]{Organigramme de \OTBS, directions rattachées à la direction
+générale hors branche des opérations}
+\label{fig:organigramme1}
+\end{figure}
+
+\subsection{Le cadre de confidentialité}
+
+La session d'intégration consacre une section entière aux règles de qualité et de sécurité :
+confidentialité des informations, sauvegarde, bureau propre, encadrement de l'accès sans fil,
+supervision et vigilance~\cite{otbs-integration}. Ces règles s'appliquent à tout intervenant, stagiaire
+compris.
+
+Nous en avons tiré une contrainte de conception, posée avant toute étude technique et jamais
+remise en cause depuis : aucune donnée de ticket ne peut être transmise à un service d'intelligence
+artificielle hébergé par un tiers. Le chapitre~2 la formalise en exigence non fonctionnelle, et les
+chapitres~4 et~5 montrent ce qu'elle a coûté, en performance comme en temps de réponse.
+
+\section{Le service support et son fonctionnement}
+
+\subsection{Le ticketing, socle organisationnel du support}
+\label{sec:ticketing1}
+
+Une équipe informatique traite chaque jour des incidents techniques, des problèmes d'accès, des
+dysfonctionnements applicatifs, des demandes de configuration et des pannes d'équipement. Gérées
+par courrier électronique, par téléphone ou par messagerie instantanée, ces demandes se suivent mal.
+L'information se perd, les délais s'allongent, et la charge réelle de l'équipe devient invisible.
+
+Les systèmes de gestion de tickets répondent à ce besoin en centralisant, structurant et traçant les
+demandes. Chaque demande devient un ticket portant un identifiant, une description, une catégorie,
+une priorité, un statut, un demandeur et l'historique de son traitement. Cette structuration
+conserve les interactions et permet de suivre le ticket de sa création à sa résolution.
+
+Quatre apports en découlent, et ils fondent l'intérêt du dispositif.
+
+\begin{puces}
+  \item \textbf{Traçabilité.} L'historique d'un ticket dit quelles actions ont été menées, par qui,
+        et où en est le traitement. Il rend aussi visibles les incidents qui se répètent.
+  \item \textbf{Priorisation et affectation.} Les tickets se classent par nature, par priorité ou
+        par impact, puis s'orientent vers l'équipe compétente. La charge se répartit, et les
+        incidents critiques passent devant.
+  \item \textbf{Pilotage.} Les données accumulées alimentent des indicateurs : volumes reçus,
+        catégories les plus fréquentes, délais de traitement, charge par équipe. Le responsable y
+        lit les difficultés récurrentes et arbitre l'organisation du service.
+  \item \textbf{Capitalisation.} Les tickets résolus forment progressivement un fonds de solutions
+        déjà éprouvées, réutilisable sur les incidents semblables, ce qui réduit la dépendance à la
+        mémoire de tel ou tel consultant.
+\end{puces}
+
+Disposer d'un tel système ne garantit pourtant pas un traitement efficace. Quand le volume augmente,
+les consultants restent absorbés par des tâches répétitives : lire la description, qualifier
+l'incident, l'orienter vers le bon intervenant, chercher une solution dans l'historique. Ces
+opérations consomment une part importante de leur temps sans produire de valeur nouvelle, et ce sont
+elles que la littérature sur l'automatisation des tickets cherche à
+alléger~\cite{alhawari2019,zangari2023}.
+
+C'est là que l'apprentissage automatique complète le dispositif. Un système intelligent qualifie
+automatiquement le ticket, assortit sa proposition d'un index de confiance, retrouve les tickets
+semblables et suggère les solutions consignées dans la base de connaissances. Son objet n'est pas de
+se substituer au consultant : il lui présente les éléments dont il a besoin pour décider plus vite.
+
+Le système de gestion de tickets reste donc le socle organisationnel qui centralise et trace les
+demandes, et la couche d'intelligence artificielle vient améliorer certaines étapes du traitement.
+Cette complémentarité est le principe retenu pour HelpDesk AI, où les fonctions automatiques
+assistent le consultant tout en laissant la validation à un humain. Les sections qui suivent
+confrontent ce principe à la situation observée chez \OTBS.
+
+\subsection{Périmètre et acteurs du service}
+\label{sec:perimetre1}
 
 Le projet s'est déroulé au sein du service assurant le support informatique interne, sous
-l'encadrement de Madame Rahma Oueslati, consultante et membre de l'équipe de traitement des tickets.
+l'encadrement de Mme Rahma Oueslati, consultante en systèmes d'information.
 
-Ce service ne dispose pas d'organigramme formalisé. Nous en avons établi le périmètre à partir des
-traces qu'il laisse dans son propre outil de suivi, ce qui décrit l'organisation telle qu'elle
-fonctionne et non telle qu'elle est censée fonctionner : onze consultants y traitent les demandes de
-202 utilisateurs, répartis dans huit entités du groupe. Le support est une fonction mutualisée. Les
-applications, les usages et le vocabulaire varient d'une entité à l'autre, ce qui élargit la
-diversité des formulations qu'un modèle de classification devra absorber.
+L'organigramme de la section~\ref{sec:organigramme1} situe les directions de l'entreprise sans
+délimiter ce service : aucune unité ne porte ce nom, la coordination du support y tient en une
+personne, et les compétences mobilisées se répartissent entre plusieurs équipes techniques. Nous en
+avons donc établi le périmètre à partir des traces qu'il laisse dans son propre outil de suivi, ce
+qui décrit l'organisation telle
+qu'elle fonctionne et non telle qu'elle est censée fonctionner. Le fichier d'export porte trois
+enseignements directs, lisibles par simple dénombrement de valeurs distinctes.
 
-Ces demandes sont classées selon un référentiel de huit catégories : Microsoft, Réseau,
-Applicatifs, Infrastructure, Système, Communication, Sécurité et Backup. Leur fréquence est très
-inégale, le rapport entre la plus courante et la plus rare atteignant 5,93. Ce déséquilibre
-constituera la principale difficulté du travail de modélisation conduit au chapitre~4.
+Onze personnes apparaissent comme affectataires de tickets. Notre encadrante figure parmi elles, ce
+qui confirme qu'elle traite les demandes en même temps qu'elle encadre. Deux cent deux personnes
+apparaissent comme demandeuses. Huit filiales du groupe sont représentées, et la
+figure~\ref{fig:entites1} donne leurs volumes respectifs.
 
-Avant ce projet, aucun point d'entrée unique n'existait. Les demandeurs signalaient leurs difficultés
-par courrier électronique, par téléphone, ou s'adressaient directement à un consultant sans
-déclaration formelle. Deux conséquences en découlaient. Une part des interventions ne laissait aucune
-trace écrite. Et le demandeur, son appel une fois passé, n'avait plus aucun moyen de savoir où en
-était sa demande.
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch01_repartition_entites.png}
+\caption{Répartition des tickets entre les huit filiales desservies}
+\label{fig:entites1}
+\end{figure}
+
+La charge est remarquablement plate : 48 tickets séparent la filiale la plus demandeuse de la moins
+demandeuse, soit un écart de 23\,\% sur des volumes compris entre 210 et 258. Aucune filiale ne
+domine le service. Les libellés portés sur la figure sont les codes du fichier d'export, et \OTBS y
+figure au même titre que les autres, le service assurant aussi le support de sa propre société.
+
+Le support est donc une fonction mutualisée, servie par une équipe restreinte au profit d'une
+population plus de dix-huit fois plus nombreuse. Les applications, les usages et le vocabulaire
+varient d'une filiale à l'autre, ce qui élargit la diversité des formulations qu'un modèle de
+classification devra absorber.
+
+Les demandes sont classées selon un référentiel de huit catégories : Microsoft, Réseau, Applicatifs,
+Infrastructure, Système, Communication, Sécurité et Backup. Leur fréquence est très inégale, le
+rapport entre la plus courante et la plus rare atteignant 5,93. Ce déséquilibre constituera la
+principale difficulté du travail de modélisation conduit au chapitre~4.
+
+Deux autres classements coexistent avec celui-là dans le fichier. Une colonne de classification
+range chaque ticket parmi cinq natures, la demande, le problème, l'incident, l'alerte et le
+changement. Une colonne de priorité en distingue quatre, du mineur au critique. Le service dispose
+donc déjà d'un vocabulaire de gestion de services, sans qu'aucun de ces trois axes ne soit exploité
+autrement que par lecture humaine.
+
+\subsection{Volumétrie observée}
+
+Le corpus couvre quatorze mois, du 1\textsuperscript{er} janvier 2025 au 17 février 2026, pour
+1\,800 tickets déposés. La figure~\ref{fig:volumetrie} en donne la répartition mensuelle.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch01_volumetrie_mensuelle.png}
+\caption{Tickets déposés par mois sur la période couverte par l'export}
+\label{fig:volumetrie}
+\end{figure}
+
+L'activité est remarquablement stable, autour de 129 tickets par mois, soit environ six par jour
+ouvré. Aucune saisonnalité marquée n'apparaît. Le dernier mois est partiel, l'export s'arrêtant au
+17 février, et la figure le signale pour éviter d'y lire une chute d'activité.
+
+Cette stabilité a une conséquence pratique pour la suite. Un service dont la charge ne varie pas
+n'a pas de pic à absorber, et le gain attendu d'une assistance automatique ne réside donc pas dans
+l'écrêtage d'une surcharge. Il réside dans le temps passé, ticket après ticket, sur des gestes que
+la section~\ref{sec:repetitivite} montre concentrés sur un petit nombre de cas.
+
+\subsection{L'outil de suivi et la qualité de ses données}
 
 L'enregistrement reposait sur une liste SharePoint. Nous ne le déduisons pas d'un entretien mais du
 fichier d'export : la colonne \texttt{Chemin d'accès} porte, sur les 1\,800 lignes et sans exception,
 la valeur \texttt{sites/IT-Check/Lists/HelpDesk}. Une telle liste assure la saisie et
 l'historisation, sans offrir ni tri automatique ni recherche dans les résolutions passées. Surtout,
-elle ne contient que ce qu'un consultant a pris le temps d'y consigner, généralement après
-l'intervention.
+elle ne contient que ce qu'un consultant a pris le temps d'y consigner.
 
-Le traitement lui-même se décrit en quatre temps. Un collaborateur rencontre une difficulté et la
-signale sous forme de \emph{ticket}. Le ticket parvient à l'un des consultants, qui l'examine et le
-qualifie. Le consultant décide ensuite de son orientation : il traite la demande lui-même lorsqu'elle
-relève de son domaine, ou identifie l'équipe compétente selon le département concerné et la nature du
-problème, puis lui transmet le ticket. La solution appliquée est enfin consignée dans l'outil de
-suivi, et le ticket est clos.
+L'export porte dix-huit colonnes, dont six ne sont pas systématiquement renseignées. Le
+tableau~\ref{tab:completude1} donne leur taux de remplissage.
 
-L'étape d'orientation commande tout le reste, car qualifier un ticket revient à décider qui va le
-traiter. Une catégorie mal choisie envoie la demande à une équipe qui n'est pas concernée ; celle-ci
-la renvoie après examen, et le temps est perdu deux fois. La classification automatique que nous
-proposons répond d'abord à ce besoin d'aiguillage.
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Taux de remplissage des colonnes incomplètes de l'export}
+\label{tab:completude1}
+\begin{tabular}{|Bp{4.6cm}|Cp{2.6cm}|Lp{6.8cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Colonne} & \textbf{Rempli} & \textbf{Lecture} \\
+\hline
+Priorité & 97\,\% & Champ facultatif à la saisie \\
+\hline
+Assigné à & 97\,\% & Cinquante-cinq tickets n'ont jamais été affectés \\
+\hline
+Analyse & 94\,\% & Renseignée après l'intervention \\
+\hline
+Résolution ou motif & 94\,\% & Renseignée après l'intervention \\
+\hline
+CID & 50\,\% & Identifiant de rattachement, souvent omis \\
+\hline
+Date de résolution & 26\,\% & Ne concerne que les tickets résolus \\
+\hline
+\end{tabular}
+\end{table}
+
+Un défaut plus discret mérite d'être signalé, car il illustre ce qu'une saisie sans contrôle
+produit. La colonne des dates de création mêle deux formats, 972 lignes au format jour, mois, année
+et 828 au format année, mois, jour. Une lecture naïve du fichier n'en interprète qu'un seul et perd
+silencieusement 46\,\% du corpus. Le chapitre~3 revient sur les nettoyages que cet état de fait a
+rendus nécessaires.
+
+\subsection{Le cycle de vie du ticket}
 
 Le processus n'ayant jamais été formalisé, nous l'avons déduit des données. Le champ \texttt{STATUT}
 prend cinq valeurs qui décrivent un cycle de vie complet, restitué à la figure~\ref{fig:processus}.
@@ -82,20 +307,56 @@ prend cinq valeurs qui décrivent un cycle de vie complet, restitué à la figur
 \label{fig:processus}
 \end{figure}
 
-Un chiffre y retient l'attention : 464 tickets rejetés pour 476 résolus. Près d'une demande sur deux
-parvenue à son terme se solde par un refus. Ce taux renseigne moins sur la difficulté des cas soumis
-au service que sur l'absence de filtrage à l'entrée. Une demande formulée au téléphone ou dans un
-courriel n'obéit à aucune contrainte de forme, et c'est un consultant qui doit s'en apercevoir, un
-ticket après l'autre.
+Le tri, la qualification et l'affectation se logent entre le dépôt et la prise en charge. Ce sont
+des décisions humaines, prises ticket après ticket, et le fichier n'en garde aucune trace autre que
+leur résultat. L'étape de qualification commande tout le reste, car décider de la catégorie d'un
+ticket revient à décider qui va le traiter. Une catégorie mal choisie oriente la demande vers une
+compétence qui n'est pas la bonne, et le temps est perdu deux fois. La classification automatique
+que nous proposons répond d'abord à ce besoin d'aiguillage.
 
-Une dernière observation achève de caractériser ce travail : il est très répétitif. Sur les
-1\,800 tickets du corpus, la colonne consacrée aux gestes de résolution ne compte que 58 valeurs
-distinctes. L'essentiel des demandes reprend donc, à quelques variantes près, des cas déjà traités.
-Le temps des consultants se concentre alors sur des tâches sans valeur ajoutée technique : qualifier
-la demande pour l'orienter, retrouver un cas comparable dans l'historique, rédiger la réponse au
-demandeur. Aucune n'exige l'expertise pour laquelle ils ont été recrutés.
+Un chiffre retient l'attention sur cette figure : 464 tickets rejetés pour 476 résolus. Près d'une
+demande sur deux parvenue à son terme se solde par un refus. Ce taux renseigne moins sur la
+difficulté des cas soumis au service que sur l'absence de contrôle à l'entrée. Le fichier
+n'enregistre aucun motif structuré de rejet, et nous ne pouvons donc pas en décomposer les causes.
 
-\subsection*{Limites de l'existant et problématique}
+\subsection{Répétitivité des résolutions}
+\label{sec:repetitivite}
+
+Une dernière observation achève de caractériser ce travail. Sur les 1\,800 tickets du corpus, la
+colonne consacrée aux gestes de résolution ne compte que 58 valeurs distinctes. Les colonnes de
+titre, d'analyse et de base de connaissances en comptent exactement autant, ce qui indique qu'elles
+sont solidaires : le service traite cinquante-huit situations types, répétées une trentaine de fois
+chacune en moyenne.
+
+Les descriptions libres, elles, comptent 1\,535 valeurs distinctes. L'écart entre ces deux nombres
+résume le problème du service. Les utilisateurs formulent leurs demandes de mille manières, alors
+que les réponses appartiennent à un répertoire restreint et stable. Retrouver la bonne réponse est
+un travail de reconnaissance, non d'invention.
+
+Le temps des consultants se concentre alors sur des tâches sans valeur ajoutée technique :
+qualifier la demande pour l'orienter, retrouver un cas comparable dans l'historique, rédiger la
+réponse au demandeur. Aucune n'exige l'expertise pour laquelle ils ont été recrutés.
+
+\subsection{Limites du diagnostic}
+
+L'honnêteté du diagnostic exige d'en marquer les bords. Plusieurs éléments qu'un état des lieux
+complet comporterait nous ont manqué, faute de réponse à la demande d'informations adressée à
+l'entreprise. Nous les énonçons ici plutôt que de les combler par des suppositions.
+
+Nous ne disposons ni d'organigramme du service, ni de description de ses niveaux d'intervention, ni
+d'engagement de niveau de service formalisé. Le fichier ne dit rien du canal par lequel chaque
+demande est arrivée, de sorte que la part des sollicitations passées par téléphone ou de vive voix
+reste inconnue. Le temps moyen de traitement d'un ticket n'a pas été confirmé, et nous ne le citons
+donc nulle part dans ce mémoire. Enfin, le motif des rejets n'est pas structuré dans les données.
+
+Ces manques limitent la portée du diagnostic sur un point précis : nous ne pouvons pas chiffrer le
+gain de temps attendu de la plateforme. Ils ne l'affaiblissent pas sur ce que les données montrent
+directement, à savoir la répétitivité du travail, le déséquilibre des catégories, le taux de rejet
+et l'absence de mémoire interrogeable. Ce risque est suivi au registre du projet.
+
+\section{Problématique et solution proposée}
+
+\subsection{Limites de l'existant et besoins associés}
 
 Le tableau~\ref{tab:limites} met les limites constatées en regard du besoin qu'elles engendrent.
 
@@ -109,16 +370,14 @@ Le tableau~\ref{tab:limites} met les limites constatées en regard du besoin qu'
 \rowcolor{enteteTab}
 \textbf{Limite constatée} & \textbf{Besoin qui en découle} \\
 \hline
-Les demandes arrivent par des canaux hétérogènes et une part n'est jamais enregistrée &
-Offrir un point d'entrée unique, de sorte que toute intervention laisse une trace \\
+Aucun point d'entrée ne garantit qu'une intervention laisse une trace &
+Offrir un point d'entrée unique et structuré \\
 \hline
 Le demandeur n'a aucune visibilité sur l'avancement de sa demande &
 Donner au demandeur un suivi autonome de ses tickets \\
 \hline
-L'orientation du ticket vers l'équipe compétente repose sur un jugement manuel, refait à chaque
-demande &
-Proposer automatiquement une catégorie, assortie d'un indicateur de fiabilité, pour aiguiller la
-demande \\
+L'orientation du ticket repose sur un jugement manuel, refait à chaque demande &
+Proposer automatiquement une catégorie, assortie d'un indicateur de fiabilité \\
 \hline
 L'historique des résolutions n'est pas interrogeable &
 Retrouver les cas comparables et leurs sources à partir d'une description libre \\
@@ -126,18 +385,32 @@ Retrouver les cas comparables et leurs sources à partir d'une description libre
 La connaissance produite reste attachée aux personnes &
 Capitaliser automatiquement chaque résolution validée \\
 \hline
+La saisie n'est soumise à aucun contrôle, d'où des champs vides et des formats mêlés &
+Contrôler la saisie à la source plutôt qu'après coup \\
+\hline
 \end{tabular}
 \end{table}
 
 Ces limites partagent une même origine : le dispositif en place enregistre une partie de
-l'information, après coup, sans jamais l'exploiter. Les solutions du marché n'y répondent
-qu'imparfaitement. Les plateformes en mode service, telles Zendesk ou Freshdesk, supposent
-l'hébergement des données chez l'éditeur et s'appuient sur des modèles entraînés sur des corpus
-anglophones ; les solutions libres hébergeables en interne, comme GLPI, n'offrent aucune capacité de
-classification automatique ; les suites complètes du type ServiceNow sont dimensionnées pour des
-structures d'une tout autre échelle. Aucune ne réunit simultanément le traitement du français
-métier, l'exécution sur l'infrastructure de l'entreprise et l'exploitation de l'historique propre au
+l'information, après coup, sans jamais l'exploiter.
+
+\subsection{Les solutions du marché}
+
+Trois familles d'outils auraient pu répondre au besoin, et aucune ne le fait entièrement dans notre
+contexte.
+
+Les plateformes en mode service, telles Zendesk ou Freshdesk, supposent l'hébergement des données
+chez l'éditeur, ce que la contrainte de confidentialité exclut d'emblée. Les solutions libres
+hébergeables en interne, GLPI au premier rang, assurent la gestion du cycle de vie du ticket sans
+proposer nativement de classification apprise sur l'historique du service. Les suites complètes de
+gestion des services informatiques, du type ServiceNow, sont dimensionnées pour des organisations
+d'une tout autre échelle que celle d'une équipe de onze personnes.
+
+Aucune ne réunit simultanément le traitement du français métier tel que ce service l'écrit,
+l'exécution sur l'infrastructure de l'entreprise et l'exploitation de l'historique propre au
 service. C'est ce constat qui fonde la problématique du projet.
+
+\subsection{Énoncé de la problématique}
 
 \begin{center}
 \begin{minipage}{0.92\textwidth}
@@ -148,18 +421,19 @@ en conservant un contrôle humain sur la décision finale ?
 \end{minipage}
 \end{center}
 
+\vspace{2mm}
+
 Cette problématique se décline en questions de recherche qui structurent les travaux des
-chapitres~4 et~5. Un
-modèle de langue francophone spécialisé améliore-t-il significativement la classification par
-rapport à une approche lexicale classique, en particulier sur les catégories minoritaires ? Une
-recherche sémantique fondée sur des représentations vectorielles denses surpasse-t-elle une
-recherche lexicale ? Comment calibrer la confiance du modèle pour définir un seuil au-delà duquel sa
-proposition peut être tenue pour suffisamment sûre ?
+chapitres~4 et~5. Un modèle de langue francophone spécialisé améliore-t-il significativement la
+classification par rapport à une approche lexicale classique, en particulier sur les catégories
+minoritaires ? Une recherche sémantique fondée sur des représentations vectorielles denses
+surpasse-t-elle une recherche lexicale ? Comment calibrer la confiance du modèle pour définir un
+seuil au-delà duquel sa proposition peut être tenue pour suffisamment sûre ?
 
-\subsection*{Solution proposée et périmètre}
+\subsection{La solution proposée}
 
-Nous proposons une plateforme, nommée HelpDesk AI, dont la figure~\ref{fig:solution} donne
-la vue fonctionnelle.
+Nous proposons une plateforme, nommée HelpDesk AI, dont la figure~\ref{fig:solution} donne la vue
+fonctionnelle.
 
 \begin{figure}[!htbp]
 \centering
@@ -168,24 +442,26 @@ la vue fonctionnelle.
 \label{fig:solution}
 \end{figure}
 
-Elle est d'abord le point d'entrée unique qui faisait défaut : toute demande y est déclarée par le
+Elle est d'abord le point d'entrée qui faisait défaut : toute demande y est déclarée par le
 demandeur lui-même dans un formulaire structuré, de sorte qu'aucune intervention n'échappe plus à
 l'historique. Viennent ensuite les briques d'assistance. Le classifieur automatique attribue une
 catégorie à chaque ticket entrant et retourne un score de confiance, qui appuie la décision
-d'orientation vers l'équipe compétente. Le moteur de recherche par similarité interroge l'historique
-des résolutions et remonte les cas les plus proches avec leurs sources ; chaque suggestion reste
-donc vérifiable. Le modèle de langage exécuté localement synthétise enfin ces cas en une proposition
+d'orientation. Le moteur de recherche par similarité interroge l'historique des résolutions et
+remonte les cas les plus proches avec leurs sources, de sorte que chaque suggestion reste
+vérifiable. Le modèle de langage exécuté localement synthétise enfin ces cas en une proposition
 rédigée, sans qu'aucune donnée ne quitte l'infrastructure de l'entreprise.
 
 Le principe directeur est le maintien de la décision humaine : le système propose, le consultant
 tranche. Aucune décision n'est appliquée sans validation, et chaque validation alimente en retour la
 base de connaissances. L'application distingue en conséquence deux parcours, un portail où le
-demandeur crée et suit ses tickets, et une console d'administration où le consultant
-examine les propositions, les corrige si nécessaire et clôt les demandes.
+demandeur crée et suit ses tickets, et une console d'administration où le consultant examine les
+propositions, les corrige si nécessaire et clôt les demandes.
 
-Reste à délimiter le périmètre du travail, ce que fait le tableau~\ref{tab:perimetre}. Poser cette
-frontière dès le cadrage protège l'évaluation contre le reproche de ne pas avoir traité ce qui n'a
-jamais été promis.
+\subsection{Périmètre du travail}
+
+Reste à délimiter le périmètre, ce que fait le tableau~\ref{tab:perimetre}. Poser cette frontière
+dès le cadrage protège l'évaluation contre le reproche de ne pas avoir traité ce qui n'a jamais été
+promis.
 
 \begin{table}[!htbp]
 \centering
@@ -209,7 +485,7 @@ Reprise et migration des tickets historiques \\
 Application web complète, portail demandeur et console d'administration &
 Notifications automatiques sur changement de statut \\
 \hline
-Conteneurisation, chaîne reproductible, campagne de tests &
+Conteneurisation et chaîne de traitement reproductible &
 Supervision en exploitation et reprise sur incident \\
 \hline
 \end{tabular}
@@ -220,25 +496,13 @@ honnête de ce qu'elle apporte et de ses limites. Sa mise en exploitation reste 
 
 \section{Méthodologie de travail}
 
-\subsection*{Comparaison des démarches envisagées}
+\subsection{Comparaison des démarches envisagées}
 
-Le projet relève de deux natures de travail que les démarches classiques traitent rarement ensemble.
-Il comporte un volet de développement logiciel, où le besoin est identifiable et le résultat
-prévisible, et un volet de science des données, où le résultat d'une expérimentation ne peut par
-définition être garanti à l'avance. Nous avons examiné les trois démarches candidates.
-
-Le cycle en V suppose un besoin stabilisé et un résultat prévisible ; il aurait conduit à figer des
-objectifs de performance avant toute expérimentation, ce qui n'a pas de sens en apprentissage
-automatique. Scrum apporte l'itération et la livraison incrémentale, mais reste centré sur le
-produit logiciel et laisse de côté la préparation et l'évaluation des données. CRISP-DM \cite{wirth2000} structure
-précisément le cycle de vie de la donnée, de la compréhension du métier jusqu'au déploiement en
-passant par la préparation, la modélisation et l'évaluation ; il ignore en revanche le développement
-applicatif qui doit rendre le modèle utilisable.
-
-Le tableau~\ref{tab:methodo} récapitule cette comparaison sur cinq critères.
-
-\begin{table}[!htbp]
+\begin{table}[H]
 \centering
+% Place avec [H] pour rester sous le titre. Le paquet float court-circuite le
+% reglage d'interligne que setspace applique aux flottants : on le retablit ici.
+\singlespacing
 \styletableau
 \caption{Comparaison des démarches de conduite de projet}
 \label{tab:methodo}
@@ -262,7 +526,21 @@ de vie de la donnée & Ne couvre pas le développement applicatif \\
 \end{tabular}
 \end{table}
 
-\subsection*{Démarche hybride retenue}
+Le tableau~\ref{tab:methodo} compare sur cinq critères les trois démarches examinées.
+Le projet relève de deux natures de travail que les démarches classiques traitent rarement ensemble.
+Il comporte un volet de développement logiciel, où le besoin est identifiable et le résultat
+prévisible, et un volet de science des données, où le résultat d'une expérimentation ne peut par
+définition être garanti à l'avance. Nous avons examiné trois démarches candidates.
+
+Le cycle en V suppose un besoin stabilisé et un résultat prévisible ; il aurait conduit à figer des
+objectifs de performance avant toute expérimentation, ce qui n'a pas de sens en apprentissage
+automatique. Scrum apporte l'itération et la livraison incrémentale, en restant centré sur le
+produit logiciel et en laissant de côté la préparation et l'évaluation des données. CRISP-DM
+\cite{wirth2000} structure précisément le cycle de vie de la donnée, de la compréhension du métier
+jusqu'au déploiement en passant par la préparation, la modélisation et l'évaluation ; il ignore en
+revanche le développement applicatif qui doit rendre le modèle utilisable.
+
+\subsection{Démarche hybride retenue}
 
 Nous avons retenu une démarche hybride. Le pilotage général suit une logique agile : le projet est
 découpé en itérations d'une durée comparable. Chacune s'ouvre sur un objectif explicite et se ferme
@@ -277,55 +555,36 @@ flatteur. Le chapitre~4 en donne l'illustration : le protocole y a été fixé d
 résultats sont rapportés tels qu'ils sont sortis, y compris lorsqu'ils contredisent l'hypothèse
 initiale.
 
-\subsection*{Organisation du projet}
-
-Le travail s'est organisé en cinq itérations successives, présentées au tableau~\ref{tab:sprints}.
-Chacune correspond à un chapitre du mémoire : la structure du document suit ainsi le déroulement
-réel du projet, et non un regroupement thématique reconstitué après coup.
-
-L'encadrante professionnelle a assuré le suivi opérationnel et la validation métier des livrables.
-L'encadrant académique a orienté la démarche scientifique et la rédaction du mémoire. Les
-consultants du service ont joué un rôle d'utilisateurs de référence : leurs retours ont notamment
-conduit à revoir la présentation des suggestions dans la console d'administration.
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Découpage du projet en itérations}
-\label{tab:sprints}
-\begin{tabular}{|Cp{1.6cm}|Lp{7.4cm}|Lp{4.4cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Sprint} & \textbf{Objet} & \textbf{Chapitre} \\
-\hline
-1 & Constitution et gouvernance du jeu de données & 3 : Données et gouvernance \\
-\hline
-2 & Conception et évaluation du classifieur & 4 : Modélisation IA \\
-\hline
-3 & Assistance à la résolution et modèle de langage local & 5 : Système RAG et assistant LLM \\
-\hline
-4 & Développement de l'application web & 6 : Développement de l'application \\
-\hline
-5 & Conteneurisation, tests et validation & 7 : Industrialisation et validation \\
-\hline
-\end{tabular}
-\end{table}
-
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
 
-Ce chapitre a établi le cadre du projet. Le service support d'\OTBS, fonction mutualisée entre huit
-entités et animée par onze consultants, recevait ses demandes par des canaux hétérogènes et les
-consignait après coup dans une liste SharePoint, sans tri automatique ni mémoire interrogeable.
-L'analyse des 1\,800 tickets accumulés a confirmé ce diagnostic, en particulier sur le taux de rejet.
-Aucune solution du marché ne réunissant les conditions requises, à savoir traiter du français
-métier, s'exécuter sur l'infrastructure de l'entreprise et exploiter l'historique propre au service,
-nous avons conçu une plateforme spécifique articulée autour d'un point d'entrée unique, d'un
-classifieur, d'un moteur de recherche par similarité et d'un modèle de langage local, le tout sous
-contrôle humain permanent.
+Ce chapitre a posé le terrain du projet. Le support informatique d'\OTBS est une fonction
+mutualisée : onze consultants traitent les demandes de huit filiales du groupe, pour deux cent deux
+demandeurs. Les interventions sont consignées dans une liste SharePoint qui ne trie rien
+automatiquement et que personne ne peut interroger.
 
-La démarche hybride retenue, agile dans son pilotage et inspirée de CRISP-DM dans ses itérations de
-modélisation, découpe le travail en cinq sprints qui structurent les chapitres~3 à~7. Le chapitre
-suivant expose au préalable les concepts sur lesquels repose la solution : représentation du texte,
-modèles \emph{transformers}, adaptation économe en paramètres, génération augmentée par récupération
-et industrialisation des modèles d'apprentissage.
+Les 1\,800 tickets accumulés sur quatorze mois donnent quatre constats mesurés. La charge est
+stable, autour de 129 tickets par mois. Le référentiel compte huit catégories, dont la plus
+fréquente dépasse la plus rare d'un facteur 5,93. Près d'une demande close sur deux est un rejet.
+Enfin, cinquante-huit gestes de résolution distincts répondent à 1\,535 formulations différentes.
+Ce dernier écart est le cœur du problème : les questions sont variées, les réponses ne le sont pas.
+
+Trois familles d'outils du marché ont été examinées. Aucune ne réunit à la fois le traitement du
+français tel que ce service l'écrit, l'exécution sur l'infrastructure de l'entreprise et
+l'exploitation de l'historique propre au service. Nous avons donc conçu une plateforme spécifique,
+HelpDesk AI, articulée autour d'un point d'entrée unique, d'un classifieur, d'un moteur de recherche
+par similarité et d'un modèle de langage exécuté localement, chaque décision restant soumise à la
+validation d'un consultant.
+
+Le périmètre a été posé dans le même mouvement. Le livrable attendu est une plateforme démontrable
+et documentée ; sa mise en exploitation chez \OTBS reste hors sujet. La conduite du travail suit une
+démarche hybride, agile pour le pilotage et inspirée de CRISP-DM pour les itérations de
+modélisation, avec une règle qui engage la validité des résultats : le protocole d'évaluation de
+chaque modèle a été arrêté avant son entraînement.
+
+Le chapitre suivant prépare la réalisation. Il expose d'abord les concepts sur lesquels la solution
+repose : la représentation du texte, les modèles \emph{transformers} et CamemBERT, l'adaptation
+économe en paramètres, la classification en présence de classes déséquilibrées, la génération
+augmentée par récupération, l'exécution locale d'un modèle de langage et l'industrialisation des
+modèles d'apprentissage. Il traduit ensuite le besoin décrit ici en exigences fonctionnelles et non
+fonctionnelles, qui serviront de référence à l'évaluation conduite au chapitre~7.

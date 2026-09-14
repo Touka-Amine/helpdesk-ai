@@ -1,123 +1,324 @@
-%============ Références du mémoire ============%
-% Complétée au fil de la rédaction des chapitres %
-%===============================================%
+%=========================================================================%
+%  Références du mémoire — HelpDesk AI                                     %
+%                                                                          %
+%  Conventions retenues :                                                  %
+%   - délimiteurs par accolades, jamais par guillemets ;                   %
+%   - sigles et noms propres protégés par des accolades dans les titres,   %
+%     de sorte qu'aucun style ne les mette en bas de casse ;               %
+%   - un type d'entrée conforme à la nature réelle du document ;           %
+%   - date de consultation portée par le champ « note » pour toute         %
+%     ressource en ligne.                                                  %
+%                                                                          %
+%  L'ordre des entrées suit les thèmes du mémoire. Le style de sortie      %
+%  numérote par ordre de citation, cet ordre-ci n'a donc aucun effet sur   %
+%  la bibliographie imprimée.                                              %
+%=========================================================================%
 
-%---------------------- Webographie ----------------------%
+%----------------------- Organisme d'accueil -----------------------------%
 
-@electronic{otbs-site,
-  title  = "OneTech Business Solutions --- Site institutionnel",
-  url    = "https://www.onetech-bs.com/",
-  year   = "2026",
-  note   = "[Consulté le 18/08/2026]"
+@online{otbs-site,
+  author  = {{OneTech Business Solutions}},
+  title   = {Site institutionnel de l'entreprise},
+  url     = {https://www.onetech-bs.com/},
+  year    = {2026},
+  note    = {[Consulté le 18/08/2026]}
 }
 
-%------------- Représentation du texte et modèles de langue -------------%
+@unpublished{otbs-integration,
+  author = {{OneTech Business Solutions}},
+  title  = {Session d'intégration {PFE} 2025},
+  year   = {2025},
+  note   = {Présentation interne remise aux stagiaires, 12 diapositives}
+}
+
+%------------------------- Conduite de projet ----------------------------%
+
+@inproceedings{wirth2000,
+  author    = {Wirth, Rüdiger and Hipp, Jochen},
+  title     = {{CRISP-DM}: Towards a Standard Process Model for Data Mining},
+  booktitle = {Proceedings of the 4th International Conference on the Practical
+               Applications of Knowledge Discovery and Data Mining},
+  year      = {2000}
+}
+
+%------------- Représentation du texte et modèles de langue --------------%
 
 @inproceedings{mikolov2013,
-  author    = "Mikolov, Tomas and Chen, Kai and Corrado, Greg and Dean, Jeffrey",
-  title     = "Efficient Estimation of Word Representations in Vector Space",
-  booktitle = "International Conference on Learning Representations (ICLR)",
-  year      = "2013"
+  author    = {Mikolov, Tomas and Chen, Kai and Corrado, Greg and Dean, Jeffrey},
+  title     = {Efficient Estimation of Word Representations in Vector Space},
+  booktitle = {International Conference on Learning Representations ({ICLR})},
+  year      = {2013}
 }
 
 @inproceedings{vaswani2017,
-  author    = "Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob
-               and Jones, Llion and Gomez, Aidan N. and Kaiser, Lukasz and Polosukhin, Illia",
-  title     = "Attention Is All You Need",
-  booktitle = "Advances in Neural Information Processing Systems (NeurIPS)",
-  year      = "2017"
+  author    = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob
+               and Jones, Llion and Gomez, Aidan N. and Kaiser, Lukasz and Polosukhin, Illia},
+  title     = {Attention Is All You Need},
+  booktitle = {Advances in Neural Information Processing Systems ({NeurIPS})},
+  year      = {2017}
 }
 
 @inproceedings{devlin2019,
-  author    = "Devlin, Jacob and Chang, Ming-Wei and Lee, Kenton and Toutanova, Kristina",
-  title     = "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
-  booktitle = "Conference of the North American Chapter of the Association
-               for Computational Linguistics (NAACL)",
-  year      = "2019"
+  author    = {Devlin, Jacob and Chang, Ming-Wei and Lee, Kenton and Toutanova, Kristina},
+  title     = {{BERT}: Pre-training of Deep Bidirectional Transformers
+               for Language Understanding},
+  booktitle = {Conference of the North American Chapter of the Association
+               for Computational Linguistics ({NAACL})},
+  year      = {2019}
 }
 
 @inproceedings{martin2020,
-  author    = "Martin, Louis and Muller, Benjamin and Ortiz Suárez, Pedro Javier
+  author    = {Martin, Louis and Muller, Benjamin and Ortiz Suárez, Pedro Javier
                and Dupont, Yoann and Romary, Laurent and de la Clergerie, Éric Villemonte
-               and Seddah, Djamé and Sagot, Beno{\^i}t",
-  title     = "CamemBERT: a Tasty French Language Model",
-  booktitle = "Annual Meeting of the Association for Computational Linguistics (ACL)",
-  year      = "2020"
+               and Seddah, Djamé and Sagot, Beno{\^i}t},
+  title     = {{CamemBERT}: a Tasty French Language Model},
+  booktitle = {Annual Meeting of the Association for Computational Linguistics ({ACL})},
+  year      = {2020}
 }
 
 @inproceedings{reimers2019,
-  author    = "Reimers, Nils and Gurevych, Iryna",
-  title     = "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
-  booktitle = "Conference on Empirical Methods in Natural Language Processing (EMNLP)",
-  year      = "2019"
+  author    = {Reimers, Nils and Gurevych, Iryna},
+  title     = {{Sentence-BERT}: Sentence Embeddings using Siamese {BERT}-Networks},
+  booktitle = {Conference on Empirical Methods in Natural Language Processing ({EMNLP})},
+  year      = {2019}
 }
 
-%------------------- Adaptation économe en paramètres -------------------%
+%------------------ Adaptation économe en paramètres ---------------------%
 
 @inproceedings{hu2022,
-  author    = "Hu, Edward J. and Shen, Yelong and Wallis, Phillip and Allen-Zhu, Zeyuan
-               and Li, Yuanzhi and Wang, Shean and Wang, Lu and Chen, Weizhu",
-  title     = "LoRA: Low-Rank Adaptation of Large Language Models",
-  booktitle = "International Conference on Learning Representations (ICLR)",
-  year      = "2022"
+  author    = {Hu, Edward J. and Shen, Yelong and Wallis, Phillip and Allen-Zhu, Zeyuan
+               and Li, Yuanzhi and Wang, Shean and Wang, Lu and Chen, Weizhu},
+  title     = {{LoRA}: Low-Rank Adaptation of Large Language Models},
+  booktitle = {International Conference on Learning Representations ({ICLR})},
+  year      = {2022}
 }
 
-%------------------ Classification et déséquilibre ------------------%
+%------------------- Classification et déséquilibre ----------------------%
 
 @article{chawla2002,
-  author  = "Chawla, Nitesh V. and Bowyer, Kevin W. and Hall, Lawrence O.
-             and Kegelmeyer, W. Philip",
-  title   = "SMOTE: Synthetic Minority Over-sampling Technique",
-  journal = "Journal of Artificial Intelligence Research",
-  volume  = "16",
-  pages   = "321--357",
-  year    = "2002"
+  author  = {Chawla, Nitesh V. and Bowyer, Kevin W. and Hall, Lawrence O.
+             and Kegelmeyer, W. Philip},
+  title   = {{SMOTE}: Synthetic Minority Over-sampling Technique},
+  journal = {Journal of Artificial Intelligence Research},
+  volume  = {16},
+  pages   = {321--357},
+  year    = {2002}
 }
 
-%--------------- Génération augmentée par récupération ---------------%
+%--------------- Génération augmentée par récupération -------------------%
 
 @inproceedings{lewis2020,
-  author    = "Lewis, Patrick and Perez, Ethan and Piktus, Aleksandra and Petroni, Fabio
+  author    = {Lewis, Patrick and Perez, Ethan and Piktus, Aleksandra and Petroni, Fabio
                and Karpukhin, Vladimir and Goyal, Naman and Küttler, Heinrich
                and Lewis, Mike and Yih, Wen-tau and Rocktäschel, Tim
-               and Riedel, Sebastian and Kiela, Douwe",
-  title     = "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
-  booktitle = "Advances in Neural Information Processing Systems (NeurIPS)",
-  year      = "2020"
+               and Riedel, Sebastian and Kiela, Douwe},
+  title     = {Retrieval-Augmented Generation for Knowledge-Intensive {NLP} Tasks},
+  booktitle = {Advances in Neural Information Processing Systems ({NeurIPS})},
+  year      = {2020}
 }
 
 @article{johnson2021,
-  author  = "Johnson, Jeff and Douze, Matthijs and Jégou, Hervé",
-  title   = "Billion-scale Similarity Search with GPUs",
-  journal = "IEEE Transactions on Big Data",
-  volume  = "7",
-  number  = "3",
-  pages   = "535--547",
-  year    = "2021"
+  author  = {Johnson, Jeff and Douze, Matthijs and Jégou, Hervé},
+  title   = {Billion-scale Similarity Search with {GPUs}},
+  journal = {{IEEE} Transactions on Big Data},
+  volume  = {7},
+  number  = {3},
+  pages   = {535--547},
+  year    = {2021}
 }
 
 @inproceedings{es2024,
-  author    = "Es, Shahul and James, Jithin and Espinosa-Anke, Luis and Schockaert, Steven",
-  title     = "RAGAS: Automated Evaluation of Retrieval Augmented Generation",
-  booktitle = "Conference of the European Chapter of the Association
-               for Computational Linguistics (EACL), System Demonstrations",
-  year      = "2024"
+  author    = {Es, Shahul and James, Jithin and Espinosa-Anke, Luis and Schockaert, Steven},
+  title     = {{RAGAS}: Automated Evaluation of Retrieval Augmented Generation},
+  booktitle = {Conference of the European Chapter of the Association
+               for Computational Linguistics ({EACL}), System Demonstrations},
+  year      = {2024}
 }
 
-%------------------------- Conduite de projet -------------------------%
+%--------------------------- Jeux de données -----------------------------%
 
-@techreport{wirth2000,
-  author      = "Wirth, Rüdiger and Hipp, Jochen",
-  title       = "CRISP-DM: Towards a Standard Process Model for Data Mining",
-  institution = "Proceedings of the 4th International Conference on the Practical
-                 Applications of Knowledge Discovery and Data Mining",
-  year        = "2000"
+@online{hfTickets,
+  author  = {Bueck, Tobias},
+  title   = {Customer Support Tickets Dataset},
+  organization = {Hugging Face Datasets},
+  url     = {https://huggingface.co/datasets/Tobi-Bueck/customer-support-tickets},
+  year    = {2024},
+  note    = {[Consulté le 18/08/2026]}
 }
 
-@misc{hfTickets,
-  author       = {Bueck, Tobias},
-  title        = {Customer Support Tickets Dataset},
-  year         = {2024},
-  howpublished = {Hugging Face Datasets},
-  note         = {\url{https://huggingface.co/datasets/Tobi-Bueck/customer-support-tickets}}
+%================= Ajouts de la relecture finale ==========================%
+%  Chaque entrée ci-dessous a été vérifiée auprès de Crossref ou d'OpenAlex :
+%  titre, auteurs, année et lieu de publication concordent avec l'enregistrement
+%  retourné par l'API. Aucune n'est décorative : toutes sont citées dans le corps
+%  du mémoire.
+%=========================================================================%
+
+%------------------- Représentation et recherche de texte ----------------%
+
+@article{sparckjones1972,
+  author  = {Sp{\"a}rck Jones, Karen},
+  title   = {A statistical interpretation of term specificity and its application in retrieval},
+  journal = {Journal of Documentation},
+  volume  = {28},
+  number  = {1},
+  pages   = {11--21},
+  year    = {1972},
+  doi     = {10.1108/eb026526}
+}
+
+@article{robertson2009,
+  author  = {Robertson, Stephen and Zaragoza, Hugo},
+  title   = {The Probabilistic Relevance Framework: {BM25} and Beyond},
+  journal = {Foundations and Trends in Information Retrieval},
+  volume  = {3},
+  number  = {4},
+  pages   = {333--389},
+  year    = {2009},
+  doi     = {10.1561/1500000019}
+}
+
+@inproceedings{cormack2009,
+  author    = {Cormack, Gordon V. and Clarke, Charles L. A. and B{\"u}ttcher, Stefan},
+  title     = {Reciprocal Rank Fusion Outperforms {Condorcet} and Individual Rank Learning Methods},
+  booktitle = {Proceedings of the 32nd International {ACM SIGIR} Conference on Research and
+               Development in Information Retrieval},
+  pages     = {758--759},
+  year      = {2009},
+  doi       = {10.1145/1571941.1572114}
+}
+
+%------------------------ Classification et calibration ------------------%
+
+@article{cortes1995,
+  author  = {Cortes, Corinna and Vapnik, Vladimir},
+  title   = {Support-vector networks},
+  journal = {Machine Learning},
+  volume  = {20},
+  number  = {3},
+  pages   = {273--297},
+  year    = {1995},
+  doi     = {10.1007/BF00994018}
+}
+
+@incollection{platt1999,
+  author    = {Platt, John},
+  title     = {Probabilistic Outputs for Support Vector Machines and Comparisons to
+               Regularized Likelihood Methods},
+  booktitle = {Advances in Large Margin Classifiers},
+  publisher = {MIT Press},
+  pages     = {61--74},
+  year      = {1999}
+}
+
+@inproceedings{guo2017,
+  author    = {Guo, Chuan and Pleiss, Geoff and Sun, Yu and Weinberger, Kilian Q.},
+  title     = {On Calibration of Modern Neural Networks},
+  booktitle = {Proceedings of the 34th International Conference on Machine Learning ({ICML})},
+  pages     = {1321--1330},
+  year      = {2017}
+}
+
+@inproceedings{kaufman2011,
+  author    = {Kaufman, Shachar and Rosset, Saharon and Perlich, Claudia},
+  title     = {Leakage in Data Mining: Formulation, Detection, and Avoidance},
+  booktitle = {Proceedings of the 17th {ACM SIGKDD} International Conference on Knowledge
+               Discovery and Data Mining},
+  pages     = {556--563},
+  year      = {2011},
+  doi       = {10.1145/2020408.2020496}
+}
+
+%--------------------- Génération augmentée et hallucinations ------------%
+
+@article{gao2023,
+  author  = {Gao, Yunfan and Xiong, Yun and Gao, Xinyu and Jia, Kangxiang and Pan, Jinliu
+             and Bi, Yuxi and Dai, Yi and Sun, Jiawei and Wang, Meng and Wang, Haofen},
+  title   = {Retrieval-Augmented Generation for Large Language Models: A Survey},
+  journal = {arXiv preprint arXiv:2312.10997},
+  year    = {2023}
+}
+
+@article{ji2023,
+  author  = {Ji, Ziwei and Lee, Nayeon and Frieske, Rita and Yu, Tiezheng and Su, Dan
+             and Xu, Yan and Ishii, Etsuko and Bang, Ye Jin and Madotto, Andrea
+             and Fung, Pascale},
+  title   = {Survey of Hallucination in Natural Language Generation},
+  journal = {ACM Computing Surveys},
+  volume  = {55},
+  number  = {12},
+  pages   = {1--38},
+  year    = {2023},
+  doi     = {10.1145/3571730}
+}
+
+%--------------------------- Industrialisation ---------------------------%
+
+@inproceedings{sculley2015,
+  author    = {Sculley, D. and Holt, Gary and Golovin, Daniel and Davydov, Eugene
+               and Phillips, Todd and Ebner, Dietmar and Chaudhary, Vinay
+               and Young, Michael and Crespo, Jean-Fran{\c c}ois and Dennison, Dan},
+  title     = {Hidden Technical Debt in Machine Learning Systems},
+  booktitle = {Advances in Neural Information Processing Systems ({NeurIPS})},
+  pages     = {2503--2511},
+  year      = {2015}
+}
+
+@inproceedings{breck2017,
+  author    = {Breck, Eric and Cai, Shanqing and Nielsen, Eric and Salib, Michael
+               and Sculley, D.},
+  title     = {The {ML} Test Score: A Rubric for {ML} Production Readiness and
+               Technical Debt Reduction},
+  booktitle = {2017 {IEEE} International Conference on Big Data},
+  pages     = {1123--1132},
+  year      = {2017},
+  doi       = {10.1109/BigData.2017.8258038}
+}
+
+@inproceedings{amershi2019se,
+  author    = {Amershi, Saleema and Begel, Andrew and Bird, Christian and DeLine, Robert
+               and Gall, Harald and Kamar, Ece and Nagappan, Nachiappan and Nushi, Besmira
+               and Zimmermann, Thomas},
+  title     = {Software Engineering for Machine Learning: A Case Study},
+  booktitle = {Proceedings of the 41st International Conference on Software Engineering:
+               Software Engineering in Practice ({ICSE-SEIP})},
+  pages     = {291--300},
+  year      = {2019},
+  doi       = {10.1109/ICSE-SEIP.2019.00042}
+}
+
+@inproceedings{amershi2019chi,
+  author    = {Amershi, Saleema and Weld, Dan and Vorvoreanu, Mihaela and Fourney, Adam
+               and Nushi, Besmira and Collisson, Penny and Suh, Jina and Iqbal, Shamsi
+               and Bennett, Paul N. and Inkpen, Kori and Teevan, Jaime
+               and Kikin-Gil, Ruth and Horvitz, Eric},
+  title     = {Guidelines for Human-{AI} Interaction},
+  booktitle = {Proceedings of the 2019 {CHI} Conference on Human Factors in Computing Systems},
+  pages     = {1--13},
+  year      = {2019},
+  doi       = {10.1145/3290605.3300233}
+}
+
+%---------------- Classification automatique de tickets ------------------%
+
+@article{alhawari2019,
+  author  = {Al-Hawari, Feras and Barham, Hala},
+  title   = {A machine learning based help desk system for {IT} service management},
+  journal = {Journal of King Saud University -- Computer and Information Sciences},
+  volume  = {33},
+  number  = {6},
+  pages   = {702--718},
+  year    = {2019},
+  doi     = {10.1016/j.jksuci.2019.04.001}
+}
+
+@article{zangari2023,
+  author  = {Zangari, Alessandro and Marcuzzo, Matteo and Schiavinato, Michele
+             and Gasparetto, Andrea and Albarelli, Andrea},
+  title   = {Ticket automation: An insight into current research with applications to
+             multi-level classification scenarios},
+  journal = {Expert Systems with Applications},
+  volume  = {225},
+  pages   = {119984},
+  year    = {2023},
+  doi     = {10.1016/j.eswa.2023.119984}
 }

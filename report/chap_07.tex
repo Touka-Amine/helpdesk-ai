@@ -1,1 +1,586 @@
-\chapter{Sprint 5 --- Industrialisation, tests et validation}
+\chapter{Industrialisation, tests et validation de la solution}
+
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+
+Un système qui ne fonctionne que sur le poste de son auteur ne prouve rien. Ce chapitre porte sur
+ce qui sépare une maquette d'un service : se déployer ailleurs sans intervention manuelle, se
+réentraîner sans se dégrader, se laisser tester, et savoir dire ce qu'il ne fait pas.
+
+Nous annonçons d'emblée son résultat le plus inconfortable. L'exigence de temps de réponse inscrite
+au cahier des charges du chapitre~2 n'est pas tenue, y compris sans concurrence, et la
+section~\ref{sec:validation7} en donne la mesure avant d'en donner l'explication. Une exigence non
+tenue mesurée vaut mieux qu'une exigence tenue par affirmation, et c'est dans cet esprit que le
+chapitre est écrit.
+
+L'exposé suit l'ordre de la mise en exploitation. La conteneurisation rend le déploiement
+reproductible. La chaîne d'apprentissage automatisé encadre le passage d'un modèle en service. Les
+tests protègent le comportement acquis. La validation confronte les exigences aux mesures. Les
+limites et les perspectives referment le travail.
+
+\section{Conteneurisation et déploiement}
+\label{sec:conteneurs7}
+
+L'application se lance par une seule commande, qui construit les images manquantes et démarre quatre
+services reliés par un réseau privé. Cette propriété n'est pas un confort de développement. Elle
+conditionne la reprise du travail par le service support, qui doit pouvoir installer la plateforme
+sans reconstituer un environnement Python, une base de données et un modèle de langage à la main.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Services déployés par la composition Docker}
+\label{tab:services7}
+\begin{tabular}{|Bp{2.6cm}|Lp{6.4cm}|Lp{4.4cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Service} & \textbf{Rôle} & \textbf{Base} \\
+\hline
+api & Service applicatif, avec le classifieur et le moteur de recherche chargés en mémoire &
+Image construite sur Python 3.11 \\
+\hline
+frontend & Interface Angular compilée, servie par un serveur web léger & Image construite \\
+\hline
+postgres & Base applicative : comptes, tickets, historique & PostgreSQL 16 \\
+\hline
+ollama & Modèle de langage exécuté localement & Image officielle \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth,height=0.76\textheight,keepaspectratio]{ch07_deploiement.png}
+\caption{Déploiement de la plateforme sur le serveur du service support}
+\label{fig:deploiement7}
+\end{figure}
+
+La figure~\ref{fig:deploiement7} donne la topologie déployée. Elle se lit par ce qu'elle ne montre
+pas : aucune flèche ne franchit le cadre du serveur vers l'extérieur. La contrainte de
+confidentialité posée au chapitre~1 ne repose donc pas sur une promesse mais sur une composition où
+rien n'est câblé vers un service tiers.
+
+\FloatBarrier
+
+Plusieurs traits de cette composition traduisent des décisions plutôt que des réglages par défaut.
+
+La base de données n'expose aucun port sur la machine hôte. Elle n'est joignable que depuis le
+réseau interne de la composition, ce qui interdit tout accès direct depuis l'extérieur du serveur.
+Le service applicatif reste le seul chemin vers les données, propriété déjà énoncée au
+chapitre~6 et que le déploiement rend effective.
+
+Le démarrage est ordonné par des contrôles de santé plutôt que par des attentes fixes. Le service
+applicatif attend que la base réponde à une sonde de disponibilité, et l'interface attend que le
+service applicatif réponde à son propre point de santé. Un démarrage lent de la base retarde donc
+la chaîne au lieu de la casser.
+
+Trois volumes nommés conservent l'état : les données de la base, les fichiers du service, et les
+poids du modèle de langage. Détruire les conteneurs ne détruit pas ces volumes, distinction qui
+sépare une remise à zéro d'une perte de données.
+
+La configuration est extérieure aux images. Un fichier d'environnement, copié depuis un modèle
+fourni, porte les identifiants de base, la clé de signature des jetons et la clé du connecteur
+d'ingestion. Ce mécanisme permet de changer d'environnement sans reconstruire. Le modèle fourni ne
+contient aucune valeur utilisable : les trois secrets y sont remplacés par un marqueur, la commande
+qui les engendre est donnée en tête de fichier, et le service refuse de démarrer en mode production
+tant qu'un marqueur subsiste. Quatre tests protègent ce comportement. Le risque R-09 du registre,
+qui signalait des secrets exploitables dans un fichier public, est clos.
+
+Une surcouche facultative active l'accélération matérielle du modèle de langage sur une machine
+équipée. Sans elle, la même composition fonctionne sur une machine ordinaire, ce qui garantit que
+la démonstration ne dépend pas du matériel disponible le jour où elle a lieu.
+
+Le service applicatif est servi par deux processus de travail. Ce nombre paraît anodin, et la
+section~\ref{sec:validation7} montrera qu'il explique une part de l'échec sur le temps de réponse.
+
+La supervision de l'activité relève entièrement de la console d'administration décrite au
+chapitre~6 : la composition ne déploie aucun service distinct pour cet usage.
+
+\FloatBarrier
+
+Le relevé de la figure~\ref{fig:dockerps7} confirme ce que la composition déclare. Les quatre
+services tournent, trois d'entre eux répondent à leur sonde de disponibilité, et deux ports
+seulement sont publiés sur la machine hôte. Les adresses de PostgreSQL et d'Ollama apparaissent
+sans redirection : elles n'existent que dans le réseau interne.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch07_docker_ps.jpg}
+\caption{État des services après démarrage de la composition}
+\label{fig:dockerps7}
+\end{figure}
+
+Ollama est le seul service dépourvu de sonde. Son image officielle n'en déclare aucune, et nous
+n'en avons pas ajouté : son indisponibilité ne bloque aucun chemin obligatoire, propriété établie
+à la section~\ref{sec:validation7}.
+
+La figure~\ref{fig:dockerimages7} donne la taille des images construites et récupérées. Le
+déséquilibre mérite un commentaire, car il traduit une contrainte réelle du projet.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch07_docker_images.jpg}
+\caption{Images employées par la composition et leur encombrement}
+\label{fig:dockerimages7}
+\end{figure}
+
+L'interface compilée tient dans 74,6~Mo, le service applicatif en réclame 5,11~Go et le modèle de
+langage 8,04~Go. Ces deux derniers portent les bibliothèques d'apprentissage, les poids du
+transformer et ceux du modèle génératif. Un service de support qui déploierait cette plateforme
+doit donc prévoir une quinzaine de gigaoctets, contrainte à énoncer avant l'installation plutôt
+qu'à découvrir pendant.
+
+\FloatBarrier
+
+\section{Chaîne d'apprentissage automatisé}
+\label{sec:mlops7}
+
+Le chapitre~4 a produit un modèle, le chapitre~5 une base de connaissances. Aucun des deux ne
+survit à un changement de corpus si les étapes qui les produisent tiennent dans un carnet de notes.
+Cette section décrit la chaîne qui les reconstruit et, surtout, celle qui décide si le résultat
+mérite d'être servi.
+
+\subsection{Un pipeline reproductible, et ce qu'il exclut délibérément}
+
+Huit étapes déclarées relient les fichiers d'entrée aux artefacts produits. Chacune déclare ses
+dépendances, ses paramètres et ses sorties, si bien qu'une modification du corpus ou d'un paramètre
+suffit à recalculer ce qui en dépend, et rien d'autre.
+
+Deux chaînes partent du même corpus nettoyé et ne se mélangent jamais. La première mène à la
+classification : préparation, découpage, construction du jeu d'apprentissage, entraînement,
+promotion. La seconde mène à la connaissance : préparation, découpage, construction des index
+lexical et sémantique, évaluation. Cette séparation reprend au niveau de l'outillage la distinction
+que le chapitre~3 a établie au niveau des données.
+
+Certains éléments sont volontairement tenus hors du pipeline, et l'explication vaut mieux que le
+silence.
+
+La collecte des tickets résolus lit la base applicative, dont l'état ne se résume pas à une
+empreinte de fichier. En faire une étape déclarée serait pire que de l'omettre : l'outil efface les
+sorties d'une étape avant de la rejouer, ce qui détruirait l'historique des lots déjà collectés. Le
+script se lance donc à la main, ou sur recommandation du dispositif de surveillance.
+
+Les scripts de surveillance lisent la production plutôt que le corpus. Ils rapportent un état, ils
+ne transforment rien, et rien ne dépend de leur sortie.
+
+Le registre des modèles est écarté pour la même raison que la collecte. Le placer en sortie d'étape
+reviendrait à l'effacer à chaque promotion, et le projet perdrait à la fois son historique de
+versions et la possibilité de revenir en arrière.
+
+\subsection{Un jeu de test gelé et un suivi des expériences}
+
+Comparer deux modèles suppose une référence stable. Le jeu de test est donc gelé : une fois
+constitué, l'étape de découpage le relit au lieu de le régénérer, et un manifeste en conserve
+l'empreinte. Sans cette précaution, chaque exécution aurait produit un jeu de test légèrement
+différent, et les écarts mesurés entre deux versions auraient mêlé le progrès du modèle au hasard
+du découpage.
+
+Ce jeu compte 356 tickets, conformément au partage décrit au chapitre~3. Il contient des noms de
+demandeurs réels, ce qui explique qu'il reste hors du dépôt public et qu'il soit référencé plutôt
+qu'inclus.
+
+Chaque entraînement dépose ses paramètres, ses métriques, son modèle et ses artefacts dans un
+registre d'expériences. Le suivi est facultatif au sens strict : si l'outil n'est pas installé,
+l'entraînement se poursuit en signalant que le suivi est désactivé. Ce choix évite qu'une
+dépendance de confort bloque la production d'un modèle.
+
+\subsection{La porte de promotion}
+
+Un modèle entraîné n'est pas un modèle servi. Entre les deux, une porte compare le candidat au
+modèle en production sur le jeu de test gelé, et refuse par défaut.
+
+Trois conditions doivent être réunies. La métrique principale doit progresser d'au moins cinq
+millièmes, seuil qui écarte les variations sans signification. Aucune catégorie ne doit régresser
+de plus de cinq centièmes, ce qui interdit d'améliorer la moyenne en sacrifiant une catégorie
+minoritaire. Et l'exactitude globale ne doit pas reculer.
+
+La décision est écrite dans un fichier, avec le détail de chaque condition, les métriques comparées
+et le motif du refus le cas échéant. La console d'administration lit ce fichier sans le recalculer,
+ce qui garantit que l'écran et la décision disent la même chose.
+
+Le dispositif a effectivement refusé. La dernière décision enregistrée rejette une version
+candidate au motif que la métrique principale n'a pas progressé : l'écart mesuré avec la version en
+production est nul, très en dessous du gain minimum exigé. Les deux autres conditions étaient
+pourtant satisfaites. Une porte qui n'a jamais refusé ne prouve rien, et nous préférons produire
+cette trace plutôt qu'une promotion réussie de complaisance.
+
+Une remarque de méthode s'impose sur la métrique retenue. La décision porte sur le F1-macro
+restreint aux catégories effectivement représentées dans le jeu de test, cinq sur huit. Ce choix
+évite qu'une catégorie sans aucun exemple de test tire mécaniquement la moyenne vers zéro et rende
+toute comparaison impossible. Il a pour contrepartie de produire une valeur plus flatteuse que le
+F1-macro complet rapporté au chapitre~4, et les deux nombres ne sont donc pas comparables entre
+eux. La porte reste juste pour ce qu'elle fait, comparer deux modèles sur la même base, sans être
+une mesure de la qualité absolue du système.
+
+\subsection{Le réentraînement contrôlé}
+
+Réentraîner à date fixe n'a pas de sens sur un flux de quelques dizaines de tickets par mois.
+Un dispositif évalue donc s'il y a matière, et écrit sa recommandation.
+
+Les déclencheurs examinés portent sur le volume collecté et sur le délai. Le volume de tickets doit
+dépasser cent cinquante, seuil en deçà duquel l'apport par catégorie reste sous le bruit
+d'échantillonnage du jeu de test. Une catégorie minoritaire qui gagne trente exemples déclenche à
+elle seule, car une classe faible progresse proportionnellement plus vite. Et un délai minimal de
+sept jours sépare deux promotions, pour éviter l'agitation.
+
+La qualité des étiquettes collectées est graduée selon ce que l'historique du ticket révèle. Une
+catégorie corrigée par un administrateur constitue une étiquette forte. Une catégorie journalisée
+et non modifiée constitue une étiquette moyenne. Une catégorie que l'administrateur n'a jamais
+touchée ne constitue qu'une confirmation par omission, et ces étiquettes faibles sont exclues du
+réentraînement. Les inclure reviendrait à réapprendre sur les sorties du modèle lui-même, ce qui
+amplifierait ses erreurs au lieu de les corriger. C'est ici que la traçabilité décrite au
+chapitre~6 devient un instrument plutôt qu'un ornement : sans le journal des modifications, cette
+graduation serait impossible.
+
+Le dispositif n'a pas encore recommandé de réentraînement, faute de volume. Cette absence de
+déclenchement est le comportement attendu sur un service qui vient d'ouvrir, et non un défaut.
+
+\FloatBarrier
+
+\section{Tests de la solution}
+\label{sec:tests7}
+
+Une suite de cent cinquante tests automatisés accompagne le service. Elle s'exécute en moins
+d'une minute et passe intégralement. Ce nombre ne dit rien à lui seul, et cette section décrit ce
+qu'il couvre et ce qu'il laisse de côté. La grille d'évaluation proposée par Breck et ses
+coauteurs~\cite{breck2017} rappelle qu'un système d'apprentissage se teste sur quatre fronts, les
+données, le modèle, l'infrastructure et la surveillance, et que le dernier est le plus souvent
+négligé. Notre bilan ne fait pas exception.
+
+\subsection{Périmètre de la suite automatisée}
+
+La figure~\ref{fig:tests7} donne l'exécution de la suite et la couverture qu'elle atteint.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch07_tests.jpg}
+\caption{Exécution de la suite de tests et couverture mesurée}
+\label{fig:tests7}
+\end{figure}
+
+La couverture est forte là où une régression serait silencieuse, les règles métier à 100\,\%, le
+contrôle qualité à 99\,\% et le registre des modèles à 95\,\%. Elle est nulle sur la surveillance,
+dont les scripts lisent la production et ne transforment rien.
+
+\subsection{Des tests qui protègent des règles, pas seulement du code}
+
+Quelques tests méritent d'être cités parce qu'ils inscrivent une règle métier plutôt qu'un
+comportement technique, et qu'ils la rendent indélébile.
+
+La frontière anti-fuite vérifie qu'aucune ligne issue de la production ne peut entrer dans le jeu
+de test gelé. Sans elle, le corpus collecté en exploitation contaminerait progressivement la
+référence d'évaluation, et les mesures des chapitres suivants perdraient leur sens sans que
+personne s'en aperçoive.
+
+Le refus des suggestions produites par le système vérifie qu'une solution non relue par un humain
+ne peut pas entrer dans la base de connaissances. C'est la règle décrite au chapitre~5, et le test
+la protège contre une évolution ultérieure qui la lèverait par commodité.
+
+L'idempotence de la promotion couvre un défaut trouvé en relecture, où la porte échouait lorsqu'on
+la rejouait sur une décision déjà prise. Le test existe parce que le défaut a existé, et il
+appartient à ce titre à l'histoire du projet autant qu'à sa qualité.
+
+\subsection{Zones non couvertes}
+
+Plusieurs manques doivent être énoncés, faute de quoi le nombre de cent cinquante donnerait une
+impression de couverture que la réalité ne soutient pas.
+
+L'interface n'est pas couverte. Quatorze fichiers de test existent du côté Angular, mais ils
+totalisent treize cas, pour la plupart issus de la génération automatique, et quatre d'entre eux ne
+contiennent aucun cas. Un rendu correct des écrans décrits au chapitre~6 ne repose donc sur aucune
+vérification automatique.
+
+Les tests de charge ne font pas partie de la suite. Ils constituent une campagne distincte, dont la
+section suivante rend compte, et ils ne sont pas rejoués à chaque modification.
+
+\subsection{Exécution automatique et couverture mesurée}
+
+Une chaîne d'intégration continue exécute la suite à chaque poussée et à chaque demande de fusion
+vers la branche principale. Elle installe les dépendances sur une copie propre du dépôt, lance les
+tests, échoue si l'un d'eux échoue, et conserve le rapport de couverture.
+
+Cette copie propre impose une restriction qu'il faut énoncer. Le corpus, le pipeline entraîné et
+l'index vectoriel sont suivis par le gestionnaire de versions de données et absents du dépôt de
+code, puisque le corpus porte des noms de demandeurs en clair. Les dix-huit tests d'intégration du
+service chargent le pipeline au démarrage et ne peuvent donc pas s'exécuter dans cet environnement.
+La chaîne en exécute cent trente-deux, qui couvrent les règles métier, la préparation des textes, les
+moteurs de recherche, le registre des modèles, la porte de promotion et le cycle de vie de la base
+de connaissances.
+
+La couverture mesurée sur ces cent trente-deux tests s'établit à 44\,\% des instructions du code source
+de traitement. Ce chiffre recouvre des situations très différentes. La préparation des textes et
+les règles métier sont couvertes intégralement, le registre des modèles à 95\,\% et la fusion
+hybride à 89\,\%. À l'inverse, les deux modules de surveillance ne sont atteints par aucun test, et
+le moteur sémantique l'est à 20\,\% parce que l'essentiel de son code suppose un index construit.
+La couverture est donc forte là où une régression serait silencieuse, et faible là où elle serait
+immédiatement visible.
+
+\FloatBarrier
+
+\section{Validation de la solution}
+\label{sec:validation7}
+
+Cette section confronte les exigences du chapitre~2 aux mesures obtenues. Nous commençons par celle
+qui n'est pas tenue.
+
+\subsection{Le temps de réponse, exigence non tenue}
+
+L'exigence de performance fixe la latence de prédiction à 300\,ms au quatre-vingt-quinzième
+centile. Une campagne de charge a été menée sur le point d'entrée de prédiction, dans
+l'environnement conteneurisé décrit à la section~\ref{sec:conteneurs7}, donc avec deux processus de
+travail. La figure~\ref{fig:charge7} en rapporte le relevé.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch07_charge.jpg}
+\caption{Campagne de charge sur le point d'entrée de prédiction}
+\label{fig:charge7}
+\end{figure}
+
+Le budget n'est tenu dans aucun des trois scénarios. Le cas séquentiel en approche pourtant : avec
+330\,ms au quatre-vingt-quinzième centile pour un budget de 300, l'écart tient à quelques dizaines
+de millisecondes. La médiane, à 105\,ms, montre que la majorité des requêtes passe largement sous
+le budget, et que ce sont les requêtes lentes qui font échouer la mesure.
+
+La dégradation sous concurrence est d'une autre nature. Le quatre-vingt-quinzième centile est
+multiplié par trois entre une requête à la fois et cinq requêtes simultanées, puis par quinze entre
+cinq et vingt. À vingt requêtes simultanées, près d'une sur cinq n'aboutit pas.
+
+L'explication tient à la conception du point d'entrée plutôt qu'à un défaut d'implémentation. Le
+traitement d'une prédiction est gourmand en calcul : encodage du texte, prédiction du classifieur,
+recherche dans l'index. Ce traitement est écrit de manière synchrone et occupe donc son processus
+de bout en bout. Avec deux processus de travail seulement, deux requêtes suffisent à saturer le
+service, et les suivantes attendent. Le langage employé ne permet pas à plusieurs fils d'exécution
+de contourner cette limite sur un traitement de cette nature.
+
+Trois voies de correction existent, et nous les énonçons sans en avoir mesuré l'effet. Augmenter le
+nombre de processus de travail est immédiat et sans risque fonctionnel. Rendre le point d'entrée
+asynchrone et déporter le calcul sur un exécuteur dédié demande une reprise du code. Séparer les
+composants d'intelligence artificielle dans un service distinct, choix écarté au chapitre~6 pour
+éviter un appel réseau, redeviendrait défendable si la charge le justifiait.
+
+Une réserve de méthode s'impose sur ces chiffres. La campagne a été conduite sur une machine de
+développement, sur trente à deux cents requêtes selon le scénario, et sur un seul point d'entrée.
+Elle établit un ordre de grandeur et un comportement sous concurrence, non une caractérisation de
+production.
+
+\subsection{Bilan de conformité}
+
+Le tableau~\ref{tab:conformite7} reprend les huit catégories d'exigences non fonctionnelles du
+chapitre~2 et leur oppose l'état mesuré.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Conformité aux exigences non fonctionnelles}
+\label{tab:conformite7}
+\begin{tabular}{|Bp{3.3cm}|Cp{2.2cm}|Lp{8.1cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Catégorie} & \textbf{État} & \textbf{Constat} \\
+\hline
+Performance & Non tenue & 330\,ms au quatre-vingt-quinzième centile sans concurrence, pour un
+budget de 300\,ms \\
+\hline
+Qualité de l'IA & Partielle & Protocole arrêté avant l'expérimentation et respecté ; seuils non
+franchis, 0,8343 de F1-macro pour 0,85 et 0,60 de rappel sur \emph{Sécurité} pour 0,70 \\
+\hline
+Confidentialité & Tenue & Aucun appel à un service externe, modèle de langage exécuté localement \\
+\hline
+Sécurité & Tenue & Jeton signé, contrôle de rôle, empreintes bcrypt ; aucun secret exploitable dans
+le dépôt, démarrage en production refusé sans génération \\
+\hline
+Fiabilité & Tenue & Le modèle de langage n'intervient sur aucun chemin obligatoire \\
+\hline
+Maintenabilité & Partielle & 150 tests côté service, dont 132 rejoués par l'intégration continue
+pour 44\,\% de couverture ; interface non couverte \\
+\hline
+Reproductibilité & Tenue & Pipeline déclaré, jeu de test gelé et référencé par empreinte \\
+\hline
+Portabilité & Tenue & Quatre services conteneurisés, démarrage par une commande \\
+\hline
+\end{tabular}
+\end{table}
+
+Cinq exigences sur huit sont tenues, deux le sont partiellement, une ne l'est pas. La fiabilité
+mérite une justification, car elle repose sur une propriété de conception. Le modèle de langage
+n'est joignable que par deux points d'entrée dédiés, l'un pour la synthèse des cas voisins, l'autre
+pour l'échange avec l'administrateur. Ni le dépôt d'une demande ni la clôture d'un ticket ne le
+sollicitent. Son indisponibilité prive donc l'administrateur d'une aide à la lecture, sans arrêter
+le service.
+
+Du côté fonctionnel, le tableau~\ref{tab:ef} du chapitre~2 en compte quatorze. Dix sont pleinement
+satisfaites, une l'est en partie, trois n'ont pas été traitées. Onze relèvent du chapitre~6, qui en
+satisfait sept, en traite une partiellement et en laisse trois de côté ; les trois autres, la
+classification automatique, la recherche de cas comparables et la synthèse rédigée, relèvent des
+chapitres~4 et~5 et sont satisfaites.
+
+L'exigence partielle est EF-07, l'orientation selon l'index de confiance : le score est calculé,
+affiché et rangé par tranches, sans qu'aucun routage automatique s'en serve. Les trois exigences
+non traitées sont EF-11, EF-12 et EF-13, le résumé automatique du ticket, la suggestion de priorité
+et l'analyse de tonalité, toutes de priorité moyenne ou faible au dossier de spécification.
+
+\FloatBarrier
+
+\section{Limites du système}
+\label{sec:limites7}
+
+Les chapitres précédents ont signalé leurs limites au fil de l'exposé. Cette section les rassemble,
+sans en ajouter ni en retrancher, parce qu'un lecteur a besoin de les voir ensemble pour juger de
+ce que le système permet.
+
+\subsection{Diversité insuffisante du corpus}
+
+Le corpus compte 1\,800 tickets sur quatorze mois, et le chapitre~3 a établi que sa diversité pose
+le vrai problème. Cinquante-huit titres distincts seulement, soit trois pour cent, là où un jeu de
+référence public en compte quatre-vingt-onze pour cent. Le système apprend donc sur un petit nombre
+de scénarios répétés.
+
+Cette pauvreté se propage jusqu'à l'évaluation. Le jeu de test gelé ne contient que cinq des huit
+catégories : \emph{Applicatifs}, \emph{Communication} et \emph{Backup} n'y figurent pas, alors
+qu'elles rassemblent plus de cinq cents tickets à l'apprentissage. Le découpage par groupe de
+titres, choisi pour empêcher toute fuite, produit mécaniquement ce résultat lorsque les groupes sont
+si peu nombreux. Le chapitre~4 a mesuré la conséquence : une part de l'écart entre les valeurs
+rapportées tient à ces catégories vides, dont le score vaut zéro faute d'exemples plutôt que par
+défaut du modèle.
+
+Le déséquilibre entre catégories reste enfin marqué, et il place les catégories minoritaires dans
+une situation où quelques tickets suffisent à déplacer leur score d'un palier entier.
+
+\subsection{Écarts de performance des composants d'intelligence artificielle}
+
+Le classifieur servi n'est pas le meilleur dont nous disposons. La chaîne lexicale complétée par
+des règles obtient 0,5829 de F1-macro, quand le transformer adapté accompagné des mêmes règles
+atteint 0,8343. L'écart de 0,25 point est acquis et documenté au chapitre~4, qui en donne aussi le
+prix : sur processeur, l'inférence du transformer coûte 325,8\,ms par ticket contre 5,0\,ms pour la
+chaîne lexicale, davantage à elle seule que le budget de latence entier. Le choix est assumé sur
+cette mesure, et il reste ouvert à révision dès que la machine qui héberge le service dispose d'une
+carte graphique.
+
+Les règles métier qui complètent le classifieur sont liées à ce référentiel de huit catégories. Un
+autre service, ou un autre découpage des catégories, exigerait de les réécrire.
+
+Le moteur de recherche place en tête un passage pertinent dans un peu plus d'un tiers des cas, avec
+une précision à trois passages de 0,3542. Son score de similarité moyen, 0,3551, reste sous le
+seuil de pertinence de 0,50 retenu dans la configuration. Le chapitre~5 a établi l'origine de cet
+écart : le seuil a été calibré sur l'échelle du moteur sémantique, puis conservé lorsque le moteur
+hybride l'a remplacé, alors que les deux ne produisent pas des scores comparables. Le risque
+associé est suivi au registre sous la référence R-20.
+
+Ce décalage a une conséquence directe sur l'exploitation. Un score systématiquement inférieur au
+seuil revient à traiter chaque ticket comme un cas nouveau, donc à exiger de l'administrateur qu'il
+rédige une solution avant toute clôture. L'effet est bénéfique pour la base de connaissances, et il
+est obtenu par accident plutôt que par conception.
+
+L'évaluation du moteur de recherche ne repose sur aucun jeu annoté par un expert du domaine, limite
+signalée au chapitre~5 et suivie sous la référence R-22.
+
+Le modèle de langage se paie en attente, de treize à vingt secondes selon la configuration
+matérielle. Cette latence est la contrepartie directe de l'exigence de confidentialité, qui impose
+son exécution locale. Elle est tolérable parce que l'appel reste facultatif et destiné à
+l'administrateur, elle ne le serait pas sur le chemin du demandeur.
+
+\subsection{Réserves sur l'exploitation}
+
+Le temps de réponse ne respecte pas le budget fixé, y compris sans concurrence, et la
+section~\ref{sec:validation7} en a donné la mesure et la cause.
+
+Les secrets de déploiement portent leur valeur par défaut dans les fichiers d'exemple, risque suivi
+sous la référence R-09. Aucune analyse de vulnérabilité n'est menée sur les images conteneurisées.
+La chaîne d'intégration continue laisse de côté les dix-huit tests qui exigent des artefacts
+versionnés, et l'interface n'est couverte par aucune vérification automatique.
+
+Le signalement des cas les mieux assurés dispose enfin de tout son appareillage sans qu'aucun
+routage automatique s'en serve. Cette réserve relève d'un arbitrage de produit et non d'un manque
+technique ; elle est suivie sous la référence R-16.
+
+\subsection{Portée restreinte des mesures}
+
+Les mesures rapportées valent pour le protocole qui les a produites, et il faut le dire clairement.
+
+Le jeu de test gelé compte 356 tickets répartis sur cinq catégories, et douze scénarios distincts.
+À ce niveau, une mesure par catégorie se déplace par paliers entiers, ce que le chapitre~4 a
+illustré sur la catégorie \emph{Sécurité}, dont le rappel passe de zéro à 0,40 pour un système
+inchangé selon le protocole de découpage retenu.
+
+La campagne de charge a été conduite sur une machine de développement, sur un seul point d'entrée
+et sur quelques centaines de requêtes. Elle établit un ordre de grandeur et un comportement sous
+concurrence, non une caractérisation de production.
+
+Aucune mesure n'a été conduite sur du trafic réel. Le service n'a pas encore d'usage, et la seule
+manière de savoir si les propositions du système aident réellement le support consiste à observer
+ce que les administrateurs en font. Le chapitre~5 en avait fait une perspective, et elle le reste.
+
+\FloatBarrier
+
+\section{Perspectives}
+\label{sec:perspectives7}
+
+Les voies décrites ici découlent des limites qui précèdent. Aucune n'a été mesurée, et nous les
+présentons comme des directions plutôt que comme des gains acquis.
+
+\subsection{Actions immédiatement réalisables}
+
+Augmenter le nombre de processus de travail du service est sans risque fonctionnel et attaque
+directement la dégradation sous concurrence. C'est le premier geste à tenter, avant toute reprise
+du code.
+
+Remplacer les secrets par défaut relève de la procédure de mise en production. Ajouter une analyse
+de vulnérabilité sur les images, et étendre la chaîne d'intégration continue aux tests qu'elle
+écarte aujourd'hui, demande une configuration et non un développement. Ces trois actions ferment
+autant de réserves signalées au bilan de conformité.
+
+\subsection{Arbitrages à trancher avant tout développement}
+
+Servir le transformer adapté à la place de la chaîne lexicale récupérerait 0,25 point de F1-macro.
+Le coût est mesuré au chapitre~4 : 325,8\,ms par ticket sur processeur, contre 58,7\,ms sur carte
+graphique. La décision porte donc moins sur le modèle que sur le matériel qui l'accueillera. Une
+troisième voie existe, réserver le transformer aux seuls tickets que la chaîne lexicale ne qualifie
+pas de façon sûre, ce qui suppose d'avoir d'abord activé le routage par index de confiance.
+
+Recalibrer le seuil de pertinence sur l'échelle du moteur hybride rendrait au seuil sa fonction de
+discrimination. La conséquence doit être anticipée : des tickets cesseraient d'être considérés
+comme nouveaux, et l'obligation de rédiger une solution avant clôture s'assouplirait d'autant. Le
+gain de justesse se paierait en enrichissement de la base de connaissances, arbitrage qui appartient
+au service.
+
+Activer le routage automatique des cas les mieux assurés reste enfin une décision de produit. Le
+dispositif technique existe, l'indice de confiance est calculé et enregistré, et seule manque
+l'autorisation de s'en servir.
+
+\subsection{Évolutions tributaires du temps et des données}
+
+Le mécanisme de collecte décrit à la section~\ref{sec:mlops7} constitue la réponse de fond à la
+pauvreté du corpus. Chaque ticket résolu par un administrateur produit une étiquette vérifiée, et
+c'est par cette voie que les catégories absentes du jeu de test finiront par y entrer. Le
+réentraînement contrôlé se déclenchera de lui-même lorsque le volume le justifiera.
+
+Constituer un jeu d'évaluation annoté pour le moteur de recherche demanderait quelques journées
+d'un expert du service. C'est le seul moyen de remplacer une mesure indirecte par une mesure
+directe de pertinence.
+
+Observer le comportement du système sur du trafic réel reste la perspective la plus riche. Le taux
+de correction des catégories, le taux d'utilisation des suggestions et les avis des demandeurs sont
+déjà enregistrés. Il ne manque que des mois d'exploitation pour que ces indicateurs disent quelque
+chose.
+
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
+
+Ce chapitre a mis la plateforme en conditions d'exploitation et l'a confrontée à ses exigences.
+
+Le déploiement est reproductible : quatre services, une commande, aucune donnée qui sorte du réseau
+interne. La chaîne d'apprentissage est déclarée et rejouable, et la porte de promotion a déjà
+refusé une version candidate, ce qui vaut mieux qu'une porte jamais éprouvée. Cent trente-trois
+tests protègent le comportement du service, dont plusieurs inscrivent une règle métier que le code
+seul ne suffirait pas à garantir.
+
+Sur les huit catégories d'exigences non fonctionnelles, cinq sont tenues, deux le sont
+partiellement, une ne l'est pas. Le temps de réponse échoue de trente millisecondes sans
+concurrence et s'effondre dès que plusieurs demandes arrivent ensemble. La cause est identifiée et
+la première correction est connue.
+
+Nous avons choisi de rapporter cet échec en ouverture du chapitre plutôt qu'en note de bas de page.
+Un travail d'ingénieur se juge autant à ce qu'il mesure qu'à ce qu'il réussit, et une exigence non
+tenue mais quantifiée oriente la suite du travail bien mieux qu'une exigence déclarée satisfaite
+sans preuve.

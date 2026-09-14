@@ -1,0 +1,91 @@
+' Charte visuelle des diagrammes UML du chapitre 6, calquée sur les modèles
+' fournis dans exemples_diagrammes/ :
+'   - classes, cas d'utilisation et séquence : trait noir sur fond blanc ;
+'   - états : rectangles arrondis jaune pâle, bordure noire ;
+'   - contexte : noyau noir, flèches bleues (surcharge locale dans le fichier).
+' Le fichier _style.puml, plus coloré, reste en service pour les schémas de flux
+' qui ne relèvent pas de la notation UML.
+
+@startuml
+skinparam dpi 200
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam BackgroundColor #FFFFFF
+skinparam roundCorner 0
+
+skinparam ArrowColor #000000
+skinparam ArrowFontColor #000000
+skinparam ArrowFontSize 12
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  BorderThickness 1
+  FontColor #000000
+  FontSize 13
+  AttributeFontColor #000000
+  AttributeFontSize 12
+  StereotypeFontColor #000000
+  StereotypeFontSize 11
+}
+
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  FontStyle bold
+  FontSize 13
+}
+
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  BorderThickness 1
+  FontColor #000000
+  FontSize 12
+}
+
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  FontSize 13
+}
+
+skinparam participant {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  FontSize 13
+}
+
+skinparam sequence {
+  LifeLineBorderColor #000000
+  LifeLineBackgroundColor #FFFFFF
+  DividerBackgroundColor #F0F0F0
+  DividerBorderColor #000000
+  DividerFontColor #000000
+  DividerFontSize 13
+  ArrowColor #000000
+}
+
+skinparam state {
+  BackgroundColor #FFFFCC
+  BorderColor #000000
+  BorderThickness 1
+  FontColor #000000
+  FontSize 13
+  AttributeFontColor #000000
+  AttributeFontSize 11
+  StartColor #000000
+  EndColor #000000
+}
+
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  FontSize 12
+}
+@enduml

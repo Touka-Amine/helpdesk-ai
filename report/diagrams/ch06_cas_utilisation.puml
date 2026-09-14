@@ -1,53 +1,111 @@
-' Diagramme de cas d'utilisation du sprint 4.
-' Faits : les identifiants EF proviennent du backlog du chapitre 2 (CADRAGE_SRS.md).
-' Deux rôles seulement, vérifiés dans api/db/models.py (role : client | admin).
+' Diagramme de cas d'utilisation, calque sur
+' exemples_diagrammes/diagrammes_cas_utilisation2.jpg :
+'   - cadre du systeme en bleu clair, titre a l'interieur ;
+'   - acteurs empiles a gauche, chacun avec sa bande de cas ;
+'   - "S'authentifier" seul a droite, atteint par un <<include>> depuis CHAQUE cas,
+'     ce qui exprime qu'aucune action n'est possible sans authentification ;
+'   - tracage orthogonal, sans courbe.
+'
+' Chaque cas est verifie dans le code :
+'   S'authentifier ............. POST   /auth/login          (api/routers/auth.py:39)
+'   Creer un ticket ............ POST   /tickets/        (api/routers/tickets.py:49)
+'                                POST   /tickets/admin-create  cote admin        :91
+'   Suivre ses tickets ......... GET    /tickets/me                              :165
+'   Donner un avis ............. POST   /tickets/{id}/feedback                   :224
+'   Consulter la file .......... GET    /tickets/admin/all                       :522
+'   Traiter un ticket .......... PATCH  /tickets/{id}/approve                    :246
+'   Cloturer un ticket ......... PATCH  /tickets/{id}/approve, statut terminal   :246
+'   Modifier un ticket ......... PATCH  /tickets/{id}/approve, sans changement
+'                                de statut : edition directe des champs de
+'                                qualification depuis la liste, possible meme
+'                                apres cloture (frontend ticket-list.ts:162)     :246
+'   Supprimer un ticket ........ DELETE /tickets/{id}, require_admin             :500
+'   Consulter l'historique ..... GET    /tickets/{id}/history                    :531
+'   Superviser l'activite ...... GET    /admin/monitoring/*    (api/routers/admin.py)
+'   Ajouter un utilisateur ..... POST   /admin/users, require_admin              :48
+'   Gerer les comptes .......... PATCH  /admin/users/{id}, require_admin         :75
 @startuml ch06_cas_utilisation
-!include _style.puml
+!include _charte.puml
 
 left to right direction
-skinparam nodesep 25
-skinparam ranksep 60
+skinparam linetype ortho
+skinparam nodesep 20
+skinparam ranksep 130
 skinparam packageStyle rectangle
+skinparam ArrowThickness 1
 
-actor "Demandeur\n<size:11><color:#5A6472>employé</color></size>" as DEM
-actor "Administrateur\n<size:11><color:#5A6472>technicien informatique</color></size>" as ADM
-actor "Utilisateur\nauthentifié" as USR #FAEFD0
-
-rectangle "HelpDesk AI" as SYS {
-  usecase "S'authentifier\n<size:11><color:#5A6472>EF-01</color></size>" as UC01
-  usecase "Gérer son profil" as UC02
-
-  usecase "Déposer une demande\n<size:11><color:#5A6472>EF-02</color></size>" as UC03
-  usecase "Suivre l'avancement\n<size:11><color:#5A6472>EF-08</color></size>" as UC04
-  usecase "Signaler si la réponse\na été utile\n<size:11><color:#5A6472>EF-13</color></size>" as UC05
-
-  usecase "Examiner les cas\npeu assurés\n<size:11><color:#5A6472>EF-05</color></size>" as UC06
-  usecase "Qualifier et clôturer\nla demande\n<size:11><color:#5A6472>EF-06</color></size>" as UC07
-  usecase "Consulter l'historique\ndes modifications\n<size:11><color:#5A6472>EF-07</color></size>" as UC08
-  usecase "Consulter le tableau\nde bord\n<size:11><color:#5A6472>EF-15</color></size>" as UC09
+skinparam rectangle {
+  BackgroundColor #B4DFF0
+  BorderColor #000000
+  FontColor #000000
+  FontSize 15
+  FontStyle bold
 }
 
-DEM --|> USR
-ADM --|> USR
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  FontSize 12
+}
 
-USR -- UC01
-USR -- UC02
+actor "Demandeur" as DEM
+actor "Admin" as ADM
 
-DEM -- UC03
-DEM -- UC04
-DEM -- UC05
+rectangle "Diagramme de cas d'utilisation générale" {
 
-ADM -- UC06
-ADM -- UC07
-ADM -- UC08
-ADM -- UC09
+  usecase "Créer un ticket" as UC_CREER
+  usecase "Suivre ses tickets" as UC_SUIVRE
+  usecase "Donner un avis\nsur la réponse" as UC_AVIS
 
+  usecase "Consulter la file\ndes tickets" as UC_FILE
+  usecase "Traiter un ticket" as UC_TRAITER
+  usecase "Clôturer un ticket" as UC_CLORE
+  usecase "Modifier un ticket" as UC_MODIF
+  usecase "Supprimer un ticket" as UC_SUPPR
+  usecase "Consulter l'historique\ndu ticket" as UC_HISTO
+  usecase "Superviser l'activité" as UC_SUPER
+  usecase "Ajouter un utilisateur" as UC_AJOUT
+  usecase "Gérer les comptes" as UC_COMPTES
 
-note bottom of USR
-  Un acteur générique porte les cas communs
-  aux deux rôles, ce qui évite de dupliquer
-  les mêmes associations et sépare ce qui
-  relève de la session de ce qui relève
-  du métier.
-end note
+  usecase "S'authentifier" as UC_AUTH
+}
+
+DEM -- UC_CREER
+DEM -- UC_SUIVRE
+DEM -- UC_AVIS
+
+ADM -- UC_CREER
+ADM -- UC_FILE
+ADM -- UC_TRAITER
+ADM -- UC_CLORE
+ADM -- UC_MODIF
+ADM -- UC_SUPPR
+ADM -- UC_HISTO
+ADM -- UC_SUPER
+ADM -- UC_AJOUT
+ADM -- UC_COMPTES
+
+' Les douze relations d'inclusion ne portent plus le stereotype <<include>> :
+' repete douze fois vers un seul cas, il encombrait la zone de convergence au
+' point qu'une fleche traversait un libelle. La convention est enoncee dans le
+' texte du memoire et rappelee par la legende.
+UC_CREER   ..> UC_AUTH
+UC_SUIVRE  ..> UC_AUTH
+UC_AVIS    ..> UC_AUTH
+UC_FILE    ..> UC_AUTH
+UC_TRAITER ..> UC_AUTH
+UC_CLORE   ..> UC_AUTH
+UC_MODIF   ..> UC_AUTH
+UC_SUPPR   ..> UC_AUTH
+UC_HISTO   ..> UC_AUTH
+UC_SUPER   ..> UC_AUTH
+UC_AJOUT   ..> UC_AUTH
+UC_COMPTES ..> UC_AUTH
+
+legend bottom
+  Toute relation en pointillé vers « S'authentifier » est une inclusion :
+  aucun cas d'utilisation n'est accessible sans authentification.
+endlegend
+
 @enduml

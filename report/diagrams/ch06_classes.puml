@@ -1,80 +1,113 @@
+' Diagramme de classes du domaine.
+' Habillage bleu, identique a celui du diagramme de cas d'utilisation.
+'
+' Vue d'analyse : ni cle primaire ni cle etrangere, ces notions relevent de la
+' persistance. Liste plate, sans regroupement interne.
+'
+' Correspondance avec api/db/models.py :
+'   TICKET.titre .............. titre
+'   TICKET.description ........ description
+'   TICKET.date de depot ...... created_at
+'   TICKET.demandeur .......... user_id (redondant avec l'association "depose",
+'                               conserve a la demande de l'auteur du memoire)
+'   TICKET.categorie .......... categorie_predite + categorie_finale, reunies ici
+'                               en un seul concept ; l'implementation garde les deux
+'                               colonnes, ce qui rend le taux de correction calculable
+'   TICKET.classification ..... classification_finale
+'   TICKET.priorite ........... priorite_saisie + priorite_finale
+'   TICKET.statut ............. statut, parmi les cinq valeurs de VALID_STATUSES
+'   HISTORIQUE.modification ... champ_modifie + ancienne_valeur + nouvelle_valeur,
+'                               reunis ici en un seul concept
+'   HISTORIQUE.horodatage ..... timestamp
+'
+' Operations verifiees :
+'   USER.s'authentifier() ............... POST   /auth/login       (auth.py:39)
+'   USER.changer son mot de passe() ..... POST   /auth/change-password       :105
+'   DEMANDEUR.deposer une demande() ..... POST   /tickets/         (tickets.py:49)
+'   DEMANDEUR.suivre ses tickets() ...... GET    /tickets/me                 :165
+'   ADMINISTRATEUR.prendre en charge() .. PATCH  /tickets/{id}/approve       :246
+'   ADMINISTRATEUR.rediger la solution .. le meme point d'entree             :246
+'   ADMINISTRATEUR.supprimer un ticket() DELETE /tickets/{id}                :500
+'   ADMINISTRATEUR.gerer les utilisateurs POST/PATCH /admin/users   (admin.py:48, 75)
+'   TICKET.traiter() .................... PATCH  /tickets/{id}/approve       :246
+'   TICKET.commenter() .................. POST   /tickets/{id}/feedback      :224
+'   HISTORIQUE.enregistrer une modification()  ticket_service.py:77,
+'                               sans effet si l'ancienne valeur egale la nouvelle
+'
+' Deux ecarts assumes, au benefice du modele metier :
+'   - la specialisation DEMANDEUR / ADMINISTRATEUR est une vue d'analyse ;
+'     l'implementation conserve une table unique porteuse d'un attribut de role ;
+'   - la filiale n'est portee que par le DEMANDEUR, conformement a la regle metier ;
+'     la colonne existe sur la table commune, vide pour un administrateur.
 @startuml ch06_classes
-!include _style.puml
+!include _charte.puml
 
-left to right direction
 hide circle
-skinparam nodesep 60
-skinparam ranksep 70
+skinparam nodesep 80
+skinparam ranksep 80
+skinparam classAttributeIconSize 0
 
-class User {
-  - id : int <<PK>>
-  - email : str <<unique>>
-  - nom : str
-  - prenom : str
-  - hashed_password : str
-  - role : str <<client | admin>>
-  - filiale : str
-  - is_active : bool
-  - first_login : bool
-  - created_at : datetime
+skinparam class {
+  BackgroundColor #B4DFF0
+  BorderColor #000000
+  FontColor #000000
+  AttributeFontColor #000000
 }
 
-class Ticket {
-  - id : int <<PK>>
-  - user_id : int <<FK>>
-  .. demande ..
-  - titre : str
-  - description : text
-  - priorite_saisie : str
-  - filiale : str
-  - equipement : str
-  - created_at : datetime
-  .. prédiction du système ..
-  - categorie_predite : str
-  - confiance : float
-  - model_version : str
-  - heuristic_applied : bool
-  - heuristic_rule : str
-  .. recommandation ..
-  - solution_rag : text
-  - knowledge_rag : text
-  - rag_score : float
-  .. décision humaine ..
-  - categorie_finale : str
-  - priorite_finale : str
-  - classification_finale : str
-  - statut : str
-  - assigne_a : str
-  - approved_by : str
-  - commentaire_admin : text
-  - resolved_at : datetime
-  .. retour du demandeur ..
-  - commentaire_client : text
-  - feedback_vote : str
-  - feedback_comment : text
+class USER {
+  - nom
+  - prénom
+  - email
+  --
+  + s'authentifier()
+  + changer son mot de passe()
 }
 
-class TicketHistory {
-  - id : int <<PK>>
-  - ticket_id : int <<FK>>
-  - changed_by : int <<FK>>
-  - champ_modifie : str
-  - ancienne_valeur : text
-  - nouvelle_valeur : text
-  - timestamp : datetime
+class DEMANDEUR {
+  - filiale
+  --
+  + déposer une demande()
+  + suivre ses tickets()
 }
 
-User "1" -- "0..*" Ticket : dépose >
-Ticket "1" -- "0..*" TicketHistory : journalise >
-User "1" -- "0..*" TicketHistory : auteur du changement >
+class ADMINISTRATEUR {
+  + prendre en charge()
+  + rédiger la solution appliquée()
+  + supprimer un ticket()
+  + gérer les utilisateurs()
+}
 
-note bottom of Ticket
-  L'ordre des attributs suit celui du traitement.
-  categorie_predite et categorie_finale coexistent :
-  le taux de correction se calcule en les comparant.
-  La catégorie n'est pas une entité, elle reste une
-  chaîne de caractères ; le coût de ce choix est
-  exposé dans le texte.
-end note
+class TICKET {
+  - titre
+  - description
+  - date de dépôt
+  - demandeur
+  - catégorie
+  - classification
+  - priorité
+  - statut
+  --
+  + traiter()
+  + commenter()
+}
+
+class HISTORIQUE {
+  - modification
+  - horodatage
+  --
+  + enregistrer une modification()
+}
+
+USER <|-- DEMANDEUR
+USER <|-- ADMINISTRATEUR
+
+' Libelles sans marqueur de sens : le ">" final ajoutait un triangle de lecture
+' devant chaque verbe, retire a la demande de l'auteur du memoire.
+DEMANDEUR "1" -- "0..*" TICKET : dépose
+ADMINISTRATEUR "0..1" -- "0..*" TICKET : traite
+TICKET "1" *-right- "0..*" HISTORIQUE : journalise
+
+' compartiment vide : l'administrateur n'ajoute aucun attribut propre.
+hide ADMINISTRATEUR fields
 
 @enduml

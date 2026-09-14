@@ -1,0 +1,86 @@
+' Sequence A — depot d'une demande par le demandeur.
+' Structure calquee sur le modele fourni par l'auteur du memoire, mais les lignes
+' de vie portent les noms des composants du projet, pas ceux d'un squelette MVC :
+'   :Interface utilisateur ... couche 2 du diagramme d'architecture
+'   :Service de tickets ...... couche services decrite en section 6.3
+'   :Classificateur .......... couche 3, propose une categorie et un indice
+'   :Moteur de recherche ..... couche 3, retrouve les tickets deja resolus
+'
+' Faits verifies dans le code :
+'   api/schemas/ticket_schemas.py:22  TicketCreate exige un titre d'au moins
+'                                     5 caracteres et une description d'au moins 30,
+'                                     d'ou la garde du fragment alt ;
+'   api/services/ai_service.py:109    predict_and_recommend enchaine, dans cet ordre,
+'                                     la prediction, les regles metier, puis la
+'                                     recherche de cas comparables ;
+'   api/services/ai_service.py:128    apply_heuristics peut ecraser la categorie ;
+'   api/routers/tickets.py:49         le tout a lieu dans la meme requete que
+'                                     l'enregistrement ;
+'   api/routers/tickets.py:451        la reformulation par le modele de langage est un
+'                                     appel distinct, absent de ce parcours.
+@startuml ch06_sequence_demandeur
+!include _charte.puml
+
+skinparam maxMessageSize 190
+
+skinparam participant {
+  BackgroundColor #B4DFF0
+  BorderColor #000000
+  FontColor #000000
+}
+
+skinparam sequence {
+  LifeLineBorderColor #000000
+  GroupBackgroundColor #FFFFFF
+  GroupBorderColor #000000
+  GroupHeaderFontColor #000000
+  GroupBodyBackgroundColor #FFFFFF
+}
+
+hide footbox
+
+actor "Demandeur" as DEM
+participant "<u>:Interface utilisateur</u>" as UI
+participant "<u>:Service de tickets</u>" as SRV
+participant "<u>:Classificateur</u>" as CLF
+participant "<u>:Moteur de recherche</u>" as RCH
+
+DEM -> UI : (1) Demander le dépôt ()
+activate UI
+UI --> DEM : (2) Afficher le formulaire ()
+deactivate UI
+
+DEM -> UI : (3) Saisir la demande (titre, description)
+activate UI
+UI -> SRV : (4) Envoyer la demande (titre, description)
+activate SRV
+SRV -> SRV : (5) Vérifier la saisie ()
+
+alt saisie complète
+
+  SRV -> CLF : (6.1) Classer (titre, description)
+  activate CLF
+  CLF -> CLF : (6.1.1) Appliquer les règles métier
+  CLF --> SRV : (6.1.2) Catégorie, indice de confiance
+  deactivate CLF
+
+  SRV -> RCH : (6.1.3) Rechercher des cas comparables ()
+  activate RCH
+  RCH --> SRV : (6.1.4) Cas comparables, solution suggérée
+  deactivate RCH
+
+  SRV -> SRV : (6.1.5) Enregistrer le ticket ()
+  SRV --> UI : (6.1.6) Confirmer le dépôt (numéro de suivi)
+  UI --> DEM : (6.1.7) Afficher le numéro de suivi ()
+
+else saisie incomplète
+
+  SRV --> UI : (6.2) Refuser la saisie ()
+  UI --> DEM : (6.2.1) Afficher un message d'erreur ()
+
+end
+
+deactivate SRV
+deactivate UI
+
+@enduml

@@ -38,10 +38,13 @@
                 \@frenchAbstractKeywords
             \endgroup
         }
-        
-        {\vskip25mm}
-        
+
+        % Bloc anglais ajoute pour ce memoire. Les commandes \englishAbstract et
+        % \englishAbstractKeywords existaient deja dans tpl/new_commands.tex ;
+        % seule leur impression manquait sur cette page.
+        \vskip7mm
         \selectlanguage{english}
+
         {\LARGE\textbf{Abstract}}
         \vskip1mm
             \begingroup
@@ -49,11 +52,14 @@
                 \@englishAbstract
             \endgroup
         \vskip1mm
-        {\textbf{Keywords : }
+        {\textbf{Keywords: }
             \begingroup
                 \@englishAbstractKeywords
             \endgroup
         }
+
+        \selectlanguage{french}
+
     \end{minipage}
     
 \end{changemargin}

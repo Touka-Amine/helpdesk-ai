@@ -1,0 +1,33 @@
+' Ce que le corpus devient : deux preparations distinctes.
+' Faits : report/chap_03.tex, tableau tab:splits (1 444 / 356 / 1 357) et
+' section Separation anti-fuite (46 scenarios en entrainement, 12 au test).
+' La base de connaissances retient les tickets d'entrainement dont le champ
+' Resolution / Motif porte un texte : chap_05.tex, section La base de connaissances.
+@startuml ch03_preparation
+!include _style.puml
+
+skinparam nodesep 30
+skinparam ranksep 50
+skinparam rectangle {
+  FontSize 13
+  BorderThickness 1.1
+}
+
+rectangle "**Corpus**\n1 800 tickets\n58 scénarios" as CORPUS #DCE9F8
+
+rectangle "**Jeu d'entraînement**\n1 444 tickets\n46 scénarios" as TRAIN #E2E3F5
+rectangle "**Jeu de test**\n356 tickets\n12 scénarios" as TEST #E2E3F5
+
+rectangle "**Base de connaissances**\n1 357 documents" as KB #D6EFE7
+
+rectangle "Classification\nchapitre 4" as CH4 #FAEFD0
+rectangle "Recherche de cas\ncomparables\nchapitre 5" as CH5 #FAEFD0
+
+CORPUS --> TRAIN : découpage par\ngroupe de titres
+CORPUS --> TEST
+
+TRAIN --> KB : //Résolution / Motif//\nrenseignée
+TRAIN --> CH4 : apprentissage
+TEST --> CH4 : évaluation
+KB --> CH5 : indexation
+@enduml
