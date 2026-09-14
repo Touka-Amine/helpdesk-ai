@@ -39,6 +39,17 @@ L'ordre restant est inchangé : 5, puis 6 et 7, puis l'introduction, la conclusi
 inventée : toute valeur citée renvoie à un fichier du dépôt. En cas de doute, la valeur est
 laissée entre crochets plutôt que devinée. Les limites du travail sont énoncées explicitement.
 
+**Écarts assumés au plan, arbitrés le 2026-09-09.** Le plan cite la méthodologie de travail
+deux fois, au chapitre 1 (§1.4) et au chapitre 2 (§2.7). Elle n'est rédigée qu'une seule fois, au
+**chapitre 1** (`../report/chap_01.tex`, section « Méthodologie de travail ») : comparaison cycle
+en V / Scrum / CRISP-DM, démarche hybride retenue, découpage en cinq sprints et acteurs du projet.
+Le chapitre 2 ne comporte donc pas de §2.7. Symétriquement, la **spécification des besoins**
+(acteurs, quinze exigences fonctionnelles, huit exigences non fonctionnelles) reste au
+**chapitre 2**, là où le plan la situe en §1.3 : elle y suit immédiatement les concepts et les
+outils dont elle dépend, et le chapitre 2 tient ainsi sa cible de 15 à 18 pages. Enfin, les points
+§2.4.1 et §2.4.4 du plan sont traités dans une sous-section unique, l'exécution locale du modèle
+de langage découlant directement de l'exigence de confidentialité.
+
 **Trame des chapitres de sprint**, alignée sur le rapport de référence de Rania Dridi
 (`../exemple_de_rapport/Rania-DRIDI-22159-2.pdf`), appliquée depuis le chapitre 6 :
 
@@ -152,183 +163,209 @@ classification et d'assistance à la résolution de tickets informatiques par NL
 
 ---
 
-## CHAPITRE 3 — SPRINT 1 : DONNÉES ET GOUVERNANCE (14–16 p.)
+## Chapitre 3 — Analyse et préparation des données
 
-**Introduction**
+## 3.1 Présentation des données
 
-### 3.1 Sprint Backlog *(tableau des user stories)*
+- Sources des données
+- Structure du corpus
+- Variables disponibles
+- Catégories de tickets
+- Volume des données
 
-### 3.2 Présentation du jeu de données
-- 3.2.1 Provenance et mode de collecte
-- 3.2.2 Schéma : 1 800 lignes × 18 colonnes *(tableau descriptif des champs)*
-- 3.2.3 Variable cible : 8 catégories métier
-- 3.2.4 Jeu de données externe de benchmark (11 923 lignes, anglophone)
+## 3.2 Analyse exploratoire des données
 
-### 3.3 Analyse exploratoire (EDA)
-- 3.3.1 Distribution des classes → **déséquilibre 5,93×** (Microsoft 409 / Backup 69)
-- 3.3.2 Complétude des champs
-- 3.3.3 Distribution des longueurs de texte (médiane 33 mots)
-- 3.3.4 Analyse des statuts et du cycle de vie
-- 3.3.5 Analyse de la redondance → **58 types de tickets récurrents**
+- Distribution des catégories
+- Analyse de la longueur des textes
+- Analyse des titres et descriptions
+- Qualité des données
+- Déséquilibre des classes
+- Redondance éventuelle
 
-### 3.4 Diagnostic de qualité des données
-- 3.4.1 Indicateurs clés *(tableau de synthèse)*
-- 3.4.2 Forces : 0 valeur manquante critique, 0 doublon, 0 incohérence de label
-- 3.4.3 Risques identifiés *(tableau : risque → impact → traitement)*
-- 3.4.4 **Limite majeure assumée** : représentativité du corpus
+## 3.3 Préparation des données
 
-### 3.5 Prétraitement et préparation
-- 3.5.1 Règles de nettoyage textuel (normalisation, regex, stop-words)
-- 3.5.2 Enrichissement des variables (`text_enriched`)
-- 3.5.3 **Stratégie de séparation anti-fuite** : GroupShuffleSplit par titre
-      (46 titres train / 12 test) — justification scientifique
-- 3.5.4 Jeux résultants : train 1 444 / test 356 / RAG 1 357
+- Nettoyage des données
+- Normalisation
+- Traitement des textes
+- Gestion des valeurs problématiques
+- Enrichissement du texte
 
-### 3.6 Gouvernance et reproductibilité
-- 3.6.1 Versionnement des données avec DVC
-- 3.6.2 Considérations RGPD et anonymisation *(limite : non implémenté)*
+## 3.4 Préparation du corpus pour la classification
 
-### 3.7 Livrables et bilan du sprint
+- Définition de la variable cible
+- Séparation entraînement / validation / test
+- Prévention de la fuite de données
+- Gestion du déséquilibre
 
-**Conclusion**
+## 3.5 Préparation des connaissances pour le RAG
 
-> Sources : `DIAGNOSTIC_QUALITE_DONNEES.md`, notebooks 01 et 02
-> Figures : distribution des classes, complétude, longueurs, redondance, statuts
+- Sélection des informations pertinentes
+- Nettoyage et structuration
+- Constitution de la base de connaissances
+- Différence entre dataset ML et base de connaissances
 
----
-
-## CHAPITRE 4 — SPRINT 2 : MODÉLISATION IA (16–18 p.)
-
-**Introduction**
-
-### 4.1 Sprint Backlog
-
-### 4.2 Protocole expérimental
-- 4.2.1 Métrique retenue : F1-macro (justification vs exactitude)
-- 4.2.2 Protocole d'entraînement et de validation
-- 4.2.3 Modèle de référence plancher (Dummy)
-
-### 4.3 Approche 1 — Baseline classique
-- 4.3.1 Vectorisation TF-IDF
-- 4.3.2 Modèles testés : LogReg+SMOTE, LinearSVC calibré, LightGBM, ensemble
-- 4.3.3 Traitement du déséquilibre (`class_weight='balanced'`, SMOTE)
-- 4.3.4 Résultats comparés *(tableau)*
-
-### 4.4 Approche 2 — Heuristiques métier
-- 4.4.1 Motivation : injection de connaissance experte
-- 4.4.2 Règles implémentées (FORCE_RULES, mots-clés discriminants)
-- 4.4.3 Gain mesuré
-
-### 4.5 Approche 3 — Fine-tuning CamemBERT avec LoRA
-- 4.5.1 Justification du choix de CamemBERT
-- 4.5.2 Configuration LoRA (r=8, α=16, modules query/value) — contrainte GPU 2 Go
-- 4.5.3 Hyperparamètres retenus *(tableau : valeur + justification)*
-- 4.5.4 Déroulement de l'entraînement (courbes de perte, early stopping)
-- 4.5.5 Résultats et matrice de confusion
-
-### 4.6 Comparaison et analyse critique
-- 4.6.1 Tableau comparatif final des 6 approches
-- 4.6.2 **Analyse : pourquoi le transformer ne surpasse pas la baseline**
-      → lien avec la redondance des 58 types (chap. 3)
-- 4.6.3 Choix du modèle retenu pour la production et justification
-- 4.6.4 Calibration de la confiance et seuil de routage automatique (HITL)
-
-### 4.7 Livrables et bilan du sprint
-
-**Conclusion**
-
-> Sources : notebooks 03, 04, 05 · `models/camembert_metadata.json`
-> Figures : matrice de confusion, distribution de confiance, benchmark comparatif
+## Conclusion du chapitre
 
 ---
 
-## CHAPITRE 5 — SPRINT 3 : SYSTÈME RAG ET ASSISTANT LLM (16–18 p.)
+# Chapitre 4 — Développement et évaluation du système de classification
 
-**Introduction**
+## 4.1 Formulation du problème de classification
 
-### 5.1 Sprint Backlog
+- Définition de la tâche
+- Variable cible
+- Classes considérées
+- Métriques d’évaluation
 
-### 5.2 Constitution de la base de connaissances
-- 5.2.1 Extraction des tickets résolus et de leurs solutions
-- 5.2.2 Structuration et indexation
+## 4.2 Approche basée sur TF-IDF
 
-### 5.3 RAG lexical (version 1)
-- 5.3.1 Similarité cosinus sur TF-IDF
-- 5.3.2 Limites observées
+### 4.2.1 Vectorisation des textes
 
-### 5.4 RAG sémantique (version 2)
-- 5.4.1 Choix du modèle d'embeddings francophone
-- 5.4.2 Indexation FAISS par catégorie
-- 5.4.3 Gain mesuré : score cosinus 0,93 vs 0,76
+### 4.2.2 Modèles de classification testés
 
-### 5.5 RAG hybride (version 3)
-- 5.5.1 Pondération sémantique/lexical (0,5 / 0,5)
-- 5.5.2 Résultats
+### 4.2.3 Évaluation des modèles
 
-### 5.6 Évaluation du système RAG
-- 5.6.1 Protocole RAGAS
-- 5.6.2 Résultats : P@3, MRR, Answer Relevancy, Faithfulness *(tableau)*
-- 5.6.3 **Analyse critique** : Faithfulness = 1,0 vrai *par construction*
-      (génération template-based, pas génération LLM libre)
+## 4.3 Amélioration par les heuristiques métier
 
-### 5.7 Intégration d'un LLM local (Ollama)
-- 5.7.1 Justification du choix on-premise (confidentialité des tickets)
-- 5.7.2 Modèle retenu (llama3.2:3b) et contraintes matérielles
-- 5.7.3 Conception des prompts
-- 5.7.4 **Garde-fous anti-hallucination** (assainissement en entrée, rejet des ID inventés)
-- 5.7.5 Optimisation de la latence : ~95 s à froid → ~19 s à chaud (`keep_alive`)
-- 5.7.6 Mécanisme de repli automatique
+- Motivation
+- Principe des règles métier
+- Règles appliquées
+- Impact sur les performances
 
-### 5.8 Boucle d'apprentissage continu
-- 5.8.1 Migration TinyDB → ChromaDB : d'un journal passif à une base interrogée en direct
-- 5.8.2 Détection des « cas nouveaux » (seuil `rag_score` < 0,50)
-- 5.8.3 Alimentation de la base par la solution réellement appliquée
+## 4.4 Approche basée sur CamemBERT et LoRA
 
-### 5.9 Livrables et bilan du sprint
+### 4.4.1 Justification du choix de CamemBERT
 
-**Conclusion**
+### 4.4.2 Principe de LoRA
 
-> Sources : notebooks 06, 07 · `src/rag/semantic_engine.py` · `api/services/llm_service.py`
+### 4.4.3 Configuration de l’entraînement
+
+### 4.4.4 Résultats obtenus
+
+## 4.5 Comparaison des approches
+
+- Comparaison des performances
+- Analyse des résultats
+- Avantages et limites de chaque approche
+
+Présenter les résultats principaux dans un tableau comparatif.
+
+## 4.6 Sélection du modèle final
+
+- Critères de sélection
+- Modèle retenu
+- Justification du choix
+- Gestion de la confiance de prédiction
+- Routage automatique et validation humaine
+
+## Conclusion du chapitre
 
 ---
+---
 
-## CHAPITRE 6 — SPRINT 4 : DÉVELOPPEMENT DE L'APPLICATION (16–18 p.)
+# Chapitre 5 — Système RAG et assistance intelligente
 
-**Introduction**
+## 5.1 Présentation du système RAG
 
-### 6.1 Sprint Backlog
+- Objectif du RAG dans la plateforme
+- Principe général
+- Flux de recherche et de génération
 
-### 6.2 Conception
-- 6.2.1 Architecture générale (vue C4 — contexte et conteneurs)
-- 6.2.2 Diagramme de cas d'utilisation
-- 6.2.3 Modèle de données / diagramme de classes
-- 6.2.4 Diagramme d'états du ticket
-- 6.2.5 Diagramme de séquence (création → classification → RAG → validation)
+## 5.2 Construction de la base de connaissances
 
-### 6.3 Développement du backend (FastAPI)
-- 6.3.1 Architecture en couches (routers / services / db)
-- 6.3.2 API REST versionnée `/api/v1` *(tableau des endpoints)*
-- 6.3.3 Authentification JWT et contrôle d'accès par rôle
-- 6.3.4 Sécurité : hachage bcrypt, rate limiting, CORS
-- 6.3.5 Intégration des services IA (classification + RAG + LLM)
+- Sources utilisées
+- Préparation des connaissances
+- Indexation
+- Gestion des connaissances historiques et dynamiques
 
-### 6.4 Développement du frontend (Angular)
-- 6.4.1 Choix technologiques (Angular standalone, signals, Tailwind)
-- 6.4.2 Système de design Material 3 et thème sombre
-- 6.4.3 Portail client — écrans et parcours
-- 6.4.4 Console d'administration — écrans et parcours
+## 5.3 Mise en œuvre de la recherche
 
-### 6.5 Workflow métier du ticket
-- 6.5.1 Cycle de vie complet et transitions de statut
-- 6.5.2 File d'approbation
-- 6.5.3 Clôture en deux étapes (revue → clôture)
-- 6.5.4 **Human-in-the-loop** : validation obligatoire avant résolution
-- 6.5.5 Différenciation de l'information client / admin
+### 5.3.1 Recherche lexicale
 
-### 6.6 Livrables et bilan du sprint
+### 5.3.2 Recherche sémantique
 
-**Conclusion**
+### 5.3.3 Recherche hybride
 
+### 5.3.4 Comparaison des approches
+
+## 5.4 Évaluation du RAG
+
+- Protocole d’évaluation
+- Critères et métriques
+- Résultats
+- Analyse des résultats
+- Limites de l’évaluation
+
+## 5.5 Intégration du LLM
+
+- Rôle du LLM
+- Modèle utilisé
+- Construction du prompt
+- Génération de la solution
+- Contrôle du contexte fourni au modèle
+- Gestion des hallucinations
+
+## 5.6 Apprentissage continu
+
+- Validation des tickets
+- Enrichissement des connaissances
+- Réutilisation des tickets validés
+- Principe d’amélioration progressive du système
+
+## Conclusion du chapitre
+---
+
+# Chapitre 6 — Développement et intégration de la plateforme
+
+## 6.1 Architecture applicative
+
+- Organisation du backend
+- Organisation du frontend
+- Base de données
+- Services IA
+- Communication entre les composants
+
+## 6.2 Développement du backend
+
+- API REST
+- Gestion des tickets
+- Gestion des utilisateurs
+- Intégration du modèle de classification
+- Intégration du RAG
+- Intégration du LLM
+
+## 6.3 Développement du frontend
+
+- Interface de création des tickets
+- Interface de consultation
+- Interface de suivi
+- Interface de validation
+- Interface d’administration
+
+## 6.4 Workflow de traitement d’un ticket
+
+Présenter le workflow global :
+
+**Création du ticket  
+→ Classification  
+→ Recherche de connaissances  
+→ Proposition de solution  
+→ Validation humaine  
+→ Résolution  
+→ Archivage / enrichissement**
+
+## 6.5 Intégration des composants
+
+- Intégration du pipeline IA
+- Intégration de la base de données
+- Intégration des services externes
+- Communication entre les différents composants
+
+## 6.6 Exemple complet de traitement
+
+Présenter un exemple réel ou représentatif montrant le parcours d’un ticket dans la plateforme.
+
+## Conclusion du chapitre
 > Sources : `ARCHITECTURE.md`, `TICKET_WORKFLOW.md`, code `api/` et `frontend/`
 
 ---

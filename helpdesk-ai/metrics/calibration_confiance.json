@@ -1,0 +1,600 @@
+{
+  "date": "2026-09-12T16:15:33.936788+00:00",
+  "protocole": "experiences, 355 tickets, graine 42",
+  "resultats": {
+    "ml_seul": {
+      "tranches": [
+        {
+          "borne_basse": 0.0,
+          "borne_haute": 0.4,
+          "tickets": 42,
+          "part": 11.8,
+          "precision": 0.0
+        },
+        {
+          "borne_basse": 0.4,
+          "borne_haute": 0.6,
+          "tickets": 121,
+          "part": 34.1,
+          "precision": 33.9
+        },
+        {
+          "borne_basse": 0.6,
+          "borne_haute": 0.8,
+          "tickets": 110,
+          "part": 31.0,
+          "precision": 89.1
+        },
+        {
+          "borne_basse": 0.8,
+          "borne_haute": 1.0,
+          "tickets": 82,
+          "part": 23.1,
+          "precision": 81.7
+        }
+      ],
+      "courbe": [
+        {
+          "seuil": 0.0,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.02,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.04,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.06,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.08,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.1,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.12,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.14,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.16,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.18,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.2,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.22,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.24,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.26,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.28,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.3,
+          "couverture": 100.0,
+          "precision": 58.03
+        },
+        {
+          "seuil": 0.32,
+          "couverture": 98.59,
+          "precision": 58.86
+        },
+        {
+          "seuil": 0.34,
+          "couverture": 94.37,
+          "precision": 61.49
+        },
+        {
+          "seuil": 0.36,
+          "couverture": 94.08,
+          "precision": 61.68
+        },
+        {
+          "seuil": 0.38,
+          "couverture": 92.68,
+          "precision": 62.61
+        },
+        {
+          "seuil": 0.4,
+          "couverture": 88.17,
+          "precision": 65.81
+        },
+        {
+          "seuil": 0.42,
+          "couverture": 84.79,
+          "precision": 68.44
+        },
+        {
+          "seuil": 0.44,
+          "couverture": 75.21,
+          "precision": 77.15
+        },
+        {
+          "seuil": 0.46,
+          "couverture": 65.92,
+          "precision": 87.18
+        },
+        {
+          "seuil": 0.48,
+          "couverture": 61.69,
+          "precision": 87.67
+        },
+        {
+          "seuil": 0.5,
+          "couverture": 60.28,
+          "precision": 87.38
+        },
+        {
+          "seuil": 0.52,
+          "couverture": 60.28,
+          "precision": 87.38
+        },
+        {
+          "seuil": 0.54,
+          "couverture": 60.0,
+          "precision": 87.32
+        },
+        {
+          "seuil": 0.56,
+          "couverture": 59.44,
+          "precision": 87.2
+        },
+        {
+          "seuil": 0.58,
+          "couverture": 58.31,
+          "precision": 86.96
+        },
+        {
+          "seuil": 0.6,
+          "couverture": 54.08,
+          "precision": 85.94
+        },
+        {
+          "seuil": 0.62,
+          "couverture": 51.55,
+          "precision": 87.98
+        },
+        {
+          "seuil": 0.64,
+          "couverture": 48.45,
+          "precision": 91.28
+        },
+        {
+          "seuil": 0.66,
+          "couverture": 45.92,
+          "precision": 90.8
+        },
+        {
+          "seuil": 0.68,
+          "couverture": 42.82,
+          "precision": 90.13
+        },
+        {
+          "seuil": 0.7,
+          "couverture": 36.62,
+          "precision": 88.46
+        },
+        {
+          "seuil": 0.72,
+          "couverture": 31.27,
+          "precision": 86.49
+        },
+        {
+          "seuil": 0.74,
+          "couverture": 28.73,
+          "precision": 85.29
+        },
+        {
+          "seuil": 0.76,
+          "couverture": 23.38,
+          "precision": 81.93
+        },
+        {
+          "seuil": 0.78,
+          "couverture": 23.1,
+          "precision": 81.71
+        },
+        {
+          "seuil": 0.8,
+          "couverture": 23.1,
+          "precision": 81.71
+        },
+        {
+          "seuil": 0.82,
+          "couverture": 21.97,
+          "precision": 85.9
+        },
+        {
+          "seuil": 0.84,
+          "couverture": 19.72,
+          "precision": 95.71
+        },
+        {
+          "seuil": 0.86,
+          "couverture": 18.87,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.88,
+          "couverture": 18.87,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.9,
+          "couverture": 18.87,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.92,
+          "couverture": 18.87,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.94,
+          "couverture": 18.87,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.96,
+          "couverture": 18.59,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.98,
+          "couverture": 0.0,
+          "precision": null
+        },
+        {
+          "seuil": 1.0,
+          "couverture": 0.0,
+          "precision": null
+        }
+      ],
+      "au_seuil_0_40": {
+        "couverture": 88.2,
+        "precision": 65.8
+      },
+      "au_seuil_0_60": {
+        "couverture": 54.1,
+        "precision": 85.9
+      }
+    },
+    "chaine_servie": {
+      "tranches": [
+        {
+          "borne_basse": 0.0,
+          "borne_haute": 0.4,
+          "tickets": 0,
+          "part": 0.0,
+          "precision": null
+        },
+        {
+          "borne_basse": 0.4,
+          "borne_haute": 0.6,
+          "tickets": 45,
+          "part": 12.7,
+          "precision": 0.0
+        },
+        {
+          "borne_basse": 0.6,
+          "borne_haute": 0.8,
+          "tickets": 165,
+          "part": 46.5,
+          "precision": 63.6
+        },
+        {
+          "borne_basse": 0.8,
+          "borne_haute": 1.0,
+          "tickets": 145,
+          "part": 40.8,
+          "precision": 89.7
+        }
+      ],
+      "courbe": [
+        {
+          "seuil": 0.0,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.02,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.04,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.06,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.08,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.1,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.12,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.14,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.16,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.18,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.2,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.22,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.24,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.26,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.28,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.3,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.32,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.34,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.36,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.38,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.4,
+          "couverture": 100.0,
+          "precision": 66.2
+        },
+        {
+          "seuil": 0.42,
+          "couverture": 97.18,
+          "precision": 68.12
+        },
+        {
+          "seuil": 0.44,
+          "couverture": 91.55,
+          "precision": 72.31
+        },
+        {
+          "seuil": 0.46,
+          "couverture": 87.32,
+          "precision": 75.81
+        },
+        {
+          "seuil": 0.48,
+          "couverture": 87.32,
+          "precision": 75.81
+        },
+        {
+          "seuil": 0.5,
+          "couverture": 87.32,
+          "precision": 75.81
+        },
+        {
+          "seuil": 0.52,
+          "couverture": 87.32,
+          "precision": 75.81
+        },
+        {
+          "seuil": 0.54,
+          "couverture": 87.32,
+          "precision": 75.81
+        },
+        {
+          "seuil": 0.56,
+          "couverture": 87.32,
+          "precision": 75.81
+        },
+        {
+          "seuil": 0.58,
+          "couverture": 87.32,
+          "precision": 75.81
+        },
+        {
+          "seuil": 0.6,
+          "couverture": 87.32,
+          "precision": 75.81
+        },
+        {
+          "seuil": 0.62,
+          "couverture": 84.79,
+          "precision": 76.74
+        },
+        {
+          "seuil": 0.64,
+          "couverture": 81.69,
+          "precision": 78.28
+        },
+        {
+          "seuil": 0.66,
+          "couverture": 79.44,
+          "precision": 77.66
+        },
+        {
+          "seuil": 0.68,
+          "couverture": 76.9,
+          "precision": 76.92
+        },
+        {
+          "seuil": 0.7,
+          "couverture": 73.8,
+          "precision": 75.95
+        },
+        {
+          "seuil": 0.72,
+          "couverture": 73.52,
+          "precision": 75.86
+        },
+        {
+          "seuil": 0.74,
+          "couverture": 71.55,
+          "precision": 75.2
+        },
+        {
+          "seuil": 0.76,
+          "couverture": 54.65,
+          "precision": 67.53
+        },
+        {
+          "seuil": 0.78,
+          "couverture": 54.37,
+          "precision": 67.36
+        },
+        {
+          "seuil": 0.8,
+          "couverture": 40.85,
+          "precision": 89.66
+        },
+        {
+          "seuil": 0.82,
+          "couverture": 24.23,
+          "precision": 87.21
+        },
+        {
+          "seuil": 0.84,
+          "couverture": 21.97,
+          "precision": 96.15
+        },
+        {
+          "seuil": 0.86,
+          "couverture": 18.87,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.88,
+          "couverture": 18.87,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.9,
+          "couverture": 18.87,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.92,
+          "couverture": 18.87,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.94,
+          "couverture": 18.87,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.96,
+          "couverture": 18.59,
+          "precision": 100.0
+        },
+        {
+          "seuil": 0.98,
+          "couverture": 0.0,
+          "precision": null
+        },
+        {
+          "seuil": 1.0,
+          "couverture": 0.0,
+          "precision": null
+        }
+      ],
+      "au_seuil_0_40": {
+        "couverture": 100.0,
+        "precision": 66.2
+      },
+      "au_seuil_0_60": {
+        "couverture": 87.3,
+        "precision": 75.8
+      }
+    }
+  }
+}

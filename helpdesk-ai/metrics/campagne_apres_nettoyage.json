@@ -1,0 +1,116 @@
+{
+  "date": "2026-09-12T15:39:28.133016+00:00",
+  "objet": "Campagne comparative posterieure a l'audit des regles du 2026-08-22, destinee a rendre tracables les scores publies.",
+  "protocole": {
+    "decoupage": "StratifiedShuffleSplit sur les 58 titres uniques, graine 42",
+    "train": 1445,
+    "test": 355,
+    "titres_train": 46,
+    "titres_test": 12,
+    "categories_au_test": 8,
+    "seuil_confiance": 0.6,
+    "regles_fermes": 5,
+    "regles_souples": 8,
+    "motifs_fermes": 29
+  },
+  "resultats": {
+    "01_hasard": {
+      "libelle": "Reference plancher (hasard stratifie)",
+      "f1_macro": 0.1382,
+      "precision_macro": 0.1369,
+      "recall_macro": 0.1492,
+      "accuracy": 0.1887,
+      "corrects": 67,
+      "f1_par_classe": {
+        "Applicatifs": 0.2553,
+        "Backup": 0.0714,
+        "Communication": 0.0328,
+        "Infrastructure": 0.1429,
+        "Microsoft": 0.2025,
+        "Réseau": 0.2895,
+        "Système": 0.1111,
+        "Sécurité": 0.0
+      }
+    },
+    "02_tfidf_seul": {
+      "libelle": "TF-IDF + LinearSVC calibre, seul",
+      "f1_macro": 0.3753,
+      "precision_macro": 0.3159,
+      "recall_macro": 0.5,
+      "accuracy": 0.5803,
+      "corrects": 206,
+      "f1_par_classe": {
+        "Applicatifs": 1.0,
+        "Backup": 0.0,
+        "Communication": 0.5636,
+        "Infrastructure": 0.0,
+        "Microsoft": 0.0,
+        "Réseau": 0.6446,
+        "Système": 0.7945,
+        "Sécurité": 0.0
+      }
+    },
+    "03_tfidf_regles": {
+      "libelle": "TF-IDF + regles metier nettoyees",
+      "f1_macro": 0.5827,
+      "precision_macro": 0.5787,
+      "recall_macro": 0.675,
+      "accuracy": 0.662,
+      "corrects": 235,
+      "f1_par_classe": {
+        "Applicatifs": 1.0,
+        "Backup": 0.0,
+        "Communication": 0.5636,
+        "Infrastructure": 1.0,
+        "Microsoft": 0.0,
+        "Réseau": 0.7324,
+        "Système": 0.7945,
+        "Sécurité": 0.5714
+      }
+    },
+    "04_camembert_seul": {
+      "libelle": "CamemBERT-base + LoRA, seul",
+      "f1_macro": 0.5685,
+      "precision_macro": 0.6424,
+      "recall_macro": 0.5887,
+      "accuracy": 0.6873,
+      "corrects": 244,
+      "f1_par_classe": {
+        "Applicatifs": 1.0,
+        "Backup": 1.0,
+        "Communication": 0.3243,
+        "Infrastructure": 0.0,
+        "Microsoft": 0.5818,
+        "Réseau": 0.642,
+        "Système": 1.0,
+        "Sécurité": 0.0
+      }
+    },
+    "05_camembert_regles": {
+      "libelle": "CamemBERT + LoRA + regles metier nettoyees",
+      "f1_macro": 0.8343,
+      "precision_macro": 0.8935,
+      "recall_macro": 0.8573,
+      "accuracy": 0.7887,
+      "corrects": 280,
+      "f1_par_classe": {
+        "Applicatifs": 1.0,
+        "Backup": 1.0,
+        "Communication": 0.7317,
+        "Infrastructure": 1.0,
+        "Microsoft": 0.4463,
+        "Réseau": 0.7464,
+        "Système": 1.0,
+        "Sécurité": 0.75
+      }
+    }
+  },
+  "cout_de_service": {
+    "tfidf_un_ticket_ms": 5.0,
+    "camembert_cpu_un_ticket_ms": 325.8,
+    "camembert_cuda_un_ticket_ms": 58.7,
+    "adaptateur_lora_Mo": 6.5,
+    "parametres_camembert_M": 111.5,
+    "taille_pipeline_tfidf_Mo": 0.31
+  }
+}

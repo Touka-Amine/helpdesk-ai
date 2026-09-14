@@ -86,3 +86,17 @@ presentation_otbs/
 
 # Fichiers de verrouillage Microsoft Office
 ~$*
+
+# Journaux de travail internes : comptes rendus de session, audits de
+# relecture, questions preparees pour la soutenance. Ils citent les huit
+# filiales, le chemin SharePoint du service et des metriques invalidees en
+# cours d'analyse, hors du contexte qui les explique.
+reports/
+AUDIT_FINAL_MEMOIRE.md
+QUESTIONS_JURY.md
+RAPPORT_FINAL_CORRECTIONS.md
+
+# Copies de travail : captures en attente d'integration au memoire et
+# diagrammes d'exemple collectes ailleurs.
+captures_app/
+exemples_diagrammes/
