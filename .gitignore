@@ -65,3 +65,24 @@ report/*.ilg
 report/*.ind
 report/*.synctex.gz
 report/**/*.aux
+
+# ===========================================
+# Donnees a caractere personnel et documents tiers
+# ===========================================
+# Ces exclusions sont volontaires et ne doivent pas etre levees.
+
+# Corpus reel : 1 357 tickets OTBS avec noms de demandeurs, consultants,
+# filiales, identifiants clients et chemin SharePoint interne. Le depot
+# distribue le code, jamais les donnees. Voir README.md, section Donnees.
+helpdesk-ai/models/semantic_rag/knowledge_base.parquet
+helpdesk-ai/data/reference/test_reference.csv
+
+# Memoires d'autres etudiants, conserves en local comme exemples de redaction.
+# Les publier reviendrait a les rediffuser sans l'accord de leurs auteurs.
+exemple_de_rapport/
+
+# Support d'integration interne OneTech Business Solutions.
+presentation_otbs/
+
+# Fichiers de verrouillage Microsoft Office
+~$*
