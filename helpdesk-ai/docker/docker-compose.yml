@@ -1,8 +1,12 @@
 # ── Helpdesk AI — docker-compose multi-services ────────────────────────────────
 #
 # Usage (depuis helpdesk-ai/) :
-#   cp .env.example .env          # puis adapter les valeurs
-#   docker compose -f docker/docker-compose.yml up --build
+#   cp .env.example .env          # puis GENERER les trois secrets marques REMPLACER__
+#   docker compose --env-file .env -f docker/docker-compose.yml up --build
+#
+# L'option --env-file est obligatoire : sans elle, Compose cherche un .env dans le
+# repertoire du fichier de composition (docker/) et non a la racine du projet, et
+# l'interpolation des identifiants de base echoue avec un message explicite.
 #
 # Services exposés :
 #   http://localhost:8081 → Frontend Angular (Nginx)
@@ -34,14 +38,18 @@ services:
   # ── PostgreSQL — base opérationnelle (utilisateurs, tickets, historique) ──────
   postgres:
     image: postgres:16-alpine
+    env_file:
+      - ../.env
     environment:
-      - POSTGRES_USER=helpdesk
-      - POSTGRES_PASSWORD=helpdesk
-      - POSTGRES_DB=helpdesk
+      # Valeurs lues dans ../.env, jamais ecrites en dur : le fichier d'exemple
+      # est public et un mot de passe committe serait un mot de passe connu.
+      - POSTGRES_USER=${POSTGRES_USER:?definir POSTGRES_USER dans .env}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?definir POSTGRES_PASSWORD dans .env}
+      - POSTGRES_DB=${POSTGRES_DB:?definir POSTGRES_DB dans .env}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U helpdesk -d helpdesk"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -62,7 +70,7 @@ services:
       - ../.env
     environment:
       # PostgreSQL (service ci-dessus), résolu par nom de service sur le réseau interne
-      - DB_URL=postgresql+psycopg2://helpdesk:helpdesk@postgres:5432/helpdesk
+      - DB_URL=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       # Accepter le frontend ET l'accès direct depuis le navigateur
       - CORS_ORIGINS=http://localhost:8081,http://localhost:4200,http://localhost:8000,http://localhost:4300
       - OLLAMA_HOST=http://ollama:11434
@@ -100,22 +108,6 @@ services:
       - helpdesk-net
 
   # ── Dashboard Streamlit ──────────────────────────────────────────────────────
-  dashboard:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.dashboard
-    image: helpdesk-dashboard:latest
-    ports:
-      - "8501:8501"
-    env_file:
-      - ../.env
-    depends_on:
-      api:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - helpdesk-net
-
 # ── Volumes ──────────────────────────────────────────────────────────────────
 volumes:
   api-data:

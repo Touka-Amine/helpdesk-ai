@@ -12,7 +12,6 @@ flowchart LR
   subgraph docker-compose
     front["frontend :8081→80\nAngular / Nginx"]
     api["api :8000\nFastAPI / uvicorn"]
-    dash["dashboard :8501\nStreamlit"]
     pg[(PostgreSQL)]
     chroma[(ChromaDB vol)]
   end
@@ -20,7 +19,6 @@ flowchart LR
   Navigateur -->|HTTP :8081| front
   Navigateur -->|HTTP :8000| api
   front --> api
-  dash --> api
   api --> pg
   api --> chroma
 ```
@@ -39,7 +37,6 @@ flowchart LR
 |---|---|---|---|
 | `api` | **8000** | `helpdesk-api:latest` | FastAPI + uvicorn (2 workers) |
 | `frontend` | **8081** → 80 | `helpdesk-front:latest` | Angular build → Nginx |
-| `dashboard` | **8501** | `helpdesk-dashboard:latest` | Streamlit |
 
 ---
 
@@ -66,7 +63,6 @@ docker compose -f docker/docker-compose.yml up --build
 # Accès :
 #   Frontend  → http://localhost:8081
 #   API Swagger → http://localhost:8000/docs
-#   Dashboard → http://localhost:8501
 ```
 
 ### Commandes utiles
@@ -97,7 +93,6 @@ docker compose -f docker/docker-compose.yml up -d api
 |---|---|
 | `docker/Dockerfile.api` | Image API FastAPI (python:3.11-slim, NLTK + ST pré-téléchargés) |
 | `docker/Dockerfile.front` | Image Angular multi-stage (node:20 build → nginx:1.27 serve) |
-| `docker/Dockerfile.dashboard` | Image Streamlit (python:3.11-slim) |
 | `docker/docker-compose.yml` | Orchestration multi-services + volumes PostgreSQL/ChromaDB + réseau interne |
 | `docker/requirements-api.txt` | Dépendances Python runtime uniquement (sans dvc/mlflow/jupyter) |
 | `docker/nginx.conf` | Config Nginx : SPA routing + cache assets + headers sécurité |
