@@ -91,6 +91,11 @@ Ce qui reste local : `data/raw/`, `models/semantic_rag/knowledge_base.parquet`,
 suite de tests et démarre l'API. Il ne peut ni rejouer `dvc repro`, ni servir de
 recommandations, faute de corpus.
 
+L'organigramme du service, relevé sur un document interne, nomme une quarantaine de
+salariés : sa source PlantUML, son rendu et le mémoire compilé qui le reproduit restent
+locaux eux aussi. Les sources LaTeX sont publiées, mais `report/main.tex` ne compile pas
+tant que `report/img/ch01_organigramme.pdf` n'est pas fourni.
+
 ## Limites connues
 
 Elles sont documentées plutôt que masquées.
