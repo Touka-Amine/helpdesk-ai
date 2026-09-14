@@ -22,7 +22,8 @@ docker compose -f docker/docker-compose.yml up --build
 |---|---|
 | Frontend Angular | http://localhost:8081 |
 | API FastAPI (Swagger) | http://localhost:8000/docs |
-| Tableau de bord | http://localhost:8501 |
+
+Quatre conteneurs seulement : `ollama`, `postgres`, `api`, `frontend`.
 
 Détail de la configuration, des variables d'environnement et de l'exploitation :
 [DEPLOYMENT.md](DEPLOYMENT.md).
@@ -33,9 +34,11 @@ Détail de la configuration, des variables d'environnement et de l'exploitation 
 python -m pytest tests/ -q
 ```
 
-**133 tests** au 2026-09-08. Pour une exécution rapide pendant le développement,
-`pytest -m "not slow"` exclut ceux qui chargent les modèles. Stratégie complète :
-[TESTING.md](TESTING.md).
+**150 tests**, dont 132 s'exécutent sans aucun artefact et forment la suite jouée en
+intégration continue. Les 18 autres chargent `best_pipeline.pkl` au démarrage et ne
+peuvent donc pas tourner sur une copie fraîche du dépôt. Pour une exécution rapide
+pendant le développement, `pytest -m "not slow"` exclut ceux qui chargent les modèles.
+Stratégie complète : [TESTING.md](TESTING.md).
 
 ## Reproduire la chaîne de traitement
 
@@ -50,6 +53,19 @@ Huit étapes : `preprocess`, `split`, `build_dataset`, `train`, `promote`, `rag_
 remplace le modèle servi qu'après avoir passé trois conditions, et le modèle précédent reste
 restaurable. Voir [MLOPS.md](MLOPS.md).
 
+## Les données ne sont pas distribuées
+
+Le corpus est un export réel du service support : 1 800 tickets portant des noms de
+demandeurs, des consultants nommés, des codes de filiale et des identifiants clients.
+Rien de tout cela ne figure dans ce dépôt, ni dans son historique.
+
+Concrètement, `data/raw/`, `models/semantic_rag/knowledge_base.parquet`,
+`data/reference/test_reference.csv` et les jeux dérivés restent locaux. Un clone frais
+exécute la suite de tests et démarre l'API, mais il ne peut ni rejouer `dvc repro`, ni
+servir de recommandations, faute de corpus. Pour reproduire la chaîne, il faut fournir
+son propre jeu de tickets au format décrit dans
+[DIAGNOSTIC_QUALITE_DONNEES.md](DIAGNOSTIC_QUALITE_DONNEES.md).
+
 ## Organisation du dépôt
 
 | Répertoire | Contenu |
@@ -57,7 +73,7 @@ restaurable. Voir [MLOPS.md](MLOPS.md).
 | `api/` | API FastAPI — `routers` (HTTP), `services` (métier), `db` (persistance et base vectorielle) |
 | `frontend/` | Application Angular (espaces client et administrateur) |
 | `src/` | Traitement des données, modèles, RAG, registre, chaîne MLOps, supervision |
-| `notebooks/` | Exploration, entraînement et évaluation — voir la cartographie critique dans `../reports/analyse-notebooks/` |
+| `notebooks/` | Exploration, entraînement et évaluation. Les sorties sont vidées : elles affichaient des extraits du corpus réel |
 | `tests/` | Suite pytest |
 | `data/`, `models/`, `metrics/` | Artefacts versionnés par DVC |
 | `docker/` | Images et orchestration |
