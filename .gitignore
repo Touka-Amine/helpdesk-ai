@@ -100,3 +100,13 @@ RAPPORT_FINAL_CORRECTIONS.md
 # diagrammes d'exemple collectes ailleurs.
 captures_app/
 exemples_diagrammes/
+
+# Organigramme du service, releve sur un document interne OneTech : il nomme
+# une quarantaine de salaries. La source PlantUML, l'image rendue et le memoire
+# compile qui la reproduit en page 23 restent donc locaux. Un clone ne compile
+# pas main.tex tant que ch01_organigramme.pdf n'est pas fourni. Pour publier le
+# memoire, remplacer cette figure par une version en fonctions et effectifs,
+# sans patronymes : les effectifs figurent en tete du .puml.
+report/diagrams/ch01_organigramme.puml
+report/img/ch01_organigramme.pdf
+report/main.pdf
