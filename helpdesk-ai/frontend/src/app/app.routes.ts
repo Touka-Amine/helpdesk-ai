@@ -6,6 +6,8 @@ import { AdminLayout } from './layout/admin-layout/admin-layout';
 import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
 import { ChangePassword } from './features/auth/change-password/change-password';
+import { ForgotPassword } from './features/auth/forgot-password/forgot-password';
+import { ResetPassword } from './features/auth/reset-password/reset-password';
 
 import { Home } from './features/client/home/home';
 import { NewTicket } from './features/client/new-ticket/new-ticket';
@@ -31,6 +33,10 @@ export const routes: Routes = [
   { path: 'auth/login',    component: Login },
   { path: 'auth/register', component: Register },
   { path: 'auth/change-password', component: ChangePassword, canActivate: [authGuardNoPasswordCheck] },
+  // Parcours "mot de passe oublie" : ces deux ecrans sont ouverts sans session,
+  // c'est precisement leur raison d'etre. Le jeton du courriel tient lieu de preuve.
+  { path: 'auth/forgot-password', component: ForgotPassword },
+  { path: 'auth/reset-password',  component: ResetPassword },
 
   // ── Espace client (auth requise) ──────────────────────────────────────────
   {

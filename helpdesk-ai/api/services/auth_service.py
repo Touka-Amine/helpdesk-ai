@@ -1,4 +1,5 @@
 # api/services/auth_service.py
+import hashlib
 import secrets
 import string
 
@@ -33,3 +34,21 @@ def create_token(data: dict) -> str:
 def decode_token(token: str) -> dict:
     return jwt.decode(token, settings.SECRET_KEY,
                       algorithms=[settings.ALGORITHM])
+
+
+# ── Reinitialisation de mot de passe ──────────────────────────────────────────
+
+def empreinte_jeton(jeton_clair: str) -> str:
+    """Empreinte SHA-256 du jeton, seule forme conservee en base.
+
+    SHA-256 et non bcrypt : le jeton fait 64 caracteres tires au hasard, il n'a
+    donc pas besoin d'etre ralenti contre une attaque par dictionnaire, et la
+    verification doit rester immediate a chaque clic sur le lien.
+    """
+    return hashlib.sha256(jeton_clair.encode("utf-8")).hexdigest()
+
+
+def generer_jeton_reinitialisation() -> tuple[str, str]:
+    """Renvoie le couple (jeton en clair a envoyer, empreinte a stocker)."""
+    jeton_clair = secrets.token_urlsafe(48)
+    return jeton_clair, empreinte_jeton(jeton_clair)

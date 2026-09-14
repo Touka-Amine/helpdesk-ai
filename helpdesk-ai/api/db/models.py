@@ -24,6 +24,31 @@ class User(Base):
     tickets = relationship("Ticket", back_populates="user", foreign_keys="Ticket.user_id")
 
 
+class PasswordReset(Base):
+    """Jeton de reinitialisation de mot de passe : usage unique, duree limitee.
+
+    Seule l'empreinte SHA-256 du jeton est conservee. Une lecture de la base ne
+    livre donc aucun lien exploitable : le jeton en clair n'existe que dans le
+    courriel envoye au titulaire du compte, et le serveur ne le revoit qu'au
+    moment ou celui-ci suit le lien.
+
+    Aucune adresse IP n'est enregistree ici. La tracabilite du demandeur
+    n'apporterait rien au parcours et ajouterait une donnee personnelle de plus
+    a justifier au regard du RGPD.
+    """
+
+    __tablename__ = "password_resets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    token_hash = Column(String(64), unique=True, index=True, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
+
+
 class Ticket(Base):
     __tablename__ = "tickets"
 

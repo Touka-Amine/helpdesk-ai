@@ -36,6 +36,21 @@ export class AuthApiService {
     return this.http.patch<AuthUser>(`${this.base}/me`, payload);
   }
 
+  /** Demande l'envoi d'un lien de reinitialisation. La reponse est la meme que
+   *  l'adresse corresponde ou non a un compte : ne jamais en deduire l'existence
+   *  du compte dans l'interface. */
+  forgotPassword(email: string) {
+    return this.http.post<{ message: string }>(`${this.base}/forgot-password`, { email });
+  }
+
+  /** Fixe un nouveau mot de passe a partir du jeton recu par courriel. */
+  resetPassword(token: string, newPassword: string) {
+    return this.http.post<{ message: string }>(`${this.base}/reset-password`, {
+      token,
+      new_password: newPassword,
+    });
+  }
+
   changePassword(payload: ChangePasswordRequest) {
     return this.http.post<{ message: string }>(`${this.base}/change-password`, payload);
   }

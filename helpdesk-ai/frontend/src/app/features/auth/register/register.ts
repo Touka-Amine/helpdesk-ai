@@ -5,11 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthApiService } from '../../../api/auth-api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { FILIALES } from '../../../models/ticket.models';
+import { AuthShell } from '../auth-shell/auth-shell';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, AuthShell],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })

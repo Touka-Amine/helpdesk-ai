@@ -4,11 +4,12 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthApiService } from '../../../api/auth-api.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { AuthShell } from '../auth-shell/auth-shell';
 
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AuthShell],
   templateUrl: './change-password.html',
   styleUrl: './change-password.css',
 })

@@ -27,11 +27,65 @@ class Settings(BaseSettings):
     OLLAMA_MODEL         : str   = "llama3.2:3b"
     OLLAMA_TIMEOUT       : float = 90.0
 
+    # "development" (defaut) ou "production". En production, le service refuse de
+    # demarrer si un secret est reste a sa valeur d'exemple : le fichier .env.example
+    # est public, et le copier tel quel mettrait en service des secrets connus de
+    # quiconque lit le depot. Risque R-09 du registre.
+    ENVIRONMENT          : str   = "development"
+
+    # ── Messagerie sortante (reinitialisation de mot de passe) ────────────────
+    # SMTP_HOST vide = messagerie desactivee. Le parcours "mot de passe oublie"
+    # reste alors fonctionnel cote API, mais aucun courriel ne part : hors
+    # production le lien est ecrit dans le journal du service pour permettre les
+    # essais, jamais en production.
+    SMTP_HOST            : str   = ""
+    SMTP_PORT            : int   = 587
+    SMTP_USER            : str   = ""
+    SMTP_PASSWORD        : str   = ""
+    SMTP_FROM            : str   = "no-reply@onetech-bs.com"
+    SMTP_STARTTLS        : bool  = True
+    SMTP_TIMEOUT         : float = 15.0
+    # Base de l'URL du frontend, utilisee pour construire le lien envoye par courriel.
+    APP_BASE_URL         : str   = "http://localhost:4200"
+    # Duree de validite du lien de reinitialisation, en minutes.
+    RESET_TOKEN_TTL_MIN  : int   = 30
+
     def admin_email_set(self) -> set[str]:
         return {e.strip().lower() for e in self.ADMIN_EMAILS.split(",") if e.strip()}
 
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+
+    def messagerie_configuree(self) -> bool:
+        """Vrai si un serveur SMTP est renseigne, donc si un courriel peut partir."""
+        return bool(self.SMTP_HOST.strip())
+
+    def secrets_non_configures(self) -> list[str]:
+        """Noms des secrets encore a leur valeur d'exemple, sans jamais les exposer."""
+        suspects = {
+            "SECRET_KEY": self.SECRET_KEY,
+            "INGEST_API_KEY": self.INGEST_API_KEY,
+            "DB_URL": self.DB_URL,
+        }
+        # Le mot de passe SMTP n'est un secret attendu que si la messagerie sert.
+        if self.messagerie_configuree():
+            suspects["SMTP_PASSWORD"] = self.SMTP_PASSWORD
+        marqueurs = ("change-this", "REMPLACER__", "helpdesk:helpdesk")
+        return [nom for nom, valeur in suspects.items()
+                if any(m in valeur for m in marqueurs)]
+
+    def verifier_secrets(self) -> None:
+        """Interrompt le demarrage en production si un secret n'a pas ete genere."""
+        if self.ENVIRONMENT.strip().lower() != "production":
+            return
+        manquants = self.secrets_non_configures()
+        if manquants:
+            raise RuntimeError(
+                "Secrets encore a leur valeur d'exemple : "
+                + ", ".join(manquants)
+                + ". Generer une valeur par cle avant tout demarrage en production "
+                  "(python -c \"import secrets; print(secrets.token_urlsafe(48))\")."
+            )
 
 
 settings = Settings()

@@ -18,6 +18,9 @@ from api.schemas import FullResponse, HealthResponse, TicketInput
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Controle avant toute autre chose : un service demarre en production avec les
+    # secrets du fichier d'exemple serait ouvert a qui lit le depot.
+    settings.verifier_secrets()
     init_db()
     predictor.load()
     yield
