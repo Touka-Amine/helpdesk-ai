@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-04T09:42:50+00:00",
+  "protocole": "GroupKFold 3 plis sur les titres du jeu d'entrainement ; le jeu de test gele n'est pas lu",
+  "epochs": 8,
+  "max_length": 64,
+  "critere": "rappel Securite moyen >= 0,70, puis meilleur F1 moyen",
+  "resultats": {
+    "0.0": {
+      "plis": [
+        {
+          "f1_presentes": 0.6096,
+          "rappel_securite": null,
+          "categories_au_pli": 7
+        },
+        {
+          "f1_presentes": 0.773,
+          "rappel_securite": 1.0,
+          "categories_au_pli": 7
+        },
+        {
+          "f1_presentes": 0.4495,
+          "rappel_securite": 0.4839,
+          "categories_au_pli": 7
+        }
+      ],
+      "f1_moyen": 0.6107,
+      "f1_ecart_type": 0.1321,
+      "rappel_securite_moyen": 0.7419
+    },
+    "0.5": {
+      "plis": [
+        {
+          "f1_presentes": 0.6126,
+          "rappel_securite": null,
+          "categories_au_pli": 7
+        },
+        {
+          "f1_presentes": 0.7668,
+          "rappel_securite": 1.0,
+          "categories_au_pli": 7
+        },
+        {
+          "f1_presentes": 0.4499,
+          "rappel_securite": 0.4839,
+          "categories_au_pli": 7
+        }
+      ],
+      "f1_moyen": 0.6098,
+      "f1_ecart_type": 0.1294,
+      "rappel_securite_moyen": 0.7419
+    },
+    "1.0": {
+      "plis": [
+        {
+          "f1_presentes": 0.6179,
+          "rappel_securite": null,
+          "categories_au_pli": 7
+        },
+        {
+          "f1_presentes": 0.7668,
+          "rappel_securite": 1.0,
+          "categories_au_pli": 7
+        },
+        {
+          "f1_presentes": 0.4494,
+          "rappel_securite": 0.4839,
+          "categories_au_pli": 7
+        }
+      ],
+      "f1_moyen": 0.6114,
+      "f1_ecart_type": 0.1297,
+      "rappel_securite_moyen": 0.7419
+    }
+  },
+  "alpha_retenu": 1.0,
+  "motif": "rappel Securite >= 0,70 et meilleur F1 parmi les eligibles"
+}

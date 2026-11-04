@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-04T07:51:41+00:00",
+  "protocole": "jeu de test GELE du pipeline (data/splits/test.csv), 356 tickets, 5 categories sur 8",
+  "entree": "entree de production : classification inconnue, fixee a « demande », priorite saisie reelle",
+  "classes_presentes": [
+    "Infrastructure",
+    "Microsoft",
+    "Réseau",
+    "Système",
+    "Sécurité"
+  ],
+  "qualite": {
+    "camembert_seul": {
+      "f1_macro_classes_presentes": 0.8247,
+      "f1_macro_huit_classes": 0.5154,
+      "accuracy": 0.8848,
+      "rappel_securite": 0.3939
+    },
+    "camembert_et_regles": {
+      "f1_macro_classes_presentes": 0.9894,
+      "f1_macro_huit_classes": 0.6184,
+      "accuracy": 0.9944,
+      "rappel_securite": 0.9394
+    }
+  },
+  "fidelite_onnx": {
+    "onnx_fp32": {
+      "predictions_identiques_a_torch": 356,
+      "sur": 356,
+      "accord": 1.0,
+      "qualite_avec_regles": {
+        "f1_macro_classes_presentes": 0.9894,
+        "f1_macro_huit_classes": 0.6184,
+        "accuracy": 0.9944,
+        "rappel_securite": 0.9394
+      }
+    },
+    "onnx_int8": {
+      "predictions_identiques_a_torch": 182,
+      "sur": 356,
+      "accord": 0.5112,
+      "qualite_avec_regles": {
+        "f1_macro_classes_presentes": 0.4842,
+        "f1_macro_huit_classes": 0.3026,
+        "accuracy": 0.6376,
+        "rappel_securite": 0.5455
+      }
+    }
+  },
+  "cout_par_ticket": {
+    "torch_fp32_cpu": {
+      "median_ms": 218.6,
+      "p95_ms": 234.1,
+      "min_ms": 202.4
+    },
+    "onnx_fp32_cpu": {
+      "median_ms": 330.1,
+      "p95_ms": 508.8,
+      "min_ms": 280.5
+    },
+    "onnx_int8_cpu": {
+      "median_ms": 222.7,
+      "p95_ms": 250.4,
+      "min_ms": 204.3
+    },
+    "taille_Mo": {
+      "onnx_fp32": 442.8,
+      "onnx_int8": 111.5
+    }
+  },
+  "note_f1": "f1_macro_huit_classes compte zero pour les trois categories absentes du jeu gele : c'est la convention du memoire pour le modele servi. f1_macro_classes_presentes ne moyenne que les cinq categories tirees."
+}

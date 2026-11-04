@@ -1,0 +1,1529 @@
+{
+  "protocole": "n-grammes 1-3 mots mines sur le seul jeu d'entrainement du protocole des experiences",
+  "graine": 42,
+  "precision_minimale": 1.0,
+  "support_minimal": 6,
+  "tickets_entrainement": 1445,
+  "candidats": [
+    {
+      "ngramme": "pour deblocage perte",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "verrouillage trop stricte",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "deblocage perte temps",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "verrouilles",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "pour une simple",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "passe meme pour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "simple faute",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "trop stricte",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "trop stricte bonjour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "simple",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "multiples",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "seulement mauvais mots",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "stricte bonjour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "deblocage",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "verrouilles apres",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "une simple faute",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "appels helpdesk pour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "utilisateurs sont verrouilles",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "mauvais mots passe",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "faute",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "apres seulement mauvais",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "sont verrouilles",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "une simple",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "seulement mauvais",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "verrouilles apres seulement",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "verrouillage trop",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "helpdesk pour deblocage",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "meme pour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "mots passe",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "helpdesk pour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "politique verrouillage trop",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "apres seulement",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "mots passe meme",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "les utilisateurs sont",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "multiples appels helpdesk",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "frappe",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "politique",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "mauvais",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "faute frappe multiples",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "pour deblocage",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "frappe multiples appels",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "politique verrouillage",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "multiples appels",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "verrouillage",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "simple faute frappe",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "seulement",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "passe meme",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "mauvais mots",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "appels helpdesk",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "helpdesk",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "meme pour une",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "stricte",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "frappe multiples",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "mots",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "sont verrouilles apres",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "deblocage perte",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "faute frappe",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "utilisateurs sont",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 16,
+      "tickets_de_la_categorie": 16,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "potentiel des",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "portail intranet navigateur",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "expire sur site",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "utilisateurs contournement potentiel",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "portail intranet",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "accedant",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "votre connexion",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "utilisateurs contournement",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "contournement potentiel des",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "site interne bonjour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "mefiance des",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "pas privee",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "navigateur",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "interne bonjour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "connexion est pas",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "affiche votre connexion",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "des regles",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "site interne",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "contournement",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "expire",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "ssl expire",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "accedant portail intranet",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "contournement potentiel",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "expire sur",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "regles",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "potentiel",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "intranet navigateur affiche",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "navigateur affiche",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "regles securite",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "privee",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "portail",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "intranet",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "des utilisateurs",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "certificat ssl expire",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "sur site interne",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "mefiance",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "connexion est",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "mefiance des utilisateurs",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "des utilisateurs contournement",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "pas privee mefiance",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "privee mefiance",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "des regles securite",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "ssl",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "potentiel des regles",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "privee mefiance des",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "securite",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "intranet navigateur",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "navigateur affiche votre",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "sur site",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "certificat ssl",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "est pas privee",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "affiche votre",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "votre connexion est",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "certificat",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "ssl expire sur",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "accedant portail",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 13,
+      "tickets_de_la_categorie": 13,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "traiter une activite",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "tache",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "pas etre finalisee",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "besoin",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "etre finalisee sans",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "pour traiter",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "professionnelle",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "dossier",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "professionnelle tache",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "demande acces",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "besoin acceder",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "finalisee sans",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "activite professionnelle tache",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "acces dossier",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "une activite professionnelle",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "finalisee",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "etre finalisee",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "sans acces",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "securise",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "acceder dossier",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "tache peut",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "professionnelle tache peut",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "securise bonjour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "activite",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "une activite",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "pour traiter une",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "finalisee sans acces",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "securise pour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "tache peut pas",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "besoin acceder dossier",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "demande acces dossier",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "activite professionnelle",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "securise pour traiter",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "traiter une",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 11,
+      "tickets_de_la_categorie": 11,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "document metier important",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "excel legitime detectant",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "acces document metier",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "perte acces",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "legitime detectant comme",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "alarme inutile",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "quarantaine fichier",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "met quarantaine fichier",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "comme",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "fausse alerte bonjour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "excel",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "document metier",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "important alarme inutile",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "quarantaine",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "fausse",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "inutile",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "excel legitime",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "legitime",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "detectant comme",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "perte acces document",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "fausse alerte",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "important",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "fichier excel",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "acces document",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "detectant",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "fichier excel legitime",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "legitime detectant",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "met quarantaine",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "metier important",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "alerte bonjour",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "important alarme",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "quarantaine fichier excel",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "metier important alarme",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "signalant",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 9,
+      "tickets_de_la_categorie": 9,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "regles securite merci",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 8,
+      "tickets_de_la_categorie": 8,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "securite merci",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 8,
+      "tickets_de_la_categorie": 8,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "acces merci",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 8,
+      "tickets_de_la_categorie": 8,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "sans acces merci",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 8,
+      "tickets_de_la_categorie": 8,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "alarme inutile merci",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 6,
+      "tickets_de_la_categorie": 6,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "inutile merci",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 6,
+      "tickets_de_la_categorie": 6,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "equipe les utilisateurs",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 6,
+      "tickets_de_la_categorie": 6,
+      "deja_couvert_par_une_regle": null
+    },
+    {
+      "ngramme": "stricte bonjour equipe",
+      "categorie": "Sécurité",
+      "precision_entrainement": 1.0,
+      "support_entrainement": 6,
+      "tickets_de_la_categorie": 6,
+      "deja_couvert_par_une_regle": null
+    }
+  ]
+}

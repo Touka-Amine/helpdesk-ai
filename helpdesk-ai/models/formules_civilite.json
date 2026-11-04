@@ -1,0 +1,22 @@
+{
+  "regle": "ligne presente sous au moins 23 des 46 titres du jeu d'entrainement",
+  "jeu": "data/splits/train.csv — le jeu de test ne participe pas",
+  "formules": [
+    "Bien cordialement.",
+    "Bonjour l’équipe IT,",
+    "Bonjour support,",
+    "Bonjour,",
+    "Cordialement.",
+    "Merci de m’aider à résoudre ce problème.",
+    "Merci de m’aider à résoudre ce souci.",
+    "Merci de vérifier le problème et de me faire un retour.",
+    "Merci de vérifier le souci et de me faire un retour.",
+    "Merci d’avance de m’aider à résoudre ce problème.",
+    "Merci d’avance de vérifier le problème et de me faire un retour.",
+    "Merci d’avance d’avance.",
+    "Merci d’avance.",
+    "Merci.",
+    "Pouvez-vous prendre en charge cette demande ?",
+    "Pouvez-vous vérifier ce point s’il vous plaît ?"
+  ]
+}

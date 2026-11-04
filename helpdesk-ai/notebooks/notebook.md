@@ -39,7 +39,7 @@
 4. Statistiques de longueur (titre, description, mots) → **figure**.
 5. Analyse des doublons + top titres répétés.
 6. **Cohérence des labels** par titre répété (résultat : 0 incohérence — à mettre en avant).
-7. Audit de la base RAG (tickets résolus par catégorie).
+7. Audit de la base RAG (tickets documentés par catégorie).
 8. Écriture de `rapport_audit.txt`.
 
 **À ajouter :**
@@ -120,13 +120,13 @@ longueurs après nettoyage.
 **Rôle** : construire la base de connaissance et le moteur de recommandation de résolutions.
 
 **État actuel (audit) :**
-- ✅ Classe `RAGEngine` (TF-IDF + cosinus), base = tickets résolus, sauvegarde `rag_engine.pkl`,
+- ✅ Classe `RAGEngine` (TF-IDF + cosinus), base = tickets documentés, sauvegarde `rag_engine.pkl`,
   une amorce d'« évaluation quantitative ».
 - ⚠️ RAG **lexical** (pas sémantique) et **évaluation incomplète** → à enrichir (Phases 6–7).
 - ⚠️ Cellules vides en fin → nettoyer.
 
 **Étapes attendues (à conserver) :**
-1. Charger la base RAG (tickets résolus, `text_rag`).
+1. Charger la base RAG (tickets documentés, `text_rag`).
 2. Vectoriser + `recommend(query, category_filter, allow_fallback)`.
 3. Sauvegarder le moteur.
 

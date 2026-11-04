@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-04T08:53:35+00:00",
+  "exigence": "EF-11 — resume automatique du ticket",
+  "methode": "retrait extractif des formules de civilite, aucune generation",
+  "n_formules": 16,
+  "seuil_titres": 23,
+  "mesures": {
+    "entrainement": {
+      "tickets": 1444,
+      "mots_origine_median": 32,
+      "mots_resume_median": 20,
+      "compression_mediane": 0.375,
+      "compression_moyenne": 0.3742,
+      "tickets_sans_gain": 0
+    },
+    "test_gele": {
+      "tickets": 356,
+      "mots_origine_median": 36,
+      "mots_resume_median": 25,
+      "compression_mediane": 0.3333,
+      "compression_moyenne": 0.3472,
+      "tickets_sans_gain": 0
+    }
+  }
+}

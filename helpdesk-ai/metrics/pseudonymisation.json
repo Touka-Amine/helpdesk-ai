@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-04T08:35:09+00:00",
+  "exigence": "ENF-04 (b)",
+  "methode": "HMAC-SHA256 tronque a 10 caracteres, cle hors du depot",
+  "colonnes": [
+    "Demandeur",
+    "Assigné à"
+  ],
+  "export_origine_inclus": false,
+  "tableaux": {
+    "data/processed/HelpDesk1.csv": {
+      "etat": "pseudonymise",
+      "colonnes": {
+        "Demandeur": {
+          "personnes_distinctes": 202,
+          "pseudonymes_distincts": 202
+        },
+        "Assigné à": {
+          "personnes_distinctes": 11,
+          "pseudonymes_distincts": 11
+        }
+      }
+    },
+    "data/splits/rag.csv": {
+      "etat": "pseudonymise",
+      "colonnes": {
+        "Demandeur": {
+          "personnes_distinctes": 202,
+          "pseudonymes_distincts": 202
+        },
+        "Assigné à": {
+          "personnes_distinctes": 11,
+          "pseudonymes_distincts": 11
+        }
+      }
+    },
+    "data/splits/test.csv": {
+      "etat": "pseudonymise",
+      "colonnes": {
+        "Demandeur": {
+          "personnes_distinctes": 169,
+          "pseudonymes_distincts": 169
+        },
+        "Assigné à": {
+          "personnes_distinctes": 7,
+          "pseudonymes_distincts": 7
+        }
+      }
+    },
+    "data/splits/train.csv": {
+      "etat": "pseudonymise",
+      "colonnes": {
+        "Demandeur": {
+          "personnes_distinctes": 202,
+          "pseudonymes_distincts": 202
+        },
+        "Assigné à": {
+          "personnes_distinctes": 11,
+          "pseudonymes_distincts": 11
+        }
+      }
+    },
+    "data/splits/train_current.csv": {
+      "etat": "pseudonymise",
+      "colonnes": {
+        "Demandeur": {
+          "personnes_distinctes": 202,
+          "pseudonymes_distincts": 202
+        },
+        "Assigné à": {
+          "personnes_distinctes": 11,
+          "pseudonymes_distincts": 11
+        }
+      }
+    },
+    "data/reference/test_reference.csv": {
+      "etat": "pseudonymise",
+      "colonnes": {
+        "Demandeur": {
+          "personnes_distinctes": 169,
+          "pseudonymes_distincts": 169
+        },
+        "Assigné à": {
+          "personnes_distinctes": 7,
+          "pseudonymes_distincts": 7
+        }
+      }
+    },
+    "data/curated/validated_20260822.csv": {
+      "etat": "vide"
+    }
+  }
+}

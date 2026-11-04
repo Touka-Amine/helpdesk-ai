@@ -30,7 +30,8 @@
     "Prise en Charge": 321,
     "En attente": 211
   },
-  "base_rag_resolus": 476,
+  "tickets_resolus": 476,
+  "tickets_documentes": 1693,
   "completude_pct": {
     "ID": 100.0,
     "STATUT": 100.0,

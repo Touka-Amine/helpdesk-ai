@@ -1,0 +1,117 @@
+{
+  "date": "2026-10-04T07:27:51+00:00",
+  "protocole": "protocole des experiences, StratifiedShuffleSplit graine 42, 355 tickets de test",
+  "question": "Le champ Classification, present dans l'entree d'entrainement, n'est pas connu au moment ou l'API predit. Quel est l'ecart ?",
+  "classification_par_defaut": "demande",
+  "resultats": {
+    "A_enrichissement_reel": {
+      "camembert_seul": {
+        "f1_macro": 0.5685,
+        "recall_macro": 0.5887,
+        "accuracy": 0.6873,
+        "rappel_securite": 0.0,
+        "precision_securite": 0.0,
+        "f1_par_classe": {
+          "Applicatifs": 1.0,
+          "Backup": 1.0,
+          "Communication": 0.3243,
+          "Infrastructure": 0.0,
+          "Microsoft": 0.5818,
+          "Réseau": 0.642,
+          "Système": 1.0,
+          "Sécurité": 0.0
+        }
+      },
+      "camembert_et_regles": {
+        "f1_macro": 0.8343,
+        "recall_macro": 0.8573,
+        "accuracy": 0.7887,
+        "rappel_securite": 0.6,
+        "precision_securite": 1.0,
+        "f1_par_classe": {
+          "Applicatifs": 1.0,
+          "Backup": 1.0,
+          "Communication": 0.7317,
+          "Infrastructure": 1.0,
+          "Microsoft": 0.4463,
+          "Réseau": 0.7464,
+          "Système": 1.0,
+          "Sécurité": 0.75
+        }
+      }
+    },
+    "B_production_classification_par_defaut": {
+      "camembert_seul": {
+        "f1_macro": 0.5683,
+        "recall_macro": 0.5887,
+        "accuracy": 0.6873,
+        "rappel_securite": 0.0,
+        "precision_securite": 0.0,
+        "f1_par_classe": {
+          "Applicatifs": 1.0,
+          "Backup": 1.0,
+          "Communication": 0.3243,
+          "Infrastructure": 0.0,
+          "Microsoft": 0.5749,
+          "Réseau": 0.6473,
+          "Système": 1.0,
+          "Sécurité": 0.0
+        }
+      },
+      "camembert_et_regles": {
+        "f1_macro": 0.8644,
+        "recall_macro": 0.8961,
+        "accuracy": 0.8085,
+        "rappel_securite": 0.9,
+        "precision_securite": 1.0,
+        "f1_par_classe": {
+          "Applicatifs": 1.0,
+          "Backup": 1.0,
+          "Communication": 0.7407,
+          "Infrastructure": 1.0,
+          "Microsoft": 0.459,
+          "Réseau": 0.7685,
+          "Système": 1.0,
+          "Sécurité": 0.9474
+        }
+      }
+    },
+    "C_sans_enrichissement": {
+      "camembert_seul": {
+        "f1_macro": 0.5613,
+        "recall_macro": 0.5911,
+        "accuracy": 0.7296,
+        "rappel_securite": 0.0,
+        "precision_securite": 0.0,
+        "f1_par_classe": {
+          "Applicatifs": 1.0,
+          "Backup": 0.9655,
+          "Communication": 0.1212,
+          "Infrastructure": 0.0,
+          "Microsoft": 0.7273,
+          "Réseau": 0.6933,
+          "Système": 0.9831,
+          "Sécurité": 0.0
+        }
+      },
+      "camembert_et_regles": {
+        "f1_macro": 0.7924,
+        "recall_macro": 0.8269,
+        "accuracy": 0.7662,
+        "rappel_securite": 0.4,
+        "precision_securite": 1.0,
+        "f1_par_classe": {
+          "Applicatifs": 1.0,
+          "Backup": 1.0,
+          "Communication": 0.566,
+          "Infrastructure": 1.0,
+          "Microsoft": 0.3932,
+          "Réseau": 0.8083,
+          "Système": 1.0,
+          "Sécurité": 0.5714
+        }
+      }
+    }
+  },
+  "ecart_publie_vs_servable": -0.0301
+}

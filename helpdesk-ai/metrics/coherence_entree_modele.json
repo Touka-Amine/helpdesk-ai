@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-09T20:47:35.024058+00:00",
+  "objet": "Ecart mesure entre le texte d'entrainement et le texte que l'application soumettait au modele. Corrige depuis.",
+  "protocole": {
+    "jeu": "data/splits/test.csv (jeu de test gele du pipeline)",
+    "n_tickets": 356,
+    "modele": "models/best_pipeline.pkl, identique pour les deux variantes",
+    "seuil_confiance": 0.6,
+    "seuil_filtre_rag": 0.7
+  },
+  "variantes": {
+    "description_seule": {
+      "libelle": "Ancien comportement : l'API ne transmettait que la description",
+      "modele_seul": {
+        "exactitude": 0.3174,
+        "f1_macro": 0.2112
+      },
+      "avec_regles": {
+        "exactitude": 0.8202,
+        "f1_macro": 0.4294
+      },
+      "confiance": {
+        "moyenne": 0.4056,
+        "mediane": 0.4099,
+        "part_sous_seuil_confiance": 0.9438,
+        "part_sous_seuil_filtre_rag": 0.9438
+      }
+    },
+    "titre_et_description": {
+      "libelle": "Comportement corrige : titre puis description, comme a l'entrainement",
+      "modele_seul": {
+        "exactitude": 0.4466,
+        "f1_macro": 0.2031
+      },
+      "avec_regles": {
+        "exactitude": 0.8202,
+        "f1_macro": 0.4372
+      },
+      "confiance": {
+        "moyenne": 0.4603,
+        "mediane": 0.4536,
+        "part_sous_seuil_confiance": 0.7978,
+        "part_sous_seuil_filtre_rag": 0.9579
+      }
+    }
+  },
+  "ecarts": {
+    "exactitude_modele_seul": 0.1292,
+    "f1_avec_regles": 0.0078,
+    "confiance_moyenne": 0.0547
+  },
+  "lecture": "Les regles metier recoivent le texte brut, titre compris, dans les deux variantes : elles rattrapent l'essentiel de l'ecart d'exactitude. L'effet qui subsiste porte sur la confiance, donc sur le filtre de categorie de la recherche de cas comparables."
+}

@@ -1,0 +1,231 @@
+{
+  "date": "2026-10-04T08:55:11+00:00",
+  "exigence": "EF-13 — analyse de tonalite du message",
+  "jeu": "data/splits/train.csv, 1444 tickets, 46 titres",
+  "lexique_pose_avant_mesure": [
+    "urgent",
+    "urgence",
+    "critique",
+    "immediat",
+    "immediatement",
+    "au plus vite",
+    "bloquant",
+    "bloque",
+    "bloquee",
+    "paralyse",
+    "arret total",
+    "arrete",
+    "impossible",
+    "plus personne",
+    "tout le service",
+    "toute l equipe",
+    "production arretee",
+    "perte de donnees",
+    "grave",
+    "severe",
+    "catastrophe",
+    "tres grave",
+    "des que possible",
+    "prioritaire",
+    "escalade"
+  ],
+  "resultats": {
+    "termes_d_urgence_cherches": 25,
+    "termes_presents": 5,
+    "termes_presents_detail": {
+      "bloque": 146,
+      "bloquee": 108,
+      "arrete": 18,
+      "impossible": 283,
+      "perte de donnees": 43
+    },
+    "tickets_avec_exclamation": 0,
+    "tickets_avec_capitales": 43,
+    "mots_discriminants": 97,
+    "mots_discriminants_transversaux": 2,
+    "titres_du_jeu": 46,
+    "verdict": "Signal partiel."
+  },
+  "mots_discriminants_les_plus_frequents": [
+    {
+      "mot": "serveur",
+      "part_haute": 0.824,
+      "tickets": 210,
+      "titres": 7
+    },
+    {
+      "mot": "indisponible",
+      "part_haute": 0.821,
+      "tickets": 112,
+      "titres": 4
+    },
+    {
+      "mot": "mais",
+      "part_haute": 0.816,
+      "tickets": 87,
+      "titres": 3
+    },
+    {
+      "mot": "apparaissent",
+      "part_haute": 0.115,
+      "tickets": 87,
+      "titres": 2
+    },
+    {
+      "mot": "connexion",
+      "part_haute": 0.143,
+      "tickets": 84,
+      "titres": 2
+    },
+    {
+      "mot": "disque",
+      "part_haute": 0.805,
+      "tickets": 82,
+      "titres": 3
+    },
+    {
+      "mot": "mauvaise",
+      "part_haute": 0.171,
+      "tickets": 82,
+      "titres": 2
+    },
+    {
+      "mot": "pointages",
+      "part_haute": 0.165,
+      "tickets": 79,
+      "titres": 2
+    },
+    {
+      "mot": "biotime",
+      "part_haute": 0.165,
+      "tickets": 79,
+      "titres": 2
+    },
+    {
+      "mot": "alerte",
+      "part_haute": 0.868,
+      "tickets": 53,
+      "titres": 3
+    },
+    {
+      "mot": "distance",
+      "part_haute": 0.137,
+      "tickets": 51,
+      "titres": 1
+    },
+    {
+      "mot": "mois",
+      "part_haute": 0.12,
+      "tickets": 50,
+      "titres": 1
+    },
+    {
+      "mot": "manquantes",
+      "part_haute": 0.12,
+      "tickets": 50,
+      "titres": 1
+    },
+    {
+      "mot": "lignes",
+      "part_haute": 0.12,
+      "tickets": 50,
+      "titres": 1
+    },
+    {
+      "mot": "ventes",
+      "part_haute": 0.12,
+      "tickets": 50,
+      "titres": 1
+    },
+    {
+      "mot": "commerciale",
+      "part_haute": 0.12,
+      "tickets": 50,
+      "titres": 1
+    },
+    {
+      "mot": "commandes",
+      "part_haute": 0.12,
+      "tickets": 50,
+      "titres": 1
+    },
+    {
+      "mot": "decision",
+      "part_haute": 0.12,
+      "tickets": 50,
+      "titres": 1
+    },
+    {
+      "mot": "tableaux",
+      "part_haute": 0.12,
+      "tickets": 50,
+      "titres": 1
+    },
+    {
+      "mot": "bord",
+      "part_haute": 0.12,
+      "tickets": 50,
+      "titres": 1
+    },
+    {
+      "mot": "inexacts",
+      "part_haute": 0.12,
+      "tickets": 50,
+      "titres": 1
+    },
+    {
+      "mot": "certaines",
+      "part_haute": 0.12,
+      "tickets": 50,
+      "titres": 1
+    },
+    {
+      "mot": "espace",
+      "part_haute": 0.837,
+      "tickets": 49,
+      "titres": 2
+    },
+    {
+      "mot": "statut",
+      "part_haute": 0.2,
+      "tickets": 45,
+      "titres": 1
+    },
+    {
+      "mot": "synchronise",
+      "part_haute": 0.2,
+      "tickets": 45,
+      "titres": 1
+    },
+    {
+      "mot": "autres",
+      "part_haute": 0.2,
+      "tickets": 45,
+      "titres": 1
+    },
+    {
+      "mot": "accessibles",
+      "part_haute": 0.2,
+      "tickets": 45,
+      "titres": 1
+    },
+    {
+      "mot": "modifies",
+      "part_haute": 0.2,
+      "tickets": 45,
+      "titres": 1
+    },
+    {
+      "mot": "restent",
+      "part_haute": 0.2,
+      "tickets": 45,
+      "titres": 1
+    },
+    {
+      "mot": "synchronisation",
+      "part_haute": 0.2,
+      "tickets": 45,
+      "titres": 1
+    }
+  ]
+}

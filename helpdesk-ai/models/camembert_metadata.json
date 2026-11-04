@@ -14,7 +14,7 @@
   "f1_baseline_tfidf": 0.3753,
   "f1_baseline_heuristiques": 0.5673,
   "gain_vs_baseline": 0.0012,
-  "split_strategy": "GroupShuffleSplit par Titre (46 train / 12 test)",
+  "split_strategy": "StratifiedShuffleSplit sur les titres uniques (46 entrainement / 12 test) — protocole des experiences, distinct du jeu de test gele du pipeline",
   "confidence_threshold": 0.4,
   "hitl_auto_pct": 91.0,
   "hitl_auto_precision": 0.6997,

@@ -1,0 +1,422 @@
+{
+  "objet": "Revue par un consultant du service d'un extrait de l'annotation RAG.",
+  "critere": "La resolution proposee aurait-elle fait gagner du temps sur CE ticket ? Oui si elle traite le probleme decrit, meme partiellement. Non si elle traite autre chose, meme dans le meme domaine.",
+  "consigne": [
+    "Pour chaque paire, repondre a la question du critere par true ou false dans le champ « utile_consultant ».",
+    "Ne pas modifier le champ « id ».",
+    "Le jugement de l'auteur n'est pas montre : c'est voulu, les deux doivent etre portes independamment.",
+    "Une paire sur laquelle vous hesitez doit etre laissee a null et signalee dans « commentaire » : une hesitation est une information, pas un echec."
+  ],
+  "ce_qui_est_masque": [
+    "le rang du candidat",
+    "son score",
+    "le jugement de l'auteur"
+  ],
+  "tirage": "tirage uniforme sur les 152 paires, graine 42. Les marges sont celles du jeu complet ; en contrepartie l'extrait ne contient qu'une poignee de paires jugees utiles.",
+  "n_paires_extraites": 40,
+  "n_paires_totales": 152,
+  "annotateur_de_reference": "auteur du memoire, non consultant du service",
+  "consultant": "<nom, et date de la relecture>",
+  "paires": [
+    {
+      "id": "Pac6cb2df",
+      "requete_titre": "Compte utilisateur bloqué",
+      "requete_description": "Bonjour support,\n\nMon compte est bloqué après plusieurs tentatives de connexion.\n\nJe ne peux plus accéder aux outils de travail.\n\nPouvez-vous prendre en charge cette demande ?\n\nMerci.\n\nCordialement.",
+      "requete_categorie": "Sécurité",
+      "candidat_resolution": "Vérifier la connexion internet, réactiver la licence avec l'outil Microsoft Support and Recovery Assistant.",
+      "candidat_categorie": "Microsoft",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pea236668",
+      "requete_titre": "Réinitialisation du mot de passe Outlook",
+      "requete_description": "Bonjour support,\n\nJe n'arrive plus à accéder à ma boîte mail Outlook. Un message d'erreur d'authentification apparaît à chaque tentative.\n\nJe ne peux plus consulter ni envoyer mes emails professionnels.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nBien cordialement.\n\nCordialement.",
+      "requete_categorie": "Microsoft",
+      "candidat_resolution": "Vider le cache du calendrier, forcer une synchronisation avec Exchange.",
+      "candidat_categorie": "Microsoft",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P4f90dea7",
+      "requete_titre": "Alarme UPS – batterie faible",
+      "requete_description": "Bonjour l’équipe IT,\n\nL'UPS de la salle serveur émet un bip continu et indique 'batterie faible'.\n\nRisque d'arrêt brutal des serveurs en cas de coupure électrique.\n\nMerci de m’aider à résoudre ce souci.\n\nMerci.",
+      "requete_categorie": "Infrastructure",
+      "candidat_resolution": "Mettre à jour le composant d'impression, réinstaller le driver d'imprimante par défaut.",
+      "candidat_categorie": "Applicatifs",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P69b400a5",
+      "requete_titre": "Absence de signature automatique dans Outlook",
+      "requete_description": "Bonjour support,\n\nLa signature configurée ne s'insère pas automatiquement dans les nouveaux messages.\n\nPerte de temps à ajouter manuellement la signature.\n\nMerci de vérifier le souci et de me faire un retour.\n\nMerci.",
+      "requete_categorie": "Microsoft",
+      "candidat_resolution": "Vérifier le masque, la passerelle, le DNS et l'absence de conflit d'adresses.",
+      "candidat_categorie": "Réseau",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P4f2a3352",
+      "requete_titre": "Service Windows arrêté",
+      "requete_description": "Bonjour l’équipe IT,\n\nUn service Windows nécessaire à l'application est arrêté.\n\nL'application associée ne fonctionne plus correctement.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nBien cordialement.\n\nCordialement.",
+      "requete_categorie": "Système",
+      "candidat_resolution": "Vérifier les périphériques audio, les permissions Windows et les paramètres Teams.",
+      "candidat_categorie": "Communication",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pf57113e2",
+      "requete_titre": "Redémarrage intempestif du switch de bureau",
+      "requete_description": "Bonjour support,\n\nLe switch au niveau de l'étage redémarre seul toutes les heures, coupant le réseau.\n\nTous les utilisateurs de l'étage perdent la connexion pendant 2 minutes.\n\nPouvez-vous prendre en charge cette demande ?\n\nMerci.",
+      "requete_categorie": "Réseau",
+      "candidat_resolution": "Vérifier la carte Wi-Fi, le profil réseau et le point d'accès.",
+      "candidat_categorie": "Réseau",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P5ac84a0e",
+      "requete_titre": "Réinitialisation du mot de passe Outlook",
+      "requete_description": "Bonjour support,\n\nJe n'arrive plus à accéder à ma boîte mail Outlook. Un message d'erreur d'authentification apparaît à chaque tentative.\n\nJe ne peux plus consulter ni envoyer mes emails professionnels.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nBien cordialement.\n\nCordialement.",
+      "requete_categorie": "Microsoft",
+      "candidat_resolution": "Vérifier le chemin réseau, les droits et la disponibilité du serveur.",
+      "candidat_categorie": "Réseau",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P3ae5d431",
+      "requete_titre": "Certificat SSL expiré sur site interne",
+      "requete_description": "Bonjour,\n\nEn accédant au portail RH (intranet), le navigateur affiche 'Votre connexion n'est pas privée'.\n\nMéfiance des utilisateurs, contournement potentiel des règles de sécurité.\n\nMerci de vérifier le problème et de me faire un retour.\n\nMerci d’avance.",
+      "requete_categorie": "Sécurité",
+      "candidat_resolution": "Vérifier le client VPN, les identifiants et la connectivité réseau.",
+      "candidat_categorie": "Réseau",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P0375bd3a",
+      "requete_titre": "Erreur lors de l'impression des documents",
+      "requete_description": "Bonjour support,\n\nLorsque je tente d'imprimer un document, une erreur apparaît et l'impression reste bloquée dans la file d'attente.\n\nJe ne peux pas imprimer les documents nécessaires à mon travail.\n\nMerci de m’aider à résoudre ce problème.\n\nBien cordialement.",
+      "requete_categorie": "Infrastructure",
+      "candidat_resolution": "Vérifier la connexion internet, réactiver la licence avec l'outil Microsoft Support and Recovery Assistant.",
+      "candidat_categorie": "Microsoft",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pc4c62d13",
+      "requete_titre": "Alarme UPS – batterie faible",
+      "requete_description": "Bonjour l’équipe IT,\n\nL'UPS de la salle serveur émet un bip continu et indique 'batterie faible'.\n\nRisque d'arrêt brutal des serveurs en cas de coupure électrique.\n\nMerci de m’aider à résoudre ce souci.\n\nMerci.",
+      "requete_categorie": "Infrastructure",
+      "candidat_resolution": "Redémarrer le service W32Time, forcer une synchronisation avec un serveur NTP fiable.",
+      "candidat_categorie": "Système",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P7abc2937",
+      "requete_titre": "Réinitialisation du mot de passe Outlook",
+      "requete_description": "Bonjour support,\n\nJe n'arrive plus à accéder à ma boîte mail Outlook. Un message d'erreur d'authentification apparaît à chaque tentative.\n\nJe ne peux plus consulter ni envoyer mes emails professionnels.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nBien cordialement.\n\nCordialement.",
+      "requete_categorie": "Microsoft",
+      "candidat_resolution": "Analyser l'email, bloquer l'expéditeur et sensibiliser l'utilisateur.",
+      "candidat_categorie": "Sécurité",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P15524570",
+      "requete_titre": "Redémarrage intempestif du switch de bureau",
+      "requete_description": "Bonjour support,\n\nLe switch au niveau de l'étage redémarre seul toutes les heures, coupant le réseau.\n\nTous les utilisateurs de l'étage perdent la connexion pendant 2 minutes.\n\nPouvez-vous prendre en charge cette demande ?\n\nBien cordialement.",
+      "requete_categorie": "Réseau",
+      "candidat_resolution": "Nettoyer les filtres, vérifier les flux d'air, ajouter des ventilateurs portables en attendant.",
+      "candidat_categorie": "Infrastructure",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pc6330ea6",
+      "requete_titre": "Certificat SSL expiré sur site interne",
+      "requete_description": "Bonjour,\n\nEn accédant au portail RH (intranet), le navigateur affiche 'Votre connexion n'est pas privée'.\n\nMéfiance des utilisateurs, contournement potentiel des règles de sécurité.\n\nMerci de vérifier le problème et de me faire un retour.\n\nMerci d’avance.",
+      "requete_categorie": "Sécurité",
+      "candidat_resolution": "Valider la demande avec le responsable puis attribuer les droits nécessaires.",
+      "candidat_categorie": "Sécurité",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pea720ad9",
+      "requete_titre": "Compte utilisateur bloqué",
+      "requete_description": "Bonjour,\n\nMon compte est bloqué après plusieurs tentatives de connexion.\n\nJe ne peux plus accéder aux outils de travail.\n\nPouvez-vous prendre en charge cette demande ?\n\nMerci d’avance.",
+      "requete_categorie": "Sécurité",
+      "candidat_resolution": "Vérifier la bande passante, analyser les processus en arrière-plan, désactiver le proxy si nécessaire.",
+      "candidat_categorie": "Réseau",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pb85da8c5",
+      "requete_titre": "Erreur lors de l'impression des documents",
+      "requete_description": "Bonjour support,\n\nLorsque je tente d'imprimer un document, une erreur apparaît et l'impression reste bloquée dans la file d'attente.\n\nJe ne peux pas imprimer les documents nécessaires à mon travail.\n\nMerci de m’aider à résoudre ce problème.\n\nBien cordialement.",
+      "requete_categorie": "Infrastructure",
+      "candidat_resolution": "Reconstruire les vues de la base, relancer l'ETL, contrôler les droits de lecture.",
+      "candidat_categorie": "Applicatifs",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P964f8eb1",
+      "requete_titre": "Redémarrage intempestif du switch de bureau",
+      "requete_description": "Bonjour l’équipe IT,\n\nLe switch au niveau de l'étage redémarre seul toutes les heures, coupant le réseau.\n\nTous les utilisateurs de l'étage perdent la connexion pendant 2 minutes.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nCordialement.",
+      "requete_categorie": "Réseau",
+      "candidat_resolution": "Vérifier l'alimentation PoE, redémarrer le téléphone, resynchroniser la configuration depuis le Call Manager.",
+      "candidat_categorie": "Communication",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P9adb052a",
+      "requete_titre": "Erreur lors de l'impression des documents",
+      "requete_description": "Bonjour support,\n\nLorsque je tente d'imprimer un document, une erreur apparaît et l'impression reste bloquée dans la file d'attente.\n\nJe ne peux pas imprimer les documents nécessaires à mon travail.\n\nPouvez-vous prendre en charge cette demande ?\n\nMerci d’avance.",
+      "requete_categorie": "Infrastructure",
+      "candidat_resolution": "Valider la demande avec le responsable puis attribuer les droits nécessaires.",
+      "candidat_categorie": "Sécurité",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pc61d93a8",
+      "requete_titre": "Accès non autorisé détecté par l'IDS",
+      "requete_description": "Bonjour,\n\nL'IDS remonte des tentatives de connexion suspectes depuis l'IP d'un serveur interne.\n\nPotentielle compromission d'un serveur utilisé comme rebond.\n\nPouvez-vous prendre en charge cette demande ?\n\nCordialement.",
+      "requete_categorie": "Sécurité",
+      "candidat_resolution": "Vérifier le client VPN, les identifiants et la connectivité réseau.",
+      "candidat_categorie": "Réseau",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Ped5a6b6c",
+      "requete_titre": "Problème de synchronisation Outlook",
+      "requete_description": "Bonjour support,\n\nLes emails ne se synchronisent plus correctement dans Outlook depuis ce matin.\n\nLes nouveaux messages ne sont pas visibles et le suivi des demandes est perturbé.\n\nMerci de vérifier le problème et de me faire un retour.\n\nCordialement.",
+      "requete_categorie": "Microsoft",
+      "candidat_resolution": "Vérifier le scanner, le pilote et la connexion réseau.",
+      "candidat_categorie": "Infrastructure",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P2f20ae3e",
+      "requete_titre": "Redémarrage intempestif du switch de bureau",
+      "requete_description": "Bonjour support,\n\nLe switch au niveau de l'étage redémarre seul toutes les heures, coupant le réseau.\n\nTous les utilisateurs de l'étage perdent la connexion pendant 2 minutes.\n\nPouvez-vous prendre en charge cette demande ?\n\nBien cordialement.",
+      "requete_categorie": "Réseau",
+      "candidat_resolution": "Vérifier la charge du switch, remplacer le câble, analyser les logs switch.",
+      "candidat_categorie": "Réseau",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pc0a7a64c",
+      "requete_titre": "Alarme UPS – batterie faible",
+      "requete_description": "Bonjour l’équipe IT,\n\nL'UPS de la salle serveur émet un bip continu et indique 'batterie faible'.\n\nRisque d'arrêt brutal des serveurs en cas de coupure électrique.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nMerci.",
+      "requete_categorie": "Infrastructure",
+      "candidat_resolution": "Nettoyer les fichiers temporaires, vérifier les logs et augmenter l'espace si besoin.",
+      "candidat_categorie": "Système",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P29476852",
+      "requete_titre": "Service Windows arrêté",
+      "requete_description": "Bonjour l’équipe IT,\n\nUn service Windows nécessaire à l'application est arrêté.\n\nL'application associée ne fonctionne plus correctement.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nBien cordialement.\n\nCordialement.",
+      "requete_categorie": "Système",
+      "candidat_resolution": "Vider le cache Teams, vérifier Microsoft 365 et relancer l'application.",
+      "candidat_categorie": "Communication",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pfdddf5dd",
+      "requete_titre": "Redémarrage intempestif du switch de bureau",
+      "requete_description": "Bonjour,\n\nLe switch au niveau de l'étage redémarre seul toutes les heures, coupant le réseau.\n\nTous les utilisateurs de l'étage perdent la connexion pendant 2 minutes.\n\nPouvez-vous prendre en charge cette demande ?\n\nMerci d’avance.",
+      "requete_categorie": "Réseau",
+      "candidat_resolution": "Redémarrer le service W32Time, forcer une synchronisation avec un serveur NTP fiable.",
+      "candidat_categorie": "Système",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P73f47f80",
+      "requete_titre": "Service Windows arrêté",
+      "requete_description": "Bonjour l’équipe IT,\n\nUn service Windows nécessaire à l'application est arrêté.\n\nL'application associée ne fonctionne plus correctement.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nBien cordialement.\n\nCordialement.",
+      "requete_categorie": "Système",
+      "candidat_resolution": "Vérifier les droits Sage X3, le profil utilisateur et l'état du service applicatif.",
+      "candidat_categorie": "Applicatifs",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pac9f09c5",
+      "requete_titre": "Erreur lors de l'impression des documents",
+      "requete_description": "Bonjour support,\n\nLorsque je tente d'imprimer un document, une erreur apparaît et l'impression reste bloquée dans la file d'attente.\n\nJe ne peux pas imprimer les documents nécessaires à mon travail.\n\nMerci de m’aider à résoudre ce problème.\n\nBien cordialement.",
+      "requete_categorie": "Infrastructure",
+      "candidat_resolution": "Mettre à jour le composant d'impression, réinstaller le driver d'imprimante par défaut.",
+      "candidat_categorie": "Applicatifs",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P022e9d41",
+      "requete_titre": "Compte utilisateur bloqué",
+      "requete_description": "Bonjour support,\n\nMon compte est bloqué après plusieurs tentatives de connexion.\n\nJe ne peux plus accéder aux outils de travail.\n\nPouvez-vous prendre en charge cette demande ?\n\nMerci.\n\nCordialement.",
+      "requete_categorie": "Sécurité",
+      "candidat_resolution": "Vérifier l'état du serveur, analyser les logs et redémarrer le service si nécessaire.",
+      "candidat_categorie": "Système",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P17f6b1bb",
+      "requete_titre": "Perte de communication avec le SAN",
+      "requete_description": "Bonjour support,\n\nLes serveurs ESXi ne voient plus les LUNs du SAN (erreur de chemin Fiber Channel).\n\nToutes les machines virtuelles hébergées sur ces LUNs sont inaccessibles.\n\nPouvez-vous prendre en charge cette demande ?\n\nCordialement.",
+      "requete_categorie": "Infrastructure",
+      "candidat_resolution": "Réduire la qualité du partage, désactiver la vidéo haute définition, utiliser un câble Ethernet.",
+      "candidat_categorie": "Communication",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P30492878",
+      "requete_titre": "Mise à jour Windows bloquée à 99%",
+      "requete_description": "Bonjour l’équipe IT,\n\nL'installation des mises à jour reste bloquée à 99% pendant des heures.\n\nPoste inutilisable, perte de temps.\n\nMerci d’avance de m’aider à résoudre ce problème.\n\nCordialement.",
+      "requete_categorie": "Système",
+      "candidat_resolution": "Désactiver les analyses au démarrage, exclure certains dossiers, réparer l'installation.",
+      "candidat_categorie": "Système",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P3fe4b77e",
+      "requete_titre": "Certificat SSL expiré sur site interne",
+      "requete_description": "Bonjour l’équipe IT,\n\nEn accédant au portail RH (intranet), le navigateur affiche 'Votre connexion n'est pas privée'.\n\nMéfiance des utilisateurs, contournement potentiel des règles de sécurité.\n\nPouvez-vous prendre en charge cette demande ?\n\nCordialement.",
+      "requete_categorie": "Sécurité",
+      "candidat_resolution": "Vérifier la carte Wi-Fi, le profil réseau et le point d'accès.",
+      "candidat_categorie": "Réseau",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P9ac0379a",
+      "requete_titre": "Absence de signature automatique dans Outlook",
+      "requete_description": "Bonjour,\n\nLa signature configurée ne s'insère pas automatiquement dans les nouveaux messages.\n\nPerte de temps à ajouter manuellement la signature.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nMerci d’avance.\n\nCordialement.",
+      "requete_categorie": "Microsoft",
+      "candidat_resolution": "Analyser le message d'erreur, vérifier les paramètres ERP et relancer le traitement.",
+      "candidat_categorie": "Applicatifs",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P5e9b8878",
+      "requete_titre": "Compte utilisateur bloqué",
+      "requete_description": "Bonjour support,\n\nMon compte est bloqué après plusieurs tentatives de connexion.\n\nJe ne peux plus accéder aux outils de travail.\n\nPouvez-vous prendre en charge cette demande ?\n\nMerci.\n\nCordialement.",
+      "requete_categorie": "Sécurité",
+      "candidat_resolution": "Vérifier les ressources système, les mises à jour et les applications au démarrage.",
+      "candidat_categorie": "Infrastructure",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pd225ba07",
+      "requete_titre": "Service Windows arrêté",
+      "requete_description": "Bonjour l’équipe IT,\n\nUn service Windows nécessaire à l'application est arrêté.\n\nL'application associée ne fonctionne plus correctement.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nBien cordialement.\n\nCordialement.",
+      "requete_categorie": "Système",
+      "candidat_resolution": "Vérifier la connexion internet, réactiver la licence avec l'outil Microsoft Support and Recovery Assistant.",
+      "candidat_categorie": "Microsoft",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P0d4f5c43",
+      "requete_titre": "Absence de signature automatique dans Outlook",
+      "requete_description": "Bonjour,\n\nLa signature configurée ne s'insère pas automatiquement dans les nouveaux messages.\n\nPerte de temps à ajouter manuellement la signature.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nMerci d’avance.\n\nCordialement.",
+      "requete_categorie": "Microsoft",
+      "candidat_resolution": "Vérifier la connexion internet, réactiver la licence avec l'outil Microsoft Support and Recovery Assistant.",
+      "candidat_categorie": "Microsoft",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pc15412b9",
+      "requete_titre": "Perte de communication avec le SAN",
+      "requete_description": "Bonjour support,\n\nLes serveurs ESXi ne voient plus les LUNs du SAN (erreur de chemin Fiber Channel).\n\nToutes les machines virtuelles hébergées sur ces LUNs sont inaccessibles.\n\nPouvez-vous prendre en charge cette demande ?\n\nCordialement.",
+      "requete_categorie": "Infrastructure",
+      "candidat_resolution": "Vérifier le câble, le port switch et la stabilité de la connexion.",
+      "candidat_categorie": "Réseau",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P8837b3bb",
+      "requete_titre": "Mise à jour Windows bloquée à 99%",
+      "requete_description": "Bonjour l’équipe IT,\n\nL'installation des mises à jour reste bloquée à 99% pendant des heures.\n\nPoste inutilisable, perte de temps.\n\nMerci d’avance de m’aider à résoudre ce problème.\n\nCordialement.",
+      "requete_categorie": "Système",
+      "candidat_resolution": "Analyser le fichier dump, mettre à jour les pilotes, vérifier la mémoire RAM avec MemTest86.",
+      "candidat_categorie": "Système",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P75070487",
+      "requete_titre": "Alarme UPS – batterie faible",
+      "requete_description": "Bonjour l’équipe IT,\n\nL'UPS de la salle serveur émet un bip continu et indique 'batterie faible'.\n\nRisque d'arrêt brutal des serveurs en cas de coupure électrique.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nMerci.",
+      "requete_categorie": "Infrastructure",
+      "candidat_resolution": "Vérifier la licence Power BI, le workspace et les droits du dataset.",
+      "candidat_categorie": "Microsoft",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P5738783c",
+      "requete_titre": "Absence de signature automatique dans Outlook",
+      "requete_description": "Bonjour,\n\nLa signature configurée ne s'insère pas automatiquement dans les nouveaux messages.\n\nPerte de temps à ajouter manuellement la signature.\n\nPouvez-vous vérifier ce point s’il vous plaît ?\n\nMerci d’avance.\n\nCordialement.",
+      "requete_categorie": "Microsoft",
+      "candidat_resolution": "Vérifier les groupes SharePoint et ajouter l'utilisateur au bon niveau d'accès.",
+      "candidat_categorie": "Microsoft",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "Pf8f46584",
+      "requete_titre": "Accès non autorisé détecté par l'IDS",
+      "requete_description": "Bonjour,\n\nL'IDS remonte des tentatives de connexion suspectes depuis l'IP d'un serveur interne.\n\nPotentielle compromission d'un serveur utilisé comme rebond.\n\nPouvez-vous prendre en charge cette demande ?\n\nCordialement.",
+      "requete_categorie": "Sécurité",
+      "candidat_resolution": "Vérifier les périphériques audio, les permissions Windows et les paramètres Teams.",
+      "candidat_categorie": "Communication",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P31b7fd9f",
+      "requete_titre": "Redémarrage intempestif du switch de bureau",
+      "requete_description": "Bonjour,\n\nLe switch au niveau de l'étage redémarre seul toutes les heures, coupant le réseau.\n\nTous les utilisateurs de l'étage perdent la connexion pendant 2 minutes.\n\nPouvez-vous prendre en charge cette demande ?\n\nMerci d’avance.",
+      "requete_categorie": "Réseau",
+      "candidat_resolution": "Vérifier l'état du serveur, analyser les logs et redémarrer le service si nécessaire.",
+      "candidat_categorie": "Système",
+      "utile_consultant": null,
+      "commentaire": ""
+    },
+    {
+      "id": "P91642a56",
+      "requete_titre": "Erreur lors de l'impression des documents",
+      "requete_description": "Bonjour support,\n\nLorsque je tente d'imprimer un document, une erreur apparaît et l'impression reste bloquée dans la file d'attente.\n\nJe ne peux pas imprimer les documents nécessaires à mon travail.\n\nMerci de m’aider à résoudre ce problème.\n\nBien cordialement.",
+      "requete_categorie": "Infrastructure",
+      "candidat_resolution": "Vérifier les groupes SharePoint et ajouter l'utilisateur au bon niveau d'accès.",
+      "candidat_categorie": "Microsoft",
+      "utile_consultant": null,
+      "commentaire": ""
+    }
+  ]
+}

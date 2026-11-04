@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-04T07:58:04+00:00",
+  "protocole": "protocole des experiences, graine 42, 355 tickets de test inedits pour CamemBERT",
+  "entree": "entree de production, classification fixee a « demande »",
+  "jetons_par_ticket": {
+    "mediane": 37,
+    "p90": 41,
+    "p99": 47,
+    "max": 48
+  },
+  "par_longueur": {
+    "48": {
+      "tickets_tronques": 0,
+      "part_tronquee": 0.0,
+      "f1_macro_seul": 0.5683,
+      "f1_macro_avec_regles": 0.8644,
+      "rappel_securite": 0.9,
+      "cout_un_fil": {
+        "median_ms": 128.5,
+        "p95_ms": 131.1
+      }
+    },
+    "64": {
+      "tickets_tronques": 0,
+      "part_tronquee": 0.0,
+      "f1_macro_seul": 0.5683,
+      "f1_macro_avec_regles": 0.8644,
+      "rappel_securite": 0.9,
+      "cout_un_fil": {
+        "median_ms": 178.7,
+        "p95_ms": 243.7
+      }
+    },
+    "96": {
+      "tickets_tronques": 0,
+      "part_tronquee": 0.0,
+      "f1_macro_seul": 0.5683,
+      "f1_macro_avec_regles": 0.8644,
+      "rappel_securite": 0.9,
+      "cout_un_fil": {
+        "median_ms": 238.7,
+        "p95_ms": 251.5
+      }
+    },
+    "128": {
+      "tickets_tronques": 0,
+      "part_tronquee": 0.0,
+      "f1_macro_seul": 0.5683,
+      "f1_macro_avec_regles": 0.8644,
+      "rappel_securite": 0.9,
+      "cout_un_fil": {
+        "median_ms": 305.9,
+        "p95_ms": 321.4
+      }
+    }
+  },
+  "par_nombre_de_fils": {
+    "128": {
+      "1": {
+        "median_ms": 307.0,
+        "p95_ms": 315.6
+      },
+      "2": {
+        "median_ms": 253.5,
+        "p95_ms": 301.1
+      },
+      "4": {
+        "median_ms": 220.4,
+        "p95_ms": 235.5
+      }
+    },
+    "64": {
+      "1": {
+        "median_ms": 163.5,
+        "p95_ms": 172.3
+      },
+      "2": {
+        "median_ms": 114.3,
+        "p95_ms": 133.3
+      },
+      "4": {
+        "median_ms": 124.4,
+        "p95_ms": 154.5
+      }
+    }
+  },
+  "machine": "processeur de developpement, torch CPU, un ticket a la fois"
+}

@@ -1,0 +1,1247 @@
+{
+  "tracees": {
+    "0.0303": {
+      "valeur": 0.0303,
+      "occurrences_memoire": [
+        "annexes.tex:337"
+      ],
+      "sources": [
+        "metrics/camembert_servable_robustesse.json :: resume/ecart_f1_median"
+      ]
+    },
+    "0.1382": {
+      "valeur": 0.1382,
+      "occurrences_memoire": [
+        "annexes.tex:321",
+        "chap_04.tex:260"
+      ],
+      "sources": [
+        "metrics/campagne_apres_nettoyage.json :: resultats/01_hasard/f1_macro",
+        "metrics/campagne_avant_nettoyage.json :: resultats/01_hasard/f1_macro"
+      ]
+    },
+    "0.1667": {
+      "valeur": 0.1667,
+      "occurrences_memoire": [
+        "chap_06.tex:619",
+        "chap_06.tex:621"
+      ],
+      "sources": [
+        "metrics/rag_eval.json :: moteurs/lexical/precision_at_3",
+        "metrics/rag_protocoles.json :: moteurs/lexical/annote/precision_at_3",
+        "metrics/rag_protocoles.json :: moteurs/lexical/proxy/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/5/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/6/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/7/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/8/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/9/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/10/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/11/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/12/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/13/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/14/precision_at_3"
+      ]
+    },
+    "0.1877": {
+      "valeur": 0.1877,
+      "occurrences_memoire": [
+        "chap_06.tex:538",
+        "chap_06.tex:729"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/distribution/moyenne",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/0/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/1/score_similarite_moyen"
+      ]
+    },
+    "0.1896": {
+      "valeur": 0.1896,
+      "occurrences_memoire": [
+        "chap_06.tex:619"
+      ],
+      "sources": [
+        "metrics/rag_eval.json :: moteurs/lexical/recall_at_3",
+        "metrics/rag_protocoles.json :: moteurs/lexical/annote/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/5/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/6/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/7/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/8/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/9/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/10/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/11/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/12/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/13/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/14/recall_at_3"
+      ]
+    },
+    "0.2031": {
+      "valeur": 0.2031,
+      "occurrences_memoire": [
+        "annexes.tex:347",
+        "annexes.tex:360",
+        "chap_06.tex:315"
+      ],
+      "sources": [
+        "metrics/coherence_entree_modele.json :: variantes/titre_et_description/modele_seul/f1_macro",
+        "metrics/ml_eval.json :: f1_macro_ml"
+      ]
+    },
+    "0.2112": {
+      "valeur": 0.2112,
+      "occurrences_memoire": [
+        "annexes.tex:360"
+      ],
+      "sources": [
+        "metrics/coherence_entree_modele.json :: variantes/description_seule/modele_seul/f1_macro",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/distribution/meilleur_par_requete/8"
+      ]
+    },
+    "0.2417": {
+      "valeur": 0.2417,
+      "occurrences_memoire": [
+        "annexes.tex:367",
+        "chap_06.tex:568"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/0/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/0/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/1/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/1/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/2/precision_at_3"
+      ]
+    },
+    "0.2687": {
+      "valeur": 0.2687,
+      "occurrences_memoire": [
+        "chap_06.tex:568",
+        "chap_06.tex:587"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/0/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/1/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/2/recall_at_3"
+      ]
+    },
+    "0.2708": {
+      "valeur": 0.2708,
+      "occurrences_memoire": [
+        "chap_06.tex:315"
+      ],
+      "sources": [
+        "metrics/ml_eval_candidate.json :: f1_macro_ml",
+        "metrics/promotion_decision.json :: metriques_candidat/f1_macro_ml",
+        "metrics/promotion_decision.json :: metriques_production/f1_macro_ml",
+        "models/candidate_metadata.json :: f1_macro_ml_seul",
+        "models/model_metadata.json :: f1_macro_ml_seul",
+        "models/registry/v1/metrics.json :: f1_macro_ml",
+        "models/registry/v1/model_metadata.json :: f1_macro_ml_seul",
+        "models/registry/v2/metrics.json :: f1_macro_ml",
+        "models/registry/v2/model_metadata.json :: f1_macro_ml_seul",
+        "models/registry/v3/metrics.json :: f1_macro_ml",
+        "models/registry/v3/model_metadata.json :: f1_macro_ml_seul",
+        "models/registry/v4/metrics.json :: f1_macro_ml",
+        "models/registry/v4/model_metadata.json :: f1_macro_ml_seul"
+      ]
+    },
+    "0.3099": {
+      "valeur": 0.3099,
+      "occurrences_memoire": [
+        "chap_06.tex:732"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/distribution/max",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/distribution/meilleur_par_requete/23"
+      ]
+    },
+    "0.3333": {
+      "valeur": 0.3333,
+      "occurrences_memoire": [
+        "annexes.tex:367",
+        "chap_06.tex:570",
+        "chap_06.tex:596",
+        "chap_06.tex:623",
+        "chap_06.tex:625"
+      ],
+      "sources": [
+        "metrics/camembert_servable_robustesse.json :: par_tirage/1/rappel_securite_publie",
+        "metrics/camembert_servable_robustesse.json :: par_tirage/2/rappel_securite_publie",
+        "metrics/rag_eval.json :: moteurs/semantique/precision_at_3",
+        "metrics/rag_protocoles.json :: moteurs/semantique/annote/precision_at_3",
+        "metrics/rag_protocoles.json :: moteurs/semantique/proxy/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/0/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/0/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/1/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/1/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/2/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/2/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/3/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/3/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/4/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/4/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/5/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/5/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/6/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/6/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/7/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/7/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/8/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/8/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/9/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/10/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/14/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/5/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/5/precision_sur_rendus",
+        "metrics/resume_eval.json :: mesures/test_gele/compression_mediane"
+      ]
+    },
+    "0.3366": {
+      "valeur": 0.3366,
+      "occurrences_memoire": [
+        "annexes.tex:373",
+        "chap_06.tex:730"
+      ],
+      "sources": [
+        "metrics/priorite_eval.json :: modele/f1_macro",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/distribution/meilleur_par_requete/8",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/distribution/meilleur_par_requete/15"
+      ]
+    },
+    "0.3417": {
+      "valeur": 0.3417,
+      "occurrences_memoire": [
+        "chap_06.tex:629",
+        "chap_06.tex:641"
+      ],
+      "sources": [
+        "metrics/rag_protocoles.json :: moteurs/hybride/proxy/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/9/precision_at_3"
+      ]
+    },
+    "0.3500": {
+      "valeur": 0.35,
+      "occurrences_memoire": [
+        "annexes.tex:389",
+        "chap_06.tex:627",
+        "chap_06.tex:641",
+        "chap_06.tex:765"
+      ],
+      "sources": [
+        "metrics/rag_eval.json :: moteurs/lexical/seuil_pertinence",
+        "metrics/rag_eval.json :: moteurs/semantique/seuil_pertinence",
+        "metrics/rag_eval.json :: moteurs/hybride/precision_at_3",
+        "metrics/rag_eval.json :: moteurs/hybride/seuil_pertinence",
+        "metrics/rag_protocoles.json :: seuil",
+        "metrics/rag_protocoles.json :: moteurs/lexical/annote/seuil_pertinence",
+        "metrics/rag_protocoles.json :: moteurs/lexical/proxy/seuil_pertinence",
+        "metrics/rag_protocoles.json :: moteurs/semantique/annote/seuil_pertinence",
+        "metrics/rag_protocoles.json :: moteurs/semantique/proxy/seuil_pertinence",
+        "metrics/rag_protocoles.json :: moteurs/hybride/annote/precision_at_3",
+        "metrics/rag_protocoles.json :: moteurs/hybride/annote/seuil_pertinence",
+        "metrics/rag_protocoles.json :: moteurs/hybride/proxy/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: seuil_retenu",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/7/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/seuils/7",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/7/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/seuils/7",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/7/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/7/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/seuils/7",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/seuil",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/0/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/0/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/1/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/2/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/3/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/4/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/5/seuil_pertinence",
+        "metrics/seuil_rag_hors_echantillon.json :: seuil_servi",
+        "metrics/seuil_rag_hors_echantillon.json :: precision_par_tranche/1/a",
+        "metrics/seuil_rag_hors_echantillon.json :: precision_par_tranche/2/de",
+        "metrics/seuil_rag_hors_echantillon.json :: meilleur_seuil_dans_l_echantillon",
+        "metrics/seuil_rag_hors_echantillon.json :: validation_croisee/seuils_choisis/0",
+        "metrics/seuil_rag_hors_echantillon.json :: validation_croisee/seuils_choisis/3"
+      ]
+    },
+    "0.3564": {
+      "valeur": 0.3564,
+      "occurrences_memoire": [
+        "chap_06.tex:539"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/distribution/moyenne",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/0/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/1/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/2/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/3/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/4/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/5/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/10/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/11/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/12/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/13/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/14/score_similarite_moyen"
+      ]
+    },
+    "0.3667": {
+      "valeur": 0.3667,
+      "occurrences_memoire": [
+        "annexes.tex:367",
+        "chap_06.tex:572",
+        "chap_06.tex:596",
+        "chap_06.tex:762",
+        "chap_06.tex:764",
+        "chap_06.tex:1171"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/0/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/0/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/1/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/1/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/2/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/2/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/3/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/3/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/4/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/4/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/5/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/5/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/10/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/10/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/11/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/11/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/12/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/12/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/13/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/13/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/14/precision_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/14/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/2/precision_at_3"
+      ]
+    },
+    "0.3753": {
+      "valeur": 0.3753,
+      "occurrences_memoire": [
+        "annexes.tex:324",
+        "annexes.tex:405",
+        "chap_04.tex:302",
+        "chap_04.tex:304",
+        "chap_04.tex:415",
+        "chap_06.tex:86"
+      ],
+      "sources": [
+        "metrics/campagne_apres_nettoyage.json :: resultats/02_tfidf_seul/f1_macro",
+        "metrics/campagne_avant_nettoyage.json :: resultats/02_tfidf_seul/f1_macro",
+        "models/camembert_metadata.json :: f1_baseline_tfidf"
+      ]
+    },
+    "0.3761": {
+      "valeur": 0.3761,
+      "occurrences_memoire": [
+        "chap_06.tex:789"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/2/precision_sur_rendus"
+      ]
+    },
+    "0.4294": {
+      "valeur": 0.4294,
+      "occurrences_memoire": [
+        "annexes.tex:363",
+        "chap_06.tex:351"
+      ],
+      "sources": [
+        "metrics/coherence_entree_modele.json :: variantes/description_seule/avec_regles/f1_macro"
+      ]
+    },
+    "0.4372": {
+      "valeur": 0.4372,
+      "occurrences_memoire": [
+        "annexes.tex:279",
+        "annexes.tex:350",
+        "annexes.tex:363",
+        "chap_04.tex:241",
+        "chap_06.tex:34",
+        "chap_06.tex:282",
+        "chap_06.tex:295",
+        "chap_06.tex:351",
+        "chap_06.tex:1167"
+      ],
+      "sources": [
+        "metrics/coherence_entree_modele.json :: variantes/titre_et_description/avec_regles/f1_macro",
+        "metrics/ml_eval.json :: f1_macro_heuristiques",
+        "metrics/portee_f1_macro.json :: portees/referentiel_du_service/f1_macro"
+      ]
+    },
+    "0.4396": {
+      "valeur": 0.4396,
+      "occurrences_memoire": [
+        "annexes.tex:392",
+        "chap_06.tex:627",
+        "chap_06.tex:655"
+      ],
+      "sources": [
+        "metrics/rag_eval.json :: moteurs/hybride/recall_at_3",
+        "metrics/rag_protocoles.json :: moteurs/hybride/annote/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/7/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/0/recall_at_3"
+      ]
+    },
+    "0.4401": {
+      "valeur": 0.4401,
+      "occurrences_memoire": [
+        "chap_06.tex:316"
+      ],
+      "sources": [
+        "metrics/ml_eval.json :: precision_macro"
+      ]
+    },
+    "0.4429": {
+      "valeur": 0.4429,
+      "occurrences_memoire": [
+        "chap_06.tex:717"
+      ],
+      "sources": [
+        "metrics/doublons_base_rag.json :: avant_correction_de_l_elargissement/hybride/precision_sur_rendus"
+      ]
+    },
+    "0.4458": {
+      "valeur": 0.4458,
+      "occurrences_memoire": [
+        "chap_06.tex:621"
+      ],
+      "sources": [
+        "metrics/rag_protocoles.json :: moteurs/lexical/proxy/mrr_at_3"
+      ]
+    },
+    "0.4463": {
+      "valeur": 0.4463,
+      "occurrences_memoire": [
+        "annexes.tex:377",
+        "chap_06.tex:179",
+        "chap_06.tex:183"
+      ],
+      "sources": [
+        "metrics/camembert_servable.json :: resultats/A_enrichissement_reel/camembert_et_regles/f1_par_classe/Microsoft",
+        "metrics/campagne_apres_nettoyage.json :: resultats/05_camembert_regles/f1_par_classe/Microsoft"
+      ]
+    },
+    "0.4533": {
+      "valeur": 0.4533,
+      "occurrences_memoire": [
+        "chap_06.tex:621"
+      ],
+      "sources": [
+        "metrics/rag_protocoles.json :: moteurs/lexical/proxy/ndcg_at_3"
+      ]
+    },
+    "0.4574": {
+      "valeur": 0.4574,
+      "occurrences_memoire": [
+        "chap_06.tex:316"
+      ],
+      "sources": [
+        "metrics/ml_eval.json :: recall_macro"
+      ]
+    },
+    "0.4604": {
+      "valeur": 0.4604,
+      "occurrences_memoire": [
+        "annexes.tex:392",
+        "chap_06.tex:570",
+        "chap_06.tex:572",
+        "chap_06.tex:588",
+        "chap_06.tex:623",
+        "chap_06.tex:655"
+      ],
+      "sources": [
+        "metrics/rag_eval.json :: moteurs/semantique/recall_at_3",
+        "metrics/rag_protocoles.json :: moteurs/semantique/annote/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/0/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/1/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/2/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/3/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/4/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/5/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/6/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/7/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/8/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/9/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/10/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/14/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/0/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/1/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/2/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/3/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/4/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/5/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/10/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/11/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/12/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/13/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/14/recall_at_3",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/5/recall_at_3"
+      ]
+    },
+    "0.4697": {
+      "valeur": 0.4697,
+      "occurrences_memoire": [
+        "chap_04.tex:552",
+        "chap_04.tex:558"
+      ],
+      "sources": [
+        "metrics/validation_camembert.json :: resultats/par_titre/histoire_validation/7/f1_macro",
+        "metrics/validation_camembert.json :: resultats/par_titre/histoire_validation/8/f1_macro",
+        "metrics/validation_camembert.json :: resultats/par_titre/histoire_validation/9/f1_macro",
+        "metrics/validation_camembert.json :: resultats/par_titre/meilleure_epoque/f1_macro"
+      ]
+    },
+    "0.4886": {
+      "valeur": 0.4886,
+      "occurrences_memoire": [
+        "annexes.tex:373",
+        "chap_06.tex:730",
+        "chap_06.tex:775",
+        "chap_06.tex:777",
+        "chap_06.tex:1106",
+        "chap_06.tex:1175"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/distribution/max",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/distribution/meilleur_par_requete/23",
+        "metrics/seuil_rag_hors_echantillon.json :: validation_croisee/precision_moyenne_hors_echantillon"
+      ]
+    },
+    "0.5000": {
+      "valeur": 0.5,
+      "occurrences_memoire": [
+        "chap_06.tex:619",
+        "chap_06.tex:619"
+      ],
+      "sources": [
+        "metrics/calibration_confiance.json :: resultats/ml_seul/courbe/25/seuil",
+        "metrics/calibration_confiance.json :: resultats/chaine_servie/courbe/25/seuil",
+        "metrics/campagne_apres_nettoyage.json :: resultats/02_tfidf_seul/recall_macro",
+        "metrics/campagne_avant_nettoyage.json :: resultats/02_tfidf_seul/recall_macro",
+        "metrics/ml_monitor.json :: derive_lexicale/taux_hors_vocabulaire",
+        "metrics/rag_eval.json :: moteurs/lexical/mrr_at_3",
+        "metrics/rag_eval.json :: moteurs/lexical/ndcg_at_3",
+        "metrics/rag_protocoles.json :: moteurs/lexical/annote/mrr_at_3",
+        "metrics/rag_protocoles.json :: moteurs/lexical/annote/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/4/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/4/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/5/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/5/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/6/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/6/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/7/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/7/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/8/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/8/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/9/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/9/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/10/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/10/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/10/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/11/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/11/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/12/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/12/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/13/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/13/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/14/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/14/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/seuils/10",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/10/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/12/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/seuils/10",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/10/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/seuils/10",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/0/alpha"
+      ]
+    },
+    "0.5062": {
+      "valeur": 0.5062,
+      "occurrences_memoire": [
+        "chap_06.tex:642"
+      ],
+      "sources": [
+        "metrics/doublons_base_rag.json :: par_moteur/hybride/precision_sur_rendus",
+        "metrics/doublons_base_rag.json :: par_moteur/hybride/precision_sur_reponses_distinctes",
+        "metrics/rag_protocoles.json :: moteurs/hybride/proxy/precision_sur_rendus"
+      ]
+    },
+    "0.5083": {
+      "valeur": 0.5083,
+      "occurrences_memoire": [
+        "chap_06.tex:568"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/0/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/1/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/2/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/3/mrr_at_3"
+      ]
+    },
+    "0.5105": {
+      "valeur": 0.5105,
+      "occurrences_memoire": [
+        "chap_06.tex:568"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/0/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/1/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/2/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/3/ndcg_at_3"
+      ]
+    },
+    "0.5106": {
+      "valeur": 0.5106,
+      "occurrences_memoire": [
+        "chap_06.tex:757"
+      ],
+      "sources": [
+        "metrics/seuil_rag_hors_echantillon.json :: precision_par_tranche/2/precision"
+      ]
+    },
+    "0.5112": {
+      "valeur": 0.5112,
+      "occurrences_memoire": [
+        "chap_04.tex:661"
+      ],
+      "sources": [
+        "metrics/arbitrage_modele_servi.json :: fidelite_onnx/onnx_int8/accord"
+      ]
+    },
+    "0.5185": {
+      "valeur": 0.5185,
+      "occurrences_memoire": [
+        "annexes.tex:370",
+        "chap_06.tex:642",
+        "chap_06.tex:717",
+        "chap_06.tex:762",
+        "chap_06.tex:782",
+        "chap_06.tex:792",
+        "chap_06.tex:1105",
+        "chap_06.tex:1172",
+        "conclusion.tex:25",
+        "global_config.tex:57"
+      ],
+      "sources": [
+        "metrics/rag_eval.json :: moteurs/hybride/precision_sur_rendus",
+        "metrics/rag_protocoles.json :: moteurs/hybride/annote/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/7/precision_sur_rendus",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/0/precision_sur_rendus"
+      ]
+    },
+    "0.5325": {
+      "valeur": 0.5325,
+      "occurrences_memoire": [
+        "chap_04.tex:602"
+      ],
+      "sources": [
+        "models/camembert_metadata.json :: f1_macro_sans_enrichissement"
+      ]
+    },
+    "0.5333": {
+      "valeur": 0.5333,
+      "occurrences_memoire": [
+        "annexes.tex:389",
+        "chap_06.tex:572",
+        "chap_06.tex:594",
+        "chap_06.tex:627",
+        "chap_06.tex:650"
+      ],
+      "sources": [
+        "metrics/rag_eval.json :: moteurs/hybride/mrr_at_3",
+        "metrics/rag_protocoles.json :: moteurs/hybride/annote/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/0/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/1/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/2/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/3/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/4/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/5/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/6/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/7/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/9/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/10/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/11/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/12/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/13/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/14/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/0/mrr_at_3",
+        "metrics/seuil_rag_hors_echantillon.json :: validation_croisee/precisions_hors_echantillon/3",
+        "models/registry/v1/metrics.json :: f1_Sécurité",
+        "models/registry/v2/metrics.json :: f1_Sécurité",
+        "models/registry/v3/metrics.json :: f1_Sécurité"
+      ]
+    },
+    "0.5613": {
+      "valeur": 0.5613,
+      "occurrences_memoire": [
+        "chap_04.tex:640"
+      ],
+      "sources": [
+        "metrics/camembert_servable.json :: resultats/C_sans_enrichissement/camembert_seul/f1_macro"
+      ]
+    },
+    "0.5652": {
+      "valeur": 0.5652,
+      "occurrences_memoire": [
+        "chap_06.tex:776"
+      ],
+      "sources": [
+        "metrics/camembert_servi_eval.json :: test/camembert_seul/f1_par_classe/Sécurité",
+        "metrics/seuil_rag_hors_echantillon.json :: precision_dans_l_echantillon"
+      ]
+    },
+    "0.5658": {
+      "valeur": 0.5658,
+      "occurrences_memoire": [
+        "chap_06.tex:572",
+        "chap_06.tex:595"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/0/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/1/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/2/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/3/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/4/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/5/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/10/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/11/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/12/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/13/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/14/ndcg_at_3"
+      ]
+    },
+    "0.5667": {
+      "valeur": 0.5667,
+      "occurrences_memoire": [
+        "chap_06.tex:629",
+        "chap_06.tex:650"
+      ],
+      "sources": [
+        "metrics/rag_protocoles.json :: moteurs/hybride/proxy/mrr_at_3"
+      ]
+    },
+    "0.5678": {
+      "valeur": 0.5678,
+      "occurrences_memoire": [
+        "annexes.tex:389",
+        "chap_06.tex:627"
+      ],
+      "sources": [
+        "metrics/rag_eval.json :: moteurs/hybride/ndcg_at_3",
+        "metrics/rag_protocoles.json :: moteurs/hybride/annote/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/6/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/7/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/9/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/0/ndcg_at_3"
+      ]
+    },
+    "0.5683": {
+      "valeur": 0.5683,
+      "occurrences_memoire": [
+        "chap_04.tex:637"
+      ],
+      "sources": [
+        "metrics/camembert_servable.json :: resultats/B_production_classification_par_defaut/camembert_seul/f1_macro",
+        "metrics/cout_longueur_sequence.json :: par_longueur/48/f1_macro_seul",
+        "metrics/cout_longueur_sequence.json :: par_longueur/64/f1_macro_seul",
+        "metrics/cout_longueur_sequence.json :: par_longueur/96/f1_macro_seul",
+        "metrics/cout_longueur_sequence.json :: par_longueur/128/f1_macro_seul"
+      ]
+    },
+    "0.5685": {
+      "valeur": 0.5685,
+      "occurrences_memoire": [
+        "annexes.tex:328",
+        "chap_04.tex:515",
+        "chap_04.tex:583",
+        "chap_04.tex:602",
+        "chap_04.tex:635",
+        "chap_06.tex:86"
+      ],
+      "sources": [
+        "metrics/camembert_servable.json :: resultats/A_enrichissement_reel/camembert_seul/f1_macro",
+        "metrics/campagne_apres_nettoyage.json :: resultats/04_camembert_seul/f1_macro",
+        "metrics/campagne_avant_nettoyage.json :: resultats/05_camembert_seul/f1_macro",
+        "models/camembert_metadata.json :: f1_macro"
+      ]
+    },
+    "0.5750": {
+      "valeur": 0.575,
+      "occurrences_memoire": [
+        "chap_06.tex:570",
+        "chap_06.tex:594",
+        "chap_06.tex:623",
+        "chap_06.tex:650"
+      ],
+      "sources": [
+        "metrics/rag_eval.json :: moteurs/semantique/mrr_at_3",
+        "metrics/rag_protocoles.json :: moteurs/semantique/annote/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/0/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/1/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/2/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/3/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/4/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/5/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/6/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/7/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/8/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/9/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/10/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/14/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/5/mrr_at_3"
+      ]
+    },
+    "0.5752": {
+      "valeur": 0.5752,
+      "occurrences_memoire": [
+        "chap_06.tex:539",
+        "chap_06.tex:728"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/distribution/moyenne",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/0/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/1/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/2/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/3/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/4/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/5/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/6/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/7/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/8/score_similarite_moyen",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/5/score_similarite_moyen"
+      ]
+    },
+    "0.5803": {
+      "valeur": 0.5803,
+      "occurrences_memoire": [
+        "chap_04.tex:298",
+        "chap_04.tex:302",
+        "chap_04.tex:304"
+      ],
+      "sources": [
+        "metrics/campagne_apres_nettoyage.json :: resultats/02_tfidf_seul/accuracy",
+        "metrics/campagne_avant_nettoyage.json :: resultats/02_tfidf_seul/accuracy"
+      ]
+    },
+    "0.5827": {
+      "valeur": 0.5827,
+      "occurrences_memoire": [
+        "annexes.tex:279",
+        "annexes.tex:326",
+        "chap_04.tex:173",
+        "chap_04.tex:241",
+        "chap_04.tex:415",
+        "chap_06.tex:29",
+        "chap_06.tex:88",
+        "chap_06.tex:159",
+        "chap_06.tex:222",
+        "chap_06.tex:970",
+        "chap_06.tex:1000",
+        "chap_06.tex:1096",
+        "chap_06.tex:1163",
+        "conclusion.tex:22",
+        "conclusion.tex:33",
+        "global_config.tex:55"
+      ],
+      "sources": [
+        "metrics/campagne_apres_nettoyage.json :: resultats/03_tfidf_regles/f1_macro"
+      ]
+    },
+    "0.5829": {
+      "valeur": 0.5829,
+      "occurrences_memoire": [
+        "annexes.tex:281",
+        "chap_06.tex:29",
+        "chap_06.tex:300"
+      ],
+      "sources": [
+        "metrics/ml_eval_candidate.json :: f1_macro_heuristiques",
+        "metrics/portee_f1_macro.json :: portees/union_vraies_et_predites/f1_macro",
+        "metrics/promotion_decision.json :: metriques_candidat/f1_macro_heuristiques",
+        "metrics/promotion_decision.json :: metriques_production/f1_macro_heuristiques",
+        "models/candidate_metadata.json :: f1_macro_avec_heuristiques",
+        "models/registry/v4/metrics.json :: f1_macro_heuristiques",
+        "models/registry/v4/model_metadata.json :: f1_macro_avec_heuristiques"
+      ]
+    },
+    "0.5868": {
+      "valeur": 0.5868,
+      "occurrences_memoire": [
+        "chap_06.tex:316"
+      ],
+      "sources": [
+        "metrics/ml_eval_candidate.json :: precision_macro",
+        "metrics/promotion_decision.json :: metriques_candidat/precision_macro",
+        "metrics/promotion_decision.json :: metriques_production/precision_macro",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/12/score_similarite_moyen",
+        "models/candidate_metadata.json :: precision_macro",
+        "models/registry/v4/metrics.json :: precision_macro",
+        "models/registry/v4/model_metadata.json :: precision_macro"
+      ]
+    },
+    "0.6000": {
+      "valeur": 0.6,
+      "occurrences_memoire": [
+        "chap_06.tex:625",
+        "chap_06.tex:650"
+      ],
+      "sources": [
+        "metrics/calibration_confiance.json :: resultats/ml_seul/tranches/1/borne_haute",
+        "metrics/calibration_confiance.json :: resultats/ml_seul/tranches/2/borne_basse",
+        "metrics/calibration_confiance.json :: resultats/ml_seul/courbe/30/seuil",
+        "metrics/calibration_confiance.json :: resultats/chaine_servie/tranches/1/borne_haute",
+        "metrics/calibration_confiance.json :: resultats/chaine_servie/tranches/2/borne_basse",
+        "metrics/calibration_confiance.json :: resultats/chaine_servie/courbe/30/seuil",
+        "metrics/camembert_servable.json :: resultats/A_enrichissement_reel/camembert_et_regles/rappel_securite",
+        "metrics/camembert_servable_robustesse.json :: seuil_regles",
+        "metrics/camembert_servable_robustesse.json :: par_tirage/0/rappel_securite_publie",
+        "metrics/campagne_apres_nettoyage.json :: protocole/seuil_confiance",
+        "metrics/campagne_avant_nettoyage.json :: protocole/seuil_confiance",
+        "metrics/coherence_entree_modele.json :: protocole/seuil_confiance",
+        "metrics/ml_monitor.json :: confiance/seuil",
+        "metrics/portee_f1_macro.json :: seuil_de_confiance",
+        "metrics/rag_protocoles.json :: moteurs/semantique/proxy/mrr_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/par_seuil/12/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: moteurs/lexical/seuils/12",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/12/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/seuils/12",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/par_seuil/12/seuil_pertinence",
+        "metrics/rag_seuil_balayage.json :: moteurs/hybride/seuils/12",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/1/alpha",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/2/mrr_at_3",
+        "models/candidate_metadata.json :: confidence_threshold",
+        "models/model_metadata.json :: confidence_threshold",
+        "models/registry/v1/model_metadata.json :: confidence_threshold",
+        "models/registry/v2/lineage.json :: confidence_threshold",
+        "models/registry/v2/model_metadata.json :: confidence_threshold",
+        "models/registry/v3/lineage.json :: confidence_threshold",
+        "models/registry/v3/model_metadata.json :: confidence_threshold",
+        "models/registry/v4/lineage.json :: confidence_threshold",
+        "models/registry/v4/model_metadata.json :: confidence_threshold"
+      ]
+    },
+    "0.6022": {
+      "valeur": 0.6022,
+      "occurrences_memoire": [
+        "chap_06.tex:629"
+      ],
+      "sources": [
+        "metrics/rag_protocoles.json :: moteurs/hybride/proxy/ndcg_at_3"
+      ]
+    },
+    "0.6073": {
+      "valeur": 0.6073,
+      "occurrences_memoire": [
+        "chap_06.tex:570",
+        "chap_06.tex:595",
+        "chap_06.tex:623"
+      ],
+      "sources": [
+        "metrics/rag_eval.json :: moteurs/semantique/ndcg_at_3",
+        "metrics/rag_protocoles.json :: moteurs/semantique/annote/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/0/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/1/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/2/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/3/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/4/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/5/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/6/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/7/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/8/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/9/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/10/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/par_seuil/14/ndcg_at_3",
+        "metrics/rag_seuil_balayage.json :: balayage_alpha/par_alpha/5/ndcg_at_3"
+      ]
+    },
+    "0.6099": {
+      "valeur": 0.6099,
+      "occurrences_memoire": [
+        "chap_06.tex:316"
+      ],
+      "sources": [
+        "metrics/ml_eval_candidate.json :: recall_macro",
+        "metrics/promotion_decision.json :: metriques_candidat/recall_macro",
+        "metrics/promotion_decision.json :: metriques_production/recall_macro",
+        "models/candidate_metadata.json :: recall_macro",
+        "models/registry/v4/metrics.json :: recall_macro",
+        "models/registry/v4/model_metadata.json :: recall_macro"
+      ]
+    },
+    "0.6257": {
+      "valeur": 0.6257,
+      "occurrences_memoire": [
+        "chap_06.tex:625"
+      ],
+      "sources": [
+        "metrics/rag_protocoles.json :: moteurs/semantique/proxy/ndcg_at_3"
+      ]
+    },
+    "0.6995": {
+      "valeur": 0.6995,
+      "occurrences_memoire": [
+        "annexes.tex:353",
+        "chap_06.tex:284",
+        "chap_06.tex:295",
+        "chap_06.tex:310"
+      ],
+      "sources": [
+        "metrics/ml_eval.json :: f1_macro_classes_evaluables",
+        "metrics/ml_eval_candidate.json :: f1_macro_classes_evaluables",
+        "metrics/portee_f1_macro.json :: portees/categories_representees_au_test/f1_macro",
+        "metrics/promotion_decision.json :: metriques_candidat/f1_macro_classes_evaluables",
+        "metrics/promotion_decision.json :: metriques_production/f1_macro_classes_evaluables",
+        "metrics/promotion_decision.json :: comparaison/valeur_production",
+        "metrics/promotion_decision.json :: comparaison/valeur_candidat",
+        "models/candidate_metadata.json :: f1_macro_classes_evaluables",
+        "models/registry/v4/metrics.json :: f1_macro_classes_evaluables",
+        "models/registry/v4/model_metadata.json :: f1_macro_classes_evaluables"
+      ]
+    },
+    "0.7024": {
+      "valeur": 0.7024,
+      "occurrences_memoire": [
+        "chap_06.tex:732"
+      ],
+      "sources": [
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/distribution/max",
+        "metrics/rag_seuil_balayage.json :: moteurs/semantique/distribution/meilleur_par_requete/6"
+      ]
+    },
+    "0.7513": {
+      "valeur": 0.7513,
+      "occurrences_memoire": [
+        "chap_06.tex:159"
+      ],
+      "sources": [
+        "metrics/campagne_avant_nettoyage.json :: resultats/04_tfidf_regles_v11/f1_macro"
+      ]
+    },
+    "0.7646": {
+      "valeur": 0.7646,
+      "occurrences_memoire": [
+        "chap_06.tex:808"
+      ],
+      "sources": [
+        "models/semantic_rag_metadata.json :: score_moyen_top1_lex"
+      ]
+    },
+    "0.7924": {
+      "valeur": 0.7924,
+      "occurrences_memoire": [
+        "chap_04.tex:640"
+      ],
+      "sources": [
+        "metrics/camembert_servable.json :: resultats/C_sans_enrichissement/camembert_et_regles/f1_macro"
+      ]
+    },
+    "0.8202": {
+      "valeur": 0.8202,
+      "occurrences_memoire": [
+        "annexes.tex:356",
+        "chap_06.tex:286"
+      ],
+      "sources": [
+        "metrics/coherence_entree_modele.json :: variantes/description_seule/avec_regles/exactitude",
+        "metrics/coherence_entree_modele.json :: variantes/titre_et_description/avec_regles/exactitude",
+        "metrics/ml_eval.json :: accuracy",
+        "metrics/ml_eval.json :: recall_weighted",
+        "metrics/ml_eval_candidate.json :: accuracy",
+        "metrics/ml_eval_candidate.json :: recall_weighted",
+        "metrics/promotion_decision.json :: metriques_candidat/accuracy",
+        "metrics/promotion_decision.json :: metriques_candidat/recall_weighted",
+        "metrics/promotion_decision.json :: metriques_production/accuracy",
+        "metrics/promotion_decision.json :: metriques_production/recall_weighted",
+        "models/candidate_metadata.json :: accuracy_test",
+        "models/registry/v4/metrics.json :: accuracy",
+        "models/registry/v4/metrics.json :: recall_weighted",
+        "models/registry/v4/model_metadata.json :: accuracy_test"
+      ]
+    },
+    "0.8303": {
+      "valeur": 0.8303,
+      "occurrences_memoire": [
+        "chap_06.tex:756"
+      ],
+      "sources": [
+        "metrics/seuil_rag_hors_echantillon.json :: pouvoir_discriminant"
+      ]
+    },
+    "0.8343": {
+      "valeur": 0.8343,
+      "occurrences_memoire": [
+        "annexes.tex:330",
+        "chap_04.tex:173",
+        "chap_04.tex:635",
+        "chap_06.tex:59",
+        "chap_06.tex:88",
+        "chap_06.tex:158",
+        "chap_06.tex:222",
+        "chap_06.tex:967",
+        "chap_06.tex:1000",
+        "chap_06.tex:1096",
+        "chap_06.tex:1161",
+        "conclusion.tex:19",
+        "global_config.tex:53"
+      ],
+      "sources": [
+        "metrics/camembert_servable.json :: resultats/A_enrichissement_reel/camembert_et_regles/f1_macro",
+        "metrics/camembert_servable_robustesse.json :: par_tirage/0/f1_publie",
+        "metrics/campagne_apres_nettoyage.json :: resultats/05_camembert_regles/f1_macro"
+      ]
+    },
+    "0.8351": {
+      "valeur": 0.8351,
+      "occurrences_memoire": [
+        "chap_04.tex:550"
+      ],
+      "sources": [
+        "metrics/validation_camembert.json :: resultats/au_hasard/test_f1_macro_avec_regles"
+      ]
+    },
+    "0.8411": {
+      "valeur": 0.8411,
+      "occurrences_memoire": [
+        "chap_04.tex:552"
+      ],
+      "sources": [
+        "metrics/validation_camembert.json :: resultats/par_titre/test_f1_macro_avec_regles"
+      ]
+    },
+    "0.8644": {
+      "valeur": 0.8644,
+      "occurrences_memoire": [
+        "annexes.tex:333",
+        "chap_04.tex:173",
+        "chap_04.tex:637",
+        "chap_04.tex:658",
+        "chap_06.tex:177",
+        "chap_06.tex:968",
+        "chap_06.tex:1001",
+        "chap_06.tex:1096",
+        "chap_06.tex:1162",
+        "conclusion.tex:20",
+        "conclusion.tex:36",
+        "global_config.tex:53"
+      ],
+      "sources": [
+        "metrics/camembert_servable.json :: resultats/B_production_classification_par_defaut/camembert_et_regles/f1_macro",
+        "metrics/camembert_servable_robustesse.json :: par_tirage/0/f1_servable",
+        "metrics/camembert_servable_robustesse.json :: resume/f1_servable_min",
+        "metrics/cout_longueur_sequence.json :: par_longueur/48/f1_macro_avec_regles",
+        "metrics/cout_longueur_sequence.json :: par_longueur/64/f1_macro_avec_regles",
+        "metrics/cout_longueur_sequence.json :: par_longueur/96/f1_macro_avec_regles",
+        "metrics/cout_longueur_sequence.json :: par_longueur/128/f1_macro_avec_regles"
+      ]
+    },
+    "0.9199": {
+      "valeur": 0.9199,
+      "occurrences_memoire": [
+        "chap_04.tex:535",
+        "chap_04.tex:550",
+        "chap_04.tex:558"
+      ],
+      "sources": [
+        "metrics/validation_camembert.json :: resultats/au_hasard/histoire_validation/7/f1_macro",
+        "metrics/validation_camembert.json :: resultats/au_hasard/histoire_validation/8/f1_macro",
+        "metrics/validation_camembert.json :: resultats/au_hasard/histoire_validation/9/f1_macro",
+        "metrics/validation_camembert.json :: resultats/au_hasard/meilleure_epoque/f1_macro"
+      ]
+    },
+    "0.9321": {
+      "valeur": 0.9321,
+      "occurrences_memoire": [
+        "chap_06.tex:808"
+      ],
+      "sources": [
+        "models/semantic_rag_metadata.json :: score_moyen_top1_sem"
+      ]
+    },
+    "0.9375": {
+      "valeur": 0.9375,
+      "occurrences_memoire": [
+        "chap_06.tex:758"
+      ],
+      "sources": [
+        "metrics/seuil_rag_hors_echantillon.json :: precision_par_tranche/3/precision"
+      ]
+    },
+    "0.9499": {
+      "valeur": 0.9499,
+      "occurrences_memoire": [
+        "chap_06.tex:158"
+      ],
+      "sources": [
+        "metrics/campagne_avant_nettoyage.json :: resultats/07_camembert_regles_v11/f1_macro"
+      ]
+    }
+  },
+  "orphelines": {
+    "0.0334": {
+      "valeur": 0.0334,
+      "occurrences_memoire": [
+        "chap_06.tex:601"
+      ],
+      "sources": []
+    },
+    "0.1932": {
+      "valeur": 0.1932,
+      "occurrences_memoire": [
+        "chap_06.tex:86"
+      ],
+      "sources": []
+    },
+    "0.2074": {
+      "valeur": 0.2074,
+      "occurrences_memoire": [
+        "chap_06.tex:90"
+      ],
+      "sources": []
+    },
+    "0.2516": {
+      "valeur": 0.2516,
+      "occurrences_memoire": [
+        "chap_06.tex:88"
+      ],
+      "sources": []
+    },
+    "0.2658": {
+      "valeur": 0.2658,
+      "occurrences_memoire": [
+        "chap_06.tex:90"
+      ],
+      "sources": []
+    },
+    "0.3746": {
+      "valeur": 0.3746,
+      "occurrences_memoire": [
+        "annexes.tex:401",
+        "chap_04.tex:197",
+        "chap_04.tex:298",
+        "chap_04.tex:300"
+      ],
+      "sources": []
+    },
+    "0.4789": {
+      "valeur": 0.4789,
+      "occurrences_memoire": [
+        "annexes.tex:401",
+        "chap_04.tex:300"
+      ],
+      "sources": []
+    },
+    "0.5719": {
+      "valeur": 0.5719,
+      "occurrences_memoire": [
+        "annexes.tex:304",
+        "annexes.tex:377",
+        "chap_06.tex:183"
+      ],
+      "sources": []
+    }
+  }
+}

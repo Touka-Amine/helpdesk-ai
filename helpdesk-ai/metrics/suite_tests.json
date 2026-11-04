@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-10T02:55:07+00:00",
+  "objet": "Decompte mesure de la suite de tests, cite par le memoire.",
+  "total": 260,
+  "integration_api": 26,
+  "rejoues_par_l_integration_continue": 234,
+  "lents_deselectionnables": 16,
+  "commande_de_l_integration_continue": "pytest tests/ --ignore=tests/test_api_integration.py",
+  "couverture_src": {
+    "instructions": 1891,
+    "non_couvertes": 926,
+    "couverture_pourcent": 51
+  },
+  "couverture_api_et_src": {
+    "instructions": 3491,
+    "non_couvertes": 1482,
+    "couverture_pourcent": 58
+  }
+}

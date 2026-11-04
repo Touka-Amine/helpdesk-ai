@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-14T06:04:26+00:00",
+  "objet": "Affirmations du memoire confrontees a l'etat du depot.",
+  "n_controles": 7,
+  "n_anomalies": 0,
+  "n_indecidables": 0,
+  "controles": [
+    {
+      "nom": "nombre de tests de la suite",
+      "verite_du_depot": "260 tests collectes, 234 rejoues par l'integration continue",
+      "etat": "ok",
+      "occurrences_contraires": [],
+      "affirmation_attendue_absente": false
+    },
+    {
+      "nom": "couverture de la suite",
+      "verite_du_depot": "51 % sur le perimetre src/",
+      "etat": "ok",
+      "occurrences_contraires": [],
+      "affirmation_attendue_absente": false
+    },
+    {
+      "nom": "pseudonymisation du corpus",
+      "verite_du_depot": "module livre, audit sur 322 fragments : conforme",
+      "etat": "ok",
+      "occurrences_contraires": [],
+      "affirmation_attendue_absente": false
+    },
+    {
+      "nom": "EF-07, orientation selon la confiance",
+      "verite_du_depot": "api/services/routage_service.py livre et teste",
+      "etat": "ok",
+      "occurrences_contraires": [],
+      "affirmation_attendue_absente": false
+    },
+    {
+      "nom": "EF-11, resume automatique",
+      "verite_du_depot": "src/models/resume.py livre, gain mesure dans resume_eval.json",
+      "etat": "ok",
+      "occurrences_contraires": [],
+      "affirmation_attendue_absente": false
+    },
+    {
+      "nom": "EF-12, suggestion de priorite",
+      "verite_du_depot": "mesuree et NON retenue (metrics/priorite_eval.json)",
+      "etat": "ok",
+      "occurrences_contraires": [],
+      "affirmation_attendue_absente": false
+    },
+    {
+      "nom": "EF-13, analyse de tonalite",
+      "verite_du_depot": "mesuree, impossible sur ce corpus (metrics/tonalite_eval.json)",
+      "etat": "ok",
+      "occurrences_contraires": [],
+      "affirmation_attendue_absente": false
+    }
+  ]
+}

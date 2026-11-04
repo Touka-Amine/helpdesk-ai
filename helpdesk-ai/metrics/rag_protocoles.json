@@ -1,0 +1,102 @@
+{
+  "generated_at": "2026-10-09T21:39:59.143501+00:00",
+  "n_requetes_annotees": 40,
+  "top_k": 3,
+  "seuil": 0.35,
+  "lecture": "Un ecart positif signifie que l'approximation surestime la pertinence : elle compte bons des passages que l'annotateur a rejetes. Un ecart negatif signifie qu'elle en rejette que l'annotateur a juges utiles.",
+  "moteurs": {
+    "lexical": {
+      "annote": {
+        "precision_at_3": 0.1667,
+        "mrr_at_3": 0.5,
+        "ndcg_at_3": 0.5,
+        "taux_reponse": 1.0,
+        "taux_repli": 1.0,
+        "seuil_pertinence": 0.35,
+        "score_similarite_moyen": 0.213,
+        "n_requetes": 40,
+        "precision_sur_rendus": 0.3571,
+        "resultats_par_requete": 1.4,
+        "recall_at_3": 0.1896
+      },
+      "proxy": {
+        "precision_at_3": 0.1667,
+        "mrr_at_3": 0.4458,
+        "ndcg_at_3": 0.4533,
+        "taux_reponse": 1.0,
+        "taux_repli": 1.0,
+        "seuil_pertinence": 0.35,
+        "score_similarite_moyen": 0.213,
+        "n_requetes": 40,
+        "precision_sur_rendus": 0.3571,
+        "resultats_par_requete": 1.4,
+        "recall_at_3": null,
+        "note_rappel": "Non calcule en mode proxy : l'ensemble des pertinents est la categorie entiere, ce qui rend le rappel@k mecaniquement proche de zero et sans rapport avec la qualite du moteur."
+      },
+      "ecart_precision_at_3": 0.0,
+      "ecart_precision_sur_rendus": 0.0
+    },
+    "semantique": {
+      "annote": {
+        "precision_at_3": 0.3333,
+        "mrr_at_3": 0.575,
+        "ndcg_at_3": 0.6073,
+        "taux_reponse": 1.0,
+        "taux_repli": 0.0,
+        "seuil_pertinence": 0.35,
+        "score_similarite_moyen": 0.5905,
+        "n_requetes": 40,
+        "precision_sur_rendus": 0.381,
+        "resultats_par_requete": 2.62,
+        "recall_at_3": 0.4604
+      },
+      "proxy": {
+        "precision_at_3": 0.3333,
+        "mrr_at_3": 0.6,
+        "ndcg_at_3": 0.6257,
+        "taux_reponse": 1.0,
+        "taux_repli": 0.0,
+        "seuil_pertinence": 0.35,
+        "score_similarite_moyen": 0.5905,
+        "n_requetes": 40,
+        "precision_sur_rendus": 0.381,
+        "resultats_par_requete": 2.62,
+        "recall_at_3": null,
+        "note_rappel": "Non calcule en mode proxy : l'ensemble des pertinents est la categorie entiere, ce qui rend le rappel@k mecaniquement proche de zero et sans rapport avec la qualite du moteur."
+      },
+      "ecart_precision_at_3": 0.0,
+      "ecart_precision_sur_rendus": 0.0
+    },
+    "hybride": {
+      "annote": {
+        "precision_at_3": 0.35,
+        "mrr_at_3": 0.5333,
+        "ndcg_at_3": 0.5678,
+        "taux_reponse": 1.0,
+        "taux_repli": 0.15,
+        "seuil_pertinence": 0.35,
+        "score_similarite_moyen": 0.3766,
+        "n_requetes": 40,
+        "precision_sur_rendus": 0.5185,
+        "resultats_par_requete": 2.02,
+        "recall_at_3": 0.4396
+      },
+      "proxy": {
+        "precision_at_3": 0.3417,
+        "mrr_at_3": 0.5667,
+        "ndcg_at_3": 0.6022,
+        "taux_reponse": 1.0,
+        "taux_repli": 0.15,
+        "seuil_pertinence": 0.35,
+        "score_similarite_moyen": 0.3766,
+        "n_requetes": 40,
+        "precision_sur_rendus": 0.5062,
+        "resultats_par_requete": 2.02,
+        "recall_at_3": null,
+        "note_rappel": "Non calcule en mode proxy : l'ensemble des pertinents est la categorie entiere, ce qui rend le rappel@k mecaniquement proche de zero et sans rapport avec la qualite du moteur."
+      },
+      "ecart_precision_at_3": -0.0083,
+      "ecart_precision_sur_rendus": -0.0123
+    }
+  }
+}

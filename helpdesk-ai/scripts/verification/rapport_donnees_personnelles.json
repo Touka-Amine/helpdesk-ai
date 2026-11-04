@@ -1,0 +1,104 @@
+{
+  "date": "2026-10-04T08:42:07+00:00",
+  "exigence": "ENF-04 (b) — traitement des donnees personnelles",
+  "reference": "data/raw/HelpDesk1.csv",
+  "fragments_recherches": 322,
+  "numeros_consideres_comme_de_service": [
+    "80080300"
+  ],
+  "emplacements_en_defaut": {},
+  "zone_applicative_comptes": [
+    "data/tickets.db"
+  ],
+  "bases_de_test_a_retirer": [
+    "data/tickets_admin_comptes_test.db",
+    "data/tickets_ci.db",
+    "data/tickets_reset_test.db",
+    "data/tickets_test.db"
+  ],
+  "tout_examine": {
+    "data/tickets.db": {
+      "users": {
+        "fragments_de_noms": [
+          "amine",
+          "mohamed"
+        ],
+        "n_fragments": 2,
+        "adresse_de_courriel": [
+          "amine.toukabri00@gmail.com",
+          "mohamedaminetoukabri089@gmail.com"
+        ],
+        "zone": "application"
+      }
+    },
+    "data/tickets_admin_comptes_test.db": {
+      "users": {
+        "fragments_de_noms": [
+          "amine",
+          "mohamed"
+        ],
+        "n_fragments": 2,
+        "adresse_de_courriel": [
+          "admin.comptes@exemple.com",
+          "aminetoukabri@gmail.com",
+          "client.comptes@exemple.com",
+          "compte.test@exemple.local",
+          "integration_test@test.com",
+          "mohamedaminetoukabri089@gmail.com",
+          "new_user_test@test.com",
+          "system@helpdesk-ai.local",
+          "systeme.comptes@exemple.com"
+        ],
+        "zone": "application"
+      }
+    },
+    "data/tickets_ci.db": {
+      "users": {
+        "fragments_de_noms": [
+          "amine",
+          "mohamed"
+        ],
+        "n_fragments": 2,
+        "adresse_de_courriel": [
+          "aminetoukabri@gmail.com",
+          "mohamedaminetoukabri089@gmail.com",
+          "system@helpdesk-ai.local"
+        ],
+        "zone": "application"
+      }
+    },
+    "data/tickets_reset_test.db": {
+      "users": {
+        "fragments_de_noms": [
+          "amine",
+          "mohamed"
+        ],
+        "n_fragments": 2,
+        "adresse_de_courriel": [
+          "aminetoukabri@gmail.com",
+          "mohamedaminetoukabri089@gmail.com",
+          "system@helpdesk-ai.local"
+        ],
+        "zone": "application"
+      }
+    },
+    "data/tickets_test.db": {
+      "users": {
+        "fragments_de_noms": [
+          "amine",
+          "mohamed"
+        ],
+        "n_fragments": 2,
+        "adresse_de_courriel": [
+          "aminetoukabri@gmail.com",
+          "integration_test@test.com",
+          "mohamedaminetoukabri089@gmail.com",
+          "new_user_test@test.com",
+          "system@helpdesk-ai.local"
+        ],
+        "zone": "application"
+      }
+    }
+  },
+  "conforme": true
+}

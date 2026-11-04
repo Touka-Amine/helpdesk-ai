@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-04T08:51:30+00:00",
+  "protocole": "decoupage du pipeline, jeu de test GELE (data/splits/test.csv)",
+  "entree": "priorite saisie + titre + description, classification absente",
+  "max_length": 64,
+  "train": 1288,
+  "validation": 156,
+  "test": {
+    "camembert_seul": {
+      "f1_macro_huit_classes": 0.204,
+      "f1_macro_classes_presentes": 0.3264,
+      "accuracy": 0.3146,
+      "rappel_securite": 0.3939,
+      "f1_par_classe": {
+        "Applicatifs": 0.0,
+        "Backup": 0.0,
+        "Communication": 0.0,
+        "Infrastructure": 0.0,
+        "Microsoft": 0.5165,
+        "Réseau": 0.0,
+        "Système": 0.5503,
+        "Sécurité": 0.5652
+      }
+    },
+    "camembert_et_regles": {
+      "f1_macro_huit_classes": 0.4366,
+      "f1_macro_classes_presentes": 0.6985,
+      "accuracy": 0.7865,
+      "rappel_securite": 1.0,
+      "f1_par_classe": {
+        "Applicatifs": 0.0,
+        "Backup": 0.0,
+        "Communication": 0.0,
+        "Infrastructure": 0.7947,
+        "Microsoft": 1.0,
+        "Réseau": 0.0,
+        "Système": 0.698,
+        "Sécurité": 1.0
+      }
+    }
+  },
+  "classes_presentes_au_test": [
+    "Infrastructure",
+    "Microsoft",
+    "Réseau",
+    "Système",
+    "Sécurité"
+  ],
+  "validation_f1_macro": 0.6231
+}

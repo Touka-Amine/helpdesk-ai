@@ -1,0 +1,1057 @@
+{
+  "date": "2026-10-10T08:26:27+00:00",
+  "dictionnaire": "C:\\Users\\Amin\\AppData\\Local\\Programs\\MiKTeX\\hunspell\\dicts",
+  "formes_connues": 432403,
+  "lexique_du_projet": 126,
+  "n_formes_inconnues": 145,
+  "formes": [
+    {
+      "mot": "Access",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:59"
+      ]
+    },
+    {
+      "mot": "Area",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:67"
+      ]
+    },
+    {
+      "mot": "Assessment",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:57"
+      ]
+    },
+    {
+      "mot": "Best",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:24"
+      ]
+    },
+    {
+      "mot": "Bidirectional",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:22"
+      ]
+    },
+    {
+      "mot": "Cross-Industry",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:26"
+      ]
+    },
+    {
+      "mot": "Facebook",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:33"
+      ]
+    },
+    {
+      "mot": "HyperText",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:35"
+      ]
+    },
+    {
+      "mot": "Its",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:70"
+      ]
+    },
+    {
+      "mot": "Low-Rank",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:43"
+      ]
+    },
+    {
+      "mot": "Matching",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:24"
+      ]
+    },
+    {
+      "mot": "Mean",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:48"
+      ]
+    },
+    {
+      "mot": "Mining",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:26"
+      ]
+    },
+    {
+      "mot": "Minority",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:62"
+      ]
+    },
+    {
+      "mot": "Model",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:42"
+      ]
+    },
+    {
+      "mot": "Modeling",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:66"
+      ]
+    },
+    {
+      "mot": "Natural",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:49"
+      ]
+    },
+    {
+      "mot": "Network",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:67"
+      ]
+    },
+    {
+      "mot": "Operations",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:46"
+      ]
+    },
+    {
+      "mot": "Organization",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:38"
+      ]
+    },
+    {
+      "mot": "Over-sampling",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:62"
+      ]
+    },
+    {
+      "mot": "Parameter-Efficient",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:53"
+      ]
+    },
+    {
+      "mot": "Process",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:26"
+      ]
+    },
+    {
+      "mot": "Processing",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:49"
+      ]
+    },
+    {
+      "mot": "Programming",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:20"
+      ]
+    },
+    {
+      "mot": "Protocol",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:35"
+      ]
+    },
+    {
+      "mot": "Rank",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:48"
+      ]
+    },
+    {
+      "mot": "Reciprocal",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:48"
+      ]
+    },
+    {
+      "mot": "Representations",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:22"
+      ]
+    },
+    {
+      "mot": "Resolved",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:74"
+      ]
+    },
+    {
+      "mot": "Role-Based",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:59"
+      ]
+    },
+    {
+      "mot": "Search",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:33"
+      ]
+    },
+    {
+      "mot": "Similarity",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:33"
+      ]
+    },
+    {
+      "mot": "StandardLists",
+      "occurrences": 1,
+      "emplacements": [
+        "main.tex:15"
+      ]
+    },
+    {
+      "mot": "Standardization",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:38"
+      ]
+    },
+    {
+      "mot": "Synthetic",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:62"
+      ]
+    },
+    {
+      "mot": "This",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:70"
+      ]
+    },
+    {
+      "mot": "Three",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:83"
+      ]
+    },
+    {
+      "mot": "Transfer",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:35"
+      ]
+    },
+    {
+      "mot": "Unified",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:66"
+      ]
+    },
+    {
+      "mot": "Wide",
+      "occurrences": 1,
+      "emplacements": [
+        "acronymes.tex:67"
+      ]
+    },
+    {
+      "mot": "above",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:84"
+      ]
+    },
+    {
+      "mot": "across",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:74"
+      ]
+    },
+    {
+      "mot": "actually",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:77"
+      ]
+    },
+    {
+      "mot": "adapted",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:75"
+      ]
+    },
+    {
+      "mot": "administrator",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:83"
+      ]
+    },
+    {
+      "mot": "already",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:72"
+      ]
+    },
+    {
+      "mot": "best",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:75"
+      ]
+    },
+    {
+      "mot": "bibintoc",
+      "occurrences": 1,
+      "emplacements": [
+        "main.tex:118"
+      ]
+    },
+    {
+      "mot": "bound",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:80"
+      ]
+    },
+    {
+      "mot": "categories",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:74"
+      ]
+    },
+    {
+      "mot": "chain",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:78"
+      ]
+    },
+    {
+      "mot": "chosen",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:80"
+      ]
+    },
+    {
+      "mot": "closest",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:71"
+      ]
+    },
+    {
+      "mot": "company",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:83"
+      ]
+    },
+    {
+      "mot": "completed",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:75"
+      ]
+    },
+    {
+      "mot": "costly",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:77"
+      ]
+    },
+    {
+      "mot": "decision",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:83"
+      ]
+    },
+    {
+      "mot": "desk",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:69"
+      ]
+    },
+    {
+      "mot": "diversity",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:84"
+      ]
+    },
+    {
+      "mot": "executed",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:81"
+      ]
+    },
+    {
+      "mot": "give",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:77"
+      ]
+    },
+    {
+      "mot": "gives",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:77"
+      ]
+    },
+    {
+      "mot": "handled",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:72"
+      ]
+    },
+    {
+      "mot": "handles",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:69"
+      ]
+    },
+    {
+      "mot": "heading",
+      "occurrences": 1,
+      "emplacements": [
+        "main.tex:118"
+      ]
+    },
+    {
+      "mot": "holds",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:74"
+      ]
+    },
+    {
+      "mot": "hybrid",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:88"
+      ]
+    },
+    {
+      "mot": "img",
+      "occurrences": 1,
+      "emplacements": [
+        "main.tex:7"
+      ]
+    },
+    {
+      "mot": "inference",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:88"
+      ]
+    },
+    {
+      "mot": "itemize",
+      "occurrences": 1,
+      "emplacements": [
+        "commandes_locales.tex:39"
+      ]
+    },
+    {
+      "mot": "itemsep",
+      "occurrences": 1,
+      "emplacements": [
+        "commandes_locales.tex:40"
+      ]
+    },
+    {
+      "mot": "its",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:79"
+      ]
+    },
+    {
+      "mot": "leakage-free",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:76"
+      ]
+    },
+    {
+      "mot": "leaves",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:83"
+      ]
+    },
+    {
+      "mot": "leftmargin",
+      "occurrences": 1,
+      "emplacements": [
+        "commandes_locales.tex:40"
+      ]
+    },
+    {
+      "mot": "list",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:70"
+      ]
+    },
+    {
+      "mot": "locally",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:81"
+      ]
+    },
+    {
+      "mot": "low",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:84"
+      ]
+    },
+    {
+      "mot": "marked",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:74"
+      ]
+    },
+    {
+      "mot": "model",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:81"
+      ]
+    },
+    {
+      "mot": "natural",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:87"
+      ]
+    },
+    {
+      "mot": "network",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:83"
+      ]
+    },
+    {
+      "mot": "never",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:70"
+      ]
+    },
+    {
+      "mot": "on-premise",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:88"
+      ]
+    },
+    {
+      "mot": "over",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:76"
+      ]
+    },
+    {
+      "mot": "parsep",
+      "occurrences": 1,
+      "emplacements": [
+        "commandes_locales.tex:41"
+      ]
+    },
+    {
+      "mot": "partopsep",
+      "occurrences": 1,
+      "emplacements": [
+        "commandes_locales.tex:41"
+      ]
+    },
+    {
+      "mot": "per",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:80"
+      ]
+    },
+    {
+      "mot": "platform",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:71"
+      ]
+    },
+    {
+      "mot": "precision",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:80"
+      ]
+    },
+    {
+      "mot": "presents",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:70"
+      ]
+    },
+    {
+      "mot": "processing",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:87"
+      ]
+    },
+    {
+      "mot": "protocol",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:78"
+      ]
+    },
+    {
+      "mot": "reaches",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:76"
+      ]
+    },
+    {
+      "mot": "recalibrated",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:79"
+      ]
+    },
+    {
+      "mot": "remain",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:84"
+      ]
+    },
+    {
+      "mot": "rephrases",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:81"
+      ]
+    },
+    {
+      "mot": "requests",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:69"
+      ]
+    },
+    {
+      "mot": "response",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:84"
+      ]
+    },
+    {
+      "mot": "rests",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:83"
+      ]
+    },
+    {
+      "mot": "retrieval",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:79"
+      ]
+    },
+    {
+      "mot": "retrieved",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:81"
+      ]
+    },
+    {
+      "mot": "returns",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:79"
+      ]
+    },
+    {
+      "mot": "reused",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:70"
+      ]
+    },
+    {
+      "mot": "rules",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:75"
+      ]
+    },
+    {
+      "mot": "scoring",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:78"
+      ]
+    },
+    {
+      "mot": "search",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:88"
+      ]
+    },
+    {
+      "mot": "semantic",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:79"
+      ]
+    },
+    {
+      "mot": "shared",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:70"
+      ]
+    },
+    {
+      "mot": "similarity",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:79"
+      ]
+    },
+    {
+      "mot": "stated",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:84"
+      ]
+    },
+    {
+      "mot": "stratified",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:76"
+      ]
+    },
+    {
+      "mot": "subsidiaries",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:70"
+      ]
+    },
+    {
+      "mot": "text",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:71"
+      ]
+    },
+    {
+      "mot": "them",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:74"
+      ]
+    },
+    {
+      "mot": "thesis",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:70"
+      ]
+    },
+    {
+      "mot": "time",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:84"
+      ]
+    },
+    {
+      "mot": "title",
+      "occurrences": 1,
+      "emplacements": [
+        "main.tex:118"
+      ]
+    },
+    {
+      "mot": "too",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:77"
+      ]
+    },
+    {
+      "mot": "topsep",
+      "occurrences": 1,
+      "emplacements": [
+        "commandes_locales.tex:41"
+      ]
+    },
+    {
+      "mot": "true",
+      "occurrences": 1,
+      "emplacements": [
+        "main.tex:15"
+      ]
+    },
+    {
+      "mot": "upper",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:80"
+      ]
+    },
+    {
+      "mot": "very",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:81"
+      ]
+    },
+    {
+      "mot": "was",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:80"
+      ]
+    },
+    {
+      "mot": "way",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:77"
+      ]
+    },
+    {
+      "mot": "would",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:77"
+      ]
+    },
+    {
+      "mot": "written",
+      "occurrences": 1,
+      "emplacements": [
+        "global_config.tex:71"
+      ]
+    },
+    {
+      "mot": "Control",
+      "occurrences": 2,
+      "emplacements": [
+        "acronymes.tex:28",
+        "acronymes.tex:59"
+      ]
+    },
+    {
+      "mot": "Learning",
+      "occurrences": 2,
+      "emplacements": [
+        "acronymes.tex:45",
+        "acronymes.tex:46"
+      ]
+    },
+    {
+      "mot": "eight",
+      "occurrences": 2,
+      "emplacements": [
+        "global_config.tex:69",
+        "global_config.tex:74"
+      ]
+    },
+    {
+      "mot": "from",
+      "occurrences": 2,
+      "emplacements": [
+        "acronymes.tex:22",
+        "global_config.tex:69"
+      ]
+    },
+    {
+      "mot": "language",
+      "occurrences": 2,
+      "emplacements": [
+        "global_config.tex:81",
+        "global_config.tex:87"
+      ]
+    },
+    {
+      "mot": "measured",
+      "occurrences": 2,
+      "emplacements": [
+        "global_config.tex:75",
+        "global_config.tex:85"
+      ]
+    },
+    {
+      "mot": "red",
+      "occurrences": 2,
+      "emplacements": [
+        "commandes_locales.tex:15",
+        "commandes_locales.tex:8"
+      ]
+    },
+    {
+      "mot": "request",
+      "occurrences": 2,
+      "emplacements": [
+        "global_config.tex:71",
+        "global_config.tex:80"
+      ]
+    },
+    {
+      "mot": "that",
+      "occurrences": 2,
+      "emplacements": [
+        "global_config.tex:71",
+        "global_config.tex:81"
+      ]
+    },
+    {
+      "mot": "threshold",
+      "occurrences": 2,
+      "emplacements": [
+        "global_config.tex:79",
+        "global_config.tex:80"
+      ]
+    },
+    {
+      "mot": "under",
+      "occurrences": 2,
+      "emplacements": [
+        "global_config.tex:76",
+        "global_config.tex:78"
+      ]
+    },
+    {
+      "mot": "with",
+      "occurrences": 2,
+      "emplacements": [
+        "global_config.tex:75",
+        "global_config.tex:83"
+      ]
+    },
+    {
+      "mot": "Language",
+      "occurrences": 3,
+      "emplacements": [
+        "acronymes.tex:42",
+        "acronymes.tex:49",
+        "acronymes.tex:66"
+      ]
+    },
+    {
+      "mot": "The",
+      "occurrences": 3,
+      "emplacements": [
+        "global_config.tex:69",
+        "global_config.tex:74"
+      ]
+    },
+    {
+      "mot": "frontmatter",
+      "occurrences": 6,
+      "emplacements": [
+        "main.tex:71",
+        "main.tex:73",
+        "main.tex:80",
+        "main.tex:83",
+        "main.tex:85",
+        "main.tex:88"
+      ]
+    },
+    {
+      "mot": "and",
+      "occurrences": 7,
+      "emplacements": [
+        "global_config.tex:70",
+        "global_config.tex:71",
+        "global_config.tex:75",
+        "global_config.tex:76",
+        "global_config.tex:79",
+        "global_config.tex:83",
+        "global_config.tex:84"
+      ]
+    },
+    {
+      "mot": "the",
+      "occurrences": 13,
+      "emplacements": [
+        "global_config.tex:71",
+        "global_config.tex:77",
+        "global_config.tex:78",
+        "global_config.tex:80",
+        "global_config.tex:81",
+        "global_config.tex:83",
+        "global_config.tex:84",
+        "global_config.tex:85"
+      ]
+    }
+  ]
+}

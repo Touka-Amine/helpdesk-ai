@@ -1,0 +1,39 @@
+........................................................................ [ 30%]
+........................................................................ [ 61%]
+........................................................................ [ 92%]
+..................                                                       [100%]
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.13.1-final-0 _______________
+
+Name                              Stmts   Miss  Cover
+-----------------------------------------------------
+src\data\__init__.py                  0      0   100%
+src\data\preprocess.py               49      0   100%
+src\data\pseudonymisation.py         40      2    95%
+src\knowledge\__init__.py             2      0   100%
+src\knowledge\quality.py             72      1    99%
+src\knowledge\snapshot.py            80     33    59%
+src\models\__init__.py                0      0   100%
+src\models\heuristics.py             26      0   100%
+src\models\predict.py                 2      2     0%
+src\models\resume.py                 44      3    93%
+src\models\signaux.py                22      0   100%
+src\models\train.py                   9      9     0%
+src\monitoring\__init__.py            0      0   100%
+src\monitoring\ml_monitor.py        171    171     0%
+src\monitoring\rag_monitor.py       137    137     0%
+src\pipeline\build_dataset.py        93     64    31%
+src\pipeline\collect.py             166     77    54%
+src\pipeline\jeu_gele.py             49      7    86%
+src\pipeline\promote.py             206    147    29%
+src\pipeline\train.py               167    106    37%
+src\pipeline\train_camembert.py     126     92    27%
+src\rag\__init__.py                   0      0   100%
+src\rag\engine.py                    79     10    87%
+src\rag\hybrid_engine.py             65      7    89%
+src\rag\semantic_engine.py          159     52    67%
+src\registry\__init__.py              2      0   100%
+src\registry\model_registry.py      125      6    95%
+-----------------------------------------------------
+TOTAL                              1891    926    51%
+234 passed in 77.66s (0:01:17)

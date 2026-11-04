@@ -1,0 +1,70 @@
+........................................................................ [ 30%]
+........................................................................ [ 61%]
+........................................................................ [ 92%]
+..................                                                       [100%]
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.13.1-final-0 _______________
+
+Name                                 Stmts   Miss  Cover
+--------------------------------------------------------
+api\__init__.py                          0      0   100%
+api\config.py                           43      1    98%
+api\db\__init__.py                       0      0   100%
+api\db\database.py                      59     18    69%
+api\db\models.py                        69      0   100%
+api\db\repositories\__init__.py          0      0   100%
+api\db\repositories\ticket_repo.py       2      2     0%
+api\db\repositories\user_repo.py         2      2     0%
+api\db\vector_store.py                 237     41    83%
+api\main.py                             63     22    65%
+api\middleware\__init__.py               0      0   100%
+api\middleware\auth_middleware.py       21      0   100%
+api\predictor.py                       117     22    81%
+api\routers\__init__.py                  0      0   100%
+api\routers\admin.py                   117     60    49%
+api\routers\auth.py                     96     21    78%
+api\routers\ingest.py                   34     14    59%
+api\routers\predictions.py               5      5     0%
+api\routers\tickets.py                 283    222    22%
+api\schemas\__init__.py                  4      0   100%
+api\schemas\auth_schemas.py             66      0   100%
+api\schemas\prediction_schemas.py       24      0   100%
+api\schemas\ticket_schemas.py           91      0   100%
+api\services\__init__.py                 0      0   100%
+api\services\ai_service.py              52     10    81%
+api\services\auth_service.py            27      3    89%
+api\services\llm_service.py             64     48    25%
+api\services\mail_service.py            44     11    75%
+api\services\rag_service.py             17     17     0%
+api\services\routage_service.py         17      0   100%
+api\services\ticket_service.py          46     37    20%
+src\data\__init__.py                     0      0   100%
+src\data\preprocess.py                  49      0   100%
+src\data\pseudonymisation.py            40      2    95%
+src\knowledge\__init__.py                2      0   100%
+src\knowledge\quality.py                72      1    99%
+src\knowledge\snapshot.py               80     33    59%
+src\models\__init__.py                   0      0   100%
+src\models\heuristics.py                26      0   100%
+src\models\predict.py                    2      2     0%
+src\models\resume.py                    44      3    93%
+src\models\signaux.py                   22      0   100%
+src\models\train.py                      9      9     0%
+src\monitoring\__init__.py               0      0   100%
+src\monitoring\ml_monitor.py           171    171     0%
+src\monitoring\rag_monitor.py          137    137     0%
+src\pipeline\build_dataset.py           93     64    31%
+src\pipeline\collect.py                166     77    54%
+src\pipeline\jeu_gele.py                49      7    86%
+src\pipeline\promote.py                206    147    29%
+src\pipeline\train.py                  167    106    37%
+src\pipeline\train_camembert.py        126     92    27%
+src\rag\__init__.py                      0      0   100%
+src\rag\engine.py                       79     10    87%
+src\rag\hybrid_engine.py                65      7    89%
+src\rag\semantic_engine.py             159     52    67%
+src\registry\__init__.py                 2      0   100%
+src\registry\model_registry.py         125      6    95%
+--------------------------------------------------------
+TOTAL                                 3491   1482    58%
+234 passed in 79.07s (0:01:19)

@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-09T22:27:11+00:00",
+  "remarque": "1 357 tickets de base RAG pour 46 resolutions distinctes : quel effet ?",
+  "reponse_courte": "Les trois moteurs ecartent deja les resolutions deja vues avant de rendre leur liste ; aucun doublon n'atteint l'utilisateur. L'effet des doublons se lit ailleurs : sur le nombre de reponses DIFFERENTES que la base peut encore fournir.",
+  "ou_se_fait_le_dedoublonnage": [
+    "src/rag/engine.py:83",
+    "src/rag/semantic_engine.py:147",
+    "src/rag/hybrid_engine.py:124"
+  ],
+  "composition_de_la_base": {
+    "lignes": 1357,
+    "resolutions_distinctes": 46,
+    "repetition_mediane": 31,
+    "repetition_maximale": 49,
+    "titres_distincts": 46
+  },
+  "protocole": "annote",
+  "n_requetes": 40,
+  "top_k": 3,
+  "par_moteur": {
+    "lexical": {
+      "suggestions_rendues_par_requete": 1.4,
+      "reponses_distinctes_par_requete": 1.4,
+      "part_de_doublons": 0.0,
+      "requetes_sans_aucun_doublon": 40,
+      "requetes_a_reponse_unique": 27,
+      "repartition_reponses_distinctes": {
+        "1": 27,
+        "2": 10,
+        "3": 3
+      },
+      "precision_sur_rendus": 0.3571,
+      "precision_sur_reponses_distinctes": 0.3571,
+      "rang_median_pour_k_reponses_differentes": 1
+    },
+    "semantique": {
+      "suggestions_rendues_par_requete": 2.625,
+      "reponses_distinctes_par_requete": 2.625,
+      "part_de_doublons": 0.0,
+      "requetes_sans_aucun_doublon": 40,
+      "requetes_a_reponse_unique": 3,
+      "repartition_reponses_distinctes": {
+        "3": 28,
+        "2": 9,
+        "1": 3
+      },
+      "precision_sur_rendus": 0.381,
+      "precision_sur_reponses_distinctes": 0.381,
+      "rang_median_pour_k_reponses_differentes": 3
+    },
+    "hybride": {
+      "suggestions_rendues_par_requete": 2.025,
+      "reponses_distinctes_par_requete": 2.025,
+      "part_de_doublons": 0.0,
+      "requetes_sans_aucun_doublon": 40,
+      "requetes_a_reponse_unique": 13,
+      "repartition_reponses_distinctes": {
+        "1": 13,
+        "3": 14,
+        "2": 13
+      },
+      "precision_sur_rendus": 0.5062,
+      "precision_sur_reponses_distinctes": 0.5062,
+      "rang_median_pour_k_reponses_differentes": 2
+    }
+  },
+  "par_moteur_sans_filtre": {
+    "lexical": {
+      "suggestions_rendues_par_requete": 3.0,
+      "reponses_distinctes_par_requete": 3.0,
+      "requetes_servies_au_complet": 40,
+      "requetes_a_moins_de_k_reponses": 0
+    },
+    "semantique": {
+      "suggestions_rendues_par_requete": 3.0,
+      "reponses_distinctes_par_requete": 3.0,
+      "requetes_servies_au_complet": 40,
+      "requetes_a_moins_de_k_reponses": 0
+    },
+    "hybride": {
+      "suggestions_rendues_par_requete": 3.0,
+      "reponses_distinctes_par_requete": 3.0,
+      "requetes_servies_au_complet": 40,
+      "requetes_a_moins_de_k_reponses": 0
+    }
+  },
+  "avant_correction_de_l_elargissement": {
+    "mesure_le": "2026-10-09",
+    "note": "facteur fixe top_k*3 = 9 voisins lus avant dedoublonnage",
+    "semantique": {
+      "suggestions_rendues_par_requete": 1.57,
+      "precision_sur_rendus": 0.5556
+    },
+    "hybride": {
+      "suggestions_rendues_par_requete": 1.75,
+      "precision_sur_rendus": 0.4429
+    },
+    "elargissement_necessaire": {
+      "9": 1.57,
+      "18": 1.85,
+      "36": 2.25,
+      "75": 2.75,
+      "150": 3.0
+    }
+  }
+}

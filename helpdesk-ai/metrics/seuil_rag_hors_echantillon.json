@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-09T22:21:33+00:00",
+  "remarque": "Le seuil 0,35 a été choisi sur le jeu d'évaluation ; sa performance doit être présentée avec cette réserve.",
+  "protocole": "annote",
+  "n_requetes": 40,
+  "seuil_servi": 0.35,
+  "pouvoir_discriminant": 0.8303,
+  "precision_par_tranche": [
+    {
+      "de": 0.0,
+      "a": 0.3,
+      "passages": 12,
+      "precision": 0.0833
+    },
+    {
+      "de": 0.3,
+      "a": 0.35,
+      "passages": 45,
+      "precision": 0.0889
+    },
+    {
+      "de": 0.35,
+      "a": 0.4,
+      "passages": 47,
+      "precision": 0.5106
+    },
+    {
+      "de": 0.4,
+      "a": 1.0,
+      "passages": 16,
+      "precision": 0.9375
+    }
+  ],
+  "lecture": "Les precisions absolues de ce fichier viennent d'un rejeu simplifie du filtrage (le repli y garde le meilleur candidat), et different de quelques centiemes de celles que le moteur produit reellement dans metrics/rag_seuil_balayage.json. C'est l'ECART entre dans et hors echantillon qui doit etre lu, les deux etant calcules de la meme facon.",
+  "precision_dans_l_echantillon": 0.5652,
+  "meilleur_seuil_dans_l_echantillon": 0.35,
+  "validation_croisee": {
+    "plis": 5,
+    "seuils_choisis": [
+      0.35,
+      0.38,
+      0.38,
+      0.35,
+      0.38
+    ],
+    "precisions_hors_echantillon": [
+      0.3846,
+      0.6364,
+      0.8889,
+      0.5333,
+      0.0
+    ],
+    "precision_moyenne_hors_echantillon": 0.4886,
+    "optimisme": 0.0766
+  }
+}

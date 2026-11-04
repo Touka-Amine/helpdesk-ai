@@ -34,8 +34,8 @@ Détail de la configuration, des variables d'environnement et de l'exploitation 
 python -m pytest tests/ -q
 ```
 
-**150 tests**, dont 132 s'exécutent sans aucun artefact et forment la suite jouée en
-intégration continue. Les 18 autres chargent `best_pipeline.pkl` au démarrage et ne
+**181 tests**, dont 155 s'exécutent sans aucun artefact et forment la suite jouée en
+intégration continue. Les 26 autres chargent `best_pipeline.pkl` au démarrage et ne
 peuvent donc pas tourner sur une copie fraîche du dépôt. Pour une exécution rapide
 pendant le développement, `pytest -m "not slow"` exclut ceux qui chargent les modèles.
 Stratégie complète : [TESTING.md](TESTING.md).

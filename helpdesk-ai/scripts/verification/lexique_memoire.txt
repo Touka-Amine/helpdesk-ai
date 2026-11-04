@@ -1,0 +1,157 @@
+# Lexique du mémoire — mots absents du dictionnaire français « classique » de
+# Dicollecte (v5.4.1, 2015) mais employés sciemment.
+#
+# Chaque ligne est une décision, pas un contournement. Le fichier est suivi en
+# version : un ajout se relit dans un diff. Un mot ajouté ici n'est plus jamais
+# signalé, alors on n'y met que ce qu'on assume.
+#
+# Une ligne par mot, insensible à la casse. Les lignes vides et celles qui
+# commencent par # sont ignorées.
+
+# ── Orthographe de 1990, employée partout dans le mémoire ────────────────────
+# Le dictionnaire « classique » ne connaît que « plate-forme ».
+plateforme
+plateformes
+
+# ── Vocabulaire de l'apprentissage automatique en français ───────────────────
+# « classifieur » est l'usage de la littérature francophone en apprentissage,
+# devant « classificateur », qui désigne plutôt un agent humain.
+classifieur
+classifieurs
+hyperparamètre
+hyperparamètres
+unigramme
+unigrammes
+bigramme
+bigrammes
+réentraîner
+réentraîne
+réentraînement
+recalibration
+baseline
+
+# ── Protection des données ───────────────────────────────────────────────────
+pseudonymisation
+pseudonymiser
+pseudonymisé
+pseudonymisés
+pseudonymisée
+pseudonymisées
+pseudonymisent
+réidentifier
+réidentification
+
+# ── Dérivés réguliers que le dictionnaire ne porte pas ───────────────────────
+journalisé
+journalisée
+journalisées
+rejouable
+rejouables
+recalculable
+recalculables
+remesuré
+remesurée
+réinstancié
+réinstanciés
+réinstanciée
+citable
+citables
+hébergeable
+hébergeables
+versionnement
+microseconde
+microsecondes
+milliseconde
+millisecondes
+contamination
+
+# ── Termes techniques et produits ────────────────────────────────────────────
+backend
+frontend
+microservice
+microservices
+bcrypt
+boosting
+ticketing
+spooler
+repositories
+routers
+scikit
+learn
+Ollama
+PostgreSQL
+Freshdesk
+Zendesk
+ServiceNow
+GLPI
+Jira
+Angular
+FastAPI
+Docker
+Git
+GitHub
+Kubernetes
+CamemBERT
+BERT
+LoRA
+FAISS
+TF-IDF
+nDCG
+MRR
+MLOps
+DVC
+MLflow
+SQLite
+JWT
+API
+REST
+DNS
+outlook
+dns
+
+# ── Noms propres cités ───────────────────────────────────────────────────────
+OneTech
+OTBS
+TEK-UP
+Toukabri
+Oueslati
+Dhouibi
+Daassi
+Breck
+Platt
+Lewis
+Martin
+Dicollecte
+
+# ── Noms de produits et termes anglais relevés à la relecture du 2026-10-10 ──
+BackOffice
+SharePoint
+OneDrive
+Teams
+SQLAlchemy
+ChromaDB
+LinearSVC
+GeForce
+Scrum
+Workflow
+Transformers
+Retrieval-Augmented
+Generation
+HelpDesk
+Backup
+Group
+University
+term
+frequency
+
+# ── Dérivés français que le dictionnaire de 2015 ne porte pas ────────────────
+réexécuter
+réexécution
+suréchantillonnage
+sous-échantillonnage
+auto-contamination
+états-transitions
+
+# ── Prénoms et noms cités dans les remerciements ─────────────────────────────
+Maher
+Rahma

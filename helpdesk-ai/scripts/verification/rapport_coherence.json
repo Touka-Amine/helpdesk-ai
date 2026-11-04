@@ -1,0 +1,217 @@
+{
+  "verite_terrain": {
+    "corpus": 1800,
+    "titres_uniques": 58,
+    "documentes": 1693,
+    "resolus": 476,
+    "statut_Résolu": 476,
+    "statut_Rejeté": 464,
+    "statut_Problème": 328,
+    "statut_Prise en Charge": 321,
+    "statut_En attente": 211,
+    "rag_lignes": 1357,
+    "rag_procedures": 46,
+    "train": 1444,
+    "test": 356,
+    "titres_train": 46,
+    "titres_test": 12
+  },
+  "controles": [
+    {
+      "ok": true,
+      "libelle": "corpus = 1800 cite dans le memoire",
+      "detail": "12 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "base RAG = 1357 cite dans le memoire",
+      "detail": "7 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "jeu d'entrainement du pipeline = 1444 cite dans le memoire",
+      "detail": "7 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "jeu de test gele = 356 cite dans le memoire",
+      "detail": "15 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "tickets resolus = 476 cite dans le memoire",
+      "detail": "10 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "tickets documentes = 1693 cite dans le memoire",
+      "detail": "1 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "CamemBERT + regles (experiences) = 0,8343 present dans le memoire",
+      "detail": "13 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "TF-IDF + regles (experiences) = 0,5827 present dans le memoire",
+      "detail": "16 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "CamemBERT seul (experiences) = 0,5685 present dans le memoire",
+      "detail": "6 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "TF-IDF seul (experiences) = 0,3753 present dans le memoire",
+      "detail": "6 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "modele servi, avec regles (pipeline) = 0,4372 present dans le memoire",
+      "detail": "9 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "modele servi, sans regles (pipeline) = 0,2031 present dans le memoire",
+      "detail": "3 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "precision affichee, hybride = 0,5185 present dans le memoire",
+      "detail": "10 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "suggestions par requete, hybride = 2,02 present dans le memoire",
+      "detail": "3 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "seuil RAG servi = 0.35 present dans le memoire",
+      "detail": "12 mention(s)"
+    },
+    {
+      "ok": true,
+      "libelle": "tests rejoues par l'integration continue = 234",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "taille du corpus : ['1\\\\,800']",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "libelle": "titres distincts du corpus : ['58', 'cinquante-huit']",
+      "detail": "VALEURS DIVERGENTES"
+    },
+    {
+      "ok": true,
+      "libelle": "consultants du service : ['onze']",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "filiales : ['huit']",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "ecrans de la plateforme : ['dix-sept']",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "budget de latence : ['300']",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "bilan de conformite : phrase (9, 5, 2, 2) contre tableau (9, 5, 2, 2)",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "nombre d'exigences chiffrees non tenues annonce : ['Trois']",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : T1 : « 1 800 tickets résolus »",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : T2 : « cas déjà résolus les plus proches »",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : T2 : « tickets déjà résolus les plus proches »",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : T4 : seuil de pertinence encore à 0,50",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : T4 : alpha 0,8 présenté comme dégradant",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : T6 : « 0,5829 contre 0,8343 »",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : T6 : ENF-02 « presque atteint »",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : T8 : GroupShuffleSplit dans le mémoire",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : tests : « cent cinquante »",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : figure obsolète ch07_tests.jpg",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : tests : « cent trente-deux »",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : tests : « dix-huit tests d'intégration »",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : couverture : moteur sémantique à 20 %",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "absente : diagramme : seuil 0,50",
+      "detail": ""
+    }
+  ],
+  "anomalies": [
+    {
+      "libelle": "titres distincts du corpus : ['58', 'cinquante-huit']",
+      "detail": "VALEURS DIVERGENTES"
+    }
+  ]
+}

@@ -58,7 +58,7 @@ cp .env.example .env
 # Éditer .env : renseigner SECRET_KEY, ADMIN_EMAILS, INGEST_API_KEY
 
 # 3. Lancer tous les services
-docker compose -f docker/docker-compose.yml up --build
+docker compose -f docker/docker-compose.yml --env-file .env up --build
 
 # Accès :
 #   Frontend  → http://localhost:8081
@@ -69,20 +69,20 @@ docker compose -f docker/docker-compose.yml up --build
 
 ```bash
 # Démarrage en arrière-plan
-docker compose -f docker/docker-compose.yml up -d --build
+docker compose -f docker/docker-compose.yml --env-file .env up -d --build
 
 # Logs d'un service
-docker compose -f docker/docker-compose.yml logs -f api
+docker compose -f docker/docker-compose.yml --env-file .env logs -f api
 
 # Arrêt (avec suppression des conteneurs)
-docker compose -f docker/docker-compose.yml down
+docker compose -f docker/docker-compose.yml --env-file .env down
 
 # Arrêt + suppression des volumes (PostgreSQL + ChromaDB)
-docker compose -f docker/docker-compose.yml down -v
+docker compose -f docker/docker-compose.yml --env-file .env down -v
 
 # Rebuild forcé d'un seul service
-docker compose -f docker/docker-compose.yml build api
-docker compose -f docker/docker-compose.yml up -d api
+docker compose -f docker/docker-compose.yml --env-file .env build api
+docker compose -f docker/docker-compose.yml --env-file .env up -d api
 ```
 
 ---

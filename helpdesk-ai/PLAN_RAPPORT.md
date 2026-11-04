@@ -3,31 +3,40 @@
 > Structure calquée sur les deux rapports de référence encadrés par M. Ahmed Dhouibi
 > (Sarra Mzali / TEK-UP / PwC — 134 p. ; Hamad Wafa / ISET Rades / Tunisie Telecom — 119 p.),
 > adaptée au contenu réel du projet HelpDesk AI.
-> Organisation **par sprints** (et non par thèmes) conformément au format attendu.
+> Fil conducteur méthodologique : **CRISP-DM**, méthodologie officielle du projet depuis le
+> 2026-09-15. Les sept chapitres gardent une organisation académique, et chacun est rattaché à la
+> ou aux phases qu'il porte. Le développement logiciel n'est pas une phase distincte : il relève
+> de la phase de déploiement et d'intégration, et des itérations successives du projet.
+> L'ancien découpage par sprints est abandonné ; le mot « sprint » n'apparaît dans aucun `.tex`.
 > Volume cible : **110–135 pages**.
 > Template : `latex-tekup/Rapport PFE TEKUP LATEX/`
+>
+> **Plan de reference : [crisp-dm.md](crisp-dm.md).** Ce fichier-ci porte le suivi de
+> redaction, les conventions et les points chiffres tranches. La structure chapitre par
+> chapitre, avec le rattachement aux phases, vit dans `crisp-dm.md`.
 
 ---
 
 ---
 
-## ÉTAT DE LA RÉDACTION — au 2026-09-08
+## ÉTAT DE LA RÉDACTION — au 2026-09-15
 
 > Suivi détaillé et figures restant à produire : [PFE_PROGRESS.md](PFE_PROGRESS.md).
-> Sources LaTeX : `../report/`. Le document compile à **115 pages, sans erreur**.
+> Sources LaTeX : `../report/`. Le document compile à **151 pages, sans erreur**,
+> soit seize pages au-dessus de la cible haute.
 
 | # | Chapitre | Pages | Cible | État |
 |---|---|---|---|---|
-| — | Introduction générale | 1 | 2–3 p. | 🟡 à étoffer en fin de rédaction |
-| 1 | Contexte général du projet | 2–9 | 12–15 p. | 🟡 rédigé, sous la cible (bloqué sur les réponses OTBS) |
-| 2 | Concepts fondamentaux et spécification | 10–25 | 15–18 p. | ✅ rédigé, repris le 2026-09-07 |
-| 3 | Sprint 1 — Données et gouvernance | 26–39 | 14–16 p. | ✅ rédigé et vérifié |
-| 4 | Sprint 2 — Modélisation IA | 40–55 | 16–18 p. | ✅ rédigé, corrigé après l'audit des règles |
-| 5 | Sprint 3 — RAG et assistant LLM | 56–73 | 16–18 p. | ✅ rédigé et relu le 2026-09-08, 18 pages |
-| 6 | Sprint 4 — Développement de l'application | 74–93 | 16–18 p. | ✅ rédigé le 2026-09-08, 20 p. (Conception en 6 p.) |
-| 7 | Sprint 5 — Industrialisation et validation | 94 | 14–16 p. | 🔴 **prochain à rédiger** |
-| — | Conclusion générale | 95 | 2–3 p. | 🔴 balises seules |
-| — | Annexes | 98 | — | 🔴 balises seules |
+| — | Introduction générale | 1 | 2–3 p. | ✅ rédigée ; annonce CRISP-DM comme fil conducteur |
+| 1 | Contexte général du projet — *phase 1, compréhension du métier* | 2–19 | 12–15 p. | ✅ rédigé ; porte le choix et la justification de CRISP-DM |
+| 2 | Concepts fondamentaux et spécification — *transversal* | 20–35 | 15–18 p. | ✅ rédigé ; sert toutes les phases, n'en porte aucune |
+| 3 | Analyse et préparation des données — *phases 2 et 3* | 36–50 | 14–16 p. | ✅ rédigé ; compréhension puis préparation |
+| 4 | Système de classification — *phases 4 et 5* | 51–67 | 16–18 p. | ✅ rédigé ; modélisation puis évaluation |
+| 5 | Système RAG et assistant — *phases 4 et 5* | 68–89 | 16–18 p. | ✅ rédigé ; sections permutées le 2026-09-15 pour que la construction précède l'évaluation |
+| 6 | Développement et intégration de la plateforme — *phase 6* | 90–112 | 16–18 p. | ✅ rédigé ; intègre les deux moteurs dans une plateforme utilisable |
+| 7 | Industrialisation, tests et validation — *phases 5 et 6* | 113–139 | 14–16 p. | ✅ rédigé ; l'exposé suit l'ordre de mise en exploitation, la validation mesurant l'environnement conteneurisé |
+| — | Conclusion générale | 147 | 1 p. | ✅ rédigée ; tient sur une page, sans tableau |
+| — | Annexes | — | — | ⬜ supprimées le 2026-09-14 sur décision de l'auteur |
 | — | Résumés FR et EN | `global_config.tex` | 1 p. | 🔴 à rédiger en dernier |
 
 **Écart à l'ordre initialement recommandé.** Les chapitres 1 et 2 ont été rédigés avant le
@@ -42,7 +51,9 @@ laissée entre crochets plutôt que devinée. Les limites du travail sont énonc
 **Écarts assumés au plan, arbitrés le 2026-09-09.** Le plan cite la méthodologie de travail
 deux fois, au chapitre 1 (§1.4) et au chapitre 2 (§2.7). Elle n'est rédigée qu'une seule fois, au
 **chapitre 1** (`../report/chap_01.tex`, section « Méthodologie de travail ») : comparaison cycle
-en V / Scrum / CRISP-DM, démarche hybride retenue, découpage en cinq sprints et acteurs du projet.
+en V / Scrum / CRISP-DM, puis CRISP-DM retenue comme méthodologie officielle, avec la figure du
+cycle, la figure de correspondance phases/chapitres et la règle du protocole arrêté avant
+l'entraînement.
 Le chapitre 2 ne comporte donc pas de §2.7. Symétriquement, la **spécification des besoins**
 (acteurs, quinze exigences fonctionnelles, huit exigences non fonctionnelles) reste au
 **chapitre 2**, là où le plan la situe en §1.3 : elle y suit immédiatement les concepts et les
@@ -50,17 +61,16 @@ outils dont elle dépend, et le chapitre 2 tient ainsi sa cible de 15 à 18 page
 §2.4.1 et §2.4.4 du plan sont traités dans une sous-section unique, l'exécution locale du modèle
 de langage découlant directement de l'exigence de confidentialité.
 
-**Trame des chapitres de sprint**, alignée sur le rapport de référence de Rania Dridi
-(`../exemple_de_rapport/Rania-DRIDI-22159-2.pdf`), appliquée depuis le chapitre 6 :
+**Conventions de rédaction appliquées à tous les chapitres**, alignées sur le rapport de
+référence de Hichem Ben Salah (`../exemple_de_rapport/`) :
 
-1. Objectifs du sprint (liste)
-2. Backlog du sprint (tableau : référence, récit utilisateur, priorité, critère de recette)
-3. Spécification des besoins fonctionnels (diagramme de cas d'utilisation du sprint)
-4. Technologies utilisées (liste, nom en gras puis paragraphe de justification)
-5. **Conception** : diagramme de contexte (C4 niveau 1), architecture générale (C4 niveau 2),
-   diagramme de classes, diagramme de séquence, diagramme d'états
-6. Réalisation
-7. Bilan du sprint (tableau exigences → résultats)
+1. Une section s'ouvre toujours par un paragraphe, jamais directement sur un sous-titre
+2. Une figure ou un tableau est annoncé par une phrase, puis relu par un paragraphe placé après
+3. Un titre n'est jamais imprimé seul en bas de page (`needspace`, `commandes_locales.tex`)
+4. La légende d'un tableau est au-dessus, celle d'une figure en dessous
+5. Tout flottant est appelé au moins une fois par le texte
+6. Chaque chapitre nomme dans son introduction la ou les phases CRISP-DM qu'il porte
+7. Chaque conclusion de chapitre annonce ce que le chapitre suivant reprend
 
 ## PAGES LIMINAIRES (`frontmatter`)
 
@@ -91,35 +101,46 @@ classification et d'assistance à la résolution de tickets informatiques par NL
 
 ## CHAPITRE 1 — CONTEXTE GÉNÉRAL DU PROJET (12–15 p.)
 
+> Phase CRISP-DM portée : **1 — Compréhension du métier**
+
 **Introduction**
 
-## CHAPITRE 1 — CONTEXTE GÉNÉRAL ET CADRE DU PROJET (12–15 p.)
+### 1.1 Présentation de l'organisme d'accueil
+- 1.1.1 Le groupe OneTech
+- 1.1.2 OneTech Business Solutions
+- 1.1.3 Organisation interne
+- 1.1.4 Le cadre de confidentialité
 
-### Introduction
+### 1.2 Le service support et son fonctionnement
+- 1.2.1 Le ticketing, socle organisationnel du support
+- 1.2.2 Périmètre et acteurs du service
+- 1.2.3 Volumétrie observée
+- 1.2.4 L'outil de suivi et la qualité de ses données
+- 1.2.5 Le cycle de vie du ticket
+- 1.2.6 Répétitivité des résolutions
+- 1.2.7 Limites du diagnostic
 
-### 1.1  Présentation de l'organisme d'accueil
-       1.1.1  Le groupe OneTech et sa filiale OTBS
-       1.1.2  Le service support informatique
-#### 1.2  Contexte et analyse de l'existant
-       1.2.1  Le traitement des tickets au sein du service
-       1.2.2  Les solutions de gestion de tickets du marché
-       1.2.3  Limites de l'existant et problématique
-### 1.3  Besoins et solution proposée
-       1.3.1  Acteurs et besoins fonctionnels
-       1.3.2  Contraintes et exigences non fonctionnelles
-       1.3.3  Solution retenue et périmètre du projet
-###  1.4  Méthodologie de travail
-       1.4.1  Démarche retenue
-       1.4.2  Organisation du projet
+### 1.3 Problématique et solution proposée
+- 1.3.1 Limites de l'existant et besoins associés
+- 1.3.2 Les solutions du marché
+- 1.3.3 Énoncé de la problématique
+- 1.3.4 La solution proposée
+- 1.3.5 Périmètre du travail
+
+### 1.4 Méthodologie de travail
+- 1.4.1 Comparaison des démarches envisagées
+- 1.4.2 Démarche retenue : CRISP-DM
 
 
 > Sources principales : `CAHIER_DES_CHARGES.md`, `CADRAGE_SRS.md` §1–4
 
-## CHAPITRE 2 — CONCEPTS FONDAMENTAUX ET MÉTHODOLOGIE (15–18 p.)
+## CHAPITRE 2 — CONCEPTS FONDAMENTAUX ET SPÉCIFICATION DES BESOINS (15–18 p.)
+
+> **Chapitre transversal** — sert toutes les phases, n'en porte aucune
 
 **Introduction**
 
-### 2.1 Traitement automatique du langage naturel (TALN)
+### 2.1 Traitement automatique du langage naturel
 - 2.1.1 Représentations classiques : sac de mots, TF-IDF
 - 2.1.2 Représentations denses : word embeddings, phrase embeddings
 - 2.1.3 Modèles transformers et BERT
@@ -131,31 +152,34 @@ classification et d'assistance à la résolution de tickets informatiques par NL
 - 2.2.2 Métriques adaptées au déséquilibre (F1-macro, rappel par classe)
 - 2.2.3 Techniques de rééquilibrage (pondération, SMOTE)
 
-### 2.3 Génération augmentée par récupération (RAG)
+### 2.3 Génération augmentée par récupération
 - 2.3.1 Principe et architecture d'un système RAG
 - 2.3.2 Recherche lexicale vs recherche sémantique
 - 2.3.3 Bases vectorielles (FAISS, ChromaDB)
 - 2.3.4 Évaluation d'un système RAG (RAGAS : précision, MRR, fidélité)
 
-### 2.4 Grands modèles de langage (LLM)
+### 2.4 Grands modèles de langage
 - 2.4.1 LLM open-source et exécution locale (on-premise)
 - 2.4.2 Prompt engineering
 - 2.4.3 Hallucinations et garde-fous
 - 2.4.4 Enjeux de confidentialité des données
 
-### 2.5 MLOps et industrialisation
+### 2.5 Industrialisation et MLOps
 - 2.5.1 Versionnement des données et des modèles (DVC)
 - 2.5.2 Suivi d'expérimentations (MLflow)
 - 2.5.3 Conteneurisation et CI/CD
 
-### 2.6 Outils technologiques utilisés *(grand tableau : outil / rôle / justification)*
+### 2.6 Positionnement du travail
 
-### 2.7 Méthodologie de travail
-- 2.7.1 Comparaison des approches de conduite de projet (Cycle en V vs Agile)
-- 2.7.2 Application de CRISP-DM au projet
-- 2.7.3 Démarche hybride retenue
-- 2.7.4 Organisation en releases et sprints *(tableau de planification)*
-- 2.7.5 Acteurs et responsabilités
+### 2.7 Outils technologiques utilisés *(tableau : outil / rôle / justification)*
+
+### 2.8 Spécification des besoins
+- 2.8.1 Acteurs du système
+- 2.8.2 Exigences fonctionnelles
+- 2.8.3 Exigences non fonctionnelles
+- 2.8.4 Traçabilité des exigences
+
+*(La méthodologie n'est pas reprise ici : elle est traitée une seule fois, au chapitre 1, §1.4.)*
 
 **Conclusion**
 
@@ -163,9 +187,12 @@ classification et d'assistance à la résolution de tickets informatiques par NL
 
 ---
 
-## Chapitre 3 — Analyse et préparation des données
+## CHAPITRE 3 — ANALYSE ET PRÉPARATION DES DONNÉES (14–16 p.)
 
-## 3.1 Présentation des données
+> Phases CRISP-DM portées : **2 — Compréhension des données** (3.1 et 3.2), puis
+> **3 — Préparation des données** (3.3 à 3.6)
+
+### 3.1 Présentation des données
 
 - Sources des données
 - Structure du corpus
@@ -173,7 +200,7 @@ classification et d'assistance à la résolution de tickets informatiques par NL
 - Catégories de tickets
 - Volume des données
 
-## 3.2 Analyse exploratoire des données
+### 3.2 Analyse exploratoire des données
 
 - Distribution des catégories
 - Analyse de la longueur des textes
@@ -182,7 +209,7 @@ classification et d'assistance à la résolution de tickets informatiques par NL
 - Déséquilibre des classes
 - Redondance éventuelle
 
-## 3.3 Préparation des données
+### 3.3 Préparation des données
 
 - Nettoyage des données
 - Normalisation
@@ -190,25 +217,33 @@ classification et d'assistance à la résolution de tickets informatiques par NL
 - Gestion des valeurs problématiques
 - Enrichissement du texte
 
-## 3.4 Préparation du corpus pour la classification
+### 3.4 Préparation du corpus pour la classification
 
 - Définition de la variable cible
 - Séparation entraînement / validation / test
 - Prévention de la fuite de données
 - Gestion du déséquilibre
 
-## 3.5 Préparation des connaissances pour le RAG
+### 3.5 Préparation des connaissances pour le RAG
 
 - Sélection des informations pertinentes
 - Nettoyage et structuration
 - Constitution de la base de connaissances
 - Différence entre dataset ML et base de connaissances
 
+### 3.6 Gouvernance et reproductibilité
+
+- Versionnement des données et du pipeline
+- Données personnelles : une limite non traitée
+
 ## Conclusion du chapitre
 
 ---
 
-# Chapitre 4 — Développement et évaluation du système de classification
+## CHAPITRE 4 — DÉVELOPPEMENT ET ÉVALUATION DU SYSTÈME DE CLASSIFICATION (16–18 p.)
+
+> Phases CRISP-DM portées : **4 — Modélisation** (4.1 à 4.4), puis **5 — Évaluation**
+> (4.5 et 4.6)
 
 ## 4.1 Formulation du problème de classification
 
@@ -217,7 +252,7 @@ classification et d'assistance à la résolution de tickets informatiques par NL
 - Classes considérées
 - Métriques d’évaluation
 
-## 4.2 Approche basée sur TF-IDF
+### 4.2 Approche fondée sur TF-IDF
 
 ### 4.2.1 Vectorisation des textes
 
@@ -232,7 +267,7 @@ classification et d'assistance à la résolution de tickets informatiques par NL
 - Règles appliquées
 - Impact sur les performances
 
-## 4.4 Approche basée sur CamemBERT et LoRA
+### 4.4 Approche fondée sur CamemBERT et LoRA
 
 ### 4.4.1 Justification du choix de CamemBERT
 
@@ -263,7 +298,11 @@ Présenter les résultats principaux dans un tableau comparatif.
 ---
 ---
 
-# Chapitre 5 — Système RAG et assistance intelligente
+## CHAPITRE 5 — SYSTÈME RAG ET ASSISTANCE INTELLIGENTE (16–18 p.)
+
+> Phases CRISP-DM portées : **4 — Modélisation** (5.1 à 5.4), puis **5 — Évaluation**
+> (5.5). L'intégration du modèle de langage est passée avant l'évaluation le 2026-09-15 :
+> la construction doit s'achever avant que la mesure commence.
 
 ## 5.1 Présentation du système RAG
 
@@ -288,22 +327,19 @@ Présenter les résultats principaux dans un tableau comparatif.
 
 ### 5.3.4 Comparaison des approches
 
-## 5.4 Évaluation du RAG
+## 5.4 Intégration du LLM
 
-- Protocole d’évaluation
-- Critères et métriques
-- Résultats
-- Analyse des résultats
-- Limites de l’évaluation
+- Un modèle exécuté sur site
+- Conception du prompt
+- Garde-fous et repli
 
-## 5.5 Intégration du LLM
+## 5.5 Évaluation du RAG
 
-- Rôle du LLM
-- Modèle utilisé
-- Construction du prompt
-- Génération de la solution
-- Contrôle du contexte fourni au modèle
-- Gestion des hallucinations
+- Protocole et approximation de la pertinence
+- Dimensions non couvertes par la campagne
+- Résultats mesurés
+- Le seuil que le moteur servi n'atteint jamais
+- Une mesure ancienne à ne pas citer
 
 ## 5.6 Apprentissage continu
 
@@ -315,96 +351,72 @@ Présenter les résultats principaux dans un tableau comparatif.
 ## Conclusion du chapitre
 ---
 
-# Chapitre 6 — Développement et intégration de la plateforme
+## CHAPITRE 6 — DÉVELOPPEMENT ET INTÉGRATION DE LA PLATEFORME (16–18 p.)
 
-## 6.1 Architecture applicative
+> Phase CRISP-DM portée : **6 — Déploiement**. Le développement logiciel n'est pas une
+> activité à part : il intègre dans une plateforme utilisable les deux moteurs des
+> chapitres 4 et 5.
 
-- Organisation du backend
-- Organisation du frontend
-- Base de données
-- Services IA
-- Communication entre les composants
+### 6.1 Architecture applicative
 
-## 6.2 Développement du backend
+- Découpage en couches, communication entre composants, choix technologiques
 
-- API REST
-- Gestion des tickets
-- Gestion des utilisateurs
-- Intégration du modèle de classification
-- Intégration du RAG
-- Intégration du LLM
+### 6.2 Conception et modélisation UML
 
-## 6.3 Développement du frontend
+- 6.2.1 Contexte et cas d'utilisation
+- 6.2.2 Diagramme de classes
+- 6.2.3 Diagramme de séquence : dépôt d'une demande
+- 6.2.4 Diagramme de séquence : clôture d'un ticket
+- 6.2.5 Traçabilité des états du ticket
 
-- Interface de création des tickets
-- Interface de consultation
-- Interface de suivi
-- Interface de validation
-- Interface d’administration
+### 6.3 Développement du backend
 
-## 6.4 Workflow de traitement d’un ticket
+- Trois couches, contrat typé, contrôle d'accès par rôle
 
-Présenter le workflow global :
+### 6.4 Développement du frontend
 
-**Création du ticket  
-→ Classification  
-→ Recherche de connaissances  
-→ Proposition de solution  
-→ Validation humaine  
-→ Résolution  
-→ Archivage / enrichissement**
+- 6.4.1 Accès à la plateforme
+- 6.4.2 Portail du demandeur
+- 6.4.3 Console d'administration et file d'approbation
+- 6.4.4 Validation humaine et bouclage de la résolution
 
-## 6.5 Intégration des composants
+### 6.5 Workflow global de traitement d'un ticket
 
-- Intégration du pipeline IA
-- Intégration de la base de données
-- Intégration des services externes
-- Communication entre les différents composants
-
-## 6.6 Exemple complet de traitement
-
-Présenter un exemple réel ou représentatif montrant le parcours d’un ticket dans la plateforme.
+Le parcours complet, du dépôt à l'enrichissement de la base, avec la boucle de retour qui
+ramène la résolution rédigée vers la recherche servant la demande suivante.
 
 ## Conclusion du chapitre
 > Sources : `ARCHITECTURE.md`, `TICKET_WORKFLOW.md`, code `api/` et `frontend/`
 
 ---
 
-## CHAPITRE 7 — SPRINT 5 : INDUSTRIALISATION, TESTS ET VALIDATION (14–16 p.)
+## CHAPITRE 7 — INDUSTRIALISATION, TESTS ET VALIDATION (14–16 p.)
+
+*Phases CRISP-DM 5 et 6 : évaluation du système, puis clôture du déploiement. L'exposé suit
+l'ordre de la mise en exploitation, la validation mesurant l'environnement conteneurisé.*
 
 **Introduction**
 
-### 7.1 Sprint Backlog
+### 7.1 Conteneurisation et déploiement
+- Quatre services : ollama, postgres, api, frontend
+- Contrôles de santé, volumes nommés, réseau interne, configuration hors image
+- Captures : état des services, encombrement des images
 
-### 7.2 Infrastructure de persistance
-- 7.2.1 Migration SQLite → PostgreSQL (justification, ADR)
-- 7.2.2 Base vectorielle ChromaDB
-- 7.2.3 Difficultés rencontrées et corrections (concurrence entre workers)
+### 7.2 Chaîne d'apprentissage automatisé
+- Pipeline DVC à huit étapes, en deux chaînes issues du même corpus
+- Jeu de test gelé, suivi des expériences
+- Porte de promotion et ses trois conditions, réentraînement contrôlé
 
-### 7.3 Conteneurisation et déploiement
-- 7.3.1 Architecture Docker Compose — 5 services *(schéma de déploiement)*
-- 7.3.2 Healthchecks, volumes et réseau interne
-- 7.3.3 Variante GPU
+### 7.3 Tests de la solution
+- Périmètre de la suite, zones non couvertes, exécution automatique et couverture
 
-### 7.4 Chaîne MLOps
-- 7.4.1 Pipeline DVC (4 étapes)
-- 7.4.2 Suivi MLflow et registre de modèles
-- 7.4.3 Model cards
-- 7.4.4 Intégration continue (lint, tests, build)
+### 7.4 Validation de la solution
+- Le temps de réponse, exigence non tenue
+- Bilan de conformité aux exigences
 
-### 7.5 Stratégie de tests
-- 7.5.1 Tests unitaires (41)
-- 7.5.2 Tests d'intégration (18/18)
-- 7.5.3 Tests de charge et latence
-- 7.5.4 Tests de sécurité
+### 7.5 Limites du système
 
-### 7.6 Validation fonctionnelle
-- 7.6.1 Matrice exigences → résultats mesurés
-- 7.6.2 Étude utilisateur légère : méthodologie et limites
-- 7.6.3 Anomalies détectées et corrigées
-- 7.6.4 Bilan de conformité *(y compris ENF non conformes : latence P95)*
-
-### 7.7 Livrables et bilan du sprint
+### 7.6 Perspectives
 
 **Conclusion**
 
@@ -449,7 +461,7 @@ RAGAS · REST · RGPD · SMOTE · SRS · TF-IDF · UML · VRAM
 ## INVENTAIRE DES FIGURES À PRODUIRE
 
 **Chapitre 1** — organigramme OTBS · processus existant · diagramme de contexte
-**Chapitre 2** — architecture transformer · principe LoRA · architecture RAG · cycle Scrum
+**Chapitre 2** — architecture transformer · principe LoRA · architecture RAG
 **Chapitre 3** — distribution des classes · complétude · longueurs · redondance ·
               statuts · schéma du split anti-fuite
 **Chapitre 4** — courbes d'entraînement · matrice de confusion · distribution de
@@ -463,15 +475,14 @@ RAGAS · REST · RGPD · SMOTE · SRS · TF-IDF · UML · VRAM
 
 ---
 
-## ORDRE DE RÉDACTION RECOMMANDÉ
+## ORDRE DE RÉDACTION — historique
 
-1. **Chapitres 3 et 4** (matière la plus dense et déjà disponible)
-2. **Chapitre 5** (RAG + LLM)
-3. **Chapitres 6 et 7** (application + industrialisation)
-4. **Chapitre 1** (contexte — nécessite des informations entreprise à collecter)
-5. **Chapitre 2** (concepts — largement transposable depuis l'existant)
-6. **Introduction et conclusion générales** (en dernier)
-7. Pages liminaires, annexes, résumé
+Tout est rédigé. L'ordre effectivement suivi a été : chapitres 3 et 4, puis 1 et 2, puis 5,
+puis 6 et 7, enfin l'introduction et la conclusion générales. Le chapitre 2 a été écrit tôt
+parce qu'il fixe le vocabulaire réutilisé aux chapitres 3 et 4.
+
+Reste à produire : les résumés français et anglais (`tpl/resume.tex`) et la signature des
+autorisations de dépôt.
 
 ---
 

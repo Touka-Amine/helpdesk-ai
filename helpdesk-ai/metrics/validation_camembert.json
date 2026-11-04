@@ -1,0 +1,126 @@
+{
+  "date": "2026-10-09T21:52:04+00:00",
+  "remarque": "Validation de CamemBERT tiree au hasard alors que le test est separe par groupes de titres.",
+  "protocole": "decoupage des experiences, graine 42 ; seul le prelevement de la validation change entre les deux bras",
+  "max_length": 128,
+  "epochs_demandees": 10,
+  "resultats": {
+    "au_hasard": {
+      "histoire_validation": [
+        {
+          "epoque": 1.0,
+          "f1_macro": 0.1791
+        },
+        {
+          "epoque": 2.0,
+          "f1_macro": 0.2786
+        },
+        {
+          "epoque": 3.0,
+          "f1_macro": 0.6298
+        },
+        {
+          "epoque": 4.0,
+          "f1_macro": 0.6804
+        },
+        {
+          "epoque": 5.0,
+          "f1_macro": 0.7717
+        },
+        {
+          "epoque": 6.0,
+          "f1_macro": 0.7717
+        },
+        {
+          "epoque": 7.0,
+          "f1_macro": 0.7869
+        },
+        {
+          "epoque": 8.0,
+          "f1_macro": 0.9199
+        },
+        {
+          "epoque": 9.0,
+          "f1_macro": 0.9199
+        },
+        {
+          "epoque": 10.0,
+          "f1_macro": 0.9199
+        }
+      ],
+      "epoques_evaluees": 10,
+      "meilleure_epoque": {
+        "epoque": 8.0,
+        "f1_macro": 0.9199
+      },
+      "test_f1_macro_seul": 0.4551,
+      "test_f1_macro_avec_regles": 0.8351,
+      "test_exactitude_avec_regles": 0.7775,
+      "libelle": "validation tiree ligne a ligne, comme le carnet",
+      "titres_communs_train_validation": 41,
+      "titres_de_validation": 41,
+      "n_entrainement": 1301,
+      "n_validation": 144
+    },
+    "par_titre": {
+      "histoire_validation": [
+        {
+          "epoque": 1.0,
+          "f1_macro": 0.0
+        },
+        {
+          "epoque": 2.0,
+          "f1_macro": 0.0962
+        },
+        {
+          "epoque": 3.0,
+          "f1_macro": 0.0699
+        },
+        {
+          "epoque": 4.0,
+          "f1_macro": 0.3671
+        },
+        {
+          "epoque": 5.0,
+          "f1_macro": 0.4436
+        },
+        {
+          "epoque": 6.0,
+          "f1_macro": 0.4503
+        },
+        {
+          "epoque": 7.0,
+          "f1_macro": 0.4676
+        },
+        {
+          "epoque": 8.0,
+          "f1_macro": 0.4697
+        },
+        {
+          "epoque": 9.0,
+          "f1_macro": 0.4697
+        },
+        {
+          "epoque": 10.0,
+          "f1_macro": 0.4697
+        }
+      ],
+      "epoques_evaluees": 10,
+      "meilleure_epoque": {
+        "epoque": 8.0,
+        "f1_macro": 0.4697
+      },
+      "test_f1_macro_seul": 0.3848,
+      "test_f1_macro_avec_regles": 0.8411,
+      "test_exactitude_avec_regles": 0.7831,
+      "libelle": "validation separee par groupe de titres",
+      "titres_communs_train_validation": 0,
+      "titres_de_validation": 5,
+      "n_entrainement": 1306,
+      "n_validation": 139
+    }
+  },
+  "ecart_validation_du_a_la_fuite": 0.4502,
+  "ecart_sur_le_test": 0.006,
+  "verdict": "Le chiffre publie tient : la fuite a fausse le signal de selection, pas la mesure finale."
+}

@@ -232,7 +232,7 @@ class Ticket:
     priorite_finale: str            # Confirmée/corrigée par l'admin
     classification_finale: str      # Demande / Incident / Problème / Changement
     confiance: float
-    rag_score: float | None         # Score de la meilleure suggestion RAG (seuil 0.50)
+    rag_score: float | None         # Score de la meilleure suggestion RAG (seuil 0.35)
     solution_rag: str               # Suggestion RAG (statique ou live ChromaDB)
     knowledge_rag: str
     commentaire_client: str         # Message visible par le client

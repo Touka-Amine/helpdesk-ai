@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-09T20:41:07+00:00",
+  "remarque": "Le memoire annonce 0,5829 sur 8 categories ; le jeu de test gele n'en contient que 5 et le code en moyenne 6.",
+  "jeu": "data/splits/test.csv (jeu de test gele du pipeline)",
+  "tickets": 356,
+  "seuil_de_confiance": 0.6,
+  "categories_prononcees_mais_absentes_du_test": [
+    "Applicatifs"
+  ],
+  "portees": {
+    "referentiel_du_service": {
+      "libelle": "les 8 categories du referentiel",
+      "categories": [
+        "Applicatifs",
+        "Backup",
+        "Communication",
+        "Infrastructure",
+        "Microsoft",
+        "Réseau",
+        "Système",
+        "Sécurité"
+      ],
+      "n": 8,
+      "f1_macro": 0.4372
+    },
+    "categories_representees_au_test": {
+      "libelle": "les categories qui ont au moins un ticket au test",
+      "categories": [
+        "Infrastructure",
+        "Microsoft",
+        "Réseau",
+        "Système",
+        "Sécurité"
+      ],
+      "n": 5,
+      "f1_macro": 0.6995
+    },
+    "union_vraies_et_predites": {
+      "libelle": "ce que le code calcule aujourd'hui, sans argument labels",
+      "categories": [
+        "Applicatifs",
+        "Infrastructure",
+        "Microsoft",
+        "Réseau",
+        "Système",
+        "Sécurité"
+      ],
+      "n": 6,
+      "f1_macro": 0.5829
+    }
+  },
+  "f1_par_categorie_du_referentiel": {
+    "Applicatifs": 0.0,
+    "Backup": 0.0,
+    "Communication": 0.0,
+    "Infrastructure": 0.7947,
+    "Microsoft": 0.9712,
+    "Réseau": 0.7317,
+    "Système": 1.0,
+    "Sécurité": 0.0
+  },
+  "defaut": "Le denominateur de la valeur publiee depend des categories que le modele prononce, donc de ses erreurs : deux modeles de qualite egale n'y sont pas compares a armes egales."
+}

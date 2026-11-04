@@ -1,0 +1,20 @@
+{
+  "base": "camembert-base",
+  "lora_r": 8,
+  "lora_alpha": 16,
+  "max_length": 64,
+  "classes": [
+    "Applicatifs",
+    "Backup",
+    "Communication",
+    "Infrastructure",
+    "Microsoft",
+    "Réseau",
+    "Système",
+    "Sécurité"
+  ],
+  "entree": "priorite <priorite_simple> + titre + description, sans classification",
+  "decoupage": "data/splits/train.csv, jeu de test gele jamais vu",
+  "epochs_demandees": 12,
+  "learning_rate": 0.0002
+}

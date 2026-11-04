@@ -7,7 +7,7 @@ réalisé chez **OneTech Business Solutions** et soutenu à **TEK-UP**.
 Le service support traitait quatorze mois de tickets sans jamais réutiliser les
 résolutions passées. La plateforme transforme cet historique en aide au traitement :
 une demande déposée en texte libre reçoit une catégorie proposée par un modèle,
-accompagnée des tickets déjà résolus les plus proches. L'administrateur corrige,
+accompagnée des tickets déjà traités les plus proches. L'administrateur corrige,
 traite, et rédige la solution appliquée, qui rejoint la base interrogée par la demande
 suivante.
 
@@ -32,14 +32,16 @@ de confiance part en file d'approbation humaine, et la décision reste au consul
 | F1-macro, CamemBERT LoRA seul | 0,5685 |
 | F1-macro, CamemBERT LoRA et règles métier | **0,8343** |
 | F1-macro du pipeline réellement servi | 0,5829 |
-| Précision à trois passages, recherche hybride | 0,3542 |
-| Précision à trois passages, sémantique seule | 0,2917 |
-| Précision à trois passages, lexicale seule | 0,1542 |
+| Précision à trois passages sans filtre, recherche hybride | **0,4083** |
+| Précision à trois passages sans filtre, sémantique seule | 0,2917 |
+| Précision à trois passages sans filtre, lexicale seule | 0,3083 |
+| Seuil de pertinence servi, recalibré | 0,35 |
+| Précision des suggestions affichées à ce seuil | 0,4545, pour 1,79 suggestion par demande |
 | Latence d'inférence, TF-IDF | 5,0 ms |
 | Latence d'inférence, CamemBERT sur processeur | 325,8 ms |
 | Latence d'inférence, CamemBERT sur carte graphique | 58,7 ms |
 | Temps de réponse, 95e centile en séquentiel | 330 ms |
-| Suite de tests | 150 tests, 132 en intégration continue, 44 % de couverture |
+| Suite de tests | 181 tests, 155 en intégration continue, 44 % de couverture |
 
 La combinaison la plus performante n'est pas celle que sert l'API. CamemBERT coûte
 325,8 ms par ticket sur processeur, davantage à lui seul que le budget de latence

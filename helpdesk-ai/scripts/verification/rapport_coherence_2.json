@@ -1,0 +1,100 @@
+{
+  "controles": [
+    {
+      "ok": true,
+      "libelle": "statuts du corpus : la ventilation somme au total",
+      "detail": "1800 = 1800"
+    },
+    {
+      "ok": true,
+      "libelle": "chaque effectif de statut du corpus figure au memoire",
+      "detail": "476 / 464 / 328 / 321 / 211"
+    },
+    {
+      "ok": true,
+      "libelle": "statuts de la base RAG : la ventilation somme au total",
+      "detail": "1357 = 1357"
+    },
+    {
+      "ok": true,
+      "libelle": "chaque effectif de statut de la base RAG figure au memoire",
+      "detail": "363 / 358 / 237 / 236 / 163"
+    },
+    {
+      "ok": true,
+      "libelle": "procedures distinctes de la base RAG = 46",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "1445 jamais rattache au protocole pipeline",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "355 jamais rattache au protocole pipeline",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "1444 jamais rattache au protocole expériences",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "356 jamais rattache au protocole expériences",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "cout de service tfidf_un_ticket_ms = 5,0",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "cout de service camembert_cpu_un_ticket_ms = 325,8",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "cout de service camembert_cuda_un_ticket_ms = 58,7",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "cout de service adaptateur_lora_Mo = 6,5",
+      "detail": ""
+    },
+    {
+      "ok": false,
+      "libelle": "cout de service parametres_camembert_M = 111,5",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "cout de service taille_pipeline_tfidf_Mo = 0,31",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "libelle": "latence p95 de 330 ms citee au memoire",
+      "detail": "artefact : {\"endpoint\": \"POST /api/v1/predict\", \"target_p95_ms\": 300.0, \"environment\": \"Docker (helpdesk-api, 2 workers uvicorn, image helpdesk-api:lat"
+    },
+    {
+      "ok": true,
+      "libelle": "toute image incluse existe sur le disque",
+      "detail": "50 images incluses"
+    },
+    {
+      "ok": true,
+      "libelle": "images presentes mais non incluses",
+      "detail": "_ecartees, armoiries_tunisie.png, ch01_diagramme_contexte.png, ch01_implantations_onetech.png, ch01_perimetre_service.png, ch01_planning.png, ch02_comparaison_publique.png, ch04_confiance.png, ch06_palette.png, tekup.png"
+    }
+  ],
+  "anomalies": [
+    {
+      "libelle": "cout de service parametres_camembert_M = 111,5",
+      "detail": ""
+    }
+  ]
+}

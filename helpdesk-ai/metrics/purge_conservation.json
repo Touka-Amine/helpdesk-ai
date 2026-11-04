@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-04T08:44:41+00:00",
+  "exigence": "ENF-04 (b) — durees de conservation",
+  "durees_arretees_par": null,
+  "mode": "releve",
+  "constats": {
+    "tickets_clos_a_delier": 0,
+    "entrees_de_journal_a_supprimer": 0,
+    "comptes_candidats_a_anonymisation": 0,
+    "limites": {
+      "tickets_clos_avant": "2023-10-05",
+      "journal_avant": "2025-10-04",
+      "comptes_crees_avant": "2024-10-04"
+    }
+  }
+}

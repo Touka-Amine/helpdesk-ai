@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-04T08:56:41+00:00",
+  "exigence": "EF-13 — signaux de gravite, a defaut de tonalite",
+  "avertissement": "Ce n est pas une analyse de tonalite : voir metrics/tonalite_eval.json pour la mesure qui l ecarte.",
+  "signal_retire": {
+    "code": "impossibilite",
+    "motif": "629 tickets d entrainement pour +0,02 point : ne distingue rien"
+  },
+  "mesures": {
+    "entrainement": {
+      "tickets": 1444,
+      "couverture": 0.3047,
+      "taux_de_base_haute": 0.4875,
+      "par_signal": {
+        "perte_de_donnees": {
+          "tickets": 43,
+          "part_haute": 0.7674,
+          "ecart_au_taux_de_base": 0.2799
+        },
+        "blocage": {
+          "tickets": 179,
+          "part_haute": 0.6201,
+          "ecart_au_taux_de_base": 0.1326
+        },
+        "indisponibilite": {
+          "tickets": 247,
+          "part_haute": 0.6478,
+          "ecart_au_taux_de_base": 0.1602
+        }
+      }
+    },
+    "test_gele": {
+      "tickets": 356,
+      "couverture": 0.4242,
+      "taux_de_base_haute": 0.441,
+      "par_signal": {
+        "blocage": {
+          "tickets": 130,
+          "part_haute": 0.5769,
+          "ecart_au_taux_de_base": 0.1359
+        },
+        "indisponibilite": {
+          "tickets": 21,
+          "part_haute": 0.8571,
+          "ecart_au_taux_de_base": 0.4161
+        }
+      }
+    }
+  }
+}

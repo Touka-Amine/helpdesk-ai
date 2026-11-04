@@ -25,9 +25,39 @@ nlp:
 
 rag:
   top_k: 3
-  similarity_threshold: 0.50   # relevé de 0.30 → filtre les suggestions RAG peu pertinentes
-  fallback_threshold: 0.20     # seuil fallback (aucun résultat au-dessus de 0.50)
-  hybrid_alpha: 0.5             # pondération sémantique dans le score hybride (Semaine 2)
+  # Seuil de récupération, recalibré sur l'échelle du score hybride.
+  #
+  # L'ancienne valeur, 0.50, était héritée de l'échelle du cosinus pur et se
+  # trouvait HORS DE PORTÉE du score hybride : sur les 40 requêtes annotées, le
+  # meilleur score par requête va de 0.3366 à 0.4886 et n'atteint jamais 0.50.
+  # Le seuil ne filtrait donc rien — il se contentait de marquer « repli » 100 %
+  # des recommandations, pour une sortie identique à celle d'un seuil de 0.20.
+  #
+  # 0.35 est le point mesuré où la précision de ce qui est réellement affiché est
+  # la plus haute (0.5185 contre 0.3667 sans filtre effectif), et où le taux de
+  # repli — 15 % — redevient un signal au lieu d'une constante.
+  # Contrepartie assumée : 2.02 suggestions par requête au lieu de 3.00.
+  #
+  # RÉSERVE, et elle doit accompagner le chiffre partout où il est cité : ce
+  # seuil a été CHOISI sur les 40 requêtes qui servent ensuite à le juger. Un
+  # réglage choisi et mesuré sur les mêmes données est flatteur. Validé de façon
+  # croisée — seuil choisi sur 32 requêtes, mesuré sur les 8 réservées, cinq
+  # plis — la précision tombe à 0.4886 contre 0.5652 dans l'échantillon, soit
+  # +0.0766 d'optimisme, environ un septième. (Ce 0.4886 est, par coïncidence,
+  # le même nombre que le plafond du score ci-dessus ; les deux n'ont aucun
+  # rapport.) Le CHOIX, lui, est stable : 0.35 ou 0.38 selon le pli.
+  # 0.5185 doit donc se lire comme un ordre de grandeur majoré.
+  #
+  # Mesures : src/pipeline/rag_eval.py --balayage-seuil et
+  # scripts/seuil_rag_hors_echantillon.py, protocole annoté (40 requêtes).
+  similarity_threshold: 0.35
+  fallback_threshold: 0.20     # plancher : en deçà, aucune suggestion n'est rendue
+  # Pondération du sémantique dans le score hybride. Mesuré au seuil servi :
+  # relever alpha rapproche l'échelle hybride de l'échelle sémantique et fait
+  # tomber le repli, au prix de la précision de l'affiché (alpha=0.8 → 0.3613
+  # contre 0.5185 ici ; la précision@3 reste plate, de 0.3500 à 0.3667).
+  # 0.5 reste le meilleur réglage ; le défaut venait du seuil, pas de la fusion.
+  hybrid_alpha: 0.5
 
 ml:
   confidence_threshold: 0.60   # relevé de 0.40 → routage auto ~70% tickets à ~85% précision
@@ -120,3 +150,48 @@ monitoring:
   # Referentiel de comparaison du taux de desaccord ML/humain. Null tant qu'aucune
   # mesure de production n'existe : le moniteur refuse alors de conclure a une derive.
   disagreement_baseline: null
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AXE 3 — Donnees personnelles (ENF-04 volet b)
+# ─────────────────────────────────────────────────────────────────────────────
+
+donnees_personnelles:
+  # Pseudonymisation des personnes nommees dans le corpus. La cle vit dans la
+  # variable d'environnement PSEUDO_KEY, hors du depot : sans elle un pseudonyme
+  # ne se remonte pas, avec elle le service recalcule celui d'un nom connu et
+  # retrouve ses tickets, sans conserver de table de correspondance.
+  pseudonymiser: true
+  variable_de_cle: PSEUDO_KEY
+  colonnes_identifiantes: ["Demandeur", "Assigné à"]
+
+  # Durees de conservation. Elles ne sont pas une opinion technique : ce sont des
+  # valeurs PROPOSEES au service, qui doit les arreter. Tant que la colonne
+  # « arrete_par » reste vide, la purge refuse de supprimer quoi que ce soit.
+  conservation:
+    arrete_par: ""              # nom et date de la decision du service
+    tickets_clos_jours: 1095    # trois ans : duree usuelle d'un historique de support
+    journal_audit_jours: 365    # un an : trace des modifications
+    comptes_inactifs_jours: 730 # deux ans sans connexion
+    jetons_expires_jours: 7     # jetons de reinitialisation deja perimes
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Usage du jeu de test gele (remarque de l'encadrant, 2026-10-09)
+# ─────────────────────────────────────────────────────────────────────────────
+
+jeu_gele:
+  # Un jeu de test ne se degrade pas d'un coup : il se degrade par usage. Chaque
+  # lecture qui TRANCHE — promouvoir, rejeter, revenir en arriere — fait passer
+  # un peu de son information dans le modele retenu. Au-dela d'un certain nombre
+  # de lectures, il ne mesure plus la generalisation : il est devenu un jeu de
+  # validation sans que personne ne l'ait decide.
+  #
+  # Le budget ne verrouille rien : il oblige a rendre la transgression visible.
+  # Une fois atteint, promote.py refuse d'arbitrer et renvoie a l'une des deux
+  # issues humaines : constituer une nouvelle reference a partir de tickets de
+  # production recents, ou assumer la lecture par ecrit avec --force.
+  #
+  # Valeur retenue : dix. Trois lectures ont deja eu lieu (v2, v3, v4 rejetees),
+  # reconstituees au journal depuis le registre. Dix laisse de la marge pour
+  # plusieurs cycles de reentrainement sans laisser la derive s'installer.
+  lectures_de_decision_max: 10
+  journal: data/reference/journal_jeu_gele.json

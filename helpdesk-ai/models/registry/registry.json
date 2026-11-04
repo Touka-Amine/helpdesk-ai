@@ -23,7 +23,8 @@
       "dataset_version": "3c89ac6025ba",
       "train_size": 1444,
       "test_size": 356,
-      "path": "models/registry/v2"
+      "path": "models/registry/v2",
+      "metrique_de_decision": 0.822
     },
     {
       "version": 3,
@@ -35,7 +36,8 @@
       "dataset_version": "3c89ac6025ba",
       "train_size": 1444,
       "test_size": 356,
-      "path": "models/registry/v3"
+      "path": "models/registry/v3",
+      "metrique_de_decision": 0.822
     },
     {
       "version": 4,
@@ -47,7 +49,8 @@
       "dataset_version": "3c89ac6025ba",
       "train_size": 1444,
       "test_size": 356,
-      "path": "models/registry/v4"
+      "path": "models/registry/v4",
+      "metrique_de_decision": 0.6995
     }
   ],
   "aliases": {

@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-04T08:20:02+00:00",
+  "exigence": "EF-12 — suggestion de priorite",
+  "protocole": "GroupShuffleSplit sur les titres, graine 42, test_size 0.2",
+  "entrainement": 1444,
+  "test": 356,
+  "titres_train": 46,
+  "titres_test": 12,
+  "entree": "titre + description, sans la priorite saisie ni la categorie",
+  "references": {
+    "majoritaire": {
+      "f1_macro": 0.204,
+      "accuracy": 0.441,
+      "f1_par_niveau": {
+        "basse": 0.0,
+        "normale": 0.0,
+        "haute": 0.6121
+      }
+    },
+    "hasard_stratifie": {
+      "f1_macro": 0.3183,
+      "accuracy": 0.3933,
+      "f1_par_niveau": {
+        "basse": 0.1013,
+        "normale": 0.3904,
+        "haute": 0.4633
+      }
+    }
+  },
+  "modele": {
+    "f1_macro": 0.3366,
+    "accuracy": 0.4916,
+    "f1_par_niveau": {
+      "basse": 0.0,
+      "normale": 0.3984,
+      "haute": 0.6112
+    }
+  },
+  "critere_acceptation": {
+    "couvre_les_trois_niveaux": false,
+    "marge_sur_la_reference": 0.0183,
+    "marge_minimale_exigee": 0.05
+  },
+  "repli_binaire_haute_ou_autre": {
+    "f1_macro": 0.5729,
+    "accuracy": 0.573,
+    "reference_f1_macro": 0.4808,
+    "marge": 0.0921,
+    "precision_quand_il_annonce_haute": 0.513,
+    "taux_de_base_haute": 0.441,
+    "exactitude_equilibree": 0.5791,
+    "exactitude_classe_majoritaire": 0.559,
+    "precision_minimale_exigee": 0.7,
+    "retenu": false
+  },
+  "modele_retenu": false,
+  "mode_retenu": "aucun",
+  "repartition_test": {
+    "haute": 157,
+    "normale": 147,
+    "basse": 52
+  }
+}

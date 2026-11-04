@@ -1,0 +1,122 @@
+{
+  "date": "2026-10-04T07:43:10+00:00",
+  "avertissement": "Le modele n'est pas re-entraine par tirage : seules les graines 42 donnent un jeu de test entierement inedit. Ces chiffres mesurent la STABILITE DE L'ECART entre les deux entrees, non la performance absolue.",
+  "graines": [
+    42,
+    1,
+    7,
+    13,
+    21,
+    55,
+    77,
+    101,
+    202,
+    303
+  ],
+  "seuil_regles": 0.6,
+  "par_tirage": [
+    {
+      "graine": 42,
+      "tickets_test": 355,
+      "f1_publie": 0.8343,
+      "f1_servable": 0.8644,
+      "ecart_f1": 0.0301,
+      "rappel_securite_publie": 0.6,
+      "rappel_securite_servable": 0.9
+    },
+    {
+      "graine": 1,
+      "tickets_test": 370,
+      "f1_publie": 0.8786,
+      "f1_servable": 0.9365,
+      "ecart_f1": 0.058,
+      "rappel_securite_publie": 0.3333,
+      "rappel_securite_servable": 0.8333
+    },
+    {
+      "graine": 7,
+      "tickets_test": 410,
+      "f1_publie": 0.886,
+      "f1_servable": 0.9434,
+      "ecart_f1": 0.0574,
+      "rappel_securite_publie": 0.3333,
+      "rappel_securite_servable": 0.8333
+    },
+    {
+      "graine": 13,
+      "tickets_test": 390,
+      "f1_publie": 0.9616,
+      "f1_servable": 0.9921,
+      "ecart_f1": 0.0306,
+      "rappel_securite_publie": 1.0,
+      "rappel_securite_servable": 1.0
+    },
+    {
+      "graine": 21,
+      "tickets_test": 377,
+      "f1_publie": 0.91,
+      "f1_servable": 0.9119,
+      "ecart_f1": 0.0019,
+      "rappel_securite_publie": 1.0,
+      "rappel_securite_servable": 1.0
+    },
+    {
+      "graine": 55,
+      "tickets_test": 362,
+      "f1_publie": 0.9068,
+      "f1_servable": 0.9374,
+      "ecart_f1": 0.0306,
+      "rappel_securite_publie": 1.0,
+      "rappel_securite_servable": 1.0
+    },
+    {
+      "graine": 77,
+      "tickets_test": 403,
+      "f1_publie": 0.9186,
+      "f1_servable": 0.9506,
+      "ecart_f1": 0.032,
+      "rappel_securite_publie": 1.0,
+      "rappel_securite_servable": 1.0
+    },
+    {
+      "graine": 101,
+      "tickets_test": 397,
+      "f1_publie": 0.9515,
+      "f1_servable": 0.9536,
+      "ecart_f1": 0.0021,
+      "rappel_securite_publie": 1.0,
+      "rappel_securite_servable": 1.0
+    },
+    {
+      "graine": 202,
+      "tickets_test": 410,
+      "f1_publie": 0.965,
+      "f1_servable": 0.995,
+      "ecart_f1": 0.03,
+      "rappel_securite_publie": 1.0,
+      "rappel_securite_servable": 1.0
+    },
+    {
+      "graine": 303,
+      "tickets_test": 422,
+      "f1_publie": 1.0,
+      "f1_servable": 1.0,
+      "ecart_f1": 0.0,
+      "rappel_securite_publie": 1.0,
+      "rappel_securite_servable": 1.0
+    }
+  ],
+  "resume": {
+    "ecart_f1_median": 0.0303,
+    "ecart_f1_min": 0.0,
+    "ecart_f1_max": 0.058,
+    "tirages_ou_le_servable_fait_mieux": 9,
+    "tirages": 10,
+    "f1_servable_median": 0.947,
+    "f1_servable_min": 0.8644,
+    "rappel_securite_servable_median": 1.0,
+    "rappel_securite_servable_min": 0.8333,
+    "tirages_au_dessus_de_0_85": 10,
+    "tirages_rappel_securite_au_dessus_de_0_70": 10
+  }
+}

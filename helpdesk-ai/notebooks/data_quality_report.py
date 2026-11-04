@@ -58,7 +58,9 @@ def compute_metrics(df: pd.DataFrame) -> dict:
     cat = find_col(df, "gorie")
     desc = find_col(df, "Description")
     titre = find_col(df, "Titre")
-    res = find_col(df, "solution")
+    # "solution" seul attrapait "Date de resolution", qui n'est remplie que pour les
+    # tickets au statut Resolu : ce n'est pas la colonne de texte cherchee ici.
+    res = find_col(df, "Motif") or find_col(df, "solution")
     statut = find_col(df, "STATUT")
 
     n = len(df)
@@ -83,7 +85,11 @@ def compute_metrics(df: pd.DataFrame) -> dict:
         "mots_desc_max": int(wl.max()),
         "mots_desc_moyenne": round(float(wl.mean()), 1),
         "statut": {str(k): int(v) for k, v in df[statut].value_counts().items()},
-        "base_rag_resolus": int(df[statut].astype(str).str.contains("solu", case=False, na=False).sum()),
+        # Deux decomptes distincts, a ne pas confondre : le statut terminal "Resolu",
+        # et le fait qu'un ticket porte un texte de resolution. C'est le second qui
+        # determine la base RAG, quel que soit le statut (cf. src/pipeline/split.py).
+        "tickets_resolus": int(df[statut].astype(str).str.contains("solu", case=False, na=False).sum()),
+        "tickets_documentes": int((df[res].notna() & (df[res].astype(str).str.strip() != "")).sum()),
         "completude_pct": {c: round(float(df[c].notna().mean() * 100), 2) for c in df.columns},
         "manquants_pct": {c: round(float(df[c].isna().mean() * 100), 2)
                            for c in df.columns if df[c].isna().any()},
@@ -152,12 +158,12 @@ def make_figures(df: pd.DataFrame, m: dict) -> list[str]:
     p4 = os.path.join(FIG_DIR, "dq_04_redondance.png")
     fig.savefig(p4, dpi=150, bbox_inches="tight"); paths.append(p4); plt.close(fig)
 
-    # 5. Statut + base RAG
+    # 5. Statut + tickets documentés
     fig, ax = plt.subplots(figsize=(10, 5))
     pd.Series(m["statut"]).sort_values(ascending=False).plot(
         kind="bar", ax=ax, color="slateblue", edgecolor="white")
-    ax.set_title(f"Répartition des statuts (base de résolution RAG : "
-                 f"{m['base_rag_resolus']} tickets résolus)", fontweight="bold")
+    ax.set_title(f"Répartition des statuts ({m['tickets_resolus']} au statut Résolu, "
+                 f"{m['tickets_documentes']} tickets documentés)", fontweight="bold")
     ax.set_ylabel("Nombre de tickets"); ax.tick_params(axis="x", rotation=20)
     plt.tight_layout()
     p5 = os.path.join(FIG_DIR, "dq_05_statuts.png")
@@ -181,7 +187,8 @@ def build_pdf(png_paths: list[str], m: dict) -> str:
             f"Titres uniques (types de tickets) : {m['titres_uniques']}",
             f"Tickets vides : {m['tickets_vides']}    Doublons de ligne : {m['doublons_lignes_completes']}",
             f"Longueur médiane (desc.) : {m['mots_desc_median']} mots",
-            f"Base de résolution (RAG) : {m['base_rag_resolus']} tickets résolus",
+            f"Tickets documentés (champ de résolution rempli) : {m['tickets_documentes']} / "
+            f"{m['n_lignes']}, dont {m['tickets_resolus']} au statut Résolu",
         ]
         for i, l in enumerate(lignes):
             fig.text(0.12, 0.62 - i * 0.035, "• " + l, fontsize=11)

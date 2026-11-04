@@ -24,6 +24,9 @@ data/splits/*
 data/reference/*
 data/curated/*
 data/knowledge/*
+# Journal des refus du contrôle qualité (api/db/vector_store.py) : titres et
+# catégories de tickets de production, même régime que data/knowledge/.
+data/kb/
 !data/reference/*manifest.json
 !data/curated/*.manifest.json
 !data/knowledge/*.manifest.json
