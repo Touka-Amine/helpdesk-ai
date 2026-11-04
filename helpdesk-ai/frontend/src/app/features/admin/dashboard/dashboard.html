@@ -10,43 +10,55 @@
       </div>
     </div>
 
-    <!-- KPIs -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-gutter">
-      <div class="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/40 shadow-sm">
-        <div class="flex items-center justify-between mb-stack-md">
-          <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total Tickets</span>
-          <span class="material-symbols-outlined text-primary">confirmation_number</span>
+    <!-- KPIs : meme carte que les compteurs de Tous les tickets, tuile a gauche,
+         libelle et chiffre a droite, memes polices -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
+      <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg flex items-center gap-stack-md">
+        <div class="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined">confirmation_number</span>
         </div>
-        <p class="font-display-lg text-display-lg text-on-surface">{{ totalCount() }}</p>
+        <div class="min-w-0">
+          <p class="font-label-md text-label-md text-on-surface-variant">Total tickets</p>
+          <p class="font-display-lg text-display-lg text-on-surface leading-none mt-1">{{ totalCount() }}</p>
+        </div>
       </div>
 
-      <div class="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/40 shadow-sm">
-        <div class="flex items-center justify-between mb-stack-md">
-          <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">En attente</span>
-          <span class="material-symbols-outlined text-amber-600">hourglass_top</span>
+      <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg flex items-center gap-stack-md">
+        <div class="w-11 h-11 rounded-lg flex items-center justify-center shrink-0"
+          [style.background]="statutCfg['En attente'].bg" [style.color]="statutCfg['En attente'].color">
+          <span class="material-symbols-outlined">hourglass_top</span>
         </div>
-        <p class="font-display-lg text-display-lg text-on-surface">{{ enAttenteCount() }}</p>
-        <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">nécessitent une approbation</p>
+        <div class="min-w-0">
+          <p class="font-label-md text-label-md text-on-surface-variant">En attente</p>
+          <p class="font-display-lg text-display-lg leading-none mt-1" [style.color]="statutCfg['En attente'].color">{{ enAttenteCount() }}</p>
+          <p class="font-label-sm text-label-sm text-outline mt-1">nécessitent une approbation</p>
+        </div>
       </div>
 
-      <div class="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/40 shadow-sm">
-        <div class="flex items-center justify-between mb-stack-md">
-          <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Temps résolution moy.</span>
-          <span class="material-symbols-outlined text-tertiary">timer</span>
+      <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg flex items-center gap-stack-md">
+        <div class="w-11 h-11 rounded-lg flex items-center justify-center shrink-0"
+          [style.background]="statutCfg['Résolu'].bg" [style.color]="statutCfg['Résolu'].color">
+          <span class="material-symbols-outlined">timer</span>
         </div>
-        <p class="font-display-lg text-display-lg text-on-surface">{{ delaiMoyenLabel() }}</p>
+        <div class="min-w-0">
+          <p class="font-label-md text-label-md text-on-surface-variant">Temps de résolution moyen</p>
+          <p class="font-display-lg text-display-lg text-on-surface leading-none mt-1">{{ delaiMoyenLabel() }}</p>
+          <p class="font-label-sm text-label-sm text-outline mt-1">de la réception à la clôture</p>
+        </div>
       </div>
 
-      <div class="bg-surface-container-lowest p-stack-lg rounded-xl border-l-4 border-primary shadow-sm">
-        <div class="flex items-center justify-between mb-stack-md">
-          <span class="font-label-md text-label-md text-primary font-bold uppercase tracking-wider">Confiance IA moy.</span>
-          <span class="material-symbols-outlined text-primary">psychology</span>
+      <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg flex items-center gap-stack-md">
+        <div class="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined">psychology</span>
         </div>
-        @if (confianceMoyenne() != null) {
-          <p class="font-display-lg text-display-lg text-on-surface">{{ confianceMoyenne() }}%</p>
-        } @else {
-          <p class="font-display-lg text-display-lg text-on-surface-variant">—</p>
-        }
+        <div class="min-w-0">
+          <p class="font-label-md text-label-md text-on-surface-variant">Confiance IA moyenne</p>
+          @if (confianceMoyenne() != null) {
+            <p class="font-display-lg text-display-lg text-on-surface leading-none mt-1">{{ confianceMoyenne() }}%</p>
+          } @else {
+            <p class="font-display-lg text-display-lg text-on-surface-variant leading-none mt-1">—</p>
+          }
+        </div>
       </div>
     </div>
 
@@ -62,7 +74,25 @@
         <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-lg">Répartition par statut</h3>
         <div class="h-56 relative">
           <canvas baseChart [data]="statutChartData()" [options]="chartOptionsDoughnut" type="doughnut"></canvas>
+          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span class="font-headline-md text-headline-md text-on-surface leading-none">{{ totalCount() }}</span>
+            <span class="font-label-sm text-label-sm text-outline">tickets</span>
+          </div>
         </div>
+
+        <!-- Légende toujours visible : chaque couleur dit son statut sans survol -->
+        <ul class="mt-stack-lg space-y-stack-sm">
+          @for (p of repartitionStatuts(); track p.statut) {
+            <li class="flex items-center gap-stack-sm">
+              <span class="w-3 h-3 rounded-full shrink-0" [style.background]="p.couleur"></span>
+              <span class="flex-1 font-label-md text-label-md text-on-surface">{{ p.libelle }}</span>
+              <span class="font-label-md text-label-md text-on-surface tabular-nums">{{ p.n }}</span>
+              <span class="w-12 text-right font-label-sm text-label-sm text-outline tabular-nums">{{ (p.pct * 100) | number: '1.0-0' }} %</span>
+            </li>
+          } @empty {
+            <li class="font-body-md text-body-md text-on-surface-variant">Aucun ticket pour l'instant.</li>
+          }
+        </ul>
       </div>
     </div>
 
@@ -99,7 +129,9 @@
                       <p class="font-label-sm text-label-sm text-on-surface-variant">{{ t.categorie_finale || t.categorie_predite || 'Non classé' }}</p>
                     </td>
                     <td class="px-gutter py-4">
-                      <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[11px] font-bold rounded-full">{{ timeAgo(t.created_at) }}</span>
+                      <!-- Couleurs du statut « En attente », qui suivent le thème clair ou sombre -->
+                      <span class="px-2 py-0.5 text-[11px] font-bold rounded-full whitespace-nowrap"
+                        [style.background]="statutCfg['En attente'].bg" [style.color]="statutCfg['En attente'].color">{{ timeAgo(t.created_at) }}</span>
                     </td>
                   </tr>
                 }

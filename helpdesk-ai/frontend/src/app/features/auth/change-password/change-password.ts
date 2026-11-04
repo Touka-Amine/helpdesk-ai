@@ -1,15 +1,16 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthApiService } from '../../../api/auth-api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AuthShell } from '../auth-shell/auth-shell';
+import { ThemeToggle } from '../theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AuthShell],
+  imports: [CommonModule, ReactiveFormsModule, AuthShell, ThemeToggle],
   templateUrl: './change-password.html',
   styleUrl: './change-password.css',
 })
@@ -18,6 +19,7 @@ export class ChangePassword {
   private authApi = inject(AuthApiService);
   private auth    = inject(AuthService);
   private router  = inject(Router);
+  private location = inject(Location);
 
   loading  = signal(false);
   errorMsg = signal<string | null>(null);
@@ -60,7 +62,12 @@ export class ChangePassword {
     });
   }
 
-  logout(): void {
-    this.auth.logout();
+  /** Retour à l'écran précédent ; à défaut d'historique, à l'accueil du rôle. */
+  annuler(): void {
+    if (window.history.length > 1) {
+      this.location.back();
+    } else {
+      this.router.navigate([this.auth.isAdmin() ? '/admin/dashboard' : '/client/my-tickets']);
+    }
   }
 }

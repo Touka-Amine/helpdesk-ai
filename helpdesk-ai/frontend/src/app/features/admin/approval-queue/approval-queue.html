@@ -1,40 +1,295 @@
 <div class="space-y-gutter">
-  <div>
-    <h2 class="font-display-lg text-display-lg text-on-surface">File d'approbation</h2>
-    <p class="font-body-md text-body-md text-on-surface-variant mt-1">{{ pendingTickets().length }} ticket(s) en attente de validation — cliquez sur un ticket pour le prendre en charge</p>
+
+  <!-- En-tête -->
+  <div class="flex items-center gap-stack-md">
+    <div class="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+      <span class="material-symbols-outlined">fact_check</span>
+    </div>
+    <div class="min-w-0">
+      <h2 class="font-display-lg text-display-lg text-on-surface">File d'approbation</h2>
+      <p class="font-body-md text-body-md text-on-surface-variant mt-1">
+        {{ pendingTickets().length }} ticket(s) en attente de validation — cliquez sur un ticket pour l'examiner
+      </p>
+    </div>
   </div>
 
-  @if (error()) {
-    <p class="text-body-md font-body-md text-error bg-error-container/40 rounded-lg px-3 py-2">{{ error() }}</p>
+  @if (messageErreur()) {
+    <p class="text-body-md font-body-md text-error bg-error-container/40 rounded-lg px-3 py-2">{{ messageErreur() }}</p>
   }
+
+  <!-- Piles + recherche -->
+  <div class="flex flex-wrap items-center gap-stack-md">
+    <!-- Chaque onglet porte la couleur de sa pile ; l'onglet ouvert se teinte entierement -->
+    @for (o of onglets; track o.cle) {
+      <button type="button" (click)="changerOnglet(o.cle)" [attr.aria-pressed]="onglet() === o.cle"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg border font-label-md text-label-md transition-colors
+               {{ onglet() === o.cle ? 'shadow-sm' : 'bg-surface-container-lowest text-on-surface border-outline-variant/40 hover:bg-surface-container' }}"
+        [style.background]="onglet() === o.cle ? teinte(o.couleur, 16) : null"
+        [style.border-color]="onglet() === o.cle ? teinte(o.couleur, 60) : null"
+        [style.color]="onglet() === o.cle ? o.couleur : null">
+        <span class="material-symbols-outlined text-[18px]" [style.color]="o.couleur">{{ o.icone }}</span>
+        {{ o.libelle }}
+        <span class="min-w-[22px] px-1.5 py-0.5 rounded-full text-center text-[11px] font-bold leading-4"
+          [style.background]="onglet() === o.cle ? o.couleur : teinte(o.couleur, 16)"
+          [style.color]="onglet() === o.cle ? '#ffffff' : o.couleur">{{ compte(o.cle) }}</span>
+      </button>
+    }
+
+    <div class="relative flex-1 min-w-[220px] max-w-sm ml-auto">
+      <span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+      <input type="text" [ngModel]="recherche()" (ngModelChange)="recherche.set($event)" placeholder="Rechercher un ticket…"
+        class="w-full bg-surface-container-lowest border border-outline-variant/40 rounded-lg font-body-md text-body-md text-on-surface py-2 pl-10 pr-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+    </div>
+
+    <!-- Recherche par date : un jour precis se retrouve sans faire defiler la pile. -->
+    <div class="flex items-center gap-2">
+      <div class="relative">
+        <span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">calendar_month</span>
+        <input type="date" [max]="aujourdhui()" [ngModel]="jour()" (ngModelChange)="changerJour($event)"
+          aria-label="Filtrer par date"
+          class="bg-surface-container-lowest border rounded-lg font-body-md text-body-md text-on-surface py-2 pl-10 pr-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors {{ jour() ? 'border-primary' : 'border-outline-variant/40' }}" />
+      </div>
+      @if (jour()) {
+        <button type="button" (click)="effacerJour()" title="Retirer le filtre de date"
+          class="flex items-center gap-1 px-2.5 py-2 rounded-lg border border-outline-variant/40 bg-surface-container-lowest font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      }
+    </div>
+
+    <!-- La file se relit toute seule ; le bouton sert quand on ne veut pas attendre. -->
+    <button type="button" (click)="rafraichir()" title="Relire la file maintenant"
+      class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-outline-variant/40 bg-surface-container-lowest font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container transition-colors">
+      <span class="material-symbols-outlined text-[18px]">refresh</span>
+      @if (derniereMaj()) { <span class="hidden sm:inline">à jour à {{ heureMaj() }}</span> }
+    </button>
+  </div>
 
   @if (loading()) {
     <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Chargement…</p>
-  } @else if (pendingTickets().length === 0) {
-    <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Aucun ticket en attente d'approbation.</p>
   } @else {
-    <div class="flex flex-col gap-stack-md">
-      @for (t of pendingTickets(); track t.id) {
-        <button type="button" (click)="openTicket(t)" [disabled]="opening() !== null"
-          class="text-left bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm hover:border-primary transition-colors disabled:opacity-60 flex items-center justify-between gap-stack-md">
-          <div class="min-w-0">
-            <p class="font-body-md text-body-md font-semibold text-on-surface truncate">#{{ t.id.toString().padStart(4,'0') }} — {{ t.titre }}</p>
-            <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">{{ t.demandeur_nom || '—' }} · en attente depuis {{ timeAgo(t.created_at) }} · {{ t.categorie_finale || t.categorie_predite || 'Non classé' }}</p>
+    <div class="grid grid-cols-1 xl:grid-cols-[1fr_minmax(380px,460px)] gap-gutter items-start">
+
+      <!-- Volet gauche : la pile -->
+      <div class="flex flex-col gap-stack-md min-w-0">
+        @if (visibles().length === 0) {
+          <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg text-center">
+            <span class="material-symbols-outlined text-outline">inbox</span>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-1">
+              @if (jour()) { Aucun ticket dans cette pile le {{ jourLisible() }}. }
+              @else if (recherche()) { Aucun ticket ne correspond à cette recherche. }
+              @else if (onglet() === 'attente') { Aucun ticket en attente d'approbation. }
+              @else { Cette pile est vide. }
+            </p>
           </div>
-          <div class="flex items-center gap-stack-md flex-none">
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold"
-              [class.bg-green-100]="isAutoRouted(t)" [class.text-green-700]="isAutoRouted(t)"
-              [class.bg-amber-100]="!isAutoRouted(t)" [class.text-amber-700]="!isAutoRouted(t)">
-              Confiance {{ (getConfidence(t) * 100).toFixed(0) }}%
-            </span>
-            @if (opening() === t.id) {
-              <span class="text-label-sm font-label-sm text-primary">Ouverture…</span>
-            } @else {
-              <span class="material-symbols-outlined text-outline">arrow_forward</span>
+        }
+
+        @for (t of visibles(); track t.id) {
+          <button type="button" (click)="choisir(t)"
+            class="w-full text-left bg-surface-container-lowest border rounded-xl p-stack-lg shadow-sm transition-colors {{ choisi()?.id === t.id ? 'border-primary ring-1 ring-primary/40' : 'border-outline-variant/40 hover:border-primary/60' }}">
+            <div class="flex items-start gap-stack-md">
+
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                [style.background]="cfgCategorie(categorie(t)).bg" [style.color]="cfgCategorie(categorie(t)).color">
+                <span class="material-symbols-outlined text-[20px]">{{ cfgCategorie(categorie(t)).icon }}</span>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between gap-stack-md">
+                  <span class="font-label-sm text-label-sm text-outline">{{ reference(t) }}</span>
+                  <span class="px-2 py-0.5 rounded-full font-label-sm text-label-sm whitespace-nowrap"
+                    [style.background]="statutCfg[t.statut]?.bg" [style.color]="statutCfg[t.statut]?.color">
+                    {{ statutCfg[t.statut]?.label ?? t.statut }}
+                  </span>
+                </div>
+
+                <p class="font-body-md text-body-md font-semibold text-on-surface truncate mt-0.5">{{ t.titre }}</p>
+
+                <div class="flex items-center justify-between gap-stack-md mt-stack-sm">
+                  <div class="flex items-center gap-stack-md min-w-0">
+                    <span class="flex items-center gap-1.5 font-label-sm text-label-sm truncate" [style.color]="cfgCategorie(categorie(t)).color">
+                      <span class="w-2 h-2 rounded-full shrink-0" [style.background]="cfgCategorie(categorie(t)).color"></span>
+                      {{ categorie(t) || 'Non classé' }}
+                    </span>
+                    @if (priorite(t)) {
+                      <span class="px-2 py-0.5 rounded-full font-label-sm text-label-sm whitespace-nowrap"
+                        [style.background]="cfgPriorite(priorite(t)).bg" [style.color]="cfgPriorite(priorite(t)).color">
+                        {{ priorite(t) }}
+                      </span>
+                    }
+                  </div>
+                  <span class="font-label-sm text-label-sm text-outline whitespace-nowrap">
+                    {{ libelleDate(t) }} {{ timeAgo(dateRef(t)) }}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-stack-sm mt-stack-md">
+                  <span class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">Confiance IA : {{ confPct(t.confiance) }}%</span>
+                  <div class="h-1.5 flex-1 max-w-[160px] rounded-full bg-outline-variant/40 overflow-hidden">
+                    <div class="h-full rounded-full" [style.width.%]="confPct(t.confiance)" [style.background]="confianceColor(t.confiance)"></div>
+                  </div>
+                </div>
+              </div>
+
+              <span class="material-symbols-outlined text-outline self-center shrink-0">chevron_right</span>
+            </div>
+          </button>
+        }
+
+        @if (resteAVoir() > 0) {
+          <button type="button" (click)="voirPlus()"
+            class="self-center px-4 py-2 rounded-lg border border-outline-variant/40 bg-surface-container-lowest text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors">
+            Afficher plus ({{ resteAVoir() }} restants)
+          </button>
+        }
+
+        @if (total() > 0 && onglet() !== 'attente') {
+          <p class="font-label-sm text-label-sm text-outline text-center">
+            {{ visibles().length }} ticket(s) sur {{ total() }}, du plus récent au plus ancien
+            @if (jour()) { · {{ jourLisible() }} }
+          </p>
+        }
+      </div>
+
+      <!-- Volet droit : le ticket ouvert -->
+      <aside class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl shadow-sm overflow-hidden xl:sticky xl:top-4">
+        @if (choisi(); as t) {
+
+          <div class="p-stack-lg border-b border-outline-variant/40">
+            <div class="flex items-center justify-between gap-stack-md">
+              <div class="flex items-center gap-stack-md min-w-0">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                  [style.background]="cfgCategorie(categorie(t)).bg" [style.color]="cfgCategorie(categorie(t)).color">
+                  <span class="material-symbols-outlined text-[20px]">{{ cfgCategorie(categorie(t)).icon }}</span>
+                </div>
+                <span class="font-label-md text-label-md text-outline">{{ reference(t) }}</span>
+              </div>
+              <span class="px-3 py-1 rounded-full font-label-md text-label-md whitespace-nowrap"
+                [style.background]="statutCfg[t.statut]?.bg" [style.color]="statutCfg[t.statut]?.color">
+                {{ statutCfg[t.statut]?.label ?? t.statut }}
+              </span>
+            </div>
+
+            <h3 class="font-headline-sm text-headline-sm text-on-surface mt-stack-md">{{ t.titre }}</h3>
+
+            <div class="flex flex-wrap items-center gap-x-stack-lg gap-y-stack-sm mt-stack-md font-label-sm text-label-sm text-on-surface-variant">
+              <span class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px]">calendar_today</span>{{ formatDate(t.created_at) }}
+              </span>
+              @if (priorite(t)) {
+                <span class="flex items-center gap-1.5" [style.color]="cfgPriorite(priorite(t)).color">
+                  <span class="material-symbols-outlined text-[16px]">{{ cfgPriorite(priorite(t)).icon }}</span>{{ priorite(t) }}
+                </span>
+              }
+              <span class="flex items-center gap-1.5" [style.color]="cfgCategorie(categorie(t)).color">
+                <span class="w-2 h-2 rounded-full" [style.background]="cfgCategorie(categorie(t)).color"></span>{{ categorie(t) || 'Non classé' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="p-stack-lg space-y-gutter max-h-[calc(100vh-22rem)] overflow-y-auto">
+
+            <section>
+              <h4 class="flex items-center gap-2 font-label-md text-label-md text-on-surface mb-stack-md">
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant">description</span>
+                Description du ticket
+              </h4>
+              <p class="bg-surface-container rounded-xl p-stack-lg font-body-md text-body-md text-on-surface-variant leading-relaxed whitespace-pre-line">{{ t.description || '—' }}</p>
+            </section>
+
+            <section class="bg-surface-container rounded-xl p-stack-lg">
+              <h4 class="flex items-center gap-2 font-label-md text-label-md text-on-surface mb-stack-md">
+                <span class="material-symbols-outlined text-[18px] text-primary">smart_toy</span>
+                Prédiction de l'IA
+              </h4>
+              <div class="grid grid-cols-2 gap-stack-md">
+                <div class="bg-surface-container-lowest rounded-lg p-stack-md">
+                  <p class="font-label-sm text-label-sm text-on-surface-variant">Catégorie prédite</p>
+                  <p class="flex items-center gap-1.5 mt-1 font-body-md text-body-md font-semibold" [style.color]="cfgCategorie(t.categorie_predite).color">
+                    <span class="w-2 h-2 rounded-full shrink-0" [style.background]="cfgCategorie(t.categorie_predite).color"></span>
+                    {{ t.categorie_predite || '—' }}
+                  </p>
+                </div>
+                <div class="bg-surface-container-lowest rounded-lg p-stack-md">
+                  <p class="font-label-sm text-label-sm text-on-surface-variant">Confiance</p>
+                  <div class="flex items-center gap-stack-sm mt-1">
+                    <span class="font-headline-sm text-headline-sm" [style.color]="confianceColor(t.confiance)">{{ confPct(t.confiance) }}%</span>
+                    <div class="h-1.5 flex-1 rounded-full bg-outline-variant/40 overflow-hidden">
+                      <div class="h-full rounded-full" [style.width.%]="confPct(t.confiance)" [style.background]="confianceColor(t.confiance)"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              @if (t.solution_rag) {
+                <div class="mt-stack-md bg-surface-container-lowest border-l-4 border-primary rounded-lg p-stack-md">
+                  <p class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+                    <span class="material-symbols-outlined text-[18px] text-primary">lightbulb</span>
+                    Recommandation IA
+                  </p>
+                  <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mt-1 whitespace-pre-line">{{ t.solution_rag }}</p>
+                </div>
+              }
+            </section>
+
+            @if (t.knowledge_rag) {
+              <section class="bg-surface-container rounded-xl overflow-hidden">
+                <button type="button" (click)="ragOuvert.set(!ragOuvert())"
+                  class="w-full flex items-center justify-between gap-stack-md p-stack-lg text-left">
+                  <span class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant">menu_book</span>
+                    Cas similaire retrouvé (RAG)
+                    @if (t.rag_score != null) {
+                      <span class="font-label-sm text-label-sm" [style.color]="confianceColor(t.rag_score)">· {{ confPct(t.rag_score) }}%</span>
+                    }
+                  </span>
+                  <span class="material-symbols-outlined text-on-surface-variant">{{ ragOuvert() ? 'expand_less' : 'expand_more' }}</span>
+                </button>
+                @if (ragOuvert()) {
+                  <blockquote class="mx-stack-lg mb-stack-lg border-l-2 border-outline-variant pl-3 font-body-md text-body-md text-on-surface-variant leading-relaxed whitespace-pre-line">{{ t.knowledge_rag }}</blockquote>
+                }
+              </section>
             }
+
+            <section class="bg-surface-container rounded-xl p-stack-lg">
+              <p class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+                <span class="material-symbols-outlined text-[18px] text-primary">verified_user</span>
+                @if (t.statut === 'En attente') { Action requise } @else { Ticket traité }
+              </p>
+              <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">
+                @if (t.statut === 'En attente') { Valider prend le ticket en charge et ouvre son traitement. Rejeter le classe sans suite. }
+                @else { Statut actuel : {{ statutCfg[t.statut]?.label ?? t.statut }}. }
+              </p>
+
+              <div class="flex flex-wrap gap-stack-md mt-stack-md">
+                @if (t.statut === 'En attente') {
+                  <button type="button" (click)="valider(t)" [disabled]="enCours() !== null"
+                    class="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-valider text-on-valider font-label-md text-label-md shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50">
+                    <span class="material-symbols-outlined text-[18px]">check</span>
+                    {{ enCours() === t.id ? 'Envoi…' : 'Valider' }}
+                  </button>
+                  <button type="button" (click)="rejeter(t)" [disabled]="enCours() !== null"
+                    class="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-rejeter text-on-rejeter font-label-md text-label-md shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                    Rejeter
+                  </button>
+                }
+                <button type="button" (click)="ouvrir(t)"
+                  class="flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                  @if (t.statut === 'En attente') { Afficher plus } @else { Ouvrir le ticket }
+                </button>
+              </div>
+            </section>
           </div>
-        </button>
-      }
+
+        } @else {
+          <div class="p-stack-lg text-center">
+            <span class="material-symbols-outlined text-outline">touch_app</span>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-1">Sélectionnez un ticket pour voir son détail.</p>
+          </div>
+        }
+      </aside>
     </div>
   }
 </div>

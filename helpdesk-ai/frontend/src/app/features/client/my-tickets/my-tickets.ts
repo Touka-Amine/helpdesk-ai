@@ -1,17 +1,13 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TicketApiService } from '../../../api/ticket-api.service';
-import { Ticket, Statut, STATUT_CFG } from '../../../models/ticket.models';
+import { relirePeriodiquement } from '../../../core/services/relecture';
+import { Ticket, Statut, STATUT_CFG, dateTicket } from '../../../models/ticket.models';
 
-const STATUT_BADGE_CLASSES: Record<Statut, string> = {
-  'En attente': 'bg-amber-100 text-amber-700',
-  'Prise en Charge': 'bg-blue-100 text-blue-700',
-  Résolu: 'bg-green-100 text-green-700',
-  Rejeté: 'bg-red-100 text-red-700',
-  Problème: 'bg-purple-100 text-purple-700',
-};
+/** Les 5 tickets les plus récents par page. */
+const TAILLE_PAGE = 5;
 
 @Component({
   selector: 'app-my-tickets',
@@ -20,18 +16,20 @@ const STATUT_BADGE_CLASSES: Record<Statut, string> = {
   templateUrl: './my-tickets.html',
   styleUrl: './my-tickets.css',
 })
-export class MyTickets implements OnInit {
+export class MyTickets implements OnInit, OnDestroy {
   private ticketApi = inject(TicketApiService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   tickets = signal<Ticket[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
 
-  statutFilter = signal<'Tous' | Statut>('Tous');
+  /** « En cours » regroupe tout ce qui n'est ni résolu ni rejeté. */
+  statutFilter = signal<'Tous' | 'En cours' | Statut>('Tous');
   searchFilter = signal('');
 
-  statutOptions: ('Tous' | Statut)[] = ['Tous', ...(Object.keys(STATUT_CFG) as Statut[])];
+  statutOptions: ('Tous' | 'En cours' | Statut)[] = ['Tous', 'En cours', ...(Object.keys(STATUT_CFG) as Statut[])];
   statutCfg = STATUT_CFG;
 
   filtered = computed(() => {
@@ -39,7 +37,9 @@ export class MyTickets implements OnInit {
     const statut = this.statutFilter();
     const search = this.searchFilter().toLowerCase().trim();
 
-    if (statut !== 'Tous') {
+    if (statut === 'En cours') {
+      result = result.filter((t) => t.statut !== 'Résolu' && t.statut !== 'Rejeté');
+    } else if (statut !== 'Tous') {
       result = result.filter((t) => t.statut === statut);
     }
     if (search) {
@@ -47,8 +47,59 @@ export class MyTickets implements OnInit {
         (t) => t.titre.toLowerCase().includes(search) || String(t.id).includes(search)
       );
     }
-    return result;
+    return [...result].sort(
+      (a, b) => dateTicket(b.created_at).getTime() - dateTicket(a.created_at).getTime(),
+    );
   });
+
+  // ── Pagination, même logique que Tous les tickets ──────────────────────────
+  page = signal(1);
+  taillePage = TAILLE_PAGE;
+
+  nbPages = computed(() => Math.max(1, Math.ceil(this.filtered().length / this.taillePage)));
+  /** La page demandée, ramenée dans les bornes : une relecture qui réduit la
+   *  liste ne doit pas laisser l'écran sur une page vide. */
+  pageCourante = computed(() => Math.min(this.page(), this.nbPages()));
+  pageTickets = computed(() => {
+    const debut = (this.pageCourante() - 1) * this.taillePage;
+    return this.filtered().slice(debut, debut + this.taillePage);
+  });
+  premierAffiche = computed(() => this.filtered().length === 0 ? 0 : (this.pageCourante() - 1) * this.taillePage + 1);
+  dernierAffiche = computed(() => Math.min(this.pageCourante() * this.taillePage, this.filtered().length));
+
+  /** Numéros de page affichés : les premiers, les derniers, et une ellipse entre
+   *  les deux quand la liste est longue. */
+  pagesAffichees = computed<(number | '…')[]>(() => {
+    const total = this.nbPages();
+    const courante = this.pageCourante();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: (number | '…')[] = [];
+    const proches = new Set([1, 2, total, courante - 1, courante, courante + 1]);
+    for (let p = 1; p <= total; p++) {
+      if (proches.has(p)) pages.push(p);
+      else if (pages[pages.length - 1] !== '…') pages.push('…');
+    }
+    return pages;
+  });
+
+  allerPage(p: number | '…'): void {
+    if (p === '…') return;
+    this.page.set(Math.min(Math.max(1, p), this.nbPages()));
+  }
+
+  pagePrecedente(): void { this.allerPage(this.pageCourante() - 1); }
+  pageSuivante(): void { this.allerPage(this.pageCourante() + 1); }
+
+  /** Un nouveau filtre repart de la première page. */
+  majRecherche(valeur: string): void {
+    this.searchFilter.set(valeur);
+    this.page.set(1);
+  }
+
+  majStatut(valeur: 'Tous' | 'En cours' | Statut): void {
+    this.statutFilter.set(valeur);
+    this.page.set(1);
+  }
 
   totalCount = computed(() => this.tickets().length);
   enAttenteCount = computed(() => this.tickets().filter((t) => t.statut === 'En attente').length);
@@ -56,7 +107,7 @@ export class MyTickets implements OnInit {
 
   cetteSemaineCount = computed(() => {
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    return this.tickets().filter((t) => new Date(t.created_at).getTime() >= weekAgo).length;
+    return this.tickets().filter((t) => dateTicket(t.created_at).getTime() >= weekAgo).length;
   });
 
   tauxResolution = computed(() => {
@@ -74,19 +125,32 @@ export class MyTickets implements OnInit {
     return Math.round(totalMs / resolus.length / 3600000);
   });
 
+  private arreterRelecture?: () => void;
+
   ngOnInit(): void {
+    // L'accueil ouvre la liste déjà filtrée (« Mes tickets en cours »).
+    if (this.route.snapshot.queryParamMap.get('statut') === 'en-cours') this.statutFilter.set('En cours');
     this.loadTickets();
+    // Les statuts de la liste suivent les decisions des techniciens sans recharger.
+    this.arreterRelecture = relirePeriodiquement(() => this.loadTickets(true));
   }
 
-  loadTickets(): void {
-    this.loading.set(true);
+  ngOnDestroy(): void {
+    this.arreterRelecture?.();
+  }
+
+  /** `silencieux` : relecture de fond, sans voyant de chargement ni message
+   *  d'erreur pour un echec passager ; la liste affichee reste en place. */
+  loadTickets(silencieux = false): void {
+    if (!silencieux) this.loading.set(true);
     this.ticketApi.getMyTickets().subscribe({
       next: (data: Ticket[]) => {
         this.tickets.set(data);
+        this.error.set(null);
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Impossible de charger vos tickets.');
+        if (!silencieux) this.error.set('Impossible de charger vos tickets.');
         this.loading.set(false);
       },
     });
@@ -100,21 +164,12 @@ export class MyTickets implements OnInit {
     this.router.navigate(['/client/tickets', id]);
   }
 
-  statutBadgeClass(s: Statut): string {
-    return STATUT_BADGE_CLASSES[s];
-  }
-
-  formatDateTime(iso: string): string {
-    const d = new Date(iso);
-    const now = new Date();
-    const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
-    if (d.toDateString() === now.toDateString()) return `Aujourd'hui, ${time}`;
-
-    const yesterday = new Date(now);
-    yesterday.setDate(now.getDate() - 1);
-    if (d.toDateString() === yesterday.toDateString()) return `Hier, ${time}`;
-
-    return `${d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}, ${time}`;
+  /** Date et heure, au même format que la colonne « Date création » de Tous les
+   *  tickets. L'API renvoie l'heure UTC sans fuseau : `dateTicket` remet le Z,
+   *  sinon l'heure affichée retarde d'une heure. */
+  formatDateHeure(iso: string): string {
+    const d = dateTicket(iso);
+    const date = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return `${date} ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
   }
 }

@@ -1,7 +1,9 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TicketApiService } from '../../../api/ticket-api.service';
+import { relirePeriodiquement } from '../../../core/services/relecture';
+import { CONTACT_OTBS } from '../../../core/contact-otbs';
 import { Ticket, STATUT_CFG, TicketHistoryEntry } from '../../../models/ticket.models';
 
 @Component({
@@ -11,7 +13,7 @@ import { Ticket, STATUT_CFG, TicketHistoryEntry } from '../../../models/ticket.m
   templateUrl: './ticket-detail.html',
   styleUrl: './ticket-detail.css',
 })
-export class TicketDetailClient implements OnInit {
+export class TicketDetailClient implements OnInit, OnDestroy {
   private route     = inject(ActivatedRoute);
   private router    = inject(Router);
   private ticketApi = inject(TicketApiService);
@@ -28,6 +30,7 @@ export class TicketDetailClient implements OnInit {
   submittingFeedback  = signal(false);
 
   statutCfg = STATUT_CFG;
+  contact = CONTACT_OTBS;
 
   // Dernière mise à jour "conviviale" pour le bloc Suivi — dérivée de l'historique
   // (déjà accessible au client pour son propre ticket) sans en exposer le detail brut.
@@ -70,7 +73,37 @@ export class TicketDetailClient implements OnInit {
     // ticket precedent affiche tant que la page n'est pas rechargee.
     this.route.paramMap.subscribe((params) => {
       const id = Number(params.get('id'));
+      this.idCourant = id;
       this.loadTicket(id);
+    });
+    // La reponse du technicien et le changement de statut arrivent sans recharger.
+    this.arreterRelecture = relirePeriodiquement(() => this.rafraichir());
+  }
+
+  private idCourant: number | null = null;
+  private arreterRelecture?: () => void;
+
+  ngOnDestroy(): void {
+    this.arreterRelecture?.();
+  }
+
+  /**
+   * Relecture de fond du ticket ouvert et de son historique.
+   *
+   * Contrairement a `loadTicket`, elle ne remet rien a zero : un retour que le
+   * demandeur est en train de rediger reste en place, et un echec passager ne
+   * remplace pas le ticket affiche par un message d'erreur.
+   */
+  private rafraichir(): void {
+    const id = this.idCourant;
+    if (id === null || this.loading() || this.submittingFeedback()) return;
+    this.ticketApi.getMyTicketDetail(id).subscribe({
+      next: (t) => { if (this.idCourant === id) this.ticket.set(t); },
+      error: () => {},
+    });
+    this.ticketApi.getTicketHistory(id).subscribe({
+      next: (h) => { if (this.idCourant === id) this.history.set(h); },
+      error: () => {},
     });
   }
 

@@ -14,33 +14,54 @@
     </button>
   </section>
 
-  <!-- Indicateurs -->
-  <section class="grid grid-cols-1 sm:grid-cols-3 gap-gutter mb-stack-lg">
-    <div class="flex items-center gap-stack-md bg-surface-container-lowest rounded-xl p-stack-lg border border-outline-variant/40 hover:shadow-md transition-shadow">
-      <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-secondary-container text-primary shrink-0">
+  <!-- Indicateurs : les quatre cartes de Mes tickets, à l'identique -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-stack-lg">
+    <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg flex items-center gap-stack-md">
+      <div class="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
         <span class="material-symbols-outlined">confirmation_number</span>
       </div>
-      <div>
-        <p class="font-headline-sm text-headline-sm text-on-surface leading-none">{{ totalCount() }}</p>
-        <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Tickets au total</p>
+      <div class="min-w-0">
+        <p class="font-label-md text-label-md text-on-surface-variant">Total tickets</p>
+        <p class="font-display-lg text-display-lg text-on-surface leading-none mt-1">{{ totalCount() }}</p>
+        <p class="font-label-sm text-label-sm text-outline mt-1">{{ cetteSemaineCount() }} cette semaine</p>
       </div>
     </div>
-    <div class="flex items-center gap-stack-md bg-surface-container-lowest rounded-xl p-stack-lg border border-outline-variant/40 hover:shadow-md transition-shadow">
-      <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-amber-100 text-amber-700 shrink-0">
-        <span class="material-symbols-outlined">pending</span>
+
+    <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg flex items-center gap-stack-md">
+      <div class="w-11 h-11 rounded-lg flex items-center justify-center shrink-0"
+        [style.background]="statutCfg['En attente'].bg" [style.color]="statutCfg['En attente'].color">
+        <span class="material-symbols-outlined">hourglass_top</span>
       </div>
-      <div>
-        <p class="font-headline-sm text-headline-sm text-on-surface leading-none">{{ enCoursCount() }}</p>
-        <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">En cours</p>
+      <div class="min-w-0">
+        <p class="font-label-md text-label-md text-on-surface-variant">En attente</p>
+        <p class="font-display-lg text-display-lg leading-none mt-1" [style.color]="statutCfg['En attente'].color">{{ enAttenteCount() }}</p>
       </div>
     </div>
-    <div class="flex items-center gap-stack-md bg-surface-container-lowest rounded-xl p-stack-lg border border-outline-variant/40 hover:shadow-md transition-shadow">
-      <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100 text-green-700 shrink-0">
-        <span class="material-symbols-outlined">task_alt</span>
+
+    <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg flex items-center gap-stack-md">
+      <div class="w-11 h-11 rounded-lg flex items-center justify-center shrink-0"
+        [style.background]="statutCfg['Résolu'].bg" [style.color]="statutCfg['Résolu'].color">
+        <span class="material-symbols-outlined">check_circle</span>
       </div>
-      <div>
-        <p class="font-headline-sm text-headline-sm text-on-surface leading-none">{{ resolvedCount() }}</p>
-        <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Résolus</p>
+      <div class="min-w-0">
+        <p class="font-label-md text-label-md text-on-surface-variant">Résolu</p>
+        <p class="font-display-lg text-display-lg leading-none mt-1" [style.color]="statutCfg['Résolu'].color">{{ resoluCount() }}</p>
+        @if (tauxResolution() !== null) {
+          <p class="font-label-sm text-label-sm text-outline mt-1">{{ tauxResolution() }} % de taux de résolution</p>
+        }
+      </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg flex items-center gap-stack-md">
+      <div class="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">timer</span>
+      </div>
+      <div class="min-w-0">
+        <p class="font-label-md text-label-md text-on-surface-variant">Délai moyen de résolution</p>
+        <p class="font-display-lg text-display-lg text-on-surface leading-none mt-1">
+          @if (delaiMoyenHeures() !== null) { {{ delaiMoyenHeures() }} h } @else { — }
+        </p>
+        <p class="font-label-sm text-label-sm text-outline mt-1">de la réception à la clôture</p>
       </div>
     </div>
   </section>
@@ -74,8 +95,10 @@
                 </div>
               </div>
               <div class="flex items-center gap-gutter shrink-0">
-                <span class="px-3 py-1 rounded-full text-label-sm font-label-sm" [ngClass]="statutBadgeClass(t.statut)">
-                  {{ statutCfg[t.statut].label }}
+                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full font-label-sm text-label-sm whitespace-nowrap"
+                  [style.background]="statutCfg[t.statut]?.bg" [style.color]="statutCfg[t.statut]?.color">
+                  <span class="material-symbols-outlined text-[16px]">{{ statutCfg[t.statut]?.icon }}</span>
+                  {{ statutCfg[t.statut]?.label ?? t.statut }}
                 </span>
                 <span class="material-symbols-outlined text-outline">chevron_right</span>
               </div>
@@ -85,51 +108,109 @@
       }
     </div>
 
-    <!-- Colonne droite : État des systèmes + Base de connaissances IA -->
+    <!-- Colonne droite : actions en attente + actions rapides -->
     <div class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
-      <!-- État des systèmes -->
+      <!-- Ce que le demandeur a à faire, calculé sur ses propres tickets. -->
       <div class="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/40">
-        <h2 class="font-label-md text-label-md text-on-surface-variant uppercase mb-stack-lg">État des systèmes</h2>
-        <div class="space-y-stack-md">
-          <div class="flex items-center justify-between">
-            <span class="font-body-md text-body-md text-on-surface">Réseau interne</span>
-            <span class="flex items-center gap-2 text-green-700 font-label-sm text-label-sm">
-              <span class="h-2 w-2 rounded-full bg-green-600"></span> Opérationnel
-            </span>
+        <h2 class="font-label-md text-label-md text-on-surface-variant uppercase mb-stack-md">Mes actions en attente</h2>
+
+        @if (rienAFaire()) {
+          <p class="font-body-md text-body-md text-on-surface-variant text-center py-stack-md">Rien à faire de votre côté.</p>
+        } @else {
+          <div class="divide-y divide-outline-variant/30">
+
+            @if (aNoter().length > 0) {
+              <div class="flex items-start gap-stack-md py-stack-md first:pt-0">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                  [style.background]="statutCfg['Résolu'].bg" [style.color]="statutCfg['Résolu'].color">
+                  <span class="material-symbols-outlined text-[18px]">thumb_up</span>
+                </span>
+                <div class="min-w-0">
+                  <p class="font-label-md text-label-md text-on-surface">
+                    @if (aNoter().length === 1) {
+                      1 ticket résolu attend votre avis
+                    } @else {
+                      {{ aNoter().length }} tickets résolus attendent votre avis
+                    }
+                  </p>
+                  <p class="font-label-sm text-label-sm text-outline truncate">{{ numerosANoter() }}</p>
+                  <button (click)="donnerAvis()"
+                    class="mt-1 inline-flex items-center gap-1 text-primary font-label-md text-label-md hover:underline">
+                    Donner mon avis
+                    <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                  </button>
+                </div>
+              </div>
+            }
+
+            @if (attenteLaPlusLongue(); as vieux) {
+              <div class="flex items-start gap-stack-md py-stack-md first:pt-0">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                  [style.background]="statutCfg['En attente'].bg" [style.color]="statutCfg['En attente'].color">
+                  <span class="material-symbols-outlined text-[18px]">hourglass_top</span>
+                </span>
+                <div class="min-w-0">
+                  <p class="font-label-md text-label-md text-on-surface">
+                    #{{ vieux.id.toString().padStart(4, '0') }} en attente depuis {{ anciennete(vieux.created_at) }}
+                  </p>
+                  <p class="font-label-sm text-label-sm text-outline truncate">{{ vieux.titre }}</p>
+                  <button (click)="goToDetail(vieux.id)"
+                    class="mt-1 inline-flex items-center gap-1 text-primary font-label-md text-label-md hover:underline">
+                    Voir le ticket
+                    <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                  </button>
+                </div>
+              </div>
+            }
+
+            @if (enTraitementCount() > 0) {
+              <div class="flex items-start gap-stack-md py-stack-md first:pt-0">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                  [style.background]="statutCfg['Prise en Charge'].bg" [style.color]="statutCfg['Prise en Charge'].color">
+                  <span class="material-symbols-outlined text-[18px]">engineering</span>
+                </span>
+                <div class="min-w-0">
+                  <p class="font-label-md text-label-md text-on-surface">
+                    @if (enTraitementCount() === 1) {
+                      1 ticket pris en charge
+                    } @else {
+                      {{ enTraitementCount() }} tickets pris en charge
+                    }
+                  </p>
+                  <p class="font-label-sm text-label-sm text-outline">Un technicien s'en occupe</p>
+                </div>
+              </div>
+            }
+
           </div>
-          <div class="flex items-center justify-between">
-            <span class="font-body-md text-body-md text-on-surface">Messagerie</span>
-            <span class="flex items-center gap-2 text-green-700 font-label-sm text-label-sm">
-              <span class="h-2 w-2 rounded-full bg-green-600"></span> Opérationnel
-            </span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="font-body-md text-body-md text-on-surface">VPN</span>
-            <span class="flex items-center gap-2 text-green-700 font-label-sm text-label-sm">
-              <span class="h-2 w-2 rounded-full bg-green-600"></span> Opérationnel
-            </span>
-          </div>
-        </div>
+        }
       </div>
 
       <!-- Actions rapides -->
       <div class="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/40">
         <h2 class="font-label-md text-label-md text-on-surface-variant uppercase mb-stack-md">Actions rapides</h2>
+        <!-- « Créer un ticket » et « Voir tout » sont déjà sur la page : ici, ce
+             qu'on ne trouve pas ailleurs sur l'accueil. -->
         <div class="flex flex-col gap-1">
-          <button (click)="goToNewTicket()"
+          <button (click)="goToMyTicketsEnCours()"
             class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-on-surface hover:bg-surface-container transition-colors text-left">
-            <span class="material-symbols-outlined text-primary text-[20px]">add</span>
-            <span class="font-body-md text-body-md">Créer un ticket</span>
+            <span class="material-symbols-outlined text-primary text-[20px]">list_alt</span>
+            <span class="font-body-md text-body-md">Mes tickets en cours</span>
           </button>
-          <button (click)="goToMyTickets()"
+          <button (click)="goToProfile()"
             class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-on-surface hover:bg-surface-container transition-colors text-left">
-            <span class="material-symbols-outlined text-primary text-[20px]">format_list_bulleted</span>
-            <span class="font-body-md text-body-md">Voir tous mes tickets</span>
+            <span class="material-symbols-outlined text-primary text-[20px]">person</span>
+            <span class="font-body-md text-body-md">Mon profil</span>
           </button>
-          <a href="mailto:support-it@onetech.local"
-            class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-on-surface hover:bg-surface-container transition-colors">
+          <button (click)="goToChangePassword()"
+            class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-on-surface hover:bg-surface-container transition-colors text-left">
+            <span class="material-symbols-outlined text-primary text-[20px]">lock</span>
+            <span class="font-body-md text-body-md">Changer mon mot de passe</span>
+          </button>
+          <a [href]="'mailto:' + contact.courriel"
+            class="flex items-center gap-3 px-2 py-2.5 rounded-lg text-on-surface hover:bg-surface-container transition-colors min-w-0">
             <span class="material-symbols-outlined text-primary text-[20px]">alternate_email</span>
-            <span class="font-body-md text-body-md">support-it&#64;onetech.local</span>
+            <span class="font-body-md text-body-md truncate">{{ contact.courriel }}</span>
           </a>
         </div>
       </div>

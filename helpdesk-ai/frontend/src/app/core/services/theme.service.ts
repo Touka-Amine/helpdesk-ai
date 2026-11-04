@@ -24,9 +24,15 @@ export class ThemeService {
     document.documentElement.classList.toggle('dark', dark);
   }
 
+  /**
+   * Le choix retenu sur le poste, sombre à défaut.
+   *
+   * Le mode sombre est celui dans lequel l'application a été dessinée : c'est
+   * donc lui qu'on voit à la première visite, sur l'écran de connexion, où la
+   * bascule permet de passer au clair avant même de saisir ses identifiants.
+   */
   private readInitial(): boolean {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return stored === 'dark';
-    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+    return stored ? stored === 'dark' : true;
   }
 }

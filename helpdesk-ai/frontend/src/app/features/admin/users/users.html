@@ -14,35 +14,51 @@
     <div class="text-body-md font-body-md text-error bg-error-container/40 rounded-lg px-3 py-2">{{ error() }}</div>
   }
 
-  <!-- KPIs -->
+  <!-- Compteurs : même carte que Tous les tickets, tuile colorée à gauche -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-    <div class="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/40 shadow-sm">
-      <div class="flex justify-between items-center mb-stack-md">
-        <span class="font-label-md text-label-md text-on-surface-variant uppercase">Total utilisateurs</span>
-        <span class="material-symbols-outlined text-primary">group</span>
+    <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg flex items-center gap-stack-md">
+      <div class="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined">group</span>
       </div>
-      <p class="font-display-lg text-display-lg text-on-surface">{{ totalCount() }}</p>
+      <div class="min-w-0">
+        <p class="font-label-md text-label-md text-on-surface-variant">Total utilisateurs</p>
+        <p class="font-display-lg text-display-lg text-on-surface leading-none mt-1">{{ totalCount() }}</p>
+      </div>
     </div>
-    <div class="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/40 shadow-sm">
-      <div class="flex justify-between items-center mb-stack-md">
-        <span class="font-label-md text-label-md text-on-surface-variant uppercase">Administrateurs</span>
-        <span class="material-symbols-outlined text-tertiary">shield_person</span>
+
+    <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg flex items-center gap-stack-md">
+      <div class="w-11 h-11 rounded-lg flex items-center justify-center shrink-0"
+        [style.background]="'var(--cat-backup-bg)'" [style.color]="'var(--cat-backup)'">
+        <span class="material-symbols-outlined">shield_person</span>
       </div>
-      <p class="font-display-lg text-display-lg text-on-surface">{{ adminCount() }}</p>
+      <div class="min-w-0">
+        <p class="font-label-md text-label-md text-on-surface-variant">Administrateurs</p>
+        <p class="font-display-lg text-display-lg leading-none mt-1" [style.color]="'var(--cat-backup)'">{{ adminCount() }}</p>
+      </div>
     </div>
-    <div class="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/40 shadow-sm">
-      <div class="flex justify-between items-center mb-stack-md">
-        <span class="font-label-md text-label-md text-on-surface-variant uppercase">Clients</span>
-        <span class="material-symbols-outlined text-secondary">person</span>
+
+    <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg flex items-center gap-stack-md">
+      <div class="w-11 h-11 rounded-lg flex items-center justify-center shrink-0"
+        [style.background]="'var(--cat-applicatifs-bg)'" [style.color]="'var(--cat-applicatifs)'">
+        <span class="material-symbols-outlined">person</span>
       </div>
-      <p class="font-display-lg text-display-lg text-on-surface">{{ clientCount() }}</p>
+      <div class="min-w-0">
+        <p class="font-label-md text-label-md text-on-surface-variant">Clients</p>
+        <p class="font-display-lg text-display-lg leading-none mt-1" [style.color]="'var(--cat-applicatifs)'">{{ clientCount() }}</p>
+      </div>
     </div>
   </div>
 
   <!-- Table -->
   <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 shadow-sm overflow-hidden">
-    <div class="p-4 border-b border-outline-variant/40 flex items-center justify-between">
+    <div class="p-4 border-b border-outline-variant/40 flex flex-wrap items-center gap-stack-md">
       <h3 class="font-headline-sm text-headline-sm text-on-surface">Liste des utilisateurs</h3>
+      <div class="relative flex-1 min-w-[220px] max-w-sm ml-auto">
+        <span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+        <input type="text" [ngModel]="recherche()" (ngModelChange)="chercher($event)" [ngModelOptions]="{standalone: true}"
+          placeholder="Rechercher un nom ou une adresse…" aria-label="Rechercher un utilisateur"
+          class="w-full bg-surface-container-lowest border border-outline-variant/40 rounded-lg font-body-md text-body-md text-on-surface py-2 pl-10 pr-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
+      </div>
       <div class="flex items-center gap-2 text-body-md text-on-surface-variant">
         <span>Afficher :</span>
         <select [(ngModel)]="roleFilter" [ngModelOptions]="{standalone: true}" class="bg-transparent border-none text-on-surface font-bold focus:ring-0 cursor-pointer">
@@ -56,7 +72,9 @@
     @if (loading()) {
       <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Chargement…</p>
     } @else if (filtered().length === 0) {
-      <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Aucun utilisateur.</p>
+      <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">
+        @if (recherche()) { Aucun utilisateur ne correspond à « {{ recherche() }} ». } @else { Aucun utilisateur. }
+      </p>
     } @else {
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -70,7 +88,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-outline-variant/30">
-            @for (u of filtered(); track u.id) {
+            @for (u of pageUtilisateurs(); track u.id) {
               <tr class="hover:bg-surface-container-low transition-colors group">
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-3">
@@ -83,7 +101,12 @@
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 font-body-md text-body-md text-on-surface-variant">{{ u.email }}</td>
+                <td class="px-6 py-4">
+                  <span class="flex items-center gap-2 font-body-md text-body-md text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[18px] text-outline shrink-0">mail</span>
+                    <span class="truncate">{{ u.email }}</span>
+                  </span>
+                </td>
                 <td class="px-6 py-4">
                   <span class="px-2 py-1 rounded-full text-[11px] font-bold border"
                     [class.bg-primary/10]="u.role === 'admin'"
@@ -103,6 +126,18 @@
                 </td>
                 <td class="px-6 py-4 text-right">
                   <div class="flex items-center justify-end gap-1">
+                    <button (click)="ouvrirEdition(u)" title="Modifier le profil"
+                      class="p-2 hover:bg-surface-container-high text-on-surface-variant rounded-lg transition-all">
+                      <span class="material-symbols-outlined">edit</span>
+                    </button>
+                    <!-- Seulement sur sa propre ligne : on ne touche pas au mot de passe des autres -->
+                    @if (u.id === currentUserId) {
+                      <button (click)="changerMonMotDePasse()" title="Changer mon mot de passe"
+                        class="p-2 hover:bg-surface-container-high rounded-lg transition-all"
+                        [style.color]="'var(--statut-attente)'">
+                        <span class="material-symbols-outlined">lock_reset</span>
+                      </button>
+                    }
                     <button (click)="toggleRole(u)" [disabled]="u.id === currentUserId"
                       class="p-2 hover:bg-primary-container/20 text-primary rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                       [title]="u.role === 'admin' ? 'Rétrograder en client' : 'Promouvoir admin'">
@@ -121,6 +156,33 @@
             }
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination, sur le modèle de Tous les tickets -->
+      <div class="flex flex-wrap items-center justify-between gap-stack-md px-4 py-3 border-t border-outline-variant/40">
+        <p class="font-label-md text-label-md text-on-surface-variant">
+          Affichage de {{ premierAffiche() }} à {{ dernierAffiche() }} sur {{ filtered().length }} utilisateurs
+        </p>
+        <div class="flex items-center gap-1">
+          <button type="button" (click)="pagePrecedente()" [disabled]="pageCourante() === 1" aria-label="Page précédente"
+            class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high disabled:opacity-40 disabled:hover:bg-transparent transition-colors">
+            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+          </button>
+          @for (p of pagesAffichees(); track $index) {
+            @if (p === '…') {
+              <span class="px-2 font-label-md text-label-md text-outline">…</span>
+            } @else {
+              <button type="button" (click)="allerPage(p)"
+                class="min-w-[32px] h-8 px-2 rounded-lg font-label-md text-label-md transition-colors {{ p === pageCourante() ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-high' }}">
+                {{ p }}
+              </button>
+            }
+          }
+          <button type="button" (click)="pageSuivante()" [disabled]="pageCourante() === nbPages()" aria-label="Page suivante"
+            class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high disabled:opacity-40 disabled:hover:bg-transparent transition-colors">
+            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+          </button>
+        </div>
       </div>
     }
   </div>
@@ -195,6 +257,52 @@
       </div>
       <p class="text-label-sm font-label-sm text-error mb-stack-lg">⚠️ Ce mot de passe ne sera plus jamais affiché.</p>
       <button (click)="closeCreatedResult()" class="w-full px-6 py-2 bg-primary text-on-primary rounded-lg text-body-md font-bold">J'ai noté le mot de passe</button>
+    </div>
+  </div>
+}
+
+<!-- Modal modification du profil -->
+@if (enEdition(); as u) {
+  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest w-full max-w-md rounded-xl shadow-2xl p-stack-lg">
+      <h3 class="font-headline-md text-headline-md text-on-surface mb-1">Modifier le profil</h3>
+      <p class="text-on-surface-variant text-body-md mb-stack-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px] text-outline">mail</span>{{ u.email }}
+      </p>
+
+      <form [formGroup]="editForm" (ngSubmit)="enregistrerEdition()" class="flex flex-col gap-stack-md">
+        <div class="grid grid-cols-2 gap-stack-md">
+          <div>
+            <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Prénom</label>
+            <input type="text" formControlName="prenom" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+          </div>
+          <div>
+            <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Nom</label>
+            <input type="text" formControlName="nom" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+          </div>
+        </div>
+        <div>
+          <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Filiale <span class="text-outline">(optionnel)</span></label>
+          <select formControlName="filiale" class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+            <option value="">—</option>
+            @for (f of filiales; track f) {
+              <option [value]="f">{{ f }}</option>
+            }
+          </select>
+        </div>
+        <p class="font-label-sm text-label-sm text-outline">L'adresse ne se modifie pas ici : c'est l'identifiant de connexion.</p>
+
+        @if (erreurEdition()) {
+          <div class="text-body-md font-body-md text-error bg-error-container/40 rounded-lg px-3 py-2">{{ erreurEdition() }}</div>
+        }
+
+        <div class="flex items-center justify-end gap-3 mt-stack-sm">
+          <button type="button" (click)="fermerEdition()" class="px-4 py-2 text-body-md font-semibold text-on-surface-variant hover:bg-surface-container rounded-lg">Annuler</button>
+          <button type="submit" [disabled]="enregistrement()" class="px-6 py-2 bg-primary text-on-primary rounded-lg text-body-md font-bold disabled:opacity-50">
+            {{ enregistrement() ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 }

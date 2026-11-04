@@ -6,22 +6,6 @@
     </header>
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="px-container-padding py-stack-lg flex flex-col gap-stack-lg">
-      <!-- Exemple -->
-      <div class="flex flex-col gap-stack-sm">
-        <label class="font-label-md text-label-md text-on-surface-variant" for="exemple">
-          S'inspirer d'un exemple <span class="font-body-md text-body-md text-on-surface-variant/60">(optionnel)</span>
-        </label>
-        <select id="exemple" formControlName="exemple" (change)="appliquerExemple($any($event.target).value)"
-          class="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-lg font-body-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
-          <option value="" disabled>Choisir un exemple…</option>
-          @for (ex of exemples; track ex.label) {
-            <option [value]="ex.label">{{ ex.label }}</option>
-          }
-        </select>
-      </div>
-
-      <hr class="border-outline-variant/40" />
-
       <!-- Titre -->
       <div class="flex flex-col gap-stack-sm">
         <label class="font-label-md text-label-md text-on-surface-variant" for="titre">

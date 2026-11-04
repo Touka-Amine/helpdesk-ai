@@ -15,6 +15,19 @@
   --color-on-tertiary: #ffffff;
   --color-tertiary-container: #6f3dd9;
   --color-on-tertiary-container: #e3d5ff;
+  /* Couleurs des actions de tableau. Chaque geste a sa teinte, pour qu'il se
+     reconnaisse sans lire l'infobulle : bleu pour consulter, orange pour
+     modifier, rouge pour supprimer, vert pour enregistrer. Tons soutenus,
+     lisibles sur les fonds clairs. */
+  --color-action-view: #1257a8;
+  --color-action-edit: #9a4b00;
+  --color-action-delete: #b3261e;
+  --color-action-save: #1b6b3a;
+  --color-valider: #15803d;
+  --color-on-valider: #ffffff;
+  --color-rejeter: #b3261e;
+  --color-on-rejeter: #ffffff;
+
   --color-error: #ba1a1a;
   --color-on-error: #ffffff;
   --color-error-container: #ffdad6;
@@ -74,6 +87,47 @@
   --spacing-container-padding: 24px;
 }
 
+/* Teintes metier : statut, priorite, categorie. Le TypeScript les lit par leur nom
+   et les pose en style inline, la ou une classe utilitaire ne peut pas etre calculee
+   a l'avance. Les valeurs ci-dessous sont celles que l'application affichait deja. */
+:root {
+  --statut-attente: #92400e;   --statut-attente-bg: #fef3c7;
+  --statut-charge: #065f46;    --statut-charge-bg: #d1fae5;
+  --statut-resolu: #14532d;    --statut-resolu-bg: #bbf7d0;
+  --statut-rejete: #991b1b;    --statut-rejete-bg: #fee2e2;
+  --statut-probleme: #4c1d95;  --statut-probleme-bg: #ede9fe;
+
+  --prio-faible: #1e40af;      --prio-faible-bg: #dbeafe;
+  --prio-modere: #92400e;      --prio-modere-bg: #fef3c7;
+  --prio-urgent: #9a3412;      --prio-urgent-bg: #ffedd5;
+  --prio-critique: #991b1b;    --prio-critique-bg: #fee2e2;
+
+  --cat-applicatifs: #1d4ed8;    --cat-applicatifs-bg: #dbeafe;
+  --cat-backup: #6d28d9;         --cat-backup-bg: #ede9fe;
+  --cat-communication: #be185d;  --cat-communication-bg: #fce7f3;
+  --cat-infrastructure: #0f766e; --cat-infrastructure-bg: #ccfbf1;
+  --cat-microsoft: #4338ca;      --cat-microsoft-bg: #e0e7ff;
+  --cat-reseau: #0e7490;         --cat-reseau-bg: #cffafe;
+  --cat-systeme: #a16207;        --cat-systeme-bg: #fef9c3;
+  --cat-securite: #b91c1c;       --cat-securite-bg: #fee2e2;
+  --cat-autre: #475569;          --cat-autre-bg: #e2e8f0;
+
+  /* Couleurs des graphiques (ecran KPIs). Les teintes ci-dessus sont faites pour
+     ecrire du texte : trop foncees en barres sur fond clair. Celles-ci sont de
+     milieu de gamme, reglees une fois pour le fond clair et une fois pour le fond
+     sombre, et verifiees par calcul dans les deux modes (ecart entre couleurs
+     voisines, y compris pour les daltoniens, et lisibilite sur la carte).
+       - quatre teintes distinctes : priorite (froid -> chaud) et classification ;
+       - deux rampes d'une seule teinte, du pas 1 (discret) au dernier (marque) :
+         bleu pour la repartition par filiale, orange pour les delais. */
+  --viz-bleu:  #2a78d6;
+  --viz-vert:  #1baf7a;
+  --viz-ambre: #eda100;
+  --viz-rouge: #dc2626;
+  --viz-bleu-1: #86b6ef; --viz-bleu-2: #5598e7; --viz-bleu-3: #2a78d6; --viz-bleu-4: #1c5cab; --viz-bleu-5: #104281;
+  --viz-orange-1: #fb923c; --viz-orange-2: #ea580c; --viz-orange-3: #c2410c; --viz-orange-4: #9a3412;
+}
+
 /* Mode sombre — surcharge des variables de couleur du theme quand <html> porte
    la classe .dark (pilote par ThemeService). Les classes Tailwind (bg-background,
    text-on-surface, bg-primary...) restent inchangees partout dans l'app : elles
@@ -91,6 +145,17 @@
   --color-on-tertiary: #3b0e78;
   --color-tertiary-container: #6f3dd9;
   --color-on-tertiary-container: #ecdcff;
+  /* Actions : memes roles, tons clairs. Sur fond sombre, une couleur soutenue
+     perd tout contraste ; c'est la version claire qui reste lisible. */
+  --color-action-view: #8ab4f8;
+  --color-action-edit: #ffb870;
+  --color-action-delete: #ff897d;
+  --color-action-save: #7ee2a8;
+  --color-valider: #34d399;
+  --color-on-valider: #04291b;
+  --color-rejeter: #ff6b5e;
+  --color-on-rejeter: #3d0a06;
+
   --color-error: #ffb4ab;
   --color-on-error: #690005;
   --color-error-container: #93000a;
@@ -110,6 +175,39 @@
   --color-on-surface-variant: #c8c5d0;
   --color-outline: #928f9a;
   --color-outline-variant: #46464f;
+
+  /* Teintes metier en mode sombre : le texte prend la version claire de la teinte,
+     le fond une version tres sombre de la meme famille. */
+  --statut-attente: #fbbf24;   --statut-attente-bg: #422b06;
+  --statut-charge: #6ee7b7;    --statut-charge-bg: #06312a;
+  --statut-resolu: #86efac;    --statut-resolu-bg: #0a3320;
+  --statut-rejete: #fca5a5;    --statut-rejete-bg: #3d1414;
+  --statut-probleme: #c4b5fd;  --statut-probleme-bg: #2b1d52;
+
+  --prio-faible: #93c5fd;      --prio-faible-bg: #14284d;
+  --prio-modere: #fcd34d;      --prio-modere-bg: #3d2c06;
+  --prio-urgent: #fdba74;      --prio-urgent-bg: #40230a;
+  --prio-critique: #fca5a5;    --prio-critique-bg: #3d1414;
+
+  --cat-applicatifs: #93c5fd;    --cat-applicatifs-bg: #14284d;
+  --cat-backup: #c4b5fd;         --cat-backup-bg: #241a4d;
+  --cat-communication: #f9a8d4;  --cat-communication-bg: #3d1229;
+  --cat-infrastructure: #5eead4; --cat-infrastructure-bg: #06302c;
+  --cat-microsoft: #a5b4fc;      --cat-microsoft-bg: #1c1f4d;
+  --cat-reseau: #67e8f9;         --cat-reseau-bg: #06303a;
+  --cat-systeme: #fde047;        --cat-systeme-bg: #38300a;
+  --cat-securite: #fca5a5;       --cat-securite-bg: #3d1414;
+  --cat-autre: #cbd5e1;          --cat-autre-bg: #2a2f3a;
+
+  /* Couleurs des graphiques en mode sombre : memes teintes, pas choisis pour le
+     fond sombre. Dans les rampes, le dernier pas reste le plus marque, ce qui
+     veut dire ici le plus clair : c'est lui qui ressort sur un fond noir. */
+  --viz-bleu:  #3987e5;
+  --viz-vert:  #199e70;
+  --viz-ambre: #c98500;
+  --viz-rouge: #dc2626;
+  --viz-bleu-1: #184f95; --viz-bleu-2: #256abf; --viz-bleu-3: #3987e5; --viz-bleu-4: #6da7ec; --viz-bleu-5: #9ec5f4;
+  --viz-orange-1: #9a3412; --viz-orange-2: #c2410c; --viz-orange-3: #f97316; --viz-orange-4: #fdba74;
 }
 
 html, body {
@@ -166,4 +264,42 @@ body {
   width: 100%;
   background: #1c2147;
   font-family: 'Inter', sans-serif;
+}
+/* Texte d'invite des champs de saisie. Sans regle explicite, le navigateur
+   applique un gris fixe qui disparait sur les fonds sombres. On le rattache a
+   la couleur de texte secondaire du theme, qui bascule avec lui. L'opacite est
+   forcee a 1 : Firefox attenue le placeholder par defaut, ce qui annulerait le
+   gain de lisibilite. */
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-on-surface-variant);
+  opacity: 1;
+}
+
+/* Le navigateur dessine lui-meme une partie de l'interface : la liste deroulante
+   d'un select, les barres de defilement, les champs remplis automatiquement. On
+   lui indique dans quel mode il travaille, sinon il les dessine en clair sur un
+   theme sombre (menu blanc a texte blanc). */
+:root {
+  color-scheme: light;
+}
+.dark {
+  color-scheme: dark;
+}
+
+/* Les champs de saisie n'heritent pas de la couleur du texte de la page : sans
+   cette regle ils prennent le noir par defaut du navigateur, illisible sur les
+   fonds sombres. Un selecteur d'element reste moins fort qu'une classe, donc les
+   champs qui posent deja leur propre couleur gardent la leur. */
+input,
+select,
+textarea {
+  color: var(--color-on-surface);
+}
+
+/* Les options sont dessinees hors de la page : elles ne recoivent ni le fond ni
+   la couleur du select, il faut les poser. */
+option {
+  background-color: var(--color-surface-container-lowest);
+  color: var(--color-on-surface);
 }

@@ -1,116 +1,276 @@
 <div class="space-y-gutter">
-  <div>
-    <h2 class="font-headline-md text-headline-md text-on-surface">Monitoring IA : santé du modèle</h2>
-    <p class="text-on-surface-variant font-body-md mt-1">Métriques réelles issues des tickets traités et du modèle entraîné.</p>
+
+  <!-- En-tête -->
+  <div class="flex flex-wrap items-center justify-between gap-stack-md">
+    <div class="flex items-center gap-stack-md min-w-0">
+      <div class="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+        <span class="material-symbols-outlined">monitoring</span>
+      </div>
+      <div class="min-w-0">
+        <h2 class="font-display-lg text-display-lg text-on-surface">KPIs</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-1">Suivi de l'activité du support et de la performance du système.</p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-stack-md">
+      <div class="flex items-center gap-1 p-1 rounded-lg border border-outline-variant/40 bg-surface-container-lowest">
+        @for (p of periodes; track p) {
+          <button type="button" (click)="periode.set(p)"
+            class="px-3 py-1.5 rounded-md font-label-md text-label-md transition-colors {{ periode() === p ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-container' }}">
+            {{ p }} jours
+          </button>
+        }
+      </div>
+      <button type="button" (click)="rafraichir()" title="Relire les tickets et les rapports"
+        class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-outline-variant/40 bg-surface-container-lowest font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined text-[18px]">refresh</span>
+        @if (derniereMaj()) { <span class="hidden sm:inline">à jour à {{ heureMaj() }}</span> }
+      </button>
+    </div>
   </div>
 
-  @if (loading()) {
+  @if (chargement()) {
     <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Chargement…</p>
   } @else {
-    <!-- KPIs -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-      <div class="bg-surface-container-lowest border border-outline-variant/40 p-gutter rounded-xl">
-        <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-base">Confiance moyenne (tickets réels)</p>
-        @if (confianceMoyenne() != null) {
-          <p class="font-display-lg text-display-lg text-primary">{{ confianceMoyenne() }}%</p>
-        } @else {
-          <p class="font-display-lg text-display-lg text-on-surface-variant">—</p>
-        }
+
+    <!-- ═══════════════ Activité du support ═══════════════ -->
+    <div class="flex items-baseline justify-between gap-stack-md">
+      <h3 class="font-label-md text-label-md text-outline uppercase tracking-wider">Activité du support</h3>
+      <span class="font-label-sm text-label-sm text-outline">sur les {{ periode() }} derniers jours</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
+      <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm flex items-start gap-stack-md">
+        <div class="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined">inbox</span>
+        </div>
+        <div class="min-w-0">
+          <p class="font-label-md text-label-md text-on-surface-variant">Tickets reçus</p>
+          <p class="font-display-lg text-display-lg text-on-surface leading-none mt-1">{{ recus() }}</p>
+          <p class="font-label-sm text-label-sm text-outline mt-1">
+            @if (variationRecus() !== null) {
+              {{ variationTexte(variationRecus()!) }} par rapport aux {{ periode() }} jours précédents
+            } @else {
+              pas de période précédente comparable
+            }
+          </p>
+        </div>
       </div>
-      <div class="bg-surface-container-lowest border border-outline-variant/40 p-gutter rounded-xl">
-        <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-base">Taux de correction manuelle</p>
-        @if (tauxCorrectionManuelle() != null) {
-          <p class="font-display-lg text-display-lg text-on-surface">{{ tauxCorrectionManuelle() }}%</p>
-          <p class="text-on-surface-variant font-label-sm mt-base">catégorie modifiée par un admin</p>
-        } @else {
-          <p class="font-display-lg text-display-lg text-on-surface-variant">—</p>
-        }
+
+      <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm flex items-start gap-stack-md">
+        <div class="w-11 h-11 rounded-lg flex items-center justify-center shrink-0"
+          [style.background]="'var(--statut-attente-bg)'" [style.color]="'var(--statut-attente)'">
+          <span class="material-symbols-outlined">hourglass_top</span>
+        </div>
+        <div class="min-w-0">
+          <p class="font-label-md text-label-md text-on-surface-variant">En attente</p>
+          <p class="font-display-lg text-display-lg leading-none mt-1" [style.color]="'var(--statut-attente)'">{{ enAttente() }}</p>
+          <p class="font-label-sm text-label-sm text-outline mt-1">en attente de validation, à cet instant</p>
+        </div>
       </div>
-      <div class="bg-error-container/20 border border-error/20 p-gutter rounded-xl">
-        <p class="font-label-md text-error uppercase tracking-wider mb-base">Tickets à faible confiance</p>
-        <p class="font-display-lg text-display-lg text-error">{{ ticketsFaibleConfiance().length }}</p>
-        <p class="text-on-error-container font-label-md mt-base">confiance &lt; 40%</p>
+
+      <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm flex items-start gap-stack-md">
+        <div class="w-11 h-11 rounded-lg flex items-center justify-center shrink-0"
+          [style.background]="'var(--statut-resolu-bg)'" [style.color]="'var(--statut-resolu)'">
+          <span class="material-symbols-outlined">task_alt</span>
+        </div>
+        <div class="min-w-0">
+          <p class="font-label-md text-label-md text-on-surface-variant">Tickets clôturés</p>
+          <p class="font-display-lg text-display-lg leading-none mt-1" [style.color]="'var(--statut-resolu)'">{{ clotures() }}</p>
+          <p class="font-label-sm text-label-sm text-outline mt-1">
+            @if (variationClotures() !== null) {
+              {{ variationTexte(variationClotures()!) }} par rapport aux {{ periode() }} jours précédents
+            } @else {
+              pas de période précédente comparable
+            }
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm flex items-start gap-stack-md">
+        <div class="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined">schedule</span>
+        </div>
+        <div class="min-w-0">
+          <p class="font-label-md text-label-md text-on-surface-variant">Temps moyen de traitement</p>
+          <p class="font-display-lg text-display-lg text-on-surface leading-none mt-1">{{ duree(tempsMoyen()) }}</p>
+          <p class="font-label-sm text-label-sm text-outline mt-1">de la réception à la clôture</p>
+        </div>
       </div>
     </div>
 
-    <!-- Performance du modèle entraîné -->
-    @if (modelInfo(); as m) {
-      <div class="bg-surface-container-lowest border border-outline-variant/40 p-gutter rounded-xl">
-        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-lg">Performance du modèle entraîné ({{ m.model_name }})</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-stack-lg">
-          <div>
-            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">F1-macro (avec heuristiques)</p>
-            <p class="font-headline-md text-headline-md text-on-surface">{{ (m.f1_macro_avec_heuristiques * 100).toFixed(1) }}%</p>
-          </div>
-          <div>
-            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Accuracy (test)</p>
-            <p class="font-headline-md text-headline-md text-on-surface">{{ (m.accuracy_test * 100).toFixed(1) }}%</p>
-          </div>
-          <div>
-            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Seuil de confiance</p>
-            <p class="font-headline-md text-headline-md text-on-surface">{{ (m.confidence_threshold * 100).toFixed(0) }}%</p>
-          </div>
-          <div>
-            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Catégories</p>
-            <p class="font-headline-md text-headline-md text-on-surface">{{ m.classes.length }}</p>
-          </div>
-        </div>
-        <p class="text-label-sm font-label-sm text-on-surface-variant mt-stack-lg italic">{{ m.dataset_note }}</p>
-      </div>
-    }
+    <!-- ═══════════════ Répartitions et tendances ═══════════════ -->
+    <div class="flex items-baseline justify-between gap-stack-md pt-stack-sm">
+      <h3 class="font-label-md text-label-md text-outline uppercase tracking-wider">Répartitions et tendances</h3>
+      <span class="font-label-sm text-label-sm text-outline">{{ recus() }} ticket(s) reçu(s) sur les {{ periode() }} derniers jours</span>
+    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
-      <!-- Confiance moyenne par catégorie -->
-      <div class="bg-surface-container-lowest border border-outline-variant/40 p-gutter rounded-xl">
-        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-lg">Confiance moyenne par catégorie</h3>
-        <div class="h-64 relative">
-          <canvas baseChart [data]="confianceParCategorie()" [options]="chartOptionsBar" type="bar"></canvas>
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-gutter">
+      <section class="xl:col-span-2 bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+        <h4 class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+          <span class="material-symbols-outlined text-[18px] text-primary">show_chart</span> Évolution des tickets
+        </h4>
+        <div class="h-64 relative mt-stack-md">
+          <canvas baseChart type="line" [data]="evolution()" [options]="optionsEvolution()"></canvas>
         </div>
-      </div>
+      </section>
 
-      <!-- Tickets à faible confiance -->
-      <div class="bg-surface-container-lowest border border-outline-variant/40 overflow-hidden rounded-xl flex flex-col">
-        <div class="p-gutter border-b border-outline-variant/40">
-          <h3 class="font-headline-sm text-headline-sm text-on-surface">Tickets à faible confiance</h3>
+      <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+        <div class="flex items-center justify-between gap-stack-md">
+          <h4 class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+            <span class="material-symbols-outlined text-[18px] text-primary">category</span> Tickets par catégorie
+          </h4>
+          <span class="font-label-sm text-label-sm text-outline">{{ parCategorie().length }} catégorie(s)</span>
         </div>
-        <div class="flex-1 overflow-auto max-h-64">
-          @if (ticketsFaibleConfiance().length === 0) {
-            <p class="text-body-md font-body-md text-on-surface-variant text-center py-stack-lg">Aucun ticket à faible confiance.</p>
-          } @else {
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-surface-container-low text-label-md text-on-surface-variant">
-                  <th class="p-gutter font-semibold">Ticket</th>
-                  <th class="p-gutter font-semibold">Catégorie</th>
-                  <th class="p-gutter font-semibold">Confiance</th>
-                </tr>
-              </thead>
-              <tbody class="text-body-md divide-y divide-outline-variant/30">
-                @for (t of ticketsFaibleConfiance().slice(0, 10); track t.id) {
-                  <tr (click)="goToTicket(t.id)" class="hover:bg-surface-container-low transition-colors cursor-pointer">
-                    <td class="p-gutter text-on-surface font-medium">#{{ t.id.toString().padStart(4,'0') }} — {{ t.titre }}</td>
-                    <td class="p-gutter text-on-surface-variant">{{ t.categorie_finale || t.categorie_predite || '—' }}</td>
-                    <td class="p-gutter">
-                      <span class="flex items-center gap-2 text-error font-bold">{{ confPct(t.confiance) }}%</span>
-                    </td>
-                  </tr>
+        <div class="space-y-stack-md mt-stack-md">
+          @for (b of parCategorie(); track b.libelle) {
+            <div class="grid grid-cols-[110px_1fr_auto] items-center gap-stack-md">
+              <span class="font-label-md text-label-md text-on-surface truncate">{{ b.libelle }}</span>
+              <div class="h-2 rounded-full bg-outline-variant/30 overflow-hidden">
+                <div class="h-full rounded-full" [style.width.%]="b.pct * 100" [style.background]="b.couleur"></div>
+              </div>
+              <span class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap tabular-nums">{{ b.n }} ({{ pct(b.pct) }})</span>
+            </div>
+          } @empty {
+            <p class="font-body-md text-body-md text-on-surface-variant">Aucun ticket reçu sur la période.</p>
+          }
+        </div>
+      </section>
+
+      <section class="xl:col-span-2 bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+        <div class="flex items-center justify-between gap-stack-md">
+          <h4 class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+            <span class="material-symbols-outlined text-[18px] text-primary">stacked_line_chart</span> Tickets ouverts, jour par jour
+          </h4>
+          <span class="font-label-sm text-label-sm text-outline">{{ stockActuel() }} ouvert(s) aujourd'hui, {{ libelleStock() }}</span>
+        </div>
+        <div class="h-64 relative mt-stack-md">
+          <canvas baseChart type="line" [data]="stockOuvert()" [options]="optionsEvolution()"></canvas>
+        </div>
+      </section>
+
+      <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+        <div class="flex items-center justify-between gap-stack-md">
+          <h4 class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+            <span class="material-symbols-outlined text-[18px] text-primary">flag</span> Tickets par priorité
+          </h4>
+          <span class="font-label-sm text-label-sm text-outline">4 niveaux</span>
+        </div>
+        @if (recus() > 0) {
+          <div class="flex items-center gap-stack-lg mt-stack-md">
+            <div class="relative w-36 h-36 shrink-0">
+              <canvas baseChart type="doughnut" [data]="anneauPriorite()" [options]="optionsAnneau"></canvas>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span class="font-headline-md text-headline-md text-on-surface leading-none">{{ recus() }}</span>
+                <span class="font-label-sm text-label-sm text-outline">tickets</span>
+              </div>
+            </div>
+            <ul class="flex-1 min-w-0 space-y-stack-sm">
+              @for (b of parPriorite(); track b.libelle) {
+                <li class="flex items-center justify-between gap-stack-md">
+                  <span class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0" [style.background]="b.couleur"></span>{{ b.libelle }}
+                  </span>
+                  <span class="font-label-sm text-label-sm text-on-surface-variant tabular-nums whitespace-nowrap">{{ pct(b.pct) }} ({{ b.n }})</span>
+                </li>
+              }
+            </ul>
+          </div>
+        } @else {
+          <p class="font-body-md text-body-md text-on-surface-variant mt-stack-md">Aucun ticket reçu sur la période.</p>
+        }
+      </section>
+
+      <section class="xl:col-span-2 bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+        <div class="flex items-center justify-between gap-stack-md">
+          <h4 class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+            <span class="material-symbols-outlined text-[18px] text-primary">domain</span> Répartition par filiale
+          </h4>
+          <div class="flex items-center gap-stack-md">
+          <span class="flex items-center gap-1 font-label-sm text-label-sm text-outline whitespace-nowrap" aria-hidden="true">
+            moins
+            @for (p of [1, 2, 3, 4, 5]; track p) {
+              <span class="w-3 h-2 rounded-sm" [style.background]="'var(--viz-bleu-' + p + ')'"></span>
+            }
+            plus
+          </span>
+          <span class="font-label-sm text-label-sm text-outline">{{ parFiliale().length }} filiale(s) · {{ recus() }} ticket(s)</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-stack-lg gap-y-stack-md mt-stack-md">
+          @for (b of parFiliale(); track b.libelle) {
+            <div class="grid grid-cols-[90px_1fr_auto] items-center gap-stack-md">
+              <span class="font-label-md text-label-md text-on-surface truncate">{{ b.libelle }}</span>
+              <div class="h-2 rounded-full bg-outline-variant/30 overflow-hidden">
+                <div class="h-full rounded-full" [style.width.%]="b.pct * 100" [style.background]="b.couleur"></div>
+              </div>
+              <span class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap tabular-nums">{{ b.n }} ({{ pct(b.pct) }})</span>
+            </div>
+          } @empty {
+            <p class="font-body-md text-body-md text-on-surface-variant">Aucun ticket reçu sur la période.</p>
+          }
+        </div>
+      </section>
+
+      <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+        <div class="flex items-center justify-between gap-stack-md">
+          <h4 class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+            <span class="material-symbols-outlined text-[18px] text-primary">label</span> Tickets par classification
+          </h4>
+          <span class="font-label-sm text-label-sm text-outline">{{ parClassification().length }} valeur(s)</span>
+        </div>
+        <div class="space-y-stack-md mt-stack-md">
+          @for (b of parClassification(); track b.libelle) {
+            <div class="grid grid-cols-[110px_1fr_auto] items-center gap-stack-md">
+              <span class="font-label-md text-label-md text-on-surface truncate">{{ b.libelle }}</span>
+              <div class="h-2 rounded-full bg-outline-variant/30 overflow-hidden">
+                <div class="h-full rounded-full" [style.width.%]="b.pct * 100" [style.background]="b.couleur"></div>
+              </div>
+              <span class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap tabular-nums">{{ b.n }} ({{ pct(b.pct) }})</span>
+            </div>
+          } @empty {
+            <p class="font-body-md text-body-md text-on-surface-variant">Aucun ticket reçu sur la période.</p>
+          }
+        </div>
+      </section>
+
+      <section class="xl:col-span-3 bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+        <div class="flex items-center justify-between gap-stack-md">
+          <h4 class="flex items-center gap-2 font-label-md text-label-md text-on-surface">
+            <span class="material-symbols-outlined text-[18px] text-primary">schedule</span> Délai moyen de traitement par catégorie
+          </h4>
+          <div class="flex items-center gap-stack-md">
+          <span class="flex items-center gap-1 font-label-sm text-label-sm text-outline whitespace-nowrap" aria-hidden="true">
+            rapide
+            @for (p of [1, 2, 3, 4]; track p) {
+              <span class="w-3 h-2 rounded-sm" [style.background]="'var(--viz-orange-' + p + ')'"></span>
+            }
+            lent
+          </span>
+          <span class="font-label-sm text-label-sm text-outline">de la réception à la clôture · {{ clotures() }} ticket(s) clôturé(s) sur la période</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-stack-lg gap-y-stack-md mt-stack-md">
+          @for (d of delaiParCategorie(); track d.libelle) {
+            <div class="grid grid-cols-[110px_1fr_auto] items-center gap-stack-md">
+              <span class="font-label-md text-label-md text-on-surface truncate">{{ d.libelle }}</span>
+              <div class="h-2 rounded-full bg-outline-variant/30 overflow-hidden">
+                @if (d.heures !== null) {
+                  <div class="h-full rounded-full" [style.width.%]="d.pct" [style.background]="d.couleur"></div>
                 }
-              </tbody>
-            </table>
+              </div>
+              @if (d.heures !== null) {
+                <span class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap tabular-nums">{{ duree(d.heures) }} · {{ d.n }} clos</span>
+              } @else {
+                <span class="font-label-sm text-label-sm text-outline whitespace-nowrap italic">non mesurable</span>
+              }
+            </div>
+          } @empty {
+            <p class="font-body-md text-body-md text-on-surface-variant">Aucun ticket reçu sur la période.</p>
           }
         </div>
-      </div>
+      </section>
     </div>
 
-    @if (modelInfo()?.known_weaknesses?.length) {
-      <div class="bg-surface-container-lowest border border-outline-variant/40 p-gutter rounded-xl">
-        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Limites connues du modèle</h3>
-        <ul class="list-disc pl-5 space-y-1">
-          @for (w of modelInfo()!.known_weaknesses; track w) {
-            <li class="font-body-md text-body-md text-on-surface-variant">{{ w }}</li>
-          }
-        </ul>
-      </div>
-    }
   }
 </div>

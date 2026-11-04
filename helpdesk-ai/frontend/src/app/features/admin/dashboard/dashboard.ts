@@ -1,10 +1,14 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
-import { TicketApiService } from '../../../api/ticket-api.service';
-import { Ticket } from '../../../models/ticket.models';
+import { TicketsStore } from '../../../core/services/tickets-store';
+import { ThemeService } from '../../../core/services/theme.service';
+import { COULEURS_STATUT, STATUT_CFG, Statut, dateTicket } from '../../../models/ticket.models';
+
+/** Une part de l'anneau des statuts, telle que la légende l'affiche. */
+export interface PartStatut { statut: Statut; libelle: string; n: number; pct: number; couleur: string }
 
 @Component({
   selector: 'app-dashboard',
@@ -13,12 +17,20 @@ import { Ticket } from '../../../models/ticket.models';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class Dashboard implements OnInit {
-  private ticketApi = inject(TicketApiService);
+export class Dashboard implements OnInit, OnDestroy {
+  private store = inject(TicketsStore);
   private router = inject(Router);
+  private theme = inject(ThemeService);
 
-  tickets = signal<Ticket[]>([]);
-  loading = signal(true);
+  /** La liste vient du magasin partagé, relu toutes les quinze secondes : un
+   *  ticket déposé par un client apparaît sur le tableau de bord sans recharger. */
+  tickets = this.store.tickets;
+  loading = this.store.chargement;
+  private detacher?: () => void;
+
+  /** Teintes des statuts, les mêmes que dans « Tous les tickets » : un compteur
+   *  « En attente » a la même icône et la même couleur partout. */
+  statutCfg = STATUT_CFG;
 
   totalCount = computed(() => this.tickets().length);
   enAttenteCount = computed(() => this.tickets().filter(t => t.statut === 'En attente').length);
@@ -51,21 +63,47 @@ export class Dashboard implements OnInit {
   ticketsPrioritaires = computed(() =>
     this.tickets()
       .filter(t => t.statut === 'En attente')
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      .sort((a, b) => dateTicket(a.created_at).getTime() - dateTicket(b.created_at).getTime())
       .slice(0, 5)
   );
 
+  /**
+   * Les parts de l'anneau, une par statut présent, dans l'ordre du cycle de vie.
+   *
+   * Chaque statut garde sa couleur (COULEURS_STATUT, ticket.models.ts). Auparavant les couleurs
+   * étaient distribuées dans l'ordre d'apparition des statuts : le vert pouvait
+   * tomber sur « Rejeté » un jour et sur « Résolu » le lendemain, et seul le
+   * survol permettait de savoir quoi était quoi.
+   */
+  repartitionStatuts = computed<PartStatut[]>(() => {
+    const total = this.tickets().length || 1;
+    return (Object.keys(STATUT_CFG) as Statut[])
+      .map(statut => {
+        const n = this.tickets().filter(t => t.statut === statut).length;
+        return { statut, libelle: STATUT_CFG[statut].label, n, pct: n / total, couleur: COULEURS_STATUT[statut] };
+      })
+      .filter(p => p.n > 0);
+  });
+
+  /** Chart.js dessine sur un canvas et ne lit pas les variables CSS : on les
+   *  résout au rendu, et le mode clair ou sombre fait partie des dépendances. */
+  private resoudre(couleur: string): string {
+    const m = couleur.match(/^var\((--[^)]+)\)$/);
+    if (!m) return couleur;
+    return getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim() || '#888888';
+  }
+
   statutChartData = computed<ChartData<'doughnut'>>(() => {
-    const counts: Record<string, number> = {};
-    for (const t of this.tickets()) {
-      counts[t.statut] = (counts[t.statut] || 0) + 1;
-    }
+    this.theme.isDark();
+    const parts = this.repartitionStatuts();
     return {
-      labels: Object.keys(counts),
+      labels: parts.map(p => p.libelle),
       datasets: [{
-        data: Object.values(counts),
-        backgroundColor: ['#3525cd', '#f5821f', '#15803d', '#dc2626', '#7c3aed'],
-        borderWidth: 0,
+        data: parts.map(p => p.n),
+        backgroundColor: parts.map(p => this.resoudre(p.couleur)),
+        // Un liseré de la couleur de la carte détache les parts les unes des autres.
+        borderColor: this.resoudre('var(--color-surface-container-lowest)'),
+        borderWidth: 2,
       }],
     };
   });
@@ -143,22 +181,17 @@ export class Dashboard implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadTickets();
+    this.detacher = this.store.suivre();
   }
 
-  loadTickets(): void {
-    this.loading.set(true);
-    this.ticketApi.getAllTickets().subscribe({
-      next: (data) => {
-        this.tickets.set(data);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
+  ngOnDestroy(): void {
+    this.detacher?.();
   }
 
+  /** L'API renvoie l'heure UTC sans fuseau : `dateTicket` remet le Z, sinon un
+   *  ticket qui vient d'arriver paraît attendre depuis plus d'une heure. */
   timeAgo(iso: string): string {
-    const diffMin = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    const diffMin = Math.round((Date.now() - dateTicket(iso).getTime()) / 60000);
     if (diffMin < 60) return `Il y a ${diffMin} min`;
     const diffH = Math.round(diffMin / 60);
     if (diffH < 24) return `Il y a ${diffH} h`;

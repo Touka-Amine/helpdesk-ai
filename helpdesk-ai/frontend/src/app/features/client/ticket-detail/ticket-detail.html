@@ -155,7 +155,7 @@
       <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
         <h4 class="font-label-md text-label-md text-outline mb-stack-lg uppercase tracking-wider">Besoin d'aide ?</h4>
         <div class="space-y-stack-md">
-          <a [href]="'mailto:support-it@onetech.local?subject=Relance ticket %23' + t.id"
+          <a [href]="'mailto:' + contact.courriel + '?subject=Relance ticket %23' + t.id"
             class="flex items-center gap-2 text-primary font-label-md text-label-md hover:underline">
             <span class="material-symbols-outlined text-[18px]">mail</span>
             Relancer le support

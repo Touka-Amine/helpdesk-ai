@@ -4,11 +4,13 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthApiService } from '../../../api/auth-api.service';
 import { AuthShell } from '../auth-shell/auth-shell';
+import { ThemeToggle } from '../theme-toggle/theme-toggle';
+import { ContactSupport } from '../contact-support/contact-support';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, AuthShell],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, AuthShell, ThemeToggle, ContactSupport],
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.css',
 })

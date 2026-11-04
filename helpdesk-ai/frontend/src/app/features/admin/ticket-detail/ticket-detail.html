@@ -68,69 +68,179 @@
           </div>
         </section>
 
-        <!-- Refonte "entreprise" (retour utilisateur) : le panneau RAG complet part dans une
-             popup dediee (voir plus bas @if (ragModalOpen())) — cet encart reste un simple
-             point d'entree pour ne pas alourdir la grille principale. -->
-        <section class="bg-surface-container-lowest border-l-4 rounded-xl p-stack-lg shadow-sm" [class.border-primary]="!isNovelCase()" [class.border-amber-500]="isNovelCase()">
-          <div class="flex justify-between items-center mb-stack-sm">
-            <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
-              @if (isNovelCase()) {
-                <span class="material-symbols-outlined text-amber-600">fiber_new</span> Nouveau type de problème
-              } @else {
-                <span class="material-symbols-outlined text-primary">smart_toy</span> Suggestions de résolution
+        <!-- Solution RAG affichée directement : elle était derrière un bouton, alors
+             que c'est l'information sur laquelle l'admin décide du traitement. -->
+        <section class="bg-surface-container-lowest border rounded-xl p-stack-lg shadow-sm space-y-stack-md {{ isNovelCase() ? 'border-outline-variant/40' : 'border-primary/40' }}">
+
+          <div class="flex items-start justify-between gap-stack-md pb-stack-md border-b border-outline-variant/40">
+            <div class="flex items-center gap-stack-md min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-primary/15 border border-primary/30 text-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined">{{ isNovelCase() ? 'fiber_new' : 'smart_toy' }}</span>
+              </div>
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="font-headline-sm text-headline-sm text-on-surface">
+                    @if (isNovelCase()) { Nouveau type de problème } @else { Solution suggérée (RAG) }
+                  </h3>
+                  @if (t.rag_score != null) {
+                    <span class="px-2.5 py-0.5 rounded-full border font-label-sm text-label-sm whitespace-nowrap"
+                      [style.color]="confianceColor(t.rag_score)" [style.borderColor]="confianceColor(t.rag_score)">
+                      Correspondance {{ confPct(t.rag_score) }}%
+                    </span>
+                  }
+                </div>
+                <p class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">Recherche sémantique dans la base des tickets documentés</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-stack-sm shrink-0">
+              @if (synthSource() === 'ollama') {
+                <span class="px-2 py-1 rounded-md bg-surface-container border border-outline-variant/60 font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">Synthèse IA locale</span>
+              } @else if (synthSource() === 'fallback') {
+                <span class="px-2 py-1 rounded-md bg-surface-container border border-outline-variant/60 font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">Résultats bruts</span>
               }
-            </h3>
-            @if (!isNovelCase()) {
-              @if (synthLoading()) {
-                <span class="text-label-sm font-label-sm text-outline flex items-center gap-1">
-                  <span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span> Analyse…
-                </span>
-              } @else if (t.rag_score != null) {
-                <span class="font-label-md text-label-md font-bold" [style.color]="confianceColor(t.rag_score)">
-                  Correspondance {{ confPct(t.rag_score) }}%
-                </span>
-              }
-            }
+              <button type="button" (click)="refreshRag()" title="Relancer la recherche"
+                class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                <span class="material-symbols-outlined text-[20px]">refresh</span>
+              </button>
+            </div>
           </div>
-          <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mb-stack-md">
-            @if (isNovelCase()) {
-              Aucun cas similaire connu dans la base de connaissances. La solution appliquée à la
-              clôture alimentera les suggestions pour les prochains tickets semblables.
-            } @else {
-              Un cas historique correspondant a été trouvé dans la base de connaissances.
+
+          @if (isNovelCase()) {
+            <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+              @if (t.rag_score != null) {
+                Aucun cas similaire connu dans la base de connaissances (score {{ confPct(t.rag_score) }}%).
+              } @else {
+                Aucun cas similaire connu dans la base de connaissances.
+              }
+              Décrivez la solution appliquée à la clôture : elle sera enregistrée et proposée
+              automatiquement pour les prochains tickets semblables.
+            </p>
+          } @else {
+
+            <div class="bg-surface-container rounded-xl p-stack-md border border-outline-variant/40">
+              <p class="flex items-center gap-1.5 font-label-md text-label-md text-primary mb-1">
+                <span class="material-symbols-outlined text-[16px]">bolt</span> Diagnostic du moteur RAG
+              </p>
+              @if (synthText() && synthSource() !== 'none') {
+                <p class="font-body-md text-body-md text-on-surface leading-relaxed" [innerHTML]="synthHtml()"
+                  (click)="onTicketRefClick($event)" (keydown)="onTicketRefClick($event)"></p>
+              } @else {
+                <p class="font-body-md text-body-md text-on-surface leading-relaxed" [innerHTML]="renderText(t.solution_rag)"
+                  (click)="onTicketRefClick($event)" (keydown)="onTicketRefClick($event)"></p>
+              }
+              @if (synthLoading()) {
+                <p class="text-label-sm font-label-sm text-outline flex items-center gap-1 mt-stack-sm">
+                  <span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+                  L'assistant IA reformule cette suggestion (jusqu'à une minute sur ce serveur)…
+                </p>
+              }
+            </div>
+
+            @if (t.knowledge_rag) {
+              <details class="bg-surface-container rounded-xl p-stack-md border border-outline-variant/40">
+                <summary class="flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant cursor-pointer">
+                  <span class="material-symbols-outlined text-[16px]">menu_book</span> Source de connaissance
+                </summary>
+                <blockquote class="border-l-2 border-outline-variant pl-3 mt-stack-md font-body-md text-body-md text-on-surface-variant whitespace-pre-line">{{ t.knowledge_rag }}</blockquote>
+              </details>
             }
-          </p>
-          <button type="button" (click)="openRagModal()"
-            class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm hover:opacity-90 transition-all">
-            <span class="material-symbols-outlined text-[18px]">lightbulb</span>
-            Voir les suggestions de résolution (IA)
-          </button>
+
+            <div class="flex flex-wrap items-center gap-stack-sm">
+              <label for="rag-explore-input" class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">N° de ticket :</label>
+              <input id="rag-explore-input" [value]="exploreId()" (input)="exploreId.set($any($event.target).value)"
+                type="text" placeholder="ex : 45"
+                class="flex-1 min-w-[120px] rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+              <button type="button" (click)="exploreTicket()" [disabled]="exploreLoading()"
+                class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm disabled:opacity-60">
+                {{ exploreLoading() ? '…' : 'Afficher' }}
+              </button>
+            </div>
+            @if (exploreError()) {
+              <p class="text-label-sm font-label-sm text-error">{{ exploreError() }}</p>
+            }
+            @if (exploreResult(); as e) {
+              <div class="rounded-xl bg-surface-container border border-primary/30 p-stack-md">
+                <div class="flex flex-wrap items-center gap-stack-md">
+                  <span class="px-2 py-0.5 rounded bg-primary/15 border border-primary/30 text-primary font-label-sm text-label-sm">Ticket lié #{{ e.id }}</span>
+                  <span class="font-label-sm text-label-sm text-on-surface-variant">{{ e.categorie_finale || e.categorie_predite || 'Non classé' }}</span>
+                  @if (e.temps_ecoule) {
+                    <span class="font-label-sm text-label-sm" [style.color]="'var(--statut-resolu)'">Résolu en {{ e.temps_ecoule }}</span>
+                  }
+                </div>
+                <p class="font-body-md text-body-md font-semibold text-on-surface mt-stack-sm">{{ e.titre }}</p>
+                <p class="font-body-md text-body-md text-on-surface-variant whitespace-pre-line mt-1">{{ e.commentaire_interne || e.solution_rag || 'Aucune procédure détaillée disponible.' }}</p>
+              </div>
+            }
+
+            <div class="flex flex-wrap items-center justify-end gap-stack-md pt-stack-md border-t border-outline-variant/40">
+              <button type="button" (click)="copierProcedure()"
+                class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-outline-variant bg-surface-container font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                <span class="material-symbols-outlined text-[18px]">{{ copieFaite() ? 'check' : 'content_copy' }}</span>
+                {{ copieFaite() ? 'Copié' : 'Copier la procédure' }}
+              </button>
+              <button type="button" (click)="insererDansReponse()"
+                class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/15 border border-primary/30 text-primary font-label-md text-label-md hover:bg-primary/25 transition-colors">
+                <span class="material-symbols-outlined text-[18px]">reply</span>
+                Insérer dans la réponse
+              </button>
+            </div>
+          }
         </section>
       </div>
 
-      <!-- Colonne droite -->
+            <!-- Colonne droite -->
       <div class="space-y-gutter">
-
-        <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
-          <p class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-stack-md">Demandeur</p>
-          <p class="font-body-md text-body-md font-semibold text-on-surface">{{ t.demandeur_nom || '—' }}</p>
-          <p class="font-label-sm text-label-sm text-on-surface-variant">{{ t.demandeur_email || '—' }}</p>
-        </section>
 
         <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm sticky top-4">
           <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-stack-md">
 
             @if (step() === 'revue') {
-              <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-sm">Traitement du ticket</h3>
-              <p class="text-label-sm font-label-sm text-on-surface-variant/70 -mt-2">
-                Statut actuel : <strong class="text-on-surface">{{ statutCfg[t.statut]?.label ?? t.statut }}</strong>.
-                Vérifiez la classification IA et la suggestion RAG à gauche, puis passez à la clôture pour statuer sur ce ticket.
+              <div class="flex items-center justify-between gap-stack-md">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-primary"></span> Traitement du ticket
+                </h3>
+                <span class="px-2.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-primary font-label-sm text-label-sm uppercase tracking-wider whitespace-nowrap">
+                  Étape {{ etape() }} / 3
+                </span>
+              </div>
+
+              <!-- Où en est le ticket : les trois temps du traitement, déduits du statut réel. -->
+              <div class="space-y-stack-sm">
+                <div class="flex items-center justify-between gap-stack-md font-label-sm text-label-sm">
+                  <span class="text-on-surface-variant">Progression du traitement</span>
+                  <span class="text-primary">{{ libelleEtape() }}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1.5">
+                  @for (n of [1, 2, 3]; track n) {
+                    <span class="h-1.5 rounded-full" [style.background]="couleurEtape(n)" [title]="titreEtape(n)"></span>
+                  }
+                </div>
+              </div>
+
+              <p class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container border border-outline-variant/40 rounded-xl p-stack-md leading-relaxed">
+                Statut actuel : <strong [style.color]="statutCfg[t.statut]?.color">{{ statutCfg[t.statut]?.label ?? t.statut }}</strong>.
+                @if (isNovelCase()) {
+                  Aucun cas similaire n'a été retrouvé : la solution que vous décrirez à la clôture
+                  alimentera la base de connaissances.
+                } @else {
+                  La solution suggérée par le RAG est affichée à gauche. Vérifiez-la, puis passez à la clôture.
+                }
               </p>
 
               <button type="button" (click)="goToClosure()"
                 class="w-full py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md shadow-sm hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                Suivant <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                Suivant (résoudre et clôturer) <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
               </button>
+
+              <div class="flex items-center justify-between gap-stack-md font-label-sm text-label-sm">
+                <button type="button" (click)="assignerACollegue()"
+                  class="text-on-surface-variant hover:text-primary transition-colors">Assigner à un collègue</button>
+                @if (peutRejeter()) {
+                  <button type="button" (click)="demanderRejet()"
+                    class="text-on-surface-variant hover:text-action-delete transition-colors">Rejeter le ticket</button>
+                }
+              </div>
             }
 
             @if (step() === 'cloture') {
@@ -175,6 +285,12 @@
               </div>
 
               <div>
+                <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1" for="champ-assignation">Assigné à <span class="text-outline">(optionnel)</span></label>
+                <input id="champ-assignation" formControlName="assigne_a" type="text" placeholder="Nom du technicien"
+                  class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+              </div>
+
+              <div>
                 <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Réponse au client</label>
                 <textarea rows="3" formControlName="commentaire_client" placeholder="Message visible par le client…"
                   class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"></textarea>
@@ -196,6 +312,27 @@
               </button>
             }
           </form>
+        </section>
+
+        <section class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-stack-lg shadow-sm">
+          <div class="flex items-center justify-between gap-stack-md mb-stack-md">
+            <p class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Demandeur</p>
+            @if (t.filiale) {
+              <span class="px-2 py-0.5 rounded bg-surface-container border border-outline-variant/60 font-label-sm text-label-sm text-on-surface-variant">{{ t.filiale }}</span>
+            }
+          </div>
+          <div class="flex items-start gap-stack-md">
+            <div class="w-10 h-10 rounded-full bg-surface-container border border-outline-variant text-primary flex items-center justify-center shrink-0 font-label-md text-label-md">
+              {{ initiales(t.demandeur_nom) }}
+            </div>
+            <div class="min-w-0">
+              <p class="font-body-md text-body-md font-semibold text-on-surface truncate">{{ t.demandeur_nom || '—' }}</p>
+              <p class="font-label-sm text-label-sm text-on-surface-variant truncate">{{ t.demandeur_email || '—' }}</p>
+              @if (t.equipement) {
+                <p class="font-label-sm text-label-sm text-outline mt-1">Équipement : {{ t.equipement }}</p>
+              }
+            </div>
+          </div>
         </section>
       </div>
     </div>
@@ -269,94 +406,31 @@
     </div>
   }
 
-  <!-- Popup "Solution suggeree (RAG)" — contenu complet (synthese IA, correspondance,
-       explorateur par ID, source de connaissance), ouvert depuis l'encart compact de la
-       colonne gauche. Le chat n'est plus ici : il vit dans la bulle IA flottante ci-dessous. -->
-  @if (ragModalOpen()) {
-    <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-gutter">
-      <div class="bg-surface-container-lowest rounded-xl p-container-padding max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-lg space-y-stack-md">
-        <div class="flex items-center justify-between">
-          <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
-            @if (isNovelCase()) {
-              <span class="material-symbols-outlined text-amber-600">fiber_new</span> Nouveau type de problème
-            } @else {
-              <span class="material-symbols-outlined text-primary">smart_toy</span> Solution suggérée (RAG)
-            }
-          </h3>
-          <div class="flex items-center gap-stack-md">
-            <button type="button" (click)="refreshRag()" class="text-primary font-label-sm text-label-sm hover:underline flex items-center gap-1">
-              <span class="material-symbols-outlined text-[16px]">refresh</span> Rafraîchir
-            </button>
-            <button type="button" (click)="closeRagModal()" class="text-on-surface-variant hover:bg-surface-container-high rounded-full p-1 -mr-1">
-              <span class="material-symbols-outlined text-[20px]">close</span>
-            </button>
-          </div>
+  <!-- Rejet demandé depuis le panneau de traitement. Le motif part dans la réponse
+       au client : un rejet sans explication n'en est pas un. -->
+  @if (rejetOuvert()) {
+    <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-gutter" (click)="annulerRejet()">
+      <div class="bg-surface-container-lowest rounded-xl p-container-padding max-w-md w-full shadow-lg space-y-stack-md" (click)="$event.stopPropagation()">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-action-delete">cancel</span> Rejeter ce ticket
+        </h3>
+        <p class="font-body-md text-body-md text-on-surface-variant">
+          Le ticket <strong class="text-on-surface">#{{ t.id.toString().padStart(4,'0') }} — {{ t.titre }}</strong>
+          sera classé sans suite. Le motif ci-dessous est transmis au demandeur.
+        </p>
+        <textarea rows="3" [value]="motifRejet()" (input)="motifRejet.set($any($event.target).value)"
+          placeholder="Ex : demande en double du ticket #45, déjà traité."
+          class="w-full rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"></textarea>
+        @if (modalError()) {
+          <div class="text-body-md font-body-md text-error bg-error-container/40 rounded-lg px-3 py-2">{{ modalError() }}</div>
+        }
+        <div class="flex justify-end gap-stack-md">
+          <button type="button" (click)="annulerRejet()" class="px-4 py-2 rounded-lg border border-outline-variant font-label-md text-label-md text-on-surface">Annuler</button>
+          <button type="button" (click)="confirmerRejet()" [disabled]="saving()"
+            class="px-4 py-2 rounded-lg bg-rejeter text-on-rejeter font-label-md text-label-md shadow-sm disabled:opacity-50">
+            {{ saving() ? 'Envoi…' : 'Confirmer le rejet' }}
+          </button>
         </div>
-
-        @if (!isNovelCase() && t.rag_score != null) {
-          <div class="flex items-center gap-stack-md">
-            <span class="font-label-sm text-label-sm text-on-surface-variant min-w-[140px]">Correspondance</span>
-            <div class="flex items-center gap-stack-sm flex-1">
-              <div class="flex-1 bg-outline-variant/40 h-2 rounded-full overflow-hidden max-w-[140px]">
-                <div class="h-full" [style.width.%]="confPct(t.rag_score)" [style.background]="confianceColor(t.rag_score)"></div>
-              </div>
-              <span class="font-label-md text-label-md font-bold" [style.color]="confianceColor(t.rag_score)">{{ confPct(t.rag_score) }}%</span>
-            </div>
-          </div>
-        }
-
-        @if (isNovelCase()) {
-          <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
-            @if (t.rag_score != null) {
-              Aucun cas similaire connu dans la base de connaissances (score {{ (t.rag_score * 100).toFixed(0) }}%).
-            } @else {
-              Aucun cas similaire connu dans la base de connaissances.
-            }
-            Décrivez la solution appliquée dans « Solution appliquée » ci-contre : elle sera
-            enregistrée et proposée automatiquement pour les prochains tickets semblables.
-          </p>
-        } @else if (synthText() && synthSource() !== 'none') {
-          <p class="font-body-md text-body-md text-on-surface leading-relaxed" [innerHTML]="synthHtml()"
-            (click)="onTicketRefClick($event)" (keydown)="onTicketRefClick($event)"></p>
-          @if (synthSource() === 'fallback') {
-            <p class="text-label-sm font-label-sm text-amber-700">⚠️ LLM local indisponible — résultats bruts non reformulés.</p>
-          }
-
-          <div class="flex items-center gap-stack-sm">
-            <input id="rag-explore-input" [value]="exploreId()" (input)="exploreId.set($any($event.target).value)"
-              type="text" placeholder="N° de ticket, ex : 1042"
-              class="flex-1 rounded-lg border border-outline-variant bg-surface p-stack-sm text-body-md font-body-md focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-            <button type="button" (click)="exploreTicket()" [disabled]="exploreLoading()"
-              class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm disabled:opacity-60">
-              {{ exploreLoading() ? '…' : 'Afficher' }}
-            </button>
-          </div>
-          @if (exploreError()) {
-            <p class="text-label-sm font-label-sm text-error">{{ exploreError() }}</p>
-          }
-          @if (exploreResult(); as e) {
-            <div class="border-l-2 border-primary pl-3">
-              <p class="font-label-md text-label-md text-on-surface font-semibold">Ticket #{{ e.id }} — {{ e.titre }}</p>
-              <p class="font-body-md text-body-md text-on-surface-variant whitespace-pre-line mt-1">{{ e.commentaire_interne || e.solution_rag || 'Aucune procédure détaillée disponible.' }}</p>
-            </div>
-          }
-        } @else {
-          <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed" [innerHTML]="renderText(t.solution_rag)"
-            (click)="onTicketRefClick($event)" (keydown)="onTicketRefClick($event)"></p>
-          @if (synthLoading()) {
-            <p class="text-label-sm font-label-sm text-outline flex items-center gap-1">
-              <span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
-              L'assistant IA reformule cette suggestion (jusqu'à une minute sur ce serveur)…
-            </p>
-          }
-        }
-
-        @if (t.knowledge_rag) {
-          <details>
-            <summary class="text-label-sm font-label-sm text-outline cursor-pointer">Source de connaissance</summary>
-            <blockquote class="border-l-2 border-outline-variant pl-3 mt-2 text-label-sm font-label-sm text-on-surface-variant whitespace-pre-line">{{ t.knowledge_rag }}</blockquote>
-          </details>
-        }
       </div>
     </div>
   }

@@ -5,11 +5,13 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthApiService } from '../../../api/auth-api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AuthShell } from '../auth-shell/auth-shell';
+import { ThemeToggle } from '../theme-toggle/theme-toggle';
+import { ContactSupport } from '../contact-support/contact-support';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, AuthShell],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, AuthShell, ThemeToggle, ContactSupport],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })

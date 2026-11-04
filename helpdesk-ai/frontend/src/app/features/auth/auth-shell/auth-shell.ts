@@ -12,6 +12,9 @@ import { Component } from '@angular/core';
  * Sous 1024 px le panneau lateral n'a plus la place d'exister. Il ne disparait
  * pas pour autant : il devient un bandeau horizontal, de la meme couleur, pour
  * que l'identite soit presente a toutes les largeurs.
+ *
+ * La bascule clair / sombre n'est pas ici : elle se pose sous le bouton de
+ * validation de chaque ecran, voir le composant ThemeToggle.
  */
 @Component({
   selector: 'app-auth-shell',

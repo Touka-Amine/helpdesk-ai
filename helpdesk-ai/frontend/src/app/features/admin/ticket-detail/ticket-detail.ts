@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TicketApiService } from '../../../api/ticket-api.service';
 import {
-  Ticket, STATUT_CFG,
+  Ticket, couleurConfiance, STATUT_CFG,
   Statut, ApproveTicketRequest, ChatMessage,
   PRIORITE_OPTIONS, CLASSIFICATION_OPTIONS, CATEGORIE_OPTIONS,
 } from '../../../models/ticket.models';
@@ -88,18 +88,104 @@ export class TicketDetail implements OnInit {
   // popup dediee pour alleger la grille principale — memes donnees/logique qu'avant,
   // juste deplacees hors de la carte pleine page.
   chatBubbleOpen = signal(false);
-  ragModalOpen = signal(false);
 
   toggleChatBubble(): void {
     this.chatBubbleOpen.update((v) => !v);
   }
 
-  openRagModal(): void {
-    this.ragModalOpen.set(true);
+  // ── Ou en est le ticket ────────────────────────────────────────────────────
+  // Le traitement se lit en trois temps : le ticket arrive et il est classe, il
+  // est pris en charge, il est clos. L'etape se deduit du statut reel, aucun
+  // compteur n'est tenu a part.
+
+  etape = computed<1 | 2 | 3>(() => {
+    const s = this.ticket()?.statut;
+    if (s === 'Résolu' || s === 'Rejeté') return 3;
+    if (s === 'Prise en Charge' || s === 'Problème') return 2;
+    return 1;
+  });
+
+  private static readonly ETAPES = ['Reçu et classé', 'Prise en charge', 'Clôture'];
+
+  libelleEtape = computed(() => TicketDetail.ETAPES[this.etape() - 1]);
+
+  titreEtape(n: number): string {
+    return TicketDetail.ETAPES[n - 1];
   }
 
-  closeRagModal(): void {
-    this.ragModalOpen.set(false);
+  couleurEtape(n: number): string {
+    const e = this.etape();
+    if (n < e) return 'var(--statut-resolu)';
+    if (n === e) return 'var(--color-primary)';
+    return 'var(--color-outline-variant)';
+  }
+
+  /** Le rejet n'est propose que si l'API accepte la transition depuis l'etat courant. */
+  peutRejeter = computed(() => this.availableStatuts().includes('Rejeté'));
+
+  // ── Rejet depuis le panneau de traitement ──────────────────────────────────
+  rejetOuvert = signal(false);
+  motifRejet = signal('');
+
+  demanderRejet(): void {
+    this.motifRejet.set('');
+    this.modalError.set(null);
+    this.rejetOuvert.set(true);
+  }
+
+  annulerRejet(): void {
+    this.rejetOuvert.set(false);
+    this.modalError.set(null);
+  }
+
+  /** Le motif part dans la reponse au client : un rejet sans explication n'en est
+   *  pas un. */
+  confirmerRejet(): void {
+    const motif = this.motifRejet().trim();
+    if (!motif) {
+      this.modalError.set('Indiquez le motif du rejet : il est transmis au demandeur.');
+      return;
+    }
+    this.form.patchValue({ commentaire_client: motif });
+    this.rejetOuvert.set(false);
+    this.performSave('Rejeté');
+  }
+
+  /** Raccourci du panneau : ouvre la cloture et place le curseur sur l'affectation. */
+  assignerACollegue(): void {
+    this.step.set('cloture');
+    setTimeout(() => document.getElementById('champ-assignation')?.focus());
+  }
+
+  // ── Reprise de la procedure proposee ───────────────────────────────────────
+  copieFaite = signal(false);
+
+  /** Le texte affiche : la synthese quand elle existe, la suggestion brute sinon. */
+  procedureAffichee(): string {
+    return (this.synthText() || this.ticket()?.solution_rag || '').trim();
+  }
+
+  copierProcedure(): void {
+    const texte = this.procedureAffichee();
+    if (!texte) return;
+    navigator.clipboard?.writeText(texte).then(
+      () => {
+        this.copieFaite.set(true);
+        setTimeout(() => this.copieFaite.set(false), 2000);
+      },
+      () => this.error.set('Copie impossible dans ce navigateur.'),
+    );
+  }
+
+  /** Reprend la procedure dans la reponse au client et ouvre la cloture : l'admin
+   *  ajuste le texte au lieu de le retaper. */
+  insererDansReponse(): void {
+    const texte = this.procedureAffichee();
+    if (!texte) return;
+    const actuel = (this.form.value.commentaire_client ?? '').trim();
+    const separation = '\n\n';
+    this.form.patchValue({ commentaire_client: actuel ? actuel + separation + texte : texte });
+    this.step.set('cloture');
   }
 
   private static readonly TICKET_REF_RE = /ticket\s*#\s*(\d+)/gi;
@@ -136,7 +222,6 @@ export class TicketDetail implements OnInit {
     event.preventDefault();
     this.exploreId.set(id);
     this.exploreTicket();
-    this.ragModalOpen.set(true);
     setTimeout(() => document.getElementById('rag-explore-input')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   }
 
@@ -153,6 +238,7 @@ export class TicketDetail implements OnInit {
     classification_finale: [''],
     commentaire_client:    [''],
     commentaire_interne:   [''],
+    assigne_a:             [''],
   });
 
   ngOnInit(): void {
@@ -182,7 +268,9 @@ export class TicketDetail implements OnInit {
     this.chatInput.set('');
     this.chatLoading.set(false);
     this.chatBubbleOpen.set(false);
-    this.ragModalOpen.set(false);
+    this.rejetOuvert.set(false);
+    this.motifRejet.set('');
+    this.copieFaite.set(false);
     this.ticketApi.getMyTicketDetail(id).subscribe({
       next: (t) => {
         this.ticket.set(t);
@@ -194,6 +282,7 @@ export class TicketDetail implements OnInit {
           classification_finale: t.classification_finale || t.classification_predite,
           commentaire_client: t.commentaire_client,
           commentaire_interne: t.commentaire_interne,
+          assigne_a: t.assigne_a ?? '',
         });
         this.availableStatuts.set(TRANSITIONS[t.statut] ?? []);
         // La synthese IA (Tache 3) est desormais la suggestion affichee par defaut
@@ -291,6 +380,7 @@ export class TicketDetail implements OnInit {
       classification_finale: v.classification_finale ?? undefined,
       commentaire_client: v.commentaire_client ?? undefined,
       commentaire_interne: v.commentaire_interne ?? undefined,
+      assigne_a: v.assigne_a ?? undefined,
     };
     this.ticketApi.approveTicket(this.ticket()!.id, payload).subscribe({
       next: () => {
@@ -415,16 +505,19 @@ export class TicketDetail implements OnInit {
     return c != null ? Math.round(c * 100) : 0;
   }
 
+  /** Initiales du demandeur pour la pastille de la carte, deux lettres au plus. */
+  initiales(nom: string | null | undefined): string {
+    const mots = (nom ?? '').trim().split(/\s+/).filter(Boolean);
+    if (!mots.length) return '?';
+    return (mots[0][0] + (mots[1]?.[0] ?? '')).toUpperCase();
+  }
+
   statutLabel(s: string | null | undefined): string {
     if (!s) return '';
     return this.statutCfg[s as Statut]?.label ?? s;
   }
 
   confianceColor(c: number | null): string {
-    if (c == null) return '#9ca3af';
-    const p = c * 100;
-    if (p >= 70) return '#15803d';
-    if (p >= 40) return '#b45309';
-    return '#dc2626';
+    return couleurConfiance(c);
   }
 }

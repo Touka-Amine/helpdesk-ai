@@ -5,14 +5,6 @@ import { Router } from '@angular/router';
 import { TicketApiService } from '../../../api/ticket-api.service';
 import { CreateTicketRequest, FILIALES } from '../../../models/ticket.models';
 
-interface Exemple {
-  label: string;
-  titre: string;
-  quand: string;
-  message: string;
-  actions: string;
-}
-
 @Component({
   selector: 'app-new-ticket',
   standalone: true,
@@ -30,51 +22,13 @@ export class NewTicket {
   errorMsg = signal<string | null>(null);
   successMsg = signal<string | null>(null);
 
-  // Exemples adaptes au format questions, pour aider les utilisateurs peu a l'aise
-  // avec la redaction d'un ticket a comprendre ce qui est attendu dans chaque champ.
-  exemples: Exemple[] = [
-    {
-      label: "Outlook ne s'ouvre plus",
-      titre: "Impossible d'ouvrir Outlook",
-      quand: 'Ce matin, vers 9h',
-      message: '« Outlook ne peut pas se connecter au serveur »',
-      actions: "J'ai redémarré mon ordinateur, mais rien n'a changé.",
-    },
-    {
-      label: 'VPN ne se connecte pas',
-      titre: 'Problème de connexion VPN',
-      quand: 'Depuis hier soir 18h',
-      message: "« Échec d'authentification »",
-      actions: "J'ai ressaisi mon mot de passe, redémarré la box, testé en 4G.",
-    },
-    {
-      label: 'Imprimante bloquée',
-      titre: "L'imprimante du bureau ne répond plus",
-      quand: 'Depuis ce matin 8h30',
-      message: '« Hors ligne »',
-      actions: "J'ai éteint et rallumé l'imprimante, vérifié les câbles.",
-    },
-  ];
-
   form = this.fb.group({
-    exemple: [''],
     titre: ['', [Validators.required, Validators.minLength(5)]],
     quand: [''],
     message: [''],
     actions: [''],
     filiale: [FILIALES[0], Validators.required],
   });
-
-  appliquerExemple(label: string): void {
-    const ex = this.exemples.find((e) => e.label === label);
-    if (!ex) return;
-    this.form.patchValue({
-      titre: ex.titre,
-      quand: ex.quand,
-      message: ex.message,
-      actions: ex.actions,
-    });
-  }
 
   submit(): void {
     this.errorMsg.set(null);
@@ -136,7 +90,6 @@ export class NewTicket {
 
   private resetForm(): void {
     this.form.reset({
-      exemple: '',
       titre: '',
       quand: '',
       message: '',

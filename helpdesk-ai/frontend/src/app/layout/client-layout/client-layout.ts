@@ -3,6 +3,7 @@ import { RouterOutlet, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { PiedPage } from '../pied-page/pied-page';
 
 interface Notification {
   id: number;
@@ -13,7 +14,7 @@ interface Notification {
 @Component({
   selector: 'app-client-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterModule, CommonModule],
+  imports: [RouterOutlet, RouterModule, CommonModule, PiedPage],
   templateUrl: './client-layout.html',
   styleUrl: './client-layout.css',
 })
