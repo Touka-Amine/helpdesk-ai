@@ -18,7 +18,6 @@ import os
 
 import numpy as np
 import pandas as pd
-import pytest
 
 os.environ.setdefault("DB_URL", "sqlite:///./data/tickets_test.db")
 

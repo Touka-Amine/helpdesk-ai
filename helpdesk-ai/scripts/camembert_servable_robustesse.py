@@ -55,7 +55,7 @@ def corps_du_texte(ligne):
 def main():
     df = pd.read_csv(CSV)
     classes = sorted(df["Catégorie"].unique())
-    df["_corps"] = [corps_du_texte(l) for _, l in df.iterrows()]
+    df["_corps"] = [corps_du_texte(enr) for _, enr in df.iterrows()]
     df["_brut"] = df["Titre"].fillna("") + " " + df["Description"].fillna("")
 
     import torch
@@ -80,10 +80,10 @@ def main():
 
     # Les deux entrees sont calculees une fois sur tout le corpus : le decoupage
     # ne fait ensuite que selectionner des lignes.
-    txt_a = ["type %s priorite %s %s" % (l["classification_simple"], l["priorite_simple"], l["_corps"])
-             for _, l in df.iterrows()]
-    txt_b = ["type %s priorite %s %s" % (CLASSIFICATION_PAR_DEFAUT, l["priorite_simple"], l["_corps"])
-             for _, l in df.iterrows()]
+    txt_a = ["type %s priorite %s %s" % (enr["classification_simple"], enr["priorite_simple"], enr["_corps"])
+             for _, enr in df.iterrows()]
+    txt_b = ["type %s priorite %s %s" % (CLASSIFICATION_PAR_DEFAUT, enr["priorite_simple"], enr["_corps"])
+             for _, enr in df.iterrows()]
     print("inference sur %d tickets, deux variantes..." % len(df))
     proba_a, proba_b = inferer(txt_a), inferer(txt_b)
     arr = np.array(classes)
@@ -118,9 +118,9 @@ def main():
         print("%-7d %10.4f %10.4f %+9.4f %12.4f %12.4f %+9.4f"
               % (g, fa, fb, fb - fa, ra, rb, rb - ra))
 
-    ecarts = [l["ecart_f1"] for l in lignes]
-    f1_s = [l["f1_servable"] for l in lignes]
-    rs_s = [l["rappel_securite_servable"] for l in lignes]
+    ecarts = [enr["ecart_f1"] for enr in lignes]
+    f1_s = [enr["f1_servable"] for enr in lignes]
+    rs_s = [enr["rappel_securite_servable"] for enr in lignes]
     resume = {
         "ecart_f1_median": round(float(np.median(ecarts)), 4),
         "ecart_f1_min": round(float(np.min(ecarts)), 4),

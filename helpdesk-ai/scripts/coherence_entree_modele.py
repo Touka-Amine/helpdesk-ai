@@ -35,7 +35,6 @@ from datetime import datetime, timezone
 
 import joblib
 import numpy as np
-import pandas as pd
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, RACINE)

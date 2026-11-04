@@ -8,7 +8,7 @@ import threading
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-from data.preprocess import clean_text, build_text_for_model, build_text_for_rag
+from data.preprocess import build_text_for_model, build_text_for_rag
 from rag.engine import RAGEngine
 from rag.semantic_engine import SemanticRAGEngine
 from rag.hybrid_engine import HybridRAGEngine

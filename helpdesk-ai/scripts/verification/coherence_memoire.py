@@ -48,7 +48,7 @@ for tex in sorted(glob.glob(os.path.join(RAPPORT, "*.tex"))):
         lignes = f.readlines()
     # on ignore les lignes de commentaire LaTeX
     sources[os.path.basename(tex)] = [
-        ("" if l.lstrip().startswith("%") else l) for l in lignes
+        ("" if lgn.lstrip().startswith("%") else lgn) for lgn in lignes
     ]
 
 TOUT = "".join("".join(v) for v in sources.values())
@@ -59,9 +59,9 @@ def mentions(motif):
     out = []
     rx = re.compile(motif)
     for nom, lignes in sources.items():
-        for i, l in enumerate(lignes, 1):
-            if rx.search(l):
-                out.append((nom, i, l.strip()[:110]))
+        for i, lgn in enumerate(lignes, 1):
+            if rx.search(lgn):
+                out.append((nom, i, lgn.strip()[:110]))
     return out
 
 
@@ -238,7 +238,7 @@ perimees = [
 for libelle, motif in perimees:
     occ = mentions(motif)
     noter(not occ, "absente : %s" % libelle,
-          "" if not occ else "; ".join("%s:%d" % (f, l) for f, l, _ in occ[:4]))
+          "" if not occ else "; ".join("%s:%d" % (f, lgn) for f, lgn, _ in occ[:4]))
 
 
 # ══════════════════════════════════════════════════════════════════════

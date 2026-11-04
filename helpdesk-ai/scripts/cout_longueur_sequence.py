@@ -68,9 +68,9 @@ def main():
     test = df[df["Titre"].isin(set(titres.iloc[te]["Titre"]))].reset_index(drop=True)
     y = test["Catégorie"].tolist()
     brut = (test["Titre"].fillna("") + " " + test["Description"].fillna("")).tolist()
-    entree = ["type %s priorite %s %s" % (CLASSIFICATION_PAR_DEFAUT, l["priorite_simple"],
-                                          corps_du_texte(l))
-              for _, l in test.iterrows()]
+    entree = ["type %s priorite %s %s" % (CLASSIFICATION_PAR_DEFAUT, enr["priorite_simple"],
+                                          corps_du_texte(enr))
+              for _, enr in test.iterrows()]
 
     tok = AutoTokenizer.from_pretrained(ADAPTATEUR)
     base = AutoModelForSequenceClassification.from_pretrained("camembert-base",
@@ -115,7 +115,9 @@ def main():
             for i in range(N_CHRONO):
                 e = tok(entree[i % len(entree)], padding="max_length", truncation=True,
                         max_length=L, return_tensors="pt")
-                t0 = time.perf_counter(); modele(**e); t.append((time.perf_counter() - t0) * 1000)
+                t0 = time.perf_counter()
+                modele(**e)
+                t.append((time.perf_counter() - t0) * 1000)
 
         resultats[str(L)] = {
             "tickets_tronques": tronques,
@@ -149,7 +151,9 @@ def main():
                 for i in range(N_CHRONO):
                     e = tok(entree[i % len(entree)], padding="max_length", truncation=True,
                             max_length=L, return_tensors="pt")
-                    t0 = time.perf_counter(); modele(**e); t.append((time.perf_counter() - t0) * 1000)
+                    t0 = time.perf_counter()
+                    modele(**e)
+                    t.append((time.perf_counter() - t0) * 1000)
             fils[str(L)][str(n)] = {"median_ms": round(float(np.median(t)), 1),
                                     "p95_ms": round(float(np.percentile(t, 95)), 1)}
             print("  longueur %3d, %d fil(s) : mediane %6.1f ms   p95 %6.1f ms"

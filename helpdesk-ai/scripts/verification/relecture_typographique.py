@@ -120,26 +120,26 @@ def controler(nom: str, texte: str) -> list:
                                             sans_echap.count(ferme))})
 
     # 4. nombre colle a une unite
-    for i, l in enumerate(lignes, 1):
-        for m in re.finditer(r"\b\d+(?:[.,]\d+)?(ms|s|Mo|Go|ko|%)\b", l):
+    for i, lgn in enumerate(lignes, 1):
+        for m in re.finditer(r"\b\d+(?:[.,]\d+)?(ms|s|Mo|Go|ko|%)\b", lgn):
             faits.append({"type": "unite collee au nombre", "fichier": nom, "ligne": i,
                           "extrait": m.group(0)})
 
     # 5. doubles espaces et espaces finales, hors commentaires : les en-tetes de
     # fichier alignent leurs cadres avec des espaces, et c'est voulu.
-    for i, l in enumerate(lignes, 1):
-        if l.lstrip().startswith("%"):
+    for i, lgn in enumerate(lignes, 1):
+        if lgn.lstrip().startswith("%"):
             continue
-        if re.search(r"\S  +\S", l):
+        if re.search(r"\S  +\S", lgn):
             faits.append({"type": "double espace", "fichier": nom, "ligne": i,
-                          "extrait": l.strip()[:70]})
-        if l != l.rstrip():
+                          "extrait": lgn.strip()[:70]})
+        if lgn != lgn.rstrip():
             faits.append({"type": "espace en fin de ligne", "fichier": nom,
-                          "ligne": i, "extrait": l.strip()[:70]})
+                          "ligne": i, "extrait": lgn.strip()[:70]})
 
     # 6. ponctuation doublee
-    for i, l in enumerate(lignes, 1):
-        for m in re.finditer(r"(?<!\.)(,,|;;|::|!!|\?\?)(?!\.)", l):
+    for i, lgn in enumerate(lignes, 1):
+        for m in re.finditer(r"(?<!\.)(,,|;;|::|!!|\?\?)(?!\.)", lgn):
             faits.append({"type": "ponctuation doublee", "fichier": nom, "ligne": i,
                           "extrait": m.group(0)})
     return faits

@@ -39,7 +39,7 @@ sources = {}
 for tex in sorted(glob.glob(os.path.join(RAPPORT, "*.tex"))):
     with io.open(tex, encoding="utf-8", errors="replace") as f:
         sources[os.path.basename(tex)] = [
-            ("" if l.lstrip().startswith("%") else l) for l in f.readlines()]
+            ("" if lgn.lstrip().startswith("%") else lgn) for lgn in f.readlines()]
 TOUT = "".join("".join(v) for v in sources.values())
 
 
@@ -96,8 +96,8 @@ for n, protocole, mauvais in [
     rx = re.compile(forme + r".{0,90}?" + mauvais + r"|" + mauvais + r".{0,90}?" + forme)
     fautifs = []
     for nom, lignes in sources.items():
-        for i, l in enumerate(lignes, 1):
-            if rx.search(l):
+        for i, lgn in enumerate(lignes, 1):
+            if rx.search(lgn):
                 fautifs.append("%s:%d" % (nom, i))
     noter(not fautifs, "%d jamais rattache au protocole %s" % (n, mauvais.replace("[ée]", "é")),
           "; ".join(fautifs[:3]))
@@ -127,8 +127,8 @@ print("-" * 70)
 
 incluses = set()
 for nom, lignes in sources.items():
-    for l in lignes:
-        for m in re.finditer(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", l):
+    for lgn in lignes:
+        for m in re.finditer(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", lgn):
             incluses.add(m.group(1))
 
 dossier = os.path.join(RAPPORT, "img")

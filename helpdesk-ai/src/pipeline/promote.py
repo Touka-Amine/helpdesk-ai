@@ -291,7 +291,7 @@ def run(args: argparse.Namespace) -> int:
         production = registre.get_production()
         if production is None:
             print(f"[promote] {motif.capitalize()}, et aucun modele en production.")
-            print(f"[promote] Lancez d'abord : python src/pipeline/train.py")
+            print("[promote] Lancez d'abord : python src/pipeline/train.py")
             return 1
         print(f"[promote] Rien a arbitrer — {motif}.")
         _restaurer_production(registre, production["version"])
@@ -434,7 +434,7 @@ def run(args: argparse.Namespace) -> int:
         _ecrire_metriques_production(metriques_candidat)
         enregistrer_mlflow(candidat["version"], registre, params)
         print(f"[promote] PROMU — v{production['version']} -> v{candidat['version']}")
-        print(f"[promote] Rechargez l'API : POST /api/v1/admin/model/reload")
+        print("[promote] Rechargez l'API : POST /api/v1/admin/model/reload")
     else:
         registre.reject(candidat["version"], reason=motif, decision=decision)
         _restaurer_production(registre, production["version"])

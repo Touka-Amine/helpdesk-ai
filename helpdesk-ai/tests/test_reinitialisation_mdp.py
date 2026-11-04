@@ -176,7 +176,7 @@ def test_le_jeton_ne_sert_qu_une_fois(client, compte, liens):
 def test_une_nouvelle_demande_annule_la_precedente(client, compte, liens):
     _demander(client, compte)
     _demander(client, compte)
-    premier, second = (_jeton_du_lien(l) for l in liens[:2])
+    premier, second = (_jeton_du_lien(lien) for lien in liens[:2])
 
     perime = client.post("/api/v1/auth/reset-password", json={
         "token": premier, "new_password": MDP_NOUVEAU,

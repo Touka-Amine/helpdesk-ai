@@ -166,7 +166,7 @@ def fouiller_base(chemin: str, frags: set[str]) -> dict:
                 lignes = cx.execute("SELECT * FROM %s LIMIT 5000" % table).fetchall()
             except sqlite3.Error:
                 continue
-            blob = "\n".join(" ".join(str(v) for v in l if isinstance(v, str)) for l in lignes)
+            blob = "\n".join(" ".join(str(v) for v in enr if isinstance(v, str)) for enr in lignes)
             t = fouiller_texte(blob, frags)
             if t:
                 t["zone"] = "application" if table in TABLES_DE_COMPTES else "corpus"

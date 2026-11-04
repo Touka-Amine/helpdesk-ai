@@ -35,7 +35,6 @@ import time
 from datetime import datetime, timezone
 
 import numpy as np
-import pandas as pd
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(RACINE, "src"))
@@ -91,9 +90,9 @@ def main():
     presentes = sorted(test["Catégorie"].unique())
     y = test["Catégorie"].tolist()
     brut = (test["Titre"].fillna("") + " " + test["Description"].fillna("")).tolist()
-    entree = ["type %s priorite %s %s" % (CLASSIFICATION_PAR_DEFAUT, l["priorite_simple"],
-                                          corps_du_texte(l))
-              for _, l in test.iterrows()]
+    entree = ["type %s priorite %s %s" % (CLASSIFICATION_PAR_DEFAUT, enr["priorite_simple"],
+                                          corps_du_texte(enr))
+              for _, enr in test.iterrows()]
     print("jeu de test gele : %d tickets, %d categories presentes sur 8"
           % (len(test), len(presentes)))
 
@@ -196,7 +195,9 @@ def main():
             for i in range(N_CHRONO):
                 ee = tok(entree[i % len(entree)], padding="max_length", truncation=True,
                          max_length=MAX_LEN, return_tensors="pt")
-                t0 = time.perf_counter(); modele(**ee); t.append((time.perf_counter() - t0) * 1000)
+                t0 = time.perf_counter()
+                modele(**ee)
+                t.append((time.perf_counter() - t0) * 1000)
         return t
 
     def chrono_onnx(sess):
@@ -210,7 +211,9 @@ def main():
         t = []
         for i in range(N_CHRONO):
             x = un(i)
-            t0 = time.perf_counter(); sess.run(["logits"], x); t.append((time.perf_counter() - t0) * 1000)
+            t0 = time.perf_counter()
+            sess.run(["logits"], x)
+            t.append((time.perf_counter() - t0) * 1000)
         return t
 
     print("\ncout par ticket, un a la fois, %d mesures :" % N_CHRONO)

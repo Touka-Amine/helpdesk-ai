@@ -84,13 +84,13 @@ def _ecrire(journal: dict) -> None:
 
 def lectures_decisionnelles() -> int:
     """Combien de fois le jeu a servi a trancher."""
-    return sum(1 for l in _charger()["lectures"] if l.get("nature") == POUR_DECIDER)
+    return sum(1 for enr in _charger()["lectures"] if enr.get("nature") == POUR_DECIDER)
 
 
 def etat() -> dict:
     journal = _charger()
-    decisions = [l for l in journal["lectures"] if l.get("nature") == POUR_DECIDER]
-    rapports = [l for l in journal["lectures"] if l.get("nature") != POUR_DECIDER]
+    decisions = [enr for enr in journal["lectures"] if enr.get("nature") == POUR_DECIDER]
+    rapports = [enr for enr in journal["lectures"] if enr.get("nature") != POUR_DECIDER]
     return {
         "lectures_totales": len(journal["lectures"]),
         "lectures_de_decision": len(decisions),
@@ -132,10 +132,10 @@ def inscrire(nature: str, motif: str, lecteur: str, **details) -> dict:
     entree.update({k: v for k, v in details.items() if v is not None})
     journal["lectures"].append(entree)
     journal["resume"] = {
-        "lectures_de_decision": sum(1 for l in journal["lectures"]
-                                    if l.get("nature") == POUR_DECIDER),
-        "lectures_de_rapport": sum(1 for l in journal["lectures"]
-                                   if l.get("nature") != POUR_DECIDER),
+        "lectures_de_decision": sum(1 for enr in journal["lectures"]
+                                    if enr.get("nature") == POUR_DECIDER),
+        "lectures_de_rapport": sum(1 for enr in journal["lectures"]
+                                   if enr.get("nature") != POUR_DECIDER),
     }
     _ecrire(journal)
     return entree

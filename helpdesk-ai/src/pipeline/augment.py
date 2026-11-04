@@ -244,9 +244,9 @@ def run(args: argparse.Namespace) -> None:
         print(f"[augment] {cat:16s} +{produits} (rejets cumules : {rejets})")
 
     if args.dry_run:
-        for l in lignes:
-            print("\n---", l["Titre"])
-            print(l["Description"][:400])
+        for lgn in lignes:
+            print("\n---", lgn["Titre"])
+            print(lgn["Description"][:400])
         return
 
     df["is_augmented"] = False

@@ -31,13 +31,12 @@ import sys
 from datetime import datetime, timezone
 
 import joblib
-import pandas as pd
 
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, RACINE)
 sys.path.insert(0, os.path.join(RACINE, "src"))
 
-from pipeline.train import REFERENTIEL, evaluer  # noqa: E402
+from pipeline.train import evaluer  # noqa: E402
 from pipeline import jeu_gele  # noqa: E402
 
 TEST = os.path.join(RACINE, "data", "splits", "test.csv")

@@ -52,7 +52,7 @@ def main():
     titres_par_ligne = collections.defaultdict(set)
     forme_lisible = {}
     for titre, desc in zip(train["Titre"], train["Description"].fillna("")):
-        for ligne in (l.strip() for l in desc.splitlines()):
+        for ligne in (lgn.strip() for lgn in desc.splitlines()):
             if not ligne:
                 continue
             k = _clef(ligne)

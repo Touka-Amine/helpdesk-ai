@@ -222,8 +222,8 @@ def run() -> None:
     if couverture < total_cat:
         manquantes = sorted(set(df["Catégorie"]) - set(test_df["Catégorie"]))
         print(f"[split]   AVERTISSEMENT — sans support au test : {manquantes}")
-        print(f"[split]   Leur F1 vaudra 0.0 par construction et tirera la F1-macro "
-              f"vers le bas. promote.py les exclut des comparaisons.")
+        print("[split]   Leur F1 vaudra 0.0 par construction et tirera la F1-macro "
+              "vers le bas. promote.py les exclut des comparaisons.")
 
     overlap = set(train_df["Titre"]) & set(test_df["Titre"])
     assert not overlap, f"Fuite detectee — {len(overlap)} Titres communs train/test !"

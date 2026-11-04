@@ -80,9 +80,9 @@ def entree_de_production(df):
     la prediction est demandee.
     """
     corps = []
-    for _, l in df.iterrows():
-        e = str(l["text_enriched"])
-        p = "type %s priorite %s " % (l["classification_simple"], l["priorite_simple"])
+    for _, enr in df.iterrows():
+        e = str(enr["text_enriched"])
+        p = "type %s priorite %s " % (enr["classification_simple"], enr["priorite_simple"])
         corps.append(e[len(p):] if e.startswith(p) else e)
     return ["priorite %s %s" % (p, c) for p, c in zip(df["priorite_simple"], corps)]
 
@@ -282,7 +282,7 @@ def main():
             "protocole": "decoupage du pipeline, jeu de test GELE (data/splits/test.csv)",
             "entree": "priorite saisie + titre + description, classification absente",
             "max_length": MAX_LEN,
-            "train": len(train), "validation": len(val), "test": len(test),
+            "train": len(train), "validation": len(val), "taille_test": len(test),
             "classes_presentes_au_test": presentes,
             "validation_f1_macro": round(float(val_scores["eval_f1_macro"]), 4),
             "test": resultat,

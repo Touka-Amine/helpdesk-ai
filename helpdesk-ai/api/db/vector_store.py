@@ -466,8 +466,8 @@ def get_refus(limit: int = 100) -> list[dict]:
         return []
     indexes = {str(e.get("ticket_id", e.get("_id"))): str(e.get("indexed_at", ""))
                for e in get_all_entries()}
-    refus = [l for tid, l in derniers.items() if str(l.get("refuse_at", "")) > indexes.get(tid, "")]
-    refus.sort(key=lambda l: l.get("refuse_at", ""), reverse=True)
+    refus = [enr for tid, enr in derniers.items() if str(enr.get("refuse_at", "")) > indexes.get(tid, "")]
+    refus.sort(key=lambda enr: enr.get("refuse_at", ""), reverse=True)
     return refus[:limit]
 
 

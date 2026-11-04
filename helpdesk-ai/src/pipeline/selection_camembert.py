@@ -65,9 +65,9 @@ N_PLIS = 3
 
 def entree_de_production(df):
     corps = []
-    for _, l in df.iterrows():
-        e = str(l["text_enriched"])
-        p = "type %s priorite %s " % (l["classification_simple"], l["priorite_simple"])
+    for _, enr in df.iterrows():
+        e = str(enr["text_enriched"])
+        p = "type %s priorite %s " % (enr["classification_simple"], enr["priorite_simple"])
         corps.append(e[len(p):] if e.startswith(p) else e)
     return ["priorite %s %s" % (p, c) for p, c in zip(df["priorite_simple"], corps)]
 

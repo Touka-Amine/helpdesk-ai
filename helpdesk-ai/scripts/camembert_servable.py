@@ -100,15 +100,15 @@ def main():
     test = decoupage(df)
     y = test["Catégorie"].tolist()
     brut = (test["Titre"].fillna("") + " " + test["Description"].fillna("")).tolist()
-    corps = [corps_du_texte(l) for _, l in test.iterrows()]
+    corps = [corps_du_texte(enr) for _, enr in test.iterrows()]
 
     variantes = {
         "A_enrichissement_reel": [
-            "type %s priorite %s %s" % (l["classification_simple"], l["priorite_simple"], c)
-            for (_, l), c in zip(test.iterrows(), corps)],
+            "type %s priorite %s %s" % (enr["classification_simple"], enr["priorite_simple"], c)
+            for (_, enr), c in zip(test.iterrows(), corps)],
         "B_production_classification_par_defaut": [
-            "type %s priorite %s %s" % (CLASSIFICATION_PAR_DEFAUT, l["priorite_simple"], c)
-            for (_, l), c in zip(test.iterrows(), corps)],
+            "type %s priorite %s %s" % (CLASSIFICATION_PAR_DEFAUT, enr["priorite_simple"], c)
+            for (_, enr), c in zip(test.iterrows(), corps)],
         "C_sans_enrichissement": corps,
     }
 

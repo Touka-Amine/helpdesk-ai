@@ -92,7 +92,7 @@ def resumer(titre: str, description: str, mots_max: int = 60) -> dict:
     texte = str(description or "")
     connues = formules()
     gardees, retirees = [], []
-    for ligne in (l.strip() for l in texte.splitlines()):
+    for ligne in (lgn.strip() for lgn in texte.splitlines()):
         if not ligne:
             continue
         if _clef(ligne) in connues:
@@ -103,7 +103,7 @@ def resumer(titre: str, description: str, mots_max: int = 60) -> dict:
     # Tout retirer voudrait dire que la description n'etait que des formules :
     # mieux vaut alors rendre l'original que rendre le vide.
     if not gardees:
-        gardees, retirees = [l.strip() for l in texte.splitlines() if l.strip()], []
+        gardees, retirees = [lgn.strip() for lgn in texte.splitlines() if lgn.strip()], []
 
     resume = " ".join(gardees)
     mots = resume.split()

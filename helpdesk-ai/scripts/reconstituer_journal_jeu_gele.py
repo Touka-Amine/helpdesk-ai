@@ -66,23 +66,23 @@ LECTURES_RECHERCHE = [
 def reconstituer_la_recherche(essai: bool) -> int:
     """Inscrit les lectures du volet recherche, une fois et pas deux."""
     journal = jeu_gele._charger()
-    deja_vues = {(l.get("lecteur"), l.get("date_reelle"))
-                 for l in journal.get("lectures", [])}
-    a_inscrire = [l for l in LECTURES_RECHERCHE
-                  if (l["lecteur"], l["date_reelle"]) not in deja_vues]
+    deja_vues = {(enr.get("lecteur"), enr.get("date_reelle"))
+                 for enr in journal.get("lectures", [])}
+    a_inscrire = [enr for enr in LECTURES_RECHERCHE
+                  if (enr["lecteur"], enr["date_reelle"]) not in deja_vues]
     print("volet recherche : %d lecture(s) decisionnelle(s) connue(s), %d a inscrire"
           % (len(LECTURES_RECHERCHE), len(a_inscrire)))
-    for l in a_inscrire:
-        print("  %s  %s" % (l["date_reelle"][:19], l["motif"][:62]))
+    for enr in a_inscrire:
+        print("  %s  %s" % (enr["date_reelle"][:19], enr["motif"][:62]))
     if essai or not a_inscrire:
         return 0
-    for l in a_inscrire:
+    for enr in a_inscrire:
         jeu_gele.inscrire(
             jeu_gele.POUR_DECIDER,
-            motif=l["motif"],
-            lecteur=l["lecteur"],
-            date_reelle=l["date_reelle"],
-            reference=l["reference"],
+            motif=enr["motif"],
+            lecteur=enr["lecteur"],
+            date_reelle=enr["date_reelle"],
+            reference=enr["reference"],
             provenance="indirecte : requetes tirees du jeu gele via le gabarit annote",
             reconstitue=True,
             note="inscrit apres coup : ces lectures precedent l'instrumentation "

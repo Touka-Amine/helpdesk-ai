@@ -9,7 +9,6 @@ mais un compteur : rendre chaque lecture visible, distinguer celles qui
 tranchent de celles qui rapportent, et arreter la porte de promotion une fois
 un budget declare atteint. Ces tests verifient les trois.
 """
-import importlib
 import io
 import json
 import os
@@ -103,9 +102,9 @@ def test_le_journal_du_depot_porte_les_lectures_deja_faites():
     if not os.path.exists(chemin):
         pytest.skip("journal absent")
     donnees = json.loads(io.open(chemin, encoding="utf-8").read())
-    decisions = [l for l in donnees["lectures"] if l.get("nature") == jeu_gele.POUR_DECIDER]
+    decisions = [enr for enr in donnees["lectures"] if enr.get("nature") == jeu_gele.POUR_DECIDER]
     assert len(decisions) >= 3, "les arbitrages v2, v3 et v4 doivent y figurer"
-    reconstituees = [l for l in decisions if l.get("reconstitue")]
+    reconstituees = [enr for enr in decisions if enr.get("reconstitue")]
     assert reconstituees, "les lectures anterieures au journal doivent etre marquees comme telles"
 
 

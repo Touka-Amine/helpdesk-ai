@@ -188,9 +188,9 @@ def run(args: argparse.Namespace) -> int:
             "n_tickets_valides": int(len(valides)),
             "taux_pct": taux_desaccord,
             "par_categorie_finale": {
-                str(cat): {"desaccords": int(l["sum"]), "total": int(l["count"]),
-                           "taux_pct": round(100 * l["sum"] / l["count"], 2)}
-                for cat, l in par_categorie.iterrows()
+                str(cat): {"desaccords": int(enr["sum"]), "total": int(enr["count"]),
+                           "taux_pct": round(100 * enr["sum"] / enr["count"], 2)}
+                for cat, enr in par_categorie.iterrows()
             },
             "interpretation": (
                 "Minorant de l'erreur reelle : ne compte que les corrections "

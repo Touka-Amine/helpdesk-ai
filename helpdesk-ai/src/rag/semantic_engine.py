@@ -144,7 +144,6 @@ class SemanticRAGEngine:
         coûte quelques dizaines de microsecondes ; deux ou trois passes ne se
         mesurent pas sur le temps de réponse.
         """
-        import numpy as np
 
         total = index.ntotal
         k = min(max(self.top_k * 3, 1), total)

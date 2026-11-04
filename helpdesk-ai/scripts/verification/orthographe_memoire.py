@@ -206,8 +206,8 @@ def texte_lisible(brut: str) -> str:
 def charger_lexique() -> set:
     if not os.path.exists(LEXIQUE):
         return set()
-    return {l.strip().lower() for l in io.open(LEXIQUE, encoding="utf-8")
-            if l.strip() and not l.startswith("#")}
+    return {lgn.strip().lower() for lgn in io.open(LEXIQUE, encoding="utf-8")
+            if lgn.strip() and not lgn.startswith("#")}
 
 
 def connu(mot: str, vocabulaire: set, lexique: set) -> bool:

@@ -420,7 +420,7 @@ def run() -> None:
         tag="candidate",
     )
     print(f"[train] Candidat enregistre : v{version} (non promu)")
-    print(f"[train] Decision de promotion : python src/pipeline/promote.py")
+    print("[train] Decision de promotion : python src/pipeline/promote.py")
 
 
 if __name__ == "__main__":
