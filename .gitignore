@@ -110,3 +110,22 @@ exemples_diagrammes/
 report/diagrams/ch01_organigramme.puml
 report/img/ch01_organigramme.pdf
 report/main.pdf
+
+# ===========================================
+# Artefacts lourds exclus du depot distant
+# ===========================================
+# GitHub refuse tout fichier au-dela de 100 Mo, et modele.onnx en pese 432.
+# Le depot garde le code d'entrainement, les scripts et les metriques : le
+# modele se reconstruit depuis helpdesk-ai/scripts/. L'adaptateur LoRA de
+# models/camembert_servi/ reste suivi, il ne pese que 3,5 Mo et suffit a
+# rejouer le modele servi avec CamemBERT telecharge depuis Hugging Face.
+helpdesk-ai/models/camembert_onnx/
+helpdesk-ai/models/_camembert_servi_travail/
+helpdesk-ai/models/_validation_travail/
+
+# Captures video de demonstration, hors sujet pour un depot de code.
+videos/
+
+# Organigramme nominatif du service, ecarte du memoire : il nomme une
+# quarantaine de salaries d'OTBS. Conserve en local, jamais publie.
+report/img/_ecartees/ch01_organigramme.png
