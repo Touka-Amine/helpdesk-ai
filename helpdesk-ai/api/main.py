@@ -1,4 +1,5 @@
 # api/main.py
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -16,6 +17,34 @@ from api.schemas import FullResponse, HealthResponse, TicketInput
 # Rate limiting — voir api/middleware/auth_middleware.py (dépendance FastAPI)
 
 
+def _chauffer_les_modeles() -> None:
+    """Fait passer une requete factice dans toute la chaine, au demarrage.
+
+    Charger un modele ne suffit pas a le rendre rapide. Le premier appel reel
+    declenche encore l'allocation des tampons de `sentence-transformers`, le
+    premier parcours de l'index FAISS et la mise en cache des vectoriseurs
+    scikit-learn. La campagne de charge l'avait mesure sans le nommer : sur
+    trente appels successifs, la mediane etait a 105 ms et le maximum a
+    1 763 ms. Ce seul appel froid suffisait a porter le quatre-vingt-quinzieme
+    centile a 330 ms et a faire echouer ENF-01.
+
+    Le ticket factice ne touche ni la base ni le journal : il ne fait que
+    traverser le predicteur et le moteur de recherche. Un echec ici n'empeche
+    pas le service de demarrer — le premier vrai appel sera simplement lent,
+    comme avant.
+    """
+    try:
+        from api.services.ai_service import predict_and_recommend
+        debut = time.perf_counter()
+        predict_and_recommend(
+            "Prechauffage du service",
+            "Requete factice emise au demarrage pour amorcer les modeles, "
+            "elle n'est ni enregistree ni comptabilisee.")
+        print("Modeles chauffes en %.0f ms" % ((time.perf_counter() - debut) * 1000))
+    except Exception as e:  # noqa: BLE001 — le demarrage ne doit jamais echouer ici
+        print("Prechauffage ignore (%s) — le premier appel reel sera plus lent." % e)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Controle avant toute autre chose : un service demarre en production avec les
@@ -23,6 +52,7 @@ async def lifespan(app: FastAPI):
     settings.verifier_secrets()
     init_db()
     predictor.load()
+    _chauffer_les_modeles()
     yield
 
 

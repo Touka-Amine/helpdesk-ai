@@ -49,11 +49,15 @@ import yaml
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from pipeline import jeu_gele  # noqa: E402
+
 PARAMS_PATH = "params.yaml"
 TEST_PATH = "data/splits/test.csv"
 RAG_ENGINE_PATH = "models/rag_engine.pkl"
 SEM_RAG_DIR = "models/semantic_rag"
 OUT = "metrics/rag_eval.json"
+OUT_BALAYAGE = "metrics/rag_seuil_balayage.json"
+OUT_PROTOCOLES = "metrics/rag_protocoles.json"
 
 
 # ── chargement des moteurs ───────────────────────────────────────────────────
@@ -85,6 +89,7 @@ def charger_moteurs(params: dict) -> dict:
                 alpha=params["rag"]["hybrid_alpha"],
                 top_k=params["rag"]["top_k"],
                 similarity_threshold=params["rag"]["similarity_threshold"],
+                fallback_threshold=params["rag"].get("fallback_threshold", 0.20),
             )
             hybride._sem = moteurs["semantique"]
             hybride._lex = moteurs["lexical"]
@@ -102,9 +107,11 @@ def interroger(moteur, titre: str, description: str, top_k: int) -> list[dict]:
 
     allow_fallback reste a True parce que c'est la valeur utilisee par
     api/predictor.py. Le desactiver mesurerait une configuration que personne
-    n'execute : le seuil de similarite de 0.50 est rarement atteint par le moteur
-    lexical, dont les scores cosinus tournent autour de 0.18, et l'evaluation
-    renverrait zero resultat partout. Le taux de repli est rapporte a part.
+    n'execute : le seuil de pertinence n'est pas atteint par tous les moteurs — le
+    lexical plafonne a 0.31 — et l'evaluation renverrait zero resultat pour eux.
+    Le taux de repli est rapporte a part, et n'est pas comparable d'un moteur a
+    l'autre puisqu'un seuil unique s'applique a trois echelles de scores
+    differentes.
     """
     from data.preprocess import build_text_for_rag
     texte = build_text_for_rag(description, titre=titre)
@@ -125,6 +132,7 @@ def evaluer_moteur(moteur, requetes: list[dict], top_k: int, mode: str,
                    seuil: float) -> dict:
     precisions, rangs_reciproques, ndcgs, rappels, scores, reponses = [], [], [], [], [], 0
     replis = 0
+    rendus_total = pertinents_rendus = 0
 
     for requete in requetes:
         resultats = interroger(moteur, requete["titre"], requete["description"], top_k)
@@ -147,7 +155,16 @@ def evaluer_moteur(moteur, requetes: list[dict], top_k: int, mode: str,
             else:
                 marques.append(1 if resultat.get("categorie") == requete["categorie"] else 0)
 
+        # Deux precisions, et la distinction compte des que le seuil filtre.
+        #   precision@k  divise par k, donc penalise une liste tronquee : rendre
+        #                deux bons resultats au lieu de trois en moyens vaut moins
+        #                que trois resultats dont un bon.
+        #   precision sur les resultats rendus : ce que vaut ce que l'utilisateur
+        #                voit reellement. C'est elle qui arbitre un reglage de seuil.
         precisions.append(sum(marques) / top_k if marques else 0.0)
+        if marques:
+            rendus_total += len(marques)
+            pertinents_rendus += sum(marques)
         premier = next((i for i, m in enumerate(marques) if m), None)
         rangs_reciproques.append(1.0 / (premier + 1) if premier is not None else 0.0)
         ideal = dcg(sorted(marques, reverse=True))
@@ -165,6 +182,13 @@ def evaluer_moteur(moteur, requetes: list[dict], top_k: int, mode: str,
         "seuil_pertinence": seuil,
         "score_similarite_moyen": round(sum(scores) / len(scores), 4) if scores else 0.0,
         "n_requetes": len(requetes),
+        # Precision de ce qui est reellement affiche, et longueur moyenne de la
+        # liste rendue. Sans ces deux valeurs, un seuil qui ameliore la qualite
+        # des suggestions en les raccourcissant apparait comme une regression.
+        "precision_sur_rendus": (round(pertinents_rendus / rendus_total, 4)
+                                 if rendus_total else None),
+        "resultats_par_requete": (round(rendus_total / reponses, 2)
+                                  if reponses else 0.0),
     }
     if mode == "annote":
         resultat[f"recall_at_{top_k}"] = round(sum(rappels) / n, 4) if rappels else 0.0
@@ -195,7 +219,15 @@ def construire_gabarit(params: dict, n: int) -> int:
         print(f"[rag_eval] {chemin} existe deja — non ecrase.")
         return 1
 
-    test_df = pd.read_csv(TEST_PATH, encoding="utf-8")
+    # Lecture qui TRANCHE : elle affecte durablement des tickets du jeu gele au
+    # role de jeu d'evaluation du moteur de recherche. Tout ce qui sera ensuite
+    # choisi sur ces requetes — le seuil, en particulier — l'est sur le jeu gele.
+    test_df = jeu_gele.lire(
+        jeu_gele.POUR_DECIDER,
+        motif="constitution du jeu d'evaluation annote du moteur de recherche",
+        lecteur="src/pipeline/rag_eval.py --build-template",
+        budget=(params.get("jeu_gele") or {}).get("lectures_de_decision_max"),
+    )
     moteurs = charger_moteurs(params)
     moteur = moteurs.get("hybride") or moteurs.get("semantique") or moteurs.get("lexical")
     if moteur is None:
@@ -203,26 +235,48 @@ def construire_gabarit(params: dict, n: int) -> int:
         return 1
 
     echantillon = echantillon_stratifie(test_df, n, params["data"]["random_state"])
+
+    # L'annotateur doit voir un vrai vivier, pas la sortie deja filtree du service.
+    # Avec le seuil servi et top_k=3, le gabarit ne proposerait que trois candidats
+    # par requete : on ne pourrait juger que ce que le moteur a deja retenu, et le
+    # rappel resterait hors de portee. On elargit donc a dix candidats sans seuil,
+    # puis on restaure les reglages.
+    N_CANDIDATS = 10
+    sauve_k = getattr(moteur, "top_k", None)
+    sauve_s = getattr(moteur, "similarity_threshold", None)
+    if sauve_k is not None:
+        moteur.top_k = N_CANDIDATS
+    if sauve_s is not None:
+        moteur.similarity_threshold = 0.0
+
     requetes = []
-    for i, ligne in echantillon.iterrows():
-        candidats = interroger(moteur, str(ligne["Titre"]), str(ligne["Description"]), 10)
-        requetes.append({
-            "query_id": f"Q{i:03d}",
-            "titre": str(ligne["Titre"]),
-            "description": str(ligne["Description"]),
-            "categorie": str(ligne["Catégorie"]),
-            "candidats_a_annoter": [
-                {
-                    "cle": str(c.get("ticket_id") or c.get("index") or
-                               str(c.get("resolution", ""))[:80]),
-                    "score_moteur": round(float(c.get("score", 0.0)), 4),
-                    "categorie": c.get("categorie", ""),
-                    "resolution": str(c.get("resolution", ""))[:400],
-                }
-                for c in candidats
-            ],
-            "pertinents": [],
-        })
+    try:
+        for i, ligne in echantillon.iterrows():
+            candidats = interroger(moteur, str(ligne["Titre"]), str(ligne["Description"]),
+                                   N_CANDIDATS)
+            requetes.append({
+                "query_id": f"Q{i:03d}",
+                "titre": str(ligne["Titre"]),
+                "description": str(ligne["Description"]),
+                "categorie": str(ligne["Catégorie"]),
+                "candidats_a_annoter": [
+                    {
+                        "cle": str(c.get("ticket_id") or c.get("index") or
+                                   str(c.get("resolution", ""))[:80]),
+                        "score_moteur": round(float(c.get("score", 0.0)), 4),
+                        "rang": rang,
+                        "categorie": c.get("categorie", ""),
+                        "resolution": str(c.get("resolution", ""))[:400],
+                    }
+                    for rang, c in enumerate(candidats, 1)
+                ],
+                "pertinents": [],
+            })
+    finally:
+        if sauve_k is not None:
+            moteur.top_k = sauve_k
+        if sauve_s is not None:
+            moteur.similarity_threshold = sauve_s
 
     os.makedirs(os.path.dirname(chemin), exist_ok=True)
     with open(chemin, "w", encoding="utf-8") as f:
@@ -236,6 +290,24 @@ def construire_gabarit(params: dict, n: int) -> int:
                 "de l'annotation. Les requetes viennent du jeu de test, jamais vues "
                 "par la base de connaissances."
             ),
+            "protocole_d_annotation": [
+                "Qui annote : un consultant du service support, qui connait le metier. "
+                "L'auteur du memoire ne s'annote pas lui-meme, et un modele de langage "
+                "ne remplace pas ce jugement : ce serait mesurer le systeme avec le "
+                "systeme.",
+                "Critere : la resolution proposee aurait-elle fait gagner du temps sur "
+                "CE ticket ? Pas 'parle-t-elle du meme domaine', mais 'aurait-elle "
+                "servi'. C'est precisement sur ce point que le protocole d'approximation "
+                "est suspect : il compte pertinent tout ce qui partage la categorie.",
+                "Ne pas juger sur la categorie affichee. Elle est donnee comme contexte, "
+                "au meme titre que l'aurait un consultant devant le ticket, mais deux "
+                "tickets 'Reseau' peuvent decrire des incidents sans rapport.",
+                "Ne pas juger sur le rang ni sur le score du moteur : ce sont eux que "
+                "l'annotation doit evaluer.",
+                "Zero pertinent est une reponse valide et frequente : les scenarios du "
+                "jeu de test sont absents de la base par construction anti-fuite.",
+                "Compter environ une demi-journee pour quarante requetes.",
+            ],
             "requetes": requetes,
         }, f, ensure_ascii=False, indent=2)
     print(f"[rag_eval] Gabarit ecrit : {chemin} ({len(requetes)} requetes a annoter)")
@@ -248,14 +320,29 @@ def charger_requetes(params: dict) -> tuple[list[dict], str]:
         with open(chemin, encoding="utf-8") as f:
             donnees = json.load(f)
         requetes = donnees.get("requetes", [])
-        annotees = [r for r in requetes if r.get("pertinents")]
+        # Une requete pour laquelle l'annotateur n'a retenu AUCUN candidat est
+        # annotee, et son resultat est zero. La confondre avec une requete non
+        # annotee reviendrait a retirer de la mesure les cas les plus difficiles,
+        # donc a surestimer le moteur. Le drapeau `annote` tranche explicitement ;
+        # a defaut, on retombe sur l'ancienne heuristique.
+        if any("annote" in r for r in requetes):
+            annotees = [r for r in requetes if r.get("annote")]
+            vides = sum(1 for r in annotees if not r.get("pertinents"))
+        else:
+            annotees = [r for r in requetes if r.get("pertinents")]
+            vides = 0
         if annotees:
-            print(f"[rag_eval] Jeu annote : {len(annotees)}/{len(requetes)} requetes annotees")
+            print(f"[rag_eval] Jeu annote : {len(annotees)}/{len(requetes)} requetes annotees, "
+                  f"dont {vides} sans aucun candidat pertinent")
             return annotees, "annote"
         print(f"[rag_eval] {chemin} present mais aucune requete annotee — "
               f"repli sur le protocole proxy.")
 
-    test_df = pd.read_csv(TEST_PATH, encoding="utf-8")
+    test_df = jeu_gele.lire(
+        jeu_gele.POUR_RAPPORTER,
+        motif="tirage du jeu de requetes du protocole d'approximation",
+        lecteur="src/pipeline/rag_eval.py (repli proxy)",
+    )
     echantillon = echantillon_stratifie(test_df, 80, params["data"]["random_state"])
     requetes = [
         {"query_id": f"Q{i:03d}", "titre": str(r["Titre"]),
@@ -268,12 +355,210 @@ def charger_requetes(params: dict) -> tuple[list[dict], str]:
 
 # ── pipeline ─────────────────────────────────────────────────────────────────
 
+def _evaluer_au_seuil(moteur, requetes, top_k, mode, seuil):
+    """Evalue le moteur avec SON seuil positionne, puis le restaure."""
+    sauve = getattr(moteur, "similarity_threshold", None)
+    if sauve is not None:
+        moteur.similarity_threshold = seuil
+    try:
+        return evaluer_moteur(moteur, requetes, top_k, mode, seuil)
+    finally:
+        if sauve is not None:
+            moteur.similarity_threshold = sauve
+
+
+def balayer_seuil(params: dict) -> int:
+    """
+    Mesure chaque moteur sur toute la plage de seuils, et releve la distribution
+    brute des scores du moteur servi.
+
+    Sans ce balayage, un seuil ne peut pas etre justifie : on ne sait ni s'il
+    filtre quelque chose, ni ce que le filtrage coute. Il a mis en evidence que
+    l'ancien seuil de 0.50 etait hors de portee du score hybride, dont le maximum
+    observe est 0.4886.
+
+    Ce balayage est une LECTURE DECISIONNELLE du jeu gele, et le journal doit le
+    dire. Les requetes ne viennent pas de `test.csv` directement mais du gabarit
+    annote — lequel a ete tire du jeu gele. Choisir un seuil sur ce balayage,
+    c'est donc le choisir sur le jeu gele, et c'est la remarque de l'encadrant sur
+    le seuil de 0,35 : elle et celle sur le jeu gele ne font qu'une.
+
+    Ecrit metrics/rag_seuil_balayage.json, lu par report/figures/ch05_seuil.py.
+    """
+    top_k = params["rag"]["top_k"]
+    plancher = float(params["rag"].get("fallback_threshold", 0.20))
+    requetes, mode = charger_requetes(params)
+    jeu_gele.inscrire(
+        jeu_gele.POUR_DECIDER,
+        motif="balayage du seuil de pertinence du moteur de recherche "
+              "(%d requetes, protocole %s)" % (len(requetes), mode),
+        lecteur="src/pipeline/rag_eval.py --balayage-seuil",
+        provenance="indirecte : requetes tirees du jeu gele via le gabarit annote",
+    )
+    moteurs = charger_moteurs(params)
+    if not moteurs:
+        print("[rag_eval] Aucun moteur RAG disponible — balayage impossible.")
+        return 1
+
+    seuils = [round(x / 100.0, 2) for x in range(0, 75, 5)]
+    rapport = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "protocole": mode,
+        "n_requetes": len(requetes),
+        "top_k": top_k,
+        "fallback_threshold": plancher,
+        "seuil_retenu": float(params["rag"]["similarity_threshold"]),
+        "moteurs": {},
+    }
+
+    for nom, moteur in moteurs.items():
+        # Distribution brute : tous les scores rendus, seuil neutralise.
+        sauve = getattr(moteur, "similarity_threshold", None)
+        if sauve is not None:
+            moteur.similarity_threshold = 0.0
+        try:
+            tous, tops = [], []
+            for requete in requetes:
+                res = interroger(moteur, requete["titre"], requete["description"], top_k)
+                scores = [float(r.get("score", 0.0)) for r in res]
+                tous.extend(scores)
+                if scores:
+                    tops.append(scores[0])
+        finally:
+            if sauve is not None:
+                moteur.similarity_threshold = sauve
+
+        rapport["moteurs"][nom] = {
+            "distribution": {
+                "n": len(tous),
+                "min": round(min(tous), 4) if tous else None,
+                "max": round(max(tous), 4) if tous else None,
+                "moyenne": round(sum(tous) / len(tous), 4) if tous else None,
+                "meilleur_par_requete": [round(v, 4) for v in tops],
+            },
+            # evaluer_moteur n'utilise `seuil` que pour compter les replis : le
+            # filtrage reel est fait par le moteur avec son propre attribut. Il
+            # faut donc le positionner, sinon le balayage mesurerait un seul point.
+            "par_seuil": [_evaluer_au_seuil(moteur, requetes, top_k, mode, s)
+                          for s in seuils],
+            "seuils": seuils,
+        }
+        d = rapport["moteurs"][nom]["distribution"]
+        print(f"[rag_eval] {nom:11s} scores de {d['min']} a {d['max']} "
+              f"(moyenne {d['moyenne']})")
+
+    # Balayage d'alpha : l'autre correction envisageable pour le taux de repli
+    # etait de relever la part semantique. Mesuree ici pour que le mmoire puisse
+    # dire pourquoi elle a ete ecartee, plutot que de l'affirmer.
+    if "hybride" in moteurs:
+        hybride = moteurs["hybride"]
+        alpha_initial = hybride.alpha
+        seuil_retenu = float(params["rag"]["similarity_threshold"])
+        rapport["balayage_alpha"] = {
+            "seuil": seuil_retenu,
+            "note": ("Chaque ligne est mesuree au seuil servi. Relever alpha "
+                     "rapproche l'echelle hybride de l'echelle semantique et fait "
+                     "tomber le repli, au prix de la precision."),
+            "par_alpha": [],
+        }
+        try:
+            for a in [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+                hybride.alpha = a
+                mesure = _evaluer_au_seuil(hybride, requetes, top_k, mode, seuil_retenu)
+                mesure["alpha"] = a
+                rapport["balayage_alpha"]["par_alpha"].append(mesure)
+                print(f"[rag_eval] alpha={a:.1f}  repli={mesure['taux_repli']:.3f} "
+                      f"| precision@{top_k}={mesure[f'precision_at_{top_k}']:.4f}")
+        finally:
+            hybride.alpha = alpha_initial
+
+    os.makedirs("metrics", exist_ok=True)
+    with open(OUT_BALAYAGE, "w", encoding="utf-8") as f:
+        json.dump(rapport, f, ensure_ascii=False, indent=2)
+    print(f"[rag_eval] ecrit {OUT_BALAYAGE}")
+    return 0
+
+
+def comparer_protocoles(params: dict) -> int:
+    """
+    Confronte le jugement humain au protocole d'approximation, sur les MEMES
+    requetes et le meme moteur.
+
+    C'est la seule mesure qui dit ce que vaut l'approximation. Le protocole proxy
+    compte pertinent tout passage de la meme categorie que la requete ; un
+    consultant, lui, juge si la resolution aurait fait gagner du temps. Les deux
+    peuvent diverger dans les deux sens : une resolution d'impression classee
+    Applicatifs aide un ticket Infrastructure (le proxy la rejette a tort), deux
+    tickets Reseau sans rapport se valident mutuellement (le proxy les accepte a
+    tort).
+
+    Exige que data/knowledge/rag_eval_set.json porte des annotations.
+    Ecrit metrics/rag_protocoles.json.
+    """
+    top_k = params["rag"]["top_k"]
+    seuil = float(params["rag"]["similarity_threshold"])
+    requetes, mode = charger_requetes(params)
+    if mode != "annote":
+        print("[rag_eval] Aucune requete annotee — comparaison impossible.")
+        print("[rag_eval] Remplissez les listes 'pertinents' de "
+              f"{params.get('knowledge', {}).get('eval_set_path')}, puis relancez.")
+        return 1
+
+    moteurs = charger_moteurs(params)
+    if not moteurs:
+        print("[rag_eval] Aucun moteur disponible.")
+        return 1
+
+    resultats = {}
+    for nom, moteur in moteurs.items():
+        humain = evaluer_moteur(moteur, requetes, top_k, "annote", seuil)
+        approx = evaluer_moteur(moteur, requetes, top_k, "proxy", seuil)
+        resultats[nom] = {
+            "annote": humain,
+            "proxy": approx,
+            "ecart_precision_at_%d" % top_k: round(
+                approx["precision_at_%d" % top_k] - humain["precision_at_%d" % top_k], 4),
+            "ecart_precision_sur_rendus": (
+                round(approx["precision_sur_rendus"] - humain["precision_sur_rendus"], 4)
+                if approx["precision_sur_rendus"] is not None
+                and humain["precision_sur_rendus"] is not None else None),
+        }
+        print("[rag_eval] %-11s humain P@%d=%.4f | approx P@%d=%.4f | ecart=%+.4f"
+              % (nom, top_k, humain["precision_at_%d" % top_k],
+                 top_k, approx["precision_at_%d" % top_k],
+                 resultats[nom]["ecart_precision_at_%d" % top_k]))
+
+    rapport = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "n_requetes_annotees": len(requetes),
+        "top_k": top_k,
+        "seuil": seuil,
+        "lecture": (
+            "Un ecart positif signifie que l'approximation surestime la pertinence : "
+            "elle compte bons des passages que l'annotateur a rejetes. Un ecart negatif "
+            "signifie qu'elle en rejette que l'annotateur a juges utiles."
+        ),
+        "moteurs": resultats,
+    }
+    os.makedirs("metrics", exist_ok=True)
+    with open(OUT_PROTOCOLES, "w", encoding="utf-8") as f:
+        json.dump(rapport, f, ensure_ascii=False, indent=2)
+    print(f"[rag_eval] ecrit {OUT_PROTOCOLES}")
+    return 0
+
+
 def run(args: argparse.Namespace) -> int:
     with open(PARAMS_PATH, encoding="utf-8") as f:
         params = yaml.safe_load(f)
 
     if args.build_template:
         return construire_gabarit(params, args.n_queries)
+
+    if args.balayage_seuil:
+        return balayer_seuil(params)
+
+    if args.comparer_protocoles:
+        return comparer_protocoles(params)
 
     top_k = params["rag"]["top_k"]
     requetes, mode = charger_requetes(params)
@@ -336,4 +621,10 @@ if __name__ == "__main__":
                    help="genere le gabarit d'annotation et sort")
     p.add_argument("--n-queries", type=int, default=80,
                    help="nombre de requetes du gabarit (defaut 80)")
+    p.add_argument("--comparer-protocoles", action="store_true",
+                   help="confronte le jugement humain au protocole d'approximation "
+                        "sur les memes requetes, puis sort")
+    p.add_argument("--balayage-seuil", action="store_true",
+                   help="mesure chaque moteur sur toute la plage de seuils et "
+                        "releve la distribution des scores, puis sort")
     sys.exit(run(p.parse_args()))

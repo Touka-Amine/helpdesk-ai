@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-from data.preprocess import clean_text
+from data.preprocess import build_text_for_model
 from models.heuristics import apply_heuristics
 from api.db.vector_store import query_similar
 
@@ -118,7 +118,9 @@ def predict_and_recommend(titre: str, description: str) -> dict:
     predictor = get_predictor()
 
     # ── Prédiction ML ────────────────────────────────────────────────────────
-    text_clean = clean_text(description)
+    # Titre puis description, comme la colonne text_clean du corpus d'entrainement :
+    # le titre porte l'essentiel du signal et ne doit pas etre omis ici.
+    text_clean = build_text_for_model(titre, description)
     proba      = predictor.pipeline.predict_proba([text_clean])[0]
     pred_idx   = proba.argmax()
     categorie  = predictor.pipeline.classes_[pred_idx]

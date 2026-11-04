@@ -49,6 +49,24 @@ def _normalize(text: str) -> str:
     return text
 
 
+def _amorce_mot(kw: str, text_norm: str) -> bool:
+    """Le mot-clé commence-t-il un mot du texte ?
+
+    Les SOFT_RULES cherchaient le mot-clé n'importe où dans le texte. Sur le
+    corpus, un seul mot-clé en profitait abusivement : « sage » (Applicatifs) se
+    déclenchait sur « message » et « messages », soit 227 occurrences, et rangeait
+    en Applicatifs tout ticket peu assuré qui parlait d'un message d'erreur.
+
+    Les quatre autres mots-clés qui dépassent leur forme exacte le font par
+    flexion légitime : « sauvegardes », « pointages », « connexion suspectes »,
+    « compromission ». Un ancrage des deux côtés les supprimerait tous les quatre.
+
+    D'où cette règle : frontière de mot à gauche, fin libre à droite. Le mot-clé
+    doit commencer un mot, il peut ne pas le finir.
+    """
+    return re.search(r"\b" + re.escape(_normalize(kw)), text_norm) is not None
+
+
 # ── FORCE_RULES ────────────────────────────────────────────────────────────────
 # Ces mots-clés correspondent à des produits/concepts qui ne peuvent appartenir
 # qu'à une seule catégorie. Ils écrasent toute prédiction ML, quelle que soit
@@ -212,8 +230,7 @@ def apply_heuristics(
     if confidence < threshold:
         for keywords, target_category, min_confidence in SOFT_RULES:
             for kw in keywords:
-                kw_norm = _normalize(kw)
-                if kw_norm in text_norm:
+                if _amorce_mot(kw, text_norm):
                     return {
                         "categorie"        : target_category,
                         "confiance"        : min_confidence,

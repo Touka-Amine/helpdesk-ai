@@ -1,7 +1,8 @@
 """
 Stage DVC 4/4 — Construction de la base RAG lexicale.
 
-Lit rag.csv (tickets résolus), ajuste RAGEngine (TF-IDF + cosinus),
+Lit rag.csv (tickets documentés : champ Résolution/Motif rempli, tous
+statuts confondus), ajuste RAGEngine (TF-IDF + cosinus),
 et sauvegarde le moteur sérialisé.
 
 Note : le RAG sémantique (FAISS + embeddings) requiert le téléchargement
@@ -33,7 +34,7 @@ def run() -> None:
 
     print(f"[rag_build] Lecture : {RAG_PATH}")
     rag_df = pd.read_csv(RAG_PATH, encoding="utf-8")
-    print(f"[rag_build] {len(rag_df)} tickets résolus")
+    print(f"[rag_build] {len(rag_df)} tickets documentés")
 
     engine = RAGEngine(
         top_k               = rag_p["top_k"],

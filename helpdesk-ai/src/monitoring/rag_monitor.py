@@ -53,7 +53,10 @@ sys.path.insert(0, os.path.join(_RACINE, "src"))
 
 PARAMS_PATH = "params.yaml"
 OUT = "metrics/rag_monitor.json"
-NOVELTY_THRESHOLD = 0.50   # meme valeur que api/routers/tickets.py
+# Regle metier, distincte du seuil de pertinence de params.yaml : voir le
+# commentaire de api/routers/tickets.py, qui porte la meme valeur et explique
+# pourquoi elle est maintenue au-dessus de la plage atteignable par le score.
+NOVELTY_THRESHOLD = 0.50
 
 NON_MESURABLE = [
     "Recommandation effectivement utilisee par l'administrateur : aucun evenement "
@@ -83,7 +86,9 @@ def indicateurs_production(tickets: pd.DataFrame, params: dict) -> dict:
         if "rag_score" in tickets.columns else pd.Series(dtype=float)
     )
     if not scores.empty:
-        seuil = params.get("rag", {}).get("similarity_threshold", 0.50)
+        # Defaut aligne sur params.yaml : un seuil de secours different de celui
+        # servi ferait diverger la surveillance du service qu'elle surveille.
+        seuil = params.get("rag", {}).get("similarity_threshold", 0.35)
         out["rag_score"] = {
             "n": int(len(scores)),
             "moyenne": round(float(scores.mean()), 4),

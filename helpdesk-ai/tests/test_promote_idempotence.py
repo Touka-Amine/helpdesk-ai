@@ -148,6 +148,15 @@ def depot(tmp_path, monkeypatch):
         tag="candidate",
     )
     registre.promote(version, reason="mise en service initiale")
+    # Le journal du jeu gele est resolu depuis l'emplacement du module, pas
+    # depuis le repertoire courant : sans cette redirection, promote.py lance en
+    # sous-processus inscrirait ses lectures d'essai dans le journal du depot.
+    # Un monkeypatch d'attribut n'y suffit pas, le sous-processus ne le voit pas.
+    (tmp_path / "data" / "reference").mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("JOURNAL_JEU_GELE",
+                       str(tmp_path / "data" / "reference" / "journal_jeu_gele.json"))
+    monkeypatch.setenv("CHEMIN_JEU_GELE",
+                       str(tmp_path / "data" / "splits" / "test.csv"))
     monkeypatch.chdir(tmp_path)
     return tmp_path, registre
 

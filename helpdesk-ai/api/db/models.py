@@ -86,6 +86,17 @@ class Ticket(Base):
     heuristic_applied = Column(Boolean, default=False)
     heuristic_rule = Column(String, nullable=True)
 
+    # ── Orientation du ticket (EF-07) ─────────────────────────────────────────
+    # L'index de confiance etait calcule et affiche, sans qu'aucune decision s'en
+    # serve : l'exigence restait partielle. Ces deux champs portent la decision
+    # elle-meme, prise une fois a la creation et jamais recalculee, pour qu'un
+    # changement de seuil ne reecrive pas l'historique.
+    #   routage  "revue_humaine" | "automatique"
+    #   motif_routage  ce qui a decide, en clair, pour que l'administrateur
+    #                  comprenne pourquoi ce ticket est devant lui.
+    routage = Column(String, nullable=True)
+    motif_routage = Column(String, nullable=True)
+
     user = relationship("User", back_populates="tickets", foreign_keys=[user_id])
     history = relationship("TicketHistory", back_populates="ticket")
 

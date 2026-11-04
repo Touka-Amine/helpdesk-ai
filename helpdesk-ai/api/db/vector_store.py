@@ -31,6 +31,7 @@ CYCLE DE VIE DES CONNAISSANCES (axe 2)
     Une entrée sans statut est traitée comme active.
 """
 
+import json
 import os
 import sys
 from datetime import datetime, timezone
@@ -52,6 +53,12 @@ _EMBED_MODEL = "paraphrase-multilingual-mpnet-base-v2"
 STATUT_ACTIF = "actif"
 STATUT_REMPLACE = "superseded"
 STATUT_OBSOLETE = "obsolete"
+
+# Journal des refus du contrôle qualité. Une connaissance refusée n'entre pas dans
+# la base vectorielle, par définition : sans ce journal, le refus ne laissait de
+# trace que dans la sortie du serveur. Une ligne JSON par refus, dans le même
+# volume Docker que la base (data/), pour survivre aux redémarrages.
+_JOURNAL_REFUS = os.path.join(_BASE_DIR, "data", "kb", "refus.jsonl")
 
 _client = None
 _embed_fn = None
@@ -185,7 +192,9 @@ def archive_resolved_ticket(
     """
     text = "\n".join(p for p in (titre, description, solution) if p).strip()
     if not text:
-        return {"accepte": False, "action": "reject", "motif": "contenu vide", "controles": []}
+        verdict_vide = {"accepte": False, "action": "reject", "motif": "contenu vide", "controles": []}
+        _journaliser_refus(ticket_id, titre, categorie, filiale, source_solution, verdict_vide)
+        return verdict_vide
 
     verdict = controler(
         titre=titre,
@@ -198,6 +207,7 @@ def archive_resolved_ticket(
 
     if not verdict.accepte:
         print(f"[kb] ticket {ticket_id} refuse — {verdict.motif}")
+        _journaliser_refus(ticket_id, titre, categorie, filiale, source_solution, verdict.as_dict())
         return verdict.as_dict()
 
     collection = _get_collection()
@@ -325,7 +335,8 @@ def get_all_entries(include_documents: bool = False) -> list[dict]:
     return sorties
 
 
-def marquer_obsolete(ticket_id: int, motif: str = "signale par le monitoring") -> bool:
+def marquer_obsolete(ticket_id: int, motif: str = "signale par le monitoring",
+                     par: Optional[str] = None) -> bool:
     """
     Marque une connaissance comme obsolète. Elle cesse d'être proposée par le RAG,
     sans être supprimée. Opération réversible en repassant le statut à actif.
@@ -342,11 +353,122 @@ def marquer_obsolete(ticket_id: int, motif: str = "signale par le monitoring") -
     meta["statut"] = STATUT_OBSOLETE
     meta["obsolete_motif"] = motif
     meta["obsolete_at"] = datetime.now(timezone.utc).isoformat()
+    meta["obsolete_par"] = par or ""
     try:
         collection.update(ids=[str(ticket_id)], metadatas=[meta])
         return True
     except Exception:
         return False
+
+
+def reactiver(ticket_id: int, par: Optional[str] = None) -> bool:
+    """
+    Remet en service une connaissance obsolète : le RAG la propose de nouveau.
+
+    Seule une entrée obsolète peut l'être. Une entrée remplacée a un successeur
+    quasi identique : la réactiver ferait proposer deux fois la même solution.
+    """
+    entree = get_entry(ticket_id)
+    if entree is None or entree.get("statut") != STATUT_OBSOLETE:
+        return False
+    meta = dict(entree)
+    meta["statut"] = STATUT_ACTIF
+    meta["reactive_at"] = datetime.now(timezone.utc).isoformat()
+    meta["reactive_par"] = par or ""
+    try:
+        _get_collection().update(ids=[str(ticket_id)], metadatas=[meta])
+        return True
+    except Exception:
+        return False
+
+
+def get_entry(ticket_id: int) -> Optional[dict]:
+    """Une entrée de la base, quel que soit son statut ; None si elle n'y est pas."""
+    try:
+        res = _get_collection().get(ids=[str(ticket_id)], include=["metadatas"])
+    except Exception:
+        return None
+    metas = res.get("metadatas") or []
+    if not metas:
+        return None
+    entree = dict(metas[0])
+    entree.setdefault("statut", STATUT_ACTIF)
+    return entree
+
+
+def get_cycle_de_vie() -> dict:
+    """
+    Toutes les connaissances avec leur statut : actives (proposées par le RAG),
+    remplacées par un quasi-doublon plus récent, obsolètes (retirées par un
+    administrateur). Rien n'est jamais supprimé : c'est la vue d'audit de la base.
+    """
+    entrees = []
+    for brute in get_all_entries():
+        entree = {k: v for k, v in brute.items() if not k.startswith("_")}
+        entree.setdefault("statut", STATUT_ACTIF)
+        if "ticket_id" not in entree:
+            _id = str(brute.get("_id", ""))
+            entree["ticket_id"] = int(_id) if _id.isdigit() else _id
+        entrees.append(entree)
+    entrees.sort(key=lambda e: e.get("resolved_at", ""), reverse=True)
+    par_statut = {STATUT_ACTIF: 0, STATUT_REMPLACE: 0, STATUT_OBSOLETE: 0}
+    for entree in entrees:
+        par_statut[entree["statut"]] = par_statut.get(entree["statut"], 0) + 1
+    return {"total": len(entrees), "par_statut": par_statut, "entrees": entrees}
+
+
+def _journaliser_refus(ticket_id: int, titre: str, categorie: str, filiale: str,
+                       source_solution: str, verdict: dict) -> None:
+    """
+    Ajoute un refus au journal. Un échec d'écriture ne doit jamais empêcher la
+    clôture du ticket : il est signalé dans la sortie du serveur, puis ignoré.
+    """
+    ligne = {
+        "ticket_id": ticket_id,
+        "titre": titre or "",
+        "categorie": categorie or "",
+        "filiale": filiale or "",
+        "source_solution": source_solution,
+        "motif": verdict.get("motif", ""),
+        "controles": verdict.get("controles", []),
+        "refuse_at": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        os.makedirs(os.path.dirname(_JOURNAL_REFUS), exist_ok=True)
+        with open(_JOURNAL_REFUS, "a", encoding="utf-8") as f:
+            f.write(json.dumps(ligne, ensure_ascii=False) + "\n")
+    except OSError as exc:
+        print(f"[kb] journal des refus inaccessible : {exc}")
+
+
+def get_refus(limit: int = 100) -> list[dict]:
+    """
+    Les refus du contrôle qualité, du plus récent au plus ancien.
+
+    Un ticket peut être refusé puis accepté après correction de sa solution. Seul
+    son dernier refus compte, et il n'est montré que s'il est postérieur à la
+    dernière indexation du ticket : un refus déjà réparé ne l'est plus.
+    """
+    if not os.path.exists(_JOURNAL_REFUS):
+        return []
+    derniers: dict[str, dict] = {}
+    with open(_JOURNAL_REFUS, encoding="utf-8") as f:
+        for brut in f:
+            brut = brut.strip()
+            if not brut:
+                continue
+            try:
+                ligne = json.loads(brut)
+            except json.JSONDecodeError:
+                continue
+            derniers[str(ligne.get("ticket_id"))] = ligne
+    if not derniers:
+        return []
+    indexes = {str(e.get("ticket_id", e.get("_id"))): str(e.get("indexed_at", ""))
+               for e in get_all_entries()}
+    refus = [l for tid, l in derniers.items() if str(l.get("refuse_at", "")) > indexes.get(tid, "")]
+    refus.sort(key=lambda l: l.get("refuse_at", ""), reverse=True)
+    return refus[:limit]
 
 
 def get_stats() -> dict:

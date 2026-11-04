@@ -130,7 +130,18 @@ class ModelRegistry:
             "created_at": datetime.now(timezone.utc).isoformat(),
             "tag": tag,
             "model_name": metadata.get("model_name", "inconnu"),
+            # `primary_metric` porte la F1-macro sur le referentiel entier. Ce
+            # n'est PAS la metrique qui tranche : promote.py compare celle des
+            # seules categories representees au test (metrique_effective()). Les
+            # deux sont donc inscrites sous leur nom, avec la portee de la
+            # premiere. Une entree SANS `primary_metric_portee` est anterieure au
+            # 2026-10-09 : sa valeur a ete calculee sans argument `labels`, donc
+            # sur une portee qui suivait les predictions du modele, et elle ne se
+            # compare a aucune valeur posterieure.
             "primary_metric": metrics.get("f1_macro_heuristiques"),
+            "primary_metric_portee": (metrics.get("f1_macro_heuristiques_portee")
+                                      or {}).get("libelle"),
+            "metrique_de_decision": metrics.get("f1_macro_classes_evaluables"),
             "accuracy": metrics.get("accuracy"),
             "dataset_version": lineage.get("dataset_version"),
             "train_size": metadata.get("train_size"),

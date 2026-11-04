@@ -15,7 +15,12 @@ class RAGEngine:
     d'un nouveau ticket entrant.
     """
 
-    def __init__(self, top_k: int = 3, similarity_threshold: float = 0.50) -> None:  # relevé 0.30→0.50
+    # Attention a l'echelle : les scores cosinus de ce moteur lexical vont de
+    # 0.09 a 0.31 (mesure sur les 80 requetes d'evaluation). Un seuil au-dessus
+    # de 0.31 est inatteignable. Le defaut ci-dessous n'est utilise par aucun
+    # chemin servi : la production passe rag.similarity_threshold de params.yaml,
+    # et le moteur hybride neutralise ce seuil pour fusionner avant de filtrer.
+    def __init__(self, top_k: int = 3, similarity_threshold: float = 0.50) -> None:
         self.top_k = top_k
         self.similarity_threshold = similarity_threshold
         self.vectorizer: TfidfVectorizer | None = None
@@ -24,7 +29,8 @@ class RAGEngine:
 
     def fit(self, df: pd.DataFrame) -> "RAGEngine":
         """
-        Construit la base de connaissance a partir des tickets resolus.
+        Construit la base de connaissance a partir des tickets documentes
+        (champ Resolution/Motif rempli), tous statuts confondus.
         df doit contenir : text_rag, Categorie, Resolution/Motif, knowledge Base
         """
         # Filtrer les lignes avec text_rag non-vide

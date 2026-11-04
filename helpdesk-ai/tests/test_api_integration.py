@@ -256,3 +256,27 @@ def test_ingest_description_trop_courte(client):
         headers={"X-Api-Key": settings.INGEST_API_KEY},
     )
     assert r.status_code == 422
+
+
+# ─────────────────────────── Base de connaissances (admin) ───────────────────
+
+ROUTES_BASE_CONNAISSANCES = [
+    ("get", "/api/v1/tickets/resolved/lifecycle", None),
+    ("get", "/api/v1/tickets/resolved/refused", None),
+    ("post", "/api/v1/tickets/resolved/1/obsolete", {"motif": "procedure depassee"}),
+    ("post", "/api/v1/tickets/resolved/1/reactivate", None),
+]
+
+
+@pytest.mark.parametrize("methode,chemin,corps", ROUTES_BASE_CONNAISSANCES)
+def test_base_connaissances_refuse_sans_connexion(client, methode, chemin, corps):
+    r = getattr(client, methode)(chemin, json=corps) if corps else getattr(client, methode)(chemin)
+    assert r.status_code == 401
+
+
+@pytest.mark.parametrize("methode,chemin,corps", ROUTES_BASE_CONNAISSANCES)
+def test_base_connaissances_reservee_aux_admins(client, auth_token, methode, chemin, corps):
+    entetes = {"Authorization": f"Bearer {auth_token}"}
+    appel = getattr(client, methode)
+    r = appel(chemin, json=corps, headers=entetes) if corps else appel(chemin, headers=entetes)
+    assert r.status_code == 403

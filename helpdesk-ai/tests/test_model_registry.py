@@ -173,3 +173,57 @@ def test_bootstrap_adopte_le_modele_existant(tmp_path):
     assert reg.get_version(1)["primary_metric"] == 0.685
     # Idempotent : un second appel ne cree pas de doublon.
     assert reg.bootstrap_from_existing(str(modele), str(meta), str(metriques)) is None
+
+
+def test_l_index_inscrit_la_metrique_qui_tranche(registre):
+    """Le nom `primary_metric` ne designait pas la metrique de la decision.
+
+    La porte de promotion compare `f1_macro_classes_evaluables` ; l'index
+    n'inscrivait que `f1_macro_heuristiques`, sous un nom qui laissait croire le
+    contraire. Les deux sont desormais inscrites, chacune sous son nom.
+    """
+    reg, artefact = registre
+    version = reg.register(
+        pipeline_path=str(artefact),
+        metadata={"model_name": "test", "train_size": 100, "test_size": 20},
+        metrics={
+            "f1_macro_heuristiques": 0.4372,
+            "f1_macro_heuristiques_portee": {"n": 8, "libelle": "les 8 categories"},
+            "f1_macro_classes_evaluables": 0.6995,
+            "accuracy": 0.8202,
+        },
+        lineage={"dataset_version": "ds-1"},
+        tag="candidate",
+    )
+    entree = reg.get_version(version)
+    assert entree["primary_metric"] == 0.4372
+    assert entree["metrique_de_decision"] == 0.6995
+    assert entree["primary_metric_portee"] == "les 8 categories"
+
+
+def test_la_cle_de_decision_de_l_index_est_celle_de_la_porte():
+    """Les deux ne doivent pas pouvoir deriver l'une de l'autre.
+
+    Si la porte changeait de metrique sans que l'index suive, celui-ci
+    afficherait a nouveau un nombre qui n'a rien decide.
+    """
+    from pipeline.promote import metrique_effective
+
+    params = {"promotion": {"primary_metric": "f1_macro_heuristiques",
+                            "ignore_zero_support_classes": True}}
+    assert metrique_effective(params) == "f1_macro_classes_evaluables"
+    source = open(os.path.join(os.path.dirname(__file__), "..", "src", "registry",
+                               "model_registry.py"), encoding="utf-8").read()
+    assert '"metrique_de_decision": metrics.get("f1_macro_classes_evaluables")' in source
+
+
+def test_une_valeur_sans_portee_reste_sans_portee(registre):
+    """Une entree anterieure a la correction ne doit pas se voir attribuer une portee.
+
+    L'absence de `primary_metric_portee` est l'information : elle dit que la
+    valeur a ete calculee sans argument `labels`, donc sur une portee qui
+    suivait les predictions, et qu'elle ne se compare a aucune valeur recente.
+    """
+    reg, artefact = registre
+    version = _enregistrer(reg, artefact, 0.685)
+    assert reg.get_version(version)["primary_metric_portee"] is None

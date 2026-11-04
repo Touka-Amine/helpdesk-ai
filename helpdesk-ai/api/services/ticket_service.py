@@ -32,6 +32,28 @@ def _format_temps_ecoule(debut: datetime | None, fin: datetime | None) -> str | 
     return f"{jours}j {total_h % 24}h"
 
 
+def _resume_du_ticket(ticket: Ticket) -> str:
+    """Le resume extractif, ou la description si le module n'est pas disponible.
+
+    Un echec ici ne doit jamais empecher d'afficher un ticket : l'administrateur
+    retrouve alors la description complete, ce qu'il avait avant EF-11.
+    """
+    try:
+        from models.resume import resumer
+        return resumer(ticket.titre or "", ticket.description or "")["resume"]
+    except Exception:
+        return ticket.description or ""
+
+
+def _signaux_du_ticket(ticket: Ticket) -> list:
+    """Les signaux de gravite, ou rien si le module n'est pas disponible."""
+    try:
+        from models.signaux import libelles
+        return libelles(ticket.titre or "", ticket.description or "")
+    except Exception:
+        return []
+
+
 def ticket_to_dict(ticket: Ticket) -> dict:
     """Sérialise un ticket ORM vers un dict JSON-compatible."""
     cat_predite = getattr(ticket, "categorie_predite", "") or ""
@@ -71,6 +93,19 @@ def ticket_to_dict(ticket: Ticket) -> dict:
         "assigne_a"          : getattr(ticket, "assigne_a", None),
         "feedback_vote"      : getattr(ticket, "feedback_vote", None),
         "feedback_comment"   : getattr(ticket, "feedback_comment", "") or "",
+        # Orientation selon l'index de confiance (EF-07). Les tickets crees avant
+        # cette version n'en portent pas : ils sont rendus comme non orientes
+        # plutot que supposes automatiques, ce qui serait une affirmation fausse.
+        "routage"            : getattr(ticket, "routage", None),
+        "motif_routage"      : getattr(ticket, "motif_routage", "") or "",
+        # Resume extractif (EF-11) : la description privee de ses formules de
+        # civilite. Calcule a la lecture plutot que stocke, parce qu'il ne
+        # depend que du texte et que la liste des formules peut etre refaite.
+        "resume"             : _resume_du_ticket(ticket),
+        # Signaux de gravite enonces par le demandeur (EF-13). Ce n'est pas une
+        # tonalite : le corpus n'en porte pas, et metrics/tonalite_eval.json le
+        # mesure. Ce sont des faits releves tels quels dans le texte.
+        "signaux_gravite"    : _signaux_du_ticket(ticket),
     }
 
 

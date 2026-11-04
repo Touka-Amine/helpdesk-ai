@@ -52,6 +52,24 @@ _RACINE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file
 sys.path.insert(0, _RACINE)
 sys.path.insert(0, os.path.join(_RACINE, "src"))
 
+from data.pseudonymisation import CleManquante, pseudonyme
+
+
+def pseudonyme_sur(valeur) -> str:
+    """Le pseudonyme d'un consultant, ou une chaine vide si la cle manque.
+
+    La collecte doit pouvoir tourner sans la cle — sur une machine
+    d'integration continue, par exemple. Dans ce cas le nom n'est pas remplace
+    par un pseudonyme : il est retire. Jamais laisse en clair.
+    """
+    if not valeur:
+        return ""
+    try:
+        return pseudonyme(str(valeur), "AGT")
+    except CleManquante:
+        return ""
+
+
 PARAMS_PATH = "params.yaml"
 
 # Colonnes du corpus historique, pour que la fusion avec data/splits/train.csv
@@ -191,14 +209,16 @@ def vers_format_corpus(df: pd.DataFrame, params: dict) -> pd.DataFrame:
             "STATUT": str(t.get("statut") or ""),
             "Titre": titre,
             "Description": description,
-            "Demandeur": "",                       # donnee nominative, non exportee
+            "Demandeur": "",                       # donnee nominative, jamais exportee
             "Classification": str(t.get("classification_finale") or ""),
             "Catégorie": str(t.get("categorie_finale") or "").strip(),
             "Date de création": str(t.get("created_at") or ""),
             "Date de résolution": str(t.get("resolved_at") or ""),
             "Filiale": str(t.get("filiale") or ""),
             "Priorité": str(t.get("priorite_finale") or t.get("priorite_saisie") or ""),
-            "Assigné à": str(t.get("assigne_a") or ""),
+            # Le consultant qui a traite le ticket est une personne nommee : son
+            # nom part en pseudonyme, comme dans le corpus historique (ENF-04 b).
+            "Assigné à": pseudonyme_sur(t.get("assigne_a")),
             "Résolution/Motif": solution,
             "knowledge Base": str(t.get("knowledge_rag") or ""),
             "Type d'élément": str(t.get("equipement") or ""),

@@ -42,7 +42,10 @@ class SemanticRAGEngine:
         self,
         model_name: str = MODEL_NAME,
         top_k: int = 3,
-        similarity_threshold: float = 0.50,   # relevé 0.30→0.50 : filtre les suggestions peu pertinentes
+        # Echelle propre a ce moteur : scores mesures de 0.49 a 0.70. Un seuil
+        # calibre pour lui ne vaut pas pour le moteur hybride, dont la fusion
+        # change l'echelle (cf. src/rag/hybrid_engine.py).
+        similarity_threshold: float = 0.50,
     ) -> None:
         self.model_name = model_name
         self.top_k = top_k
@@ -110,6 +113,88 @@ class SemanticRAGEngine:
 
     # ── recommandation ────────────────────────────────────────────────────────
 
+    def _voisins_jusqu_a_k_reponses(self, q_vec, index, positions):
+        """Cherche assez de voisins pour que `top_k` RÉSOLUTIONS différentes en sortent.
+
+        Pourquoi un élargissement variable et non un facteur fixe
+        ---------------------------------------------------------
+        La version précédente lisait `top_k * 3` voisins, soit neuf, « pour
+        filtrer les doublons ». Ce facteur suppose une base où chaque réponse
+        n'apparaît qu'une poignée de fois. Celle du projet n'est pas ainsi
+        faite : 1 357 passages pour 46 résolutions distinctes, soit une
+        trentaine de copies par réponse. Les neuf plus proches voisins d'une
+        requête sont donc, presque toujours, neuf exemplaires de la même
+        résolution — et le dédoublonnage n'en laissait qu'une.
+
+        Mesuré sur les quarante requêtes du jeu d'évaluation, filtre de
+        pertinence retiré pour isoler l'effet :
+
+            voisins lus    réponses distinctes    requêtes servies au complet
+                 9                1,57                    1 sur 40
+                18                1,85                    7
+                36                2,25                   13
+                75                2,75                   30
+               150                3,00                   40
+
+        Il faut lire cent cinquante voisins, soit onze pour cent de l'index,
+        pour que trois réponses différentes sortent de chaque requête. Un
+        facteur écrit en dur se tromperait à la première évolution du corpus :
+        l'élargissement double donc jusqu'à ce que le compte y soit, ou jusqu'à
+        épuisement de l'index. La recherche FAISS sur treize cents vecteurs
+        coûte quelques dizaines de microsecondes ; deux ou trois passes ne se
+        mesurent pas sur le temps de réponse.
+        """
+        import numpy as np
+
+        total = index.ntotal
+        k = min(max(self.top_k * 3, 1), total)
+        while True:
+            scores_arr, local_ids = index.search(q_vec, k)
+            bruts = [i for i in local_ids[0] if i >= 0]
+            global_ids = [positions[i] for i in bruts] if positions is not None else bruts
+            if k >= total:
+                break
+            # Compter ce qui sortirait réellement, c'est-à-dire après dédoublonnage.
+            distinctes = set()
+            for gid in global_ids:
+                r = self._resolution_de(gid)
+                if r:
+                    distinctes.add(r)
+                if len(distinctes) >= self.top_k:
+                    break
+            if len(distinctes) >= self.top_k:
+                break
+            k = min(k * 2, total)
+        return global_ids, scores_arr[0]
+
+    def _resolutions_indexees(self) -> list:
+        """Les réponses de la base, une par ligne, calculées une seule fois.
+
+        L'élargissement variable peut parcourir plusieurs centaines de lignes
+        avant d'avoir ses `top_k` réponses différentes. Un `iloc` par ligne y
+        coûterait des dizaines de millisecondes à chaque requête, sur un chemin
+        déjà sous contrainte de temps de réponse (ENF-01). La liste est donc
+        bâtie au premier besoin et conservée.
+        """
+        cache = getattr(self, "_cache_resolutions", None)
+        if cache is not None and len(cache) == len(self.knowledge_base):
+            return cache
+        kb = self.knowledge_base
+        principale = kb.get("Résolution/Motif")
+        secours = kb.get("knowledge Base")
+        cache = []
+        for i in range(len(kb)):
+            r = str(principale.iloc[i]).strip() if principale is not None else ""
+            if r.lower() in ("nan", "none", ""):
+                r = str(secours.iloc[i]).strip() if secours is not None else ""
+            cache.append("" if r.lower() in ("nan", "none", "") else r)
+        self._cache_resolutions = cache
+        return cache
+
+    def _resolution_de(self, gid) -> str:
+        """La réponse portée par une ligne, ou une chaîne vide s'il n'y en a pas."""
+        return self._resolutions_indexees()[gid]
+
     def recommend(
         self,
         query_text: str,
@@ -125,20 +210,13 @@ class SemanticRAGEngine:
 
         if category_filter and category_filter in self._index_with_cat:
             cat_data = self._index_with_cat[category_filter]
-            cat_index = cat_data["index"]
-            cat_positions = cat_data["positions"]
-            k = min(self.top_k * 3, cat_index.ntotal)   # récupérer + pour filtrer doublons
-            scores_arr, local_ids = cat_index.search(q_vec, k)
-            scores_flat = scores_arr[0]
-            # Mapper local_ids → lignes de knowledge_base
-            global_ids = [cat_positions[i] for i in local_ids[0] if i >= 0]
+            global_ids, scores_flat = self._voisins_jusqu_a_k_reponses(
+                q_vec, cat_data["index"], cat_data["positions"])
         else:
             # Fallback : pas de filtre catégorie
             category_filter = None
-            k = min(self.top_k * 3, self._index.ntotal)
-            scores_arr, local_ids = self._index.search(q_vec, k)
-            scores_flat = scores_arr[0]
-            global_ids = [i for i in local_ids[0] if i >= 0]
+            global_ids, scores_flat = self._voisins_jusqu_a_k_reponses(
+                q_vec, self._index, None)
 
         results = []
         seen_resolutions: set[str] = set()

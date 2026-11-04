@@ -60,6 +60,9 @@ def _migrate_columns() -> None:
         "model_version"    : "TEXT",
         "heuristic_applied": "BOOLEAN DEFAULT FALSE",
         "heuristic_rule"   : "TEXT",
+        # Orientation selon l'index de confiance — voir api/db/models.py (EF-07).
+        "routage"          : "TEXT",
+        "motif_routage"    : "TEXT",
     }
     _sync_columns(inspector, "tickets", expected_tickets)
 

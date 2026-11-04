@@ -1,7 +1,8 @@
 """
 Reconstruction du RAG sémantique (FAISS + embeddings) — hors pipeline DVC.
 
-Lit rag.csv (tickets résolus), ajuste SemanticRAGEngine (sentence-transformers
+Lit rag.csv (tickets documentés : champ Résolution/Motif rempli, tous statuts
+confondus), ajuste SemanticRAGEngine (sentence-transformers
 + FAISS), et sauvegarde les artefacts dans models/semantic_rag/.
 
 Note : nécessite le téléchargement du modèle sentence-transformers
@@ -32,7 +33,7 @@ def run() -> None:
 
     print(f"[rag_semantic_build] Lecture : {RAG_PATH}")
     rag_df = pd.read_csv(RAG_PATH, encoding="utf-8")
-    print(f"[rag_semantic_build] {len(rag_df)} tickets résolus")
+    print(f"[rag_semantic_build] {len(rag_df)} tickets documentés")
 
     engine = SemanticRAGEngine(
         top_k               = rag_p["top_k"],

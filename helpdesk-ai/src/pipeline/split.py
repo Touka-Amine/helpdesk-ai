@@ -28,7 +28,9 @@ POURQUOI LE JEU DE TEST EST GELE
 Sorties :
   - data/splits/train.csv  — tickets d'entrainement (ML)
   - data/splits/test.csv   — copie de travail du jeu de test gele
-  - data/splits/rag.csv    — tickets resolus pour la base RAG (issus du train seul)
+  - data/splits/rag.csv    — tickets documentes pour la base RAG (issus du train seul) :
+                             tout ticket dont "Resolution/Motif" porte un texte, quel que
+                             soit son statut. Ce n'est PAS un filtre sur "Resolu".
 
 Usage :
     python src/pipeline/split.py
@@ -194,7 +196,9 @@ def run() -> None:
         if freeze:
             ecrire_reference(test_df, ref_path, manifest_path, strategy, test_size, random_state)
 
-    # Base RAG : tickets resolus du train uniquement.
+    # Base RAG : tickets documentes du train uniquement, c'est-a-dire ceux dont le champ
+    # "Resolution/Motif" porte un texte. Le statut n'entre pas dans le filtre : un ticket
+    # rejete, en cours ou en attente documente lui aussi une reponse.
     # Anti-fuite : les resolutions de test ne doivent pas etre recherchables.
     rag_mask = (
         train_df["Résolution/Motif"].notna()

@@ -10,10 +10,20 @@ Motivation : le sémantique capture la proximité de sens (score cosinus élevé
 mais le lexical retrouve mieux les tickets répétitifs exacts (P@3 et MRR plus hauts).
 L'hybride combine les deux forces et améliore P@3, MRR, et Answer Relevancy.
 
-Résultats attendus (à mesurer avec 07_rag_evaluation.ipynb) :
-    P@3     : > 0.42 lexical baseline
-    MRR@3   : > 0.65 lexical baseline
-    score   : > 0.69 sémantique baseline
+ÉCHELLE DU SCORE — le point à ne pas perdre de vue
+    La moyenne de deux similarités ne vit pas sur la même échelle que chacune
+    d'elles. Le sémantique plafonne autour de 0.70 et le lexical autour de 0.31 ;
+    le score hybride à alpha=0.5 est donc borné aux alentours de 0.50 et, sur les
+    80 requêtes du protocole d'évaluation, il va de 0.327 à 0.489.
+
+    Un seuil repris tel quel de l'échelle du cosinus est par conséquent hors de
+    portée : c'était le cas de l'ancien 0.50, qui marquait « repli » la totalité
+    des recommandations sans en filtrer aucune. Le seuil servi vient maintenant de
+    params.yaml (rag.similarity_threshold), calibré sur cette échelle.
+
+Mesures de référence (src/pipeline/rag_eval.py, protocole proxy, 80 requêtes) :
+    P@3     : 0.3542 hybride, contre 0.2917 sémantique seul et 0.1542 lexical seul
+    score moyen : 0.3551
 """
 
 from __future__ import annotations
@@ -40,7 +50,8 @@ class HybridRAGEngine:
         self,
         alpha: float = 0.5,
         top_k: int = 3,
-        similarity_threshold: float = 0.50,
+        similarity_threshold: float = 0.35,
+        fallback_threshold: float = 0.20,
         sem_model_name: str = "paraphrase-multilingual-mpnet-base-v2",
     ) -> None:
         if not 0.0 <= alpha <= 1.0:
@@ -48,6 +59,7 @@ class HybridRAGEngine:
         self.alpha = alpha
         self.top_k = top_k
         self.similarity_threshold = similarity_threshold
+        self.fallback_threshold = fallback_threshold
 
         self._sem = SemanticRAGEngine(
             model_name=sem_model_name,
@@ -145,8 +157,7 @@ class HybridRAGEngine:
 
         # Fallback si aucun résultat au-dessus du seuil
         if allow_fallback and not filtered and results:
-            fallback_threshold = 0.20
-            filtered = [r for r in results if r["score"] >= fallback_threshold]
+            filtered = [r for r in results if r["score"] >= self.fallback_threshold]
             for r in filtered:
                 r["fallback"] = True
 
@@ -159,6 +170,7 @@ class HybridRAGEngine:
             "alpha": self.alpha,
             "top_k": self.top_k,
             "similarity_threshold": self.similarity_threshold,
+            "fallback_threshold": self.fallback_threshold,
             "semantic_model": self._sem.model_name,
             "n_tickets": len(self._sem.knowledge_base) if self._sem.knowledge_base is not None else 0,
         }

@@ -19,7 +19,8 @@ class UserOut(BaseModel):
     id: int
     nom: str
     prenom: str
-    email: EmailStr
+    # Adresse relue en base, pas revalidee : voir la note sur AdminUserOut.
+    email: str
     role: str
     filiale: str = ""
     created_at: datetime | None = None
@@ -66,7 +67,16 @@ class AdminUserOut(BaseModel):
     id: int
     nom: str
     prenom: str
-    email: EmailStr
+    # Type `str` et non `EmailStr`, volontairement.
+    #
+    # Revalider une adresse en sortie n'apporte rien : elle a deja ete verifiee
+    # a la creation du compte. En revanche, FastAPI valide chaque ligne avant
+    # d'envoyer la reponse, donc une seule adresse jugee invalide fait echouer
+    # la liste entiere et l'ecran n'affiche plus personne. C'est arrive avec des
+    # comptes de test ecrits directement en base sur un domaine reserve (.local),
+    # que le validateur d'adresses refuse. Les schemas d'entree, eux, gardent
+    # `EmailStr` : c'est la que la verification a un sens.
+    email: str
     role: str
     filiale: str = ""
     is_active: bool = True
@@ -90,3 +100,9 @@ class AdminUserCreateOut(BaseModel):
 class AdminUserUpdate(BaseModel):
     role: str | None = Field(None, pattern="^(admin|client)$")
     is_active: bool | None = None
+    # Profil. L'adresse n'est pas modifiable ici : c'est l'identifiant de
+    # connexion, et la changer sans verification ouvrirait la porte a un
+    # detournement de compte.
+    nom: str | None = Field(None, min_length=1, max_length=100)
+    prenom: str | None = Field(None, min_length=1, max_length=100)
+    filiale: str | None = Field(None, max_length=50)

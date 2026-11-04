@@ -89,9 +89,26 @@ def update_user(
         user.role = data.role
     if data.is_active is not None:
         user.is_active = data.is_active
+    # Profil : un nom fait d'espaces seulement ne remplace pas le nom existant.
+    for champ in ("nom", "prenom"):
+        valeur = getattr(data, champ)
+        if valeur is not None:
+            valeur = valeur.strip()
+            if not valeur:
+                raise HTTPException(422, f"Le champ {champ} ne peut pas être vide")
+            setattr(user, champ, valeur)
+    if data.filiale is not None:
+        user.filiale = data.filiale.strip()
     db.commit()
     db.refresh(user)
     return user
+
+
+# Pas de route pour changer le mot de passe d'un autre compte, volontairement :
+# chacun change le sien (POST /auth/change-password), et un mot de passe oublie
+# passe par le lien envoye a son titulaire (POST /auth/forgot-password). Un
+# administrateur ne peut donc jamais connaitre ni choisir le mot de passe d'un
+# autre utilisateur, hormis le mot de passe provisoire d'un compte qu'il cree.
 
 
 @router.get("/model-info")

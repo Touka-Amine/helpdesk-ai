@@ -54,6 +54,28 @@ from sklearn.svm import LinearSVC
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from models.heuristics import apply_heuristics
 from registry.model_registry import ModelRegistry
+from pipeline import jeu_gele
+
+# Le referentiel du service, fige. Toute moyenne par categorie se calcule sur
+# cette liste et sur rien d'autre.
+#
+# Pourquoi c'est ecrit ici plutot que deduit des donnees : jusqu'a la revue du
+# 2026-10-09, la F1-macro etait calculee par `f1_score(..., average="macro")`
+# SANS argument `labels`. Scikit-learn moyennait alors sur l'union des
+# categories vraies et des categories predites, c'est-a-dire sur un
+# denominateur qui variait avec les erreurs du modele. Sur le jeu gele, le
+# modele prononcait « Applicatifs », absente du test : la moyenne portait sur
+# six categories, et le memoire annoncait huit. Un modele qui n'aurait pas
+# commis cette erreur aurait ete divise par cinq et aurait affiche un meilleur
+# score a qualite rigoureusement identique.
+#
+# Les trois valeurs, mesurees sur le meme modele et le meme jeu :
+#   8 categories du referentiel        0,4372
+#   5 categories presentes au test     0,6995
+#   6 categories de l'union            0,5829   <- ce qui etait publie
+# Voir scripts/verification/portee_f1_macro.py et metrics/portee_f1_macro.json.
+REFERENTIEL = ["Applicatifs", "Backup", "Communication", "Infrastructure",
+               "Microsoft", "Réseau", "Système", "Sécurité"]
 
 TRAIN_CURRENT = "data/splits/train_current.csv"
 TRAIN_FALLBACK = "data/splits/train.csv"
@@ -85,7 +107,10 @@ def evaluer(pipeline, test_df, threshold):
     y_test = test_df["Catégorie"].tolist()
 
     y_pred_ml = pipeline.predict(X_test)
-    f1_ml = f1_score(y_test, y_pred_ml, average="macro", zero_division=0)
+    # Meme denominateur fige que pour la chaine complete, sinon les deux valeurs
+    # ne se comparent pas entre elles.
+    f1_ml = f1_score(y_test, y_pred_ml, average="macro",
+                     labels=REFERENTIEL, zero_division=0)
 
     titres = test_df["Titre"].fillna("").tolist()
     descs = test_df["Description"].fillna("").tolist()
@@ -116,20 +141,43 @@ def evaluer(pipeline, test_df, threshold):
 
     metriques = {
         "f1_macro_ml": round(float(f1_ml), 4),
+        # Moyenne sur les 8 categories du referentiel, denominateur fige. Les
+        # categories absentes du jeu de test y valent zero : cette valeur mesure
+        # donc autant la composition du jeu que le modele, et c'est pourquoi elle
+        # ne sert pas de metrique de decision. Elle reste publiee parce qu'elle
+        # est la seule comparable d'un jeu de test a l'autre.
         "f1_macro_heuristiques": round(
-            float(f1_score(y_test, y_pred_h, average="macro", zero_division=0)), 4
+            float(f1_score(y_test, y_pred_h, average="macro",
+                           labels=REFERENTIEL, zero_division=0)), 4
         ),
+        # La portee est ecrite a cote de la valeur : un lecteur ne doit pas avoir
+        # a ouvrir le code pour savoir sur combien de categories on a divise.
+        "f1_macro_heuristiques_portee": {
+            "categories": list(REFERENTIEL),
+            "n": len(REFERENTIEL),
+            "libelle": "les 8 categories du referentiel du service",
+        },
         # Meme moyenne, calculee sur les seules classes ayant du support au test.
         # Une classe absente du test a une F1 de 0.0 par construction : la compter
-        # mesure la composition du jeu de test, pas le modele.
+        # mesure la composition du jeu de test, pas le modele. C'est cette
+        # valeur-ci que la porte de promotion lit.
         "f1_macro_classes_evaluables": round(float(f1_macro_support), 4),
+        "f1_macro_classes_evaluables_portee": {
+            "categories": list(classes_evaluables),
+            "n": len(classes_evaluables),
+            "libelle": "les categories ayant au moins un ticket dans ce jeu de test",
+        },
         "n_classes_evaluables": len(classes_evaluables),
         "accuracy": round(float(accuracy_score(y_test, y_pred_h)), 4),
+        # Meme correction que pour la F1-macro : le denominateur est fige sur le
+        # referentiel, sans quoi il suivrait les erreurs du modele.
         "precision_macro": round(
-            float(precision_score(y_test, y_pred_h, average="macro", zero_division=0)), 4
+            float(precision_score(y_test, y_pred_h, average="macro",
+                                  labels=REFERENTIEL, zero_division=0)), 4
         ),
         "recall_macro": round(
-            float(recall_score(y_test, y_pred_h, average="macro", zero_division=0)), 4
+            float(recall_score(y_test, y_pred_h, average="macro",
+                               labels=REFERENTIEL, zero_division=0)), 4
         ),
         "precision_weighted": round(
             float(precision_score(y_test, y_pred_h, average="weighted", zero_division=0)), 4
@@ -243,7 +291,14 @@ def run() -> None:
               f"Lancez build_dataset.py pour inclure les donnees de production.")
 
     train_df = pd.read_csv(chemin_train, encoding="utf-8")
-    test_df = pd.read_csv(TEST_PATH, encoding="utf-8")
+    # Lecture de RAPPORT : l'entrainement se fait sur train.csv, et la
+    # validation croisee par groupe de titres s'y tient. Ce jeu ne sert ici
+    # qu'a publier des chiffres ; il ne choisit aucun reglage.
+    test_df = jeu_gele.lire(
+        jeu_gele.POUR_RAPPORTER,
+        motif="evaluation du modele entraine, publication de metrics/ml_eval.json",
+        lecteur="src/pipeline/train.py",
+    )
 
     X_train = train_df["text_clean"].fillna("").tolist()
     y_train = train_df["Catégorie"].tolist()

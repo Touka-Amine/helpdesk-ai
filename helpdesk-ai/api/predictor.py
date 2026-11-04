@@ -8,7 +8,7 @@ import threading
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-from data.preprocess import clean_text, build_text_for_rag
+from data.preprocess import clean_text, build_text_for_model, build_text_for_rag
 from rag.engine import RAGEngine
 from rag.semantic_engine import SemanticRAGEngine
 from rag.hybrid_engine import HybridRAGEngine
@@ -25,6 +25,31 @@ POINTER_PATH = os.path.join(os.path.dirname(__file__), '..', 'models', 'registry
 # prediction serait du gaspillage sans benefice : une promotion prise en compte en
 # moins de trente secondes est largement suffisante.
 FRESHNESS_CHECK_INTERVAL = 30.0
+
+PARAMS_PATH = os.path.join(os.path.dirname(__file__), '..', 'params.yaml')
+
+# Valeurs de repli si params.yaml est absent de l'image : elles doivent rester
+# identiques a celles du fichier, sans quoi le service mesure une configuration
+# et en sert une autre.
+RAG_DEFAUTS = {"top_k": 3, "similarity_threshold": 0.35, "hybrid_alpha": 0.5}
+
+
+def _params_rag() -> dict:
+    """
+    Parametres du RAG lus depuis params.yaml.
+
+    Ils y sont lus plutot que codes en dur pour que le moteur servi et le moteur
+    evalue par src/pipeline/rag_eval.py partagent une seule source. Le seuil avait
+    ete recopie a la main dans ce fichier, et rien ne garantissait qu'il suive une
+    recalibration du pipeline.
+    """
+    try:
+        import yaml
+        with open(PARAMS_PATH, encoding="utf-8") as f:
+            rag = (yaml.safe_load(f) or {}).get("rag") or {}
+        return {cle: rag.get(cle, defaut) for cle, defaut in RAG_DEFAUTS.items()}
+    except Exception:
+        return dict(RAG_DEFAUTS)
 
 
 class Predictor:
@@ -148,14 +173,22 @@ class Predictor:
         # Ordre de préférence : Hybride > Sémantique seul > Lexical seul
         try:
             self.semantic_rag = SemanticRAGEngine.load(SEM_RAG_DIR)
-            # Construire le moteur hybride en réutilisant semantic_rag déjà chargé
-            self.hybrid_rag = HybridRAGEngine(alpha=0.5, top_k=3, similarity_threshold=0.50)
+            # Construire le moteur hybride en réutilisant semantic_rag déjà chargé.
+            # Les réglages viennent de params.yaml, pas d'une copie locale.
+            prag = _params_rag()
+            self.hybrid_rag = HybridRAGEngine(
+                alpha=prag["hybrid_alpha"],
+                top_k=prag["top_k"],
+                similarity_threshold=prag["similarity_threshold"],
+            )
             self.hybrid_rag._sem = self.semantic_rag
             self.hybrid_rag._lex = self.rag
             self.hybrid_rag._fitted = True
             self._semantic_rag_loaded = True
             n_docs = len(self.semantic_rag.knowledge_base)
-            print(f"RAG hybride actif — {n_docs} tickets | alpha=0.5 (sem×0.5 + lex×0.5)")
+            a = prag["hybrid_alpha"]
+            print(f"RAG hybride actif — {n_docs} tickets | alpha={a} "
+                  f"(sem×{a} + lex×{round(1 - a, 2)}) | seuil={prag['similarity_threshold']}")
         except Exception as e:
             print(f"RAG sémantique non disponible ({e}) — fallback lexical actif")
             self.semantic_rag = None
@@ -168,8 +201,16 @@ class Predictor:
               f"seuil={self.threshold}, modele {version}")
 
     def predict(self, titre: str, description: str) -> dict:
-        """Prédit la catégorie via le pipeline ML (TF-IDF + classificateur)."""
-        text_clean = clean_text(description)
+        """
+        Prédit la catégorie via le pipeline ML (TF-IDF + classificateur).
+
+        Le texte est construit par `build_text_for_model`, c'est-à-dire titre puis
+        description, exactement comme la colonne `text_clean` du corpus sur laquelle
+        le modèle a été entraîné. N'envoyer que la description le privait du champ
+        le plus discriminant : sur le jeu de test gelé, l'exactitude tombait de
+        44,7 % à 31,7 % et la confiance moyenne de 0,46 à 0,41.
+        """
+        text_clean = build_text_for_model(titre, description)
         proba      = self.pipeline.predict_proba([text_clean])[0]
         pred_idx   = proba.argmax()
         categorie  = self.pipeline.classes_[pred_idx]

@@ -7,21 +7,48 @@ from sqlalchemy.orm import Session
 from api.db.database import get_db
 from api.db.models import Ticket, User, TicketHistory
 from api.db.vector_store import (
+    STATUT_ACTIF, STATUT_OBSOLETE,
     archive_resolved_ticket, delete_resolved, get_stats as vector_stats, get_all_resolved,
+    get_cycle_de_vie, get_entry, get_refus, marquer_obsolete, reactiver,
 )
 from api.routers.auth import get_current_user, require_admin
 from api.schemas.ticket_schemas import (
     AdminTicketCreate, ApproveRequest, ChatRequest, ChatResponseOut, FeedbackRequest,
-    RagSynthesisOut, TicketCreate, TicketOut,
+    ObsoleteRequest, RagSynthesisOut, TicketCreate, TicketOut,
 )
 from api.services.ai_service import get_live_candidates, predict_and_recommend, recommend_for_category
 from api.services.auth_service import hash_password
 from api.services.llm_service import chat_reply, synthesize_recommendations
+from api.services.routage_service import AUTOMATIQUE, REVUE_HUMAINE, decider
 from api.services.ticket_service import ticket_to_dict, log_ticket_history
 
 # Sous ce score de similarité RAG, on considère qu'aucun cas historique proche
-# n'existe ("nouveau type de problème") — même seuil que HybridRAGEngine (predictor.py).
+# n'existe ("nouveau type de problème") et l'admin doit décrire la solution avant
+# de clore le ticket.
+#
+# Ce seuil est DÉLIBÉRÉMENT distinct de rag.similarity_threshold (params.yaml), qui
+# décide de ce qu'on affiche. Les deux valeurs ont longtemps été le même 0.50, ce qui
+# faisait dépendre une règle métier d'un réglage de pertinence sans rapport.
+#
+# Il est maintenu au-dessus de la plage atteignable par le score hybride (0.33 à 0.49
+# mesuré) : la règle se déclenche donc sur tous les tickets, et c'est l'effet voulu.
+# La solution rédigée par l'admin est ce qui alimente la base de connaissances, seul
+# mécanisme capable de lever la pauvreté du corpus. L'abaisser ferait gagner du temps
+# sur les cas récurrents au prix de cette alimentation.
 NOVELTY_THRESHOLD = 0.50
+
+
+def decider_orientation(pred: dict) -> tuple[str, str]:
+    """Oriente le ticket selon l'index de confiance (EF-07).
+
+    Les deux seuils viennent de `params.yaml`, par l'intermediaire du predicteur,
+    pour qu'un reglage change au meme endroit que les autres.
+    """
+    from api import predictor as _p
+    seuil_confiance = getattr(_p.predictor, "threshold", None) or 0.60
+    seuil_rag = _p._params_rag().get("similarity_threshold", 0.35)
+    return decider(pred, float(seuil_confiance), float(seuil_rag))
+
 
 # Statuts valides et transitions permises
 VALID_STATUSES = ["En attente", "Prise en Charge", "Résolu", "Rejeté", "Problème"]
@@ -53,6 +80,7 @@ def create_ticket(
     user: User = Depends(get_current_user),
 ):
     pred = predict_and_recommend(data.titre, data.description)
+    routage, motif_routage = decider_orientation(pred)
 
     ticket = Ticket(
         user_id=user.id,
@@ -75,6 +103,9 @@ def create_ticket(
         model_version=pred.get("model_version", ""),
         heuristic_applied=bool(pred.get("heuristic_applied", False)),
         heuristic_rule=pred.get("heuristic_rule") or "",
+        # Orientation EF-07 : decidee une fois, a la creation, et journalisee.
+        routage=routage,
+        motif_routage=motif_routage,
     )
     db.add(ticket)
     db.commit()
@@ -83,6 +114,7 @@ def create_ticket(
     # Log initial
     log_ticket_history(db, ticket.id, None, "statut", None, "En attente")
     log_ticket_history(db, ticket.id, None, "categorie_finale", None, pred.get("categorie", ""))
+    log_ticket_history(db, ticket.id, None, "routage", None, f"{routage} ({motif_routage})")
     db.commit()
 
     return ticket_to_dict(ticket)
@@ -129,6 +161,7 @@ def admin_create_ticket(
             db.refresh(user)
 
     pred = predict_and_recommend(data.titre, data.description)
+    routage, motif_routage = decider_orientation(pred)
     ticket = Ticket(
         user_id=user.id,
         titre=data.titre,
@@ -150,12 +183,15 @@ def admin_create_ticket(
         model_version=pred.get("model_version", ""),
         heuristic_applied=bool(pred.get("heuristic_applied", False)),
         heuristic_rule=pred.get("heuristic_rule") or "",
+        routage=routage,
+        motif_routage=motif_routage,
     )
     db.add(ticket)
     db.commit()
     db.refresh(ticket)
 
     log_ticket_history(db, ticket.id, admin.id, "statut", None, "En attente (créé par admin)")
+    log_ticket_history(db, ticket.id, admin.id, "routage", None, f"{routage} ({motif_routage})")
     log_ticket_history(db, ticket.id, admin.id, "categorie_finale", None, pred.get("categorie", ""))
     db.commit()
 
@@ -521,11 +557,49 @@ def delete_ticket(
 
 @router.get("/admin/all")
 def get_all_tickets(
+    routage: str | None = None,
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
 ):
-    tickets = db.query(Ticket).order_by(Ticket.id.desc()).all()
+    """Tous les tickets, filtrables sur l'orientation (EF-07).
+
+    `?routage=revue_humaine` rend la file des cas peu assures, celle que
+    l'exigence demande de constituer. Sans parametre, la liste est complete :
+    l'orientation trie, elle ne cache rien.
+    """
+    requete = db.query(Ticket)
+    if routage:
+        if routage not in (REVUE_HUMAINE, AUTOMATIQUE):
+            raise HTTPException(422, "routage doit valoir « %s » ou « %s »"
+                                % (REVUE_HUMAINE, AUTOMATIQUE))
+        requete = requete.filter(Ticket.routage == routage)
+    tickets = requete.order_by(Ticket.id.desc()).all()
     return [ticket_to_dict(ticket) for ticket in tickets]
+
+
+@router.get("/admin/orientation")
+def compter_orientation(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    """Combien de tickets attendent une revue humaine, et pourquoi (EF-07).
+
+    `non_orientes` compte les tickets anterieurs a la mise en place du routage.
+    Ils ne sont pas comptes comme automatiques : personne n'a pris cette
+    decision pour eux.
+    """
+    total = db.query(Ticket).count()
+    revue = db.query(Ticket).filter(Ticket.routage == REVUE_HUMAINE).count()
+    auto = db.query(Ticket).filter(Ticket.routage == AUTOMATIQUE).count()
+    en_attente_de_revue = db.query(Ticket).filter(
+        Ticket.routage == REVUE_HUMAINE, Ticket.statut == "En attente").count()
+    return {
+        "total": total,
+        "revue_humaine": revue,
+        "automatique": auto,
+        "non_orientes": total - revue - auto,
+        "revue_humaine_encore_en_attente": en_attente_de_revue,
+    }
 
 
 @router.get("/{ticket_id}/history")
@@ -585,3 +659,72 @@ def get_resolved_archive(
     """
     docs = get_all_resolved(limit=limit)
     return {"total": len(docs), "tickets": docs}
+
+
+# ── Cycle de vie et contrôle qualité de la base de connaissances ────────────────
+
+@router.get("/resolved/lifecycle")
+def get_resolved_lifecycle(_: User = Depends(require_admin)):
+    """
+    Toutes les connaissances avec leur statut : actives (proposées par le RAG),
+    remplacées par un quasi-doublon plus récent, obsolètes. Contrairement à
+    /resolved/archive, rien n'est filtré : c'est la vue d'audit de la base.
+    """
+    return get_cycle_de_vie()
+
+
+@router.get("/resolved/refused")
+def get_resolved_refused(
+    limit: int = 100,
+    _: User = Depends(require_admin),
+):
+    """
+    Les solutions refusées par le contrôle qualité (src/knowledge/quality.py), avec
+    le motif et le détail de chaque contrôle. Elles ne sont pas dans la base : le
+    ticket, lui, reste intact dans PostgreSQL.
+    """
+    refus = get_refus(limit=limit)
+    return {"total": len(refus), "refus": refus}
+
+
+@router.post("/resolved/{ticket_id}/obsolete")
+def mark_resolved_obsolete(
+    ticket_id: int,
+    body: ObsoleteRequest,
+    admin: User = Depends(require_admin),
+):
+    """
+    Retire une connaissance du RAG sans la supprimer. Réversible avec /reactivate.
+    Seule une connaissance active peut être rendue obsolète.
+    """
+    entree = get_entry(ticket_id)
+    if entree is None:
+        raise HTTPException(404, "Connaissance introuvable")
+    if entree.get("statut") != STATUT_ACTIF:
+        raise HTTPException(
+            409, f"Seule une connaissance active peut être rendue obsolète (statut actuel : {entree.get('statut')})"
+        )
+    if not marquer_obsolete(ticket_id, motif=body.motif.strip(), par=str(admin.id)):
+        raise HTTPException(500, "Mise à jour de la base de connaissances impossible")
+    return get_entry(ticket_id)
+
+
+@router.post("/resolved/{ticket_id}/reactivate")
+def reactivate_resolved(
+    ticket_id: int,
+    admin: User = Depends(require_admin),
+):
+    """
+    Remet en service une connaissance obsolète. Une connaissance remplacée ne peut
+    pas l'être : elle a un successeur quasi identique déjà proposé par le RAG.
+    """
+    entree = get_entry(ticket_id)
+    if entree is None:
+        raise HTTPException(404, "Connaissance introuvable")
+    if entree.get("statut") != STATUT_OBSOLETE:
+        raise HTTPException(
+            409, f"Seule une connaissance obsolète peut être remise en service (statut actuel : {entree.get('statut')})"
+        )
+    if not reactiver(ticket_id, par=str(admin.id)):
+        raise HTTPException(500, "Mise à jour de la base de connaissances impossible")
+    return get_entry(ticket_id)

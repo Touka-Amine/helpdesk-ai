@@ -56,6 +56,15 @@ class TicketOut(BaseModel):
     assigne_a: Optional[str] = None
     feedback_vote: Optional[str] = None
     feedback_comment: str = ""
+    # Orientation selon l'index de confiance (EF-07) : "revue_humaine",
+    # "automatique", ou absent pour les tickets anterieurs a cette version.
+    routage: Optional[str] = None
+    motif_routage: str = ""
+    # Resume extractif du ticket (EF-11).
+    resume: str = ""
+    # Signaux de gravite releves dans le texte (EF-13) : des faits enonces par
+    # le demandeur, pas une note de tonalite.
+    signaux_gravite: list[str] = []
 
 
 class FeedbackRequest(BaseModel):
@@ -125,3 +134,8 @@ class TicketHistoryItem(BaseModel):
     nouvelle_valeur: Optional[str] = None
     timestamp: datetime
     par: str = "Systeme"
+
+
+class ObsoleteRequest(BaseModel):
+    """Motif du retrait d'une connaissance, conservé dans la base pour l'audit."""
+    motif: str = Field(..., min_length=3, max_length=300)

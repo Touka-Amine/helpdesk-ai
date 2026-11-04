@@ -11,6 +11,39 @@ POURQUOI REEVALUER LE MODELE DE PRODUCTION
     chiffres issus de deux jeux differents ne veut rien dire. Les deux modeles
     sont donc reevalues ici, dans la meme execution, sur data/splits/test.csv.
 
+CE QUE LE JEU GELE EST, ET CE QU'IL N'EST PAS
+    Remarque de l'encadrant du 2026-10-09 : le jeu de test gele ne doit pas
+    devenir progressivement un jeu de validation servant a selectionner les
+    modeles.
+
+    Elle vise un risque reel et connu. Un jeu de test ne se degrade pas d'un
+    coup, il se degrade par usage : chaque lecture qui TRANCHE fait passer un
+    peu de son information dans le modele retenu, et le chiffre qu'il rendra la
+    fois suivante mesure un peu moins la generalisation. Au bout de quelques
+    dizaines de lectures il ne mesure plus rien, sans qu'aucune ligne de code
+    n'ait change.
+
+    Le jeu gele est ici une PORTE, pas un SELECTEUR. Il repond a « ce candidat
+    peut-il remplacer la production », une fois par candidat. Il ne sert pas a
+    choisir un hyperparametre, un seuil, une variante de texte ni une epoque :
+    ces choix-la se font sur l'entrainement, par validation croisee par groupe
+    de titres (voir src/pipeline/selection_camembert.py, qui ne lit jamais ce
+    fichier).
+
+    Trois garde-fous rendent la regle verifiable plutot que declarative :
+      - chaque lecture s'inscrit dans data/reference/journal_jeu_gele.json,
+        avec sa date, son motif et ce qu'elle a servi a decider ;
+      - les lectures qui DECIDENT sont distinguees de celles qui RAPPORTENT,
+        car recalculer un chiffre pour un tableau n'influence aucun choix ;
+      - un budget declare dans params.yaml arrete la porte une fois atteint.
+        Elle renvoie alors a une decision humaine : constituer une nouvelle
+        reference a partir de tickets de production recents, ou assumer la
+        lecture par ecrit avec --force, qui l'inscrit comme hors budget.
+
+    Etat au 2026-10-09 : trois lectures decisionnelles, reconstituees depuis le
+    registre (candidats v2, v3 et v4, tous trois rejetes). Le budget est fixe a
+    dix.
+
 LES PORTES
     1. Gain minimum sur la metrique principale.
     2. Aucune classe ayant du support au test ne perd plus que max_class_regression.
@@ -49,6 +82,7 @@ import pandas as pd
 import yaml
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from pipeline import jeu_gele                           # noqa: E402
 from pipeline.train import evaluer                      # noqa: E402
 from registry.model_registry import ModelRegistry, RegistryError   # noqa: E402
 
@@ -211,11 +245,22 @@ def run(args: argparse.Namespace) -> int:
 
     if args.list:
         prod = registre.resolve_alias("production")
-        print(f"{'ver':>4}  {'tag':<12} {'metrique':>9} {'accuracy':>9}  dataset       cree")
+        # Deux colonnes de F1-macro, parce qu'il y a deux portees et qu'une seule
+        # tranche. « decision » est celle que comparent les portes ; « ref-8 »
+        # est la moyenne sur le referentiel entier, suivie d'un « ? » quand
+        # l'entree precede la correction du 2026-10-09 et que sa portee est donc
+        # inconnue — une telle valeur ne se compare a aucune autre.
+        print(f"{'ver':>4}  {'tag':<12} {'decision':>9} {'ref-8':>10} "
+              f"{'accuracy':>9}  dataset       cree")
         for v in registre.list_versions():
             marque = " <- production" if v["version"] == prod else ""
+            ref8 = v.get("primary_metric")
+            ref8_txt = "n/a" if ref8 is None else (
+                "%.4f%s" % (ref8, "" if v.get("primary_metric_portee") else "?"))
+            decision = v.get("metrique_de_decision")
+            decision_txt = "n/a" if decision is None else "%.4f" % decision
             print(f"v{v['version']:<3}  {v['tag']:<12} "
-                  f"{(v.get('primary_metric') or 0):>9.4f} {(v.get('accuracy') or 0):>9.4f}  "
+                  f"{decision_txt:>9} {ref8_txt:>10} {(v.get('accuracy') or 0):>9.4f}  "
                   f"{str(v.get('dataset_version'))[:12]:<12}  {v['created_at'][:19]}{marque}")
         return 0
 
@@ -250,6 +295,15 @@ def run(args: argparse.Namespace) -> int:
             return 1
         print(f"[promote] Rien a arbitrer — {motif}.")
         _restaurer_production(registre, production["version"])
+        # Lecture de RAPPORT : on rafraichit les metriques publiees du modele en
+        # service, aucun choix n'en depend. Elle n'entame pas le budget, mais
+        # elle est inscrite : le journal doit dire tout ce qui a touche au jeu.
+        jeu_gele.inscrire(
+            jeu_gele.POUR_RAPPORTER,
+            motif="rafraichissement des metriques du modele en service, sans arbitrage",
+            lecteur="src/pipeline/promote.py",
+            version_concernee=production["version"],
+        )
         metriques_prod, _ = evaluer_artefact(
             os.path.join(registre.version_dir(production["version"]), "pipeline.pkl"),
             pd.read_csv(TEST_PATH, encoding="utf-8"), threshold,
@@ -268,7 +322,40 @@ def run(args: argparse.Namespace) -> int:
     candidat = candidats[0]
     production = registre.get_production()
 
+    # ── Avant de lire le jeu gele ────────────────────────────────────────────
+    # Cet arbitrage va s'en servir pour TRANCHER, donc l'eroder. Le budget est
+    # verifie d'abord, et la lecture inscrite au journal ensuite : une sortie en
+    # erreur ne doit pas laisser une lecture non comptee, ni l'inverse.
+    budget = params.get("jeu_gele", {}).get("lectures_de_decision_max")
+    etat_jeu = jeu_gele.etat()
+    print(f"[promote] Jeu gele : {etat_jeu['lectures_de_decision']} lecture(s) de decision "
+          f"deja inscrites" + (f", budget {budget}" if budget else ", pas de budget declare"))
+    try:
+        jeu_gele.verifier_budget(budget)
+    except jeu_gele.BudgetEpuise as exc:
+        if not args.force:
+            print("[promote] REFUS\n%s" % exc)
+            ecrire_decision({
+                "at": datetime.now(timezone.utc).isoformat(),
+                "resultat": "refuse",
+                "version_candidate": candidat["version"],
+                "motif": "Budget de lecture du jeu de test gele epuise ; "
+                         "aucun arbitrage rendu.",
+                "jeu_gele": etat_jeu,
+            })
+            return 2
+        print("[promote] Budget depasse, poursuite forcee (--force) : la lecture est "
+              "inscrite au journal comme telle.")
+
     test_df = pd.read_csv(TEST_PATH, encoding="utf-8")
+    jeu_gele.inscrire(
+        jeu_gele.POUR_DECIDER,
+        motif="arbitrage de promotion du candidat v%s" % candidat["version"],
+        lecteur="src/pipeline/promote.py",
+        version_concernee=candidat["version"],
+        hors_budget=bool(args.force and budget
+                         and etat_jeu["lectures_de_decision"] >= int(budget)) or None,
+    )
     print(f"[promote] Jeu de test gele : {TEST_PATH} ({len(test_df)} lignes, "
           f"{test_df['Catégorie'].nunique()} categories)")
 
@@ -330,6 +417,11 @@ def run(args: argparse.Namespace) -> int:
         "comparaison": comparaison,
         "test_reference": TEST_PATH,
         "n_test": int(len(test_df)),
+        # Combien de fois le jeu gele a servi a trancher, celle-ci comprise.
+        # Un lecteur de ce fichier doit pouvoir juger si le chiffre qui le
+        # precede mesure encore la generalisation.
+        "jeu_gele": jeu_gele.etat(),
+        "jeu_gele_budget": budget,
     }
 
     if args.dry_run:
