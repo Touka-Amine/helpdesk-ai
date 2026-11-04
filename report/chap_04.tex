@@ -1,25 +1,157 @@
-\chapter{Développement et évaluation du système de classification}
+\addtocontents{toc}{\protect\phasecrisp{Phase 4 --- Modélisation}}
+\chapter{Classification automatique des tickets}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
 
-Le chapitre précédent a livré un corpus décrit, nettoyé et découpé. Celui-ci s'en sert pour
-construire le classifieur qui affecte une catégorie à chaque ticket entrant. Trois approches ont été
-éprouvées sous un protocole unique : une chaîne de vectorisation classique, la même chaîne complétée
-par des règles métier, puis l'adaptation d'un transformer francophone.
+Les données sont comprises et préparées. Ce chapitre ouvre la quatrième phase de la démarche et
+construit le premier des deux moteurs de la solution : le classifieur qui affecte une catégorie à
+chaque ticket entrant.
 
-Autant annoncer le résultat principal. La meilleure approche atteint un F1-macro de 0,8343, à 0,016
-de la cible de 0,85. Elle combine le transformer et les règles, association que la comparaison
-initiale n'avait pas éprouvée et que la section~\ref{sec:combinaison} analyse. Le chapitre rapporte
-aussi un audit des règles qui a conduit à retirer quatre mots-clés et à corriger les résultats
-publiés à la baisse : la section~\ref{sec:audit} l'expose, car la démarche importe autant que le
-chiffre.
+Il s'ouvre sur les concepts que cette construction mobilise, la représentation du texte et la
+classification en présence de classes déséquilibrées, puis formule le problème et éprouve trois
+approches sous un protocole unique : une chaîne de vectorisation classique, la même chaîne complétée
+par des règles métier, et l'adaptation d'un transformer francophone.
 
-\section{Formulation du problème de classification}
+Les résultats obtenus ici sont rapportés au fil de l'eau. Leur comparaison et le choix du modèle
+servi relèvent de la phase d'évaluation, au chapitre~6.
+
+\section{Concepts mobilisés}
+
+Un algorithme d'apprentissage ne traite que des vecteurs numériques. Toute chaîne de traitement en
+langue naturelle commence donc par une opération de représentation, dont la qualité conditionne tout
+ce qui suit.
+
+\subsection{Représentations du texte}
+
+Le sac de mots décrit un document par le décompte de ses termes, sans tenir compte de leur ordre. La
+pondération \emph{term frequency -- inverse document frequency}, ou TF-IDF~\cite{sparckjones1972},
+corrige ce décompte en
+multipliant la fréquence d'un terme par l'inverse du nombre de documents où il apparaît : un mot
+présent partout discrimine mal, un mot rare et localisé discrimine bien. Dans notre corpus,
+\emph{problème} reçoit un poids faible, tandis que \emph{spooler} ou \emph{VPN} identifient
+immédiatement une catégorie.
+
+Peu coûteuse et entièrement interprétable, cette représentation sert de référence en classification
+de textes courts. Sa limite est structurelle : \emph{Session Outlook bloquée} et \emph{messagerie
+qui ne s'ouvre plus} ne partagent aucun terme alors qu'elles désignent le même incident. Synonymie,
+polysémie et ordre des mots échappent par construction à ce modèle.
+
+\textbf{Les représentations denses.} Les représentations denses placent chaque mot dans un espace continu de quelques centaines de
+dimensions, où la proximité géométrique traduit la proximité de sens~\cite{mikolov2013}. Deux mots
+employés dans des contextes semblables y reçoivent des vecteurs voisins, sans qu'aucune règle ne
+l'impose. Les modèles d'encodage de phrases étendent le principe à un texte
+complet~\cite{reimers2019} ; ce sont eux qui alimentent la recherche de tickets similaires du
+chapitre~5.
+
+Une limite subsiste dans les premières représentations denses : chaque mot reçoit un vecteur unique
+quel que soit son emploi, et le terme \emph{serveur} confond alors la machine physique, le processus
+logiciel et le rôle applicatif.
+
+\subsection{Transformers, BERT et CamemBERT}
+
+L'architecture \emph{transformer} lève cette contrainte par le mécanisme d'attention, qui pondère
+l'influence de chaque mot d'une phrase sur la représentation des autres~\cite{vaswani2017}. Dans
+\emph{le serveur de messagerie ne répond plus}, la présence de \emph{messagerie} oriente la
+représentation de \emph{serveur}.
+
+Le modèle BERT y applique un pré-entraînement par masquage : il prédit des mots occultés à partir de
+leur contexte gauche et droit~\cite{devlin2019}. Cette bidirectionnalité le rend adapté aux tâches
+de compréhension telles que la classification. Le pré-entraînement s'effectuant sans étiquettes, le
+modèle acquiert une connaissance générale de la langue à partir de texte brut, puis se spécialise
+sur une tâche donnée avec un volume d'exemples annotés bien plus modeste.
+
+\textbf{CamemBERT, un transformer francophone.} BERT ayant été entraîné sur des corpus majoritairement anglophones, son transfert direct au français
+donne des résultats médiocres, et les modèles multilingues dégradent la qualité obtenue sur chaque
+langue en répartissant leur capacité sur une centaine d'entre elles.
+
+CamemBERT applique au français la même architecture et la même procédure, sur la partie française du
+corpus OSCAR~\cite{martin2020}. Ses auteurs le montrent devant les modèles multilingues sur les
+tâches francophones de référence. Le choix s'impose ici, où les tickets sont rédigés en français
+dans un registre professionnel mêlé de vocabulaire technique anglais. Nous mesurons plus loin ce que ce modèle apporte réellement sur notre corpus.
+
+\subsection{Adaptation économe en paramètres}
+
+Spécialiser un modèle pré-entraîné, ou \emph{fine-tuning}, suppose classiquement d'héberger en
+mémoire graphique le modèle, ses gradients et les états de l'optimiseur, soit plusieurs fois sa
+taille. Cette exigence dépassait notre matériel.
+
+Les méthodes d'adaptation économe en paramètres, regroupées sous le sigle PEFT, gèlent les poids
+d'origine et n'entraînent qu'un petit nombre de paramètres additionnels. La technique LoRA, retenue
+ici, insère dans certaines couches deux matrices de rang faible dont le produit s'ajoute aux poids
+gelés~\cite{hu2022} :
+
+\[
+h = W_0 x + \frac{\alpha}{r}\,B A x
+\]
+
+La matrice $W_0$ reste figée ; seules $A$, qui projette l'entrée sur un espace de dimension réduite
+$r$, et $B$, qui la ramène vers la dimension de sortie, sont apprises. Le rang $r$ fixe le nombre de
+paramètres entraînables, qui chute de plusieurs ordres de grandeur, et le facteur $\alpha$ règle
+l'amplitude de la correction. Le prix est une capacité d'adaptation moindre, le modèle ne pouvant se
+réorganiser que dans le sous-espace autorisé par le rang choisi.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{ch02_principe_lora.png}
+\caption{Principe de l'adaptation LoRA : les poids d'origine restent gelés}
+\label{fig:lora2}
+\end{figure}
+
+La figure~\ref{fig:lora2} montre le trajet d'une entrée. Elle traverse en parallèle les poids
+d'origine, qui ne bougent pas, et la paire de matrices de rang faible, seule partie apprise. Les
+deux contributions s'additionnent avant de sortir. Rien n'est retiré au modèle pré-entraîné, et
+l'adaptation se lit comme une correction ajoutée par-dessus. Nous appliquons ce dispositif à CamemBERT plus loin, et en donnons les paramètres retenus.
+
+\subsection{Classification supervisée et déséquilibre de classes}
+
+Attribuer une catégorie à un ticket relève de la classification supervisée à étiquette unique sur
+huit modalités. La difficulté principale tient à la distribution très inégale de ces catégories,
+davantage qu'au choix de l'algorithme.
+
+\textbf{Les algorithmes de référence.} Trois familles conviennent sur des représentations TF-IDF et servent de point de comparaison.
+
+\begin{puces}
+\item \textbf{Régression logistique} : probabilité d'appartenance modélisée par une combinaison
+linéaire des variables. Entraînement rapide, peu d'hyperparamètres, probabilités directement
+interprétables, ce qui importe pour le calcul d'un index de confiance.
+\item \textbf{Machines à vecteurs de support}~\cite{cortes1995} : hyperplan séparateur à marge
+maximale. La variante
+linéaire se comporte bien en grande dimension, situation typique du TF-IDF. Elles ne fournissent pas
+de probabilité et demandent une calibration.
+\item \textbf{Méthodes d'ensemble par arbres}, dont le gradient boosting : arbres faibles construits
+séquentiellement, chacun corrigeant les erreurs du précédent. Interactions non linéaires capturées,
+au prix d'un réglage plus délicat.
+\end{puces}
+
+\textbf{Les métriques adaptées au déséquilibre.} Notre corpus présente un rapport de 5,93 entre la catégorie la plus fréquente et la plus rare. Le
+taux de bonnes réponses devient trompeur : un classifieur qui privilégie les catégories majoritaires
+obtient un score global honorable tout en restant inutilisable sur les catégories rares, dont la
+sécurité fait partie.
+
+La précision indique quelle proportion des tickets attribués à une catégorie lui appartient
+réellement, le rappel quelle proportion des tickets d'une catégorie a été retrouvée, et le score F1
+en est la moyenne harmonique. Le F1-macro moyenne ces scores sans les pondérer par les effectifs :
+une catégorie rare y pèse autant qu'une catégorie fréquente, et l'effondrement de l'une se voit
+immédiatement. C'est le critère principal retenu ici, complété par le rappel par catégorie.
+
+\textbf{Les techniques de rééquilibrage.} Agir sur la métrique révèle le problème sans le corriger. Deux leviers portent sur l'apprentissage.
+
+\begin{puces}
+\item \textbf{Pondération des classes} : la fonction de coût pénalise davantage les erreurs commises
+sur les catégories rares. Aucune donnée supplémentaire, un paramètre unique dans la plupart des
+implémentations.
+\item \textbf{Suréchantillonnage synthétique} : la méthode SMOTE interpole entre un exemple
+minoritaire et l'un de ses plus proches voisins de la même classe~\cite{chawla2002}. Appliquée au
+TF-IDF, elle crée des vecteurs qui ne correspondent à aucun texte réel, ce qui appelle de la
+prudence dans l'interprétation des gains.
+\end{puces}
+
+\section{Formulation du problème et protocole d'évaluation}
 
 La tâche consiste à affecter une catégorie à un ticket à partir de son seul texte, titre et
 description réunis, ce qui en fait une classification multi-classes à étiquette unique. La variable
-cible est le champ \texttt{Catégorie} décrit au chapitre~3. Nous n'écartons aucune des huit
+cible est le champ \texttt{Catégorie} décrit au chapitre~2. Nous n'écartons aucune des huit
 modalités, pas même \emph{Sécurité} et \emph{Backup}, qui rassemblent moins de 8\,\% du corpus : ce
 sont précisément celles dont une erreur coûte le plus cher.
 
@@ -38,25 +170,23 @@ EF-05 & Fonctionnelle & Automatiser la suggestion de catégorie au dépôt du ti
 \hline
 ENF-02 & Non fonctionnelle & Obtenir une qualification assez juste pour être suivie sans
 vérification systématique & F1-macro $\geq$ 0,85, sous un protocole arrêté avant
-l'expérimentation & 0,8343\newline \textbf{Presque atteint} \\
+l'expérimentation & 0,8343 publié\newline 0,8644 sur l'entrée de production\newline 0,5827
+servi\newline \textbf{Non atteint par le modèle servi} \\
 \hline
 ENF-03 & Non fonctionnelle & Garantir qu'un incident de sécurité ne passe pas inaperçu & Rappel
-$\geq$ 0,70 sur la catégorie \emph{Sécurité} & 0,60\newline \textbf{Non atteint} \\
+$\geq$ 0,70 sur la catégorie \emph{Sécurité} & 0,60 publié\newline 0,90 sur l'entrée de
+production\newline \textbf{Non atteint par le modèle servi} \\
 \hline
 \end{tabular}
 \end{table}
 
 Le tableau~\ref{tab:exigences4} rappelle ce que le chapitre doit satisfaire, avec les références
-des tableaux~\ref{tab:ef} et~\ref{tab:enf} du chapitre~2. Deux exigences voisines relèvent d'autres
+des tableaux~\ref{tab:ef} et~\ref{tab:enf} du chapitre~1. Deux exigences voisines relèvent d'autres
 chapitres : la recherche de cas comparables, EF-06, est traitée au chapitre~5 ; l'orientation
-des cas peu assurés vers une revue humaine, EF-07, est construite au chapitre~6, où nous ne
-fournissons ici que l'index de confiance dont elle a besoin.
+des cas peu assurés vers une revue humaine, EF-07, est décrite au chapitre~6 avec le bilan de
+conformité, où nous ne fournissons ici que l'index de confiance dont elle a besoin.
 
-\FloatBarrier
-
-\subsection{La métrique retenue}
-
-Sur un corpus déséquilibré d'un facteur 5,93, l'exactitude se laisse satisfaire par un modèle qui
+\textbf{La métrique retenue.} Sur un corpus déséquilibré d'un facteur 5,93, l'exactitude se laisse satisfaire par un modèle qui
 ignore les catégories rares. Le premier modèle entraîné l'illustre : la régression logistique sur
 vecteurs TF-IDF atteint 58,0\,\% d'exactitude, ce qui paraît honorable pour huit classes, mais ne
 prédit correctement que quatre catégories sur huit et laisse \emph{Backup},
@@ -67,14 +197,15 @@ Nous retenons donc le F1-macro, moyenne non pondérée des F1 par catégorie, o�
 métrique tombe à 0,3746 et rend visible ce que l'exactitude masquait. Les tableaux continuent de
 rapporter l'exactitude à titre indicatif ; toutes les décisions se prennent sur le F1-macro.
 
-\subsection{Le découpage utilisé pour les expériences}
 \label{sec:protocole}
 
-Les expériences reposent sur un découpage qui diffère de celui du pipeline décrit à la
+\textbf{Le découpage utilisé pour les expériences.} Les expériences reposent sur un découpage qui diffère de celui du pipeline décrit à la
 section~\ref{sec:antifuite}. Nous le posons d'emblée, car deux jeux de chiffres circulent dans le
 mémoire et les confondre conduirait à des comparaisons fausses. Les deux découpages regroupent les
 tickets par titre et ne laissent passer aucune fuite ; celui des expériences stratifie en outre le
 tirage par catégorie, au niveau des titres.
+
+Le tableau~\ref{tab:protocoles} récapitule les deux découpages.
 
 \begin{table}[!htbp]
 \centering
@@ -98,8 +229,18 @@ Catégories au test & 8 sur 8 & 5 sur 8 \\
 \hline
 Usage & Comparaison des approches (ch.~4) & Modèle servi en production \\
 \hline
+Mesures & \texttt{metrics/\allowbreak campagne\_\allowbreak apres\_\allowbreak
+nettoyage\allowbreak .json} &
+\texttt{metrics/\allowbreak ml\_\allowbreak eval\allowbreak .json} \\
+\hline
 \end{tabular}
 \end{table}
+
+L'annexe~D, tableau~\ref{tab:chiffres}, rapporte chaque valeur publiée dans ce mémoire à l'un de ces deux protocoles et au
+fichier qui la porte. La précaution n'est pas de pure forme : la chaîne lexicale complétée des
+règles obtient 0,5827 sous le protocole des expériences et 0,4372 sous celui du pipeline, pour un
+jeu de test où trois catégories sur huit n'ont aucun ticket. Quinze points séparent deux mesures
+du même système, et l'écart ne dit rien du modèle : il dit la composition des deux jeux.
 
 Les deux retiennent le même nombre de groupes, si bien que la stratification laisse le volume
 intact : elle choisit seulement lesquels des 58 titres partent au test, pour que les huit catégories
@@ -109,16 +250,23 @@ y figurent. Le jeu de test des expériences couvre \emph{Applicatifs} (68 ticket
 sont issus ; ceux du modèle de production sont rapportés séparément à la
 section~\ref{sec:production}.
 
-\subsection{La référence plancher}
+Les deux jeux de test ne coïncident pas : quatre titres seulement leur sont communs sur les douze
+qu'ils comptent chacun. Les huit autres titres évalués dans ce chapitre appartiennent à
+l'entraînement du modèle de production, et inversement. Aucun chiffre du présent chapitre ne peut
+donc être rapproché d'un chiffre de la section~\ref{sec:production} : ils ne portent pas sur les
+mêmes tickets.
 
-Un classifieur trivial, qui tire une catégorie au hasard selon les proportions observées à
+\textbf{La référence plancher.} Un classifieur trivial, qui tire une catégorie au hasard selon les proportions observées à
 l'entraînement, obtient un F1-macro de 0,1382 pour une exactitude de 18,9\,\%. Cette valeur borne
 l'interprétation par le bas : un modèle à 0,37 fait près de trois fois mieux que le hasard, et reste
 loin de l'objectif.
 
 \section{Approche fondée sur TF-IDF}
 
-\subsection{Vectorisation des textes}
+La première approche repose sur le comptage pondéré des mots. Elle fournit un socle
+mesurable avant toute méthode plus coûteuse.
+
+\subsection{Vectorisation et modèles testés}
 
 Nous transformons les descriptions en vecteurs TF-IDF, dans la configuration fixée au chapitre~3 :
 5\,000 descripteurs au maximum, unigrammes et bigrammes, un seuil de deux occurrences minimales par
@@ -126,17 +274,21 @@ terme, et une pondération sous-linéaire des fréquences. Les bigrammes importe
 des expressions comme \og salle serveur \fg{} portent le signal de catégorie que les mots isolés
 dissolvent.
 
-\subsection{Modèles testés et traitement du déséquilibre}
-
-Nous avons entraîné quatre modèles sur cette représentation, chacun traitant le déséquilibre à sa
+\textbf{Les modèles testés et le traitement du déséquilibre.} Nous avons entraîné quatre modèles sur cette représentation, chacun traitant le déséquilibre à sa
 manière, de sorte que la comparaison porte aussi sur les stratégies de rééquilibrage. La régression
 logistique s'appuie sur un sur-échantillonnage synthétique des classes rares~\cite{chawla2002} ; les
 autres pondèrent les classes à l'apprentissage.
 
+Le tableau~\ref{tab:baseline} récapitule les modèles retenus et leur
+traitement du déséquilibre.
+
 \begin{table}[!htbp]
 \centering
 \styletableau
-\caption{Modèles de la baseline et traitement du déséquilibre}
+\caption[Modèles de la baseline et traitement du déséquilibre]{Modèles de la baseline et
+traitement du déséquilibre. Seules valeurs du mémoire
+non recalculables depuis un artefact du dépôt : voir la réserve suivant le
+tableau~\ref{tab:chiffres}}
 \label{tab:baseline}
 \begin{tabular}{|Bp{4.0cm}|Lp{5.0cm}|Cp{2.2cm}|Cp{2.2cm}|}
 \hline
@@ -160,6 +312,9 @@ tous le résultat où il était. Quand des familles de modèles aussi différent
 niveau, la borne tient à ce que la représentation leur donne à voir.
 
 \subsection{Évaluation des modèles}
+
+Le détail par catégorie explique ce que le score agrégé masque, et nous le donnons pour le
+meilleur des quatre modèles.
 
 \begin{table}[!htbp]
 \centering
@@ -205,7 +360,10 @@ problèmes.
 
 \section{Amélioration par les heuristiques métier}
 
-\subsection{Motivation}
+Certains mots désignent une catégorie sans ambiguïté possible. Cette section mesure ce
+qu'un module de règles apporte au modèle statistique.
+
+\subsection{Les deux niveaux de règles}
 
 La baseline échoue sur des cas qu'un consultant tranche sans hésiter : un ticket mentionnant
 \texttt{outlook} relève de \emph{Microsoft}, un ticket mentionnant \texttt{ransomware} relève de
@@ -216,7 +374,10 @@ Nous avons donc ajouté une couche de règles appliquée après la prédiction, 
 ticket. Le texte nettoyé ne conviendrait pas : la normalisation détruit une partie des motifs
 recherchés.
 
-\subsection{Les deux niveaux de règles}
+\textbf{Les deux niveaux.} Le module distingue deux niveaux de règles, selon la force du signal que porte le terme
+repéré dans le texte.
+
+Le tableau~\ref{tab:regles} en donne la structure.
 
 \begin{table}[!htbp]
 \centering
@@ -266,7 +427,10 @@ d'apprentissage et laisse l'apprentissage lui-même exactement où elle l'a trou
 
 \section{Approche fondée sur CamemBERT et LoRA}
 
-\subsection{Justification du choix de CamemBERT}
+Un transformer francophone adapté à notre corpus constitue la troisième approche. Le
+matériel disponible a commandé la technique d'adaptation autant que le choix du modèle.
+
+\subsection{Choix du modèle et contrainte matérielle}
 
 Les deux approches précédentes traitent le texte comme un sac de termes. Un modèle pré-entraîné sur
 le mécanisme d'attention~\cite{vaswani2017,devlin2019} apporte une représentation contextuelle : il
@@ -276,16 +440,18 @@ retenons CamemBERT~\cite{martin2020} plutôt qu'un modèle multilingue dont la c
 sur des dizaines de langues. Sa variante de base, à 110 millions de paramètres, reste compatible
 avec le matériel disponible.
 
-\subsection{Principe de LoRA et contrainte matérielle}
-
-Le GPU disponible est une NVIDIA GeForce MX130 dotée de 2\,Go de mémoire vidéo. Un ajustement
+\textbf{Le principe de LoRA.} Le GPU disponible est une NVIDIA GeForce MX130 dotée de 2\,Go de mémoire vidéo. Un ajustement
 complet de CamemBERT y est hors de portée : les états de l'optimiseur à eux seuls dépasseraient
 cette capacité. L'adaptation à faible rang~\cite{hu2022} répond à cette contrainte en gelant les
 poids du modèle et en n'entraînant que deux petites matrices insérées dans chaque couche
-d'attention. Le chapitre~2 en a exposé le principe ; nous en donnons ici le réglage retenu.
+d'attention. Le principe en a été exposé plus haut ; nous en donnons ici le réglage retenu.
 
 \subsection{Configuration et déroulement de l'entraînement}
+
 \label{sec:apprentissage4}
+
+L'adaptation a demandé de fixer une dizaine de valeurs, les unes déduites de mesures, les
+autres reprises de la littérature.
 
 \begin{table}[!htbp]
 \centering
@@ -355,7 +521,57 @@ de mémoriser. Retenir la courbe de validation comme résultat aurait conduit à
 près de deux fois meilleur qu'il ne l'est. L'observation dépasse notre cas : sur un corpus organisé
 en scénarios récurrents, un découpage aléatoire mesure la mémorisation autant que la généralisation.
 
+\textbf{Ce que ce jeu de validation a décidé.} La première rédaction s'arrêtait là, en traitant cet écart comme une curiosité à ne pas confondre
+avec un résultat. C'était insuffisant, et la relecture de l'encadrant l'a montré : ce jeu de
+validation n'a pas seulement induit en erreur un lecteur de courbe, il a \emph{choisi l'époque}. Le
+paramètre \texttt{load\_best\_model\_at\_end}, associé à \texttt{metric\_for\_best\_model} réglé sur
+le F1-macro, conserve les poids de l'époque la meilleure sur la validation. Un signal faussé
+commande donc la sélection, et le modèle publié pourrait n'être pas le meilleur qu'on ait entraîné.
+
+Savoir si cela a eu une conséquence est une question de mesure, non de raisonnement. Nous avons
+donc rejoué l'entraînement deux fois, identiques en tout sauf le prélèvement de la validation :
+une fois ligne à ligne, comme le carnet, une fois par groupe de titres. Le rejeu reproduit la
+nature du tirage, non l'échantillon exact du carnet, et c'est pourquoi le F1 de validation du
+premier bras vaut 0,9199 plutôt que le 0,98 que porte la courbe de la
+figure~\ref{fig:apprentissage} : deux tirages aléatoires d'un dixième des lignes ne désignent pas
+les mêmes lignes. Ce qui se compare ici, ce sont les deux bras entre eux.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Effet de la fuite du jeu de validation sur la sélection de l'époque}
+\label{tab:validation4}
+\begin{tabular}{|Bp{4.4cm}|Cp{2.4cm}|Cp{2.2cm}|Cp{2.6cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Prélèvement de la validation} & \textbf{F1 de validation} & \textbf{Époque retenue} &
+\textbf{F1 sur le test, avec règles} \\
+\hline
+Au hasard, ligne à ligne & 0,9199 & 8 & 0,8351 \\
+\hline
+Par groupe de titres & 0,4697 & 8 & 0,8411 \\
+\hline
+\end{tabular}
+\end{table}
+
+Le tableau~\ref{tab:validation4} sépare les deux effets. La fuite gonfle le signal de validation de
+0,45 point — 0,9199 contre 0,4697 pour une qualité réelle identique, ce qui est considérable. Mais
+les deux entraînements retiennent la \emph{même} huitième époque, et leurs résultats sur le jeu de
+test propre ne diffèrent que de 0,006, en deçà du bruit d'un jeu de douze scénarios.
+
+La conclusion se formule donc en deux temps, et les séparer importe. Le défaut est réel et
+sérieux : une procédure de sélection qui s'appuie sur un signal faussé de moitié n'offre aucune
+garantie, et il serait malhonnête de la défendre au motif qu'elle n'a pas nui cette fois-ci. Mais
+les chiffres publiés dans ce mémoire tiennent, parce qu'aucun d'eux ne provient de la validation :
+ils sont tous mesurés sur le jeu de test séparé par titres, et l'époque que la validation a choisie
+se trouve être celle qu'une validation propre aurait choisie aussi. Le script d'entraînement
+destiné au modèle servi prélève désormais sa validation par groupe de titres, et ne s'en remet plus
+à cette coïncidence.
+
 \subsection{Résultats obtenus}
+
+La matrice de confusion donne le détail catégorie par catégorie, là où le score agrégé
+n'en dit rien.
 
 \begin{figure}[!htbp]
 \centering
@@ -385,357 +601,93 @@ type.
 Préfixer chaque ticket de son type de demande et de sa priorité simplifiés, variables construites au
 chapitre~3, fait passer le F1-macro de 0,5325 à 0,5685, soit un gain de 0,036.
 
-\section{Comparaison des approches}
+\subsection{Deux mesures faites après coup, et ce qu'elles déplacent}
 
-\subsection{Tableau d'ensemble}
+\label{sec:servable4}
 
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch04_benchmark.png}
-\caption{F1-macro des approches comparées, jeu de test de 355 tickets}
-\label{fig:bench4}
-\end{figure}
+Les résultats ci-dessus ont été obtenus, puis relus. Deux vérifications menées après la première
+rédaction en déplacent la portée, et nous les rapportons ici plutôt que de laisser le lecteur
+découvrir l'écart entre ce chapitre et le dépôt.
 
-La figure~\ref{fig:bench4} rassemble les sept approches sous le protocole unique de la
-section~\ref{sec:protocole}. Quatre paliers s'y lisent : le hasard à 0,138 ; les modèles purement
-lexicaux autour de 0,375, quelle que soit leur famille ; l'approche par règles et le transformer
-seul autour de 0,58 ; leur combinaison à 0,8343.
+\textbf{Le modèle était mesuré sur une entrée que la production ne peut pas fournir.} L'entrée
+enrichie construite au chapitre~3 contient le champ \texttt{Classification}. Or l'application fixe
+ce champ à \og Demande \fg{} pour tout ticket qui vient d'être déposé : l'administrateur ne le
+renseigne que pendant le traitement. Le modèle recevait donc à l'entraînement et à l'évaluation une
+information dont il ne disposera jamais au moment de prédire. C'est le même défaut que celui relevé
+au chapitre~6 sur le titre, que l'application ne transmettait pas : un autre endroit de la chaîne,
+la même cause.
 
-Toutes ces valeurs sont rejouables. Un script du dépôt reconstruit le découpage, réentraîne la
-chaîne lexicale, recharge l'adaptateur du transformer et recalcule les cinq configurations en une
-exécution, dont il dépose le résultat dans un fichier daté. Les chiffres publiés dans ce chapitre
-sont ceux de ce fichier, et non des valeurs reportées à la main depuis un carnet de travail.
-
-\subsection{La combinaison qui manquait}
-\label{sec:combinaison}
-
-La comparaison telle qu'elle vient d'être conduite oppose une chaîne lexicale complétée par des
-règles à un transformer qui n'en reçoit aucune. Les deux systèmes ne sont donc pas dans la même
-configuration, et l'écart mesuré entre eux ne dit rien de leurs mérites respectifs. Les règles ne
-dépendent pourtant d'aucun modèle : elles lisent le texte brut et reçoivent une catégorie prédite
-accompagnée d'un index de confiance, sans se soucier de leur provenance.
+La correction ne demandait pas de réentraîner : il suffisait de réévaluer le modèle existant sur
+l'entrée que l'application lui enverra. Le tableau~\ref{tab:servable4} donne les trois variantes,
+même protocole, même graine, même modèle ; seule l'entrée change.
 
 \begin{table}[!htbp]
 \centering
 \styletableau
-\caption{Les deux modèles, avec et sans les règles métier}
-\label{tab:croise}
-\begin{tabular}{|Bp{4.0cm}|Cp{2.8cm}|Cp{2.8cm}|Cp{2.6cm}|}
+\caption{Le même modèle, mesuré sur trois entrées différentes}
+\label{tab:servable4}
+\begin{tabular}{|Bp{5.6cm}|Cp{2.3cm}|Cp{2.3cm}|Cp{2.6cm}|}
 \hline
 \rowcolor{enteteTab}
-& \textbf{TF-IDF} & \textbf{CamemBERT} & \textbf{Écart} \\
+\textbf{Entrée} & \textbf{F1-macro seul} & \textbf{Avec règles} & \textbf{Rappel
+\emph{Sécurité}} \\
 \hline
-Sans les règles & 0,3753 & 0,5685 & +0,1932 \\
+Enrichissement publié, classification réelle & 0,5685 & 0,8343 & 0,60 \\
 \hline
-Avec les règles & 0,5827 & \textbf{0,8343} & +0,2516 \\
+Entrée de production, classification \og Demande \fg{} & 0,5683 & \textbf{0,8644} &
+\textbf{0,90} \\
 \hline
-Apport des règles & +0,2074 & +0,2658 & \\
+Sans enrichissement & 0,5613 & 0,7924 & 0,40 \\
 \hline
 \end{tabular}
 \end{table}
 
-Le tableau~\ref{tab:croise} se lit dans les deux sens et donne deux résultats.
+Le résultat est contre-intuitif et mérite d'être énoncé tel quel : l'entrée \emph{appauvrie} donne
+un meilleur modèle. Le champ \texttt{Classification} du corpus, renseigné après coup par le
+consultant qui a traité le ticket, portait une part de la réponse ; le retirer force le modèle à
+lire le texte. Sur dix découpages appariés, l'écart est positif neuf fois, nul une fois, jamais
+négatif, de médiane $+0{,}0303$ ; et les dix dépassent à la fois la cible de 0,85 et celle de 0,70
+sur \emph{Sécurité}.
 
-\begin{puces}
-\item \textbf{CamemBERT devance la chaîne lexicale dans les deux configurations}, de 0,19 sans les
-règles et de 0,25 avec. L'hypothèse posée au démarrage du projet, selon laquelle un transformer
-francophone adapté surpasse la baseline, est donc vérifiée ; la lecture inverse, celle d'une
-équivalence entre les deux approches, provenait uniquement de la comparaison asymétrique.
-\item \textbf{Les règles profitent davantage au transformer}, +0,266 contre +0,207. Les deux
-composants ne corrigent pas les mêmes erreurs : CamemBERT traite seul \emph{Backup} et
-\emph{Système} à 1,00, là où la chaîne lexicale les abandonne ; les règles récupèrent
-\emph{Infrastructure} et \emph{Sécurité}, que les deux modèles laissent à zéro.
-\end{puces}
+\textbf{Soixante-deux pour cent du calcul partait en rembourrage.} Le ticket le plus long du corpus
+fait 48 jetons ; la longueur maximale était réglée à 128. Le modèle calculait donc, pour chaque
+ticket, quatre-vingts positions de remplissage.
 
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch04_f1_par_categorie.png}
-\caption{F1 par catégorie des deux modèles pris seuls, sans les règles métier}
-\label{fig:f1cat4}
-\end{figure}
+Quatre longueurs ont été mesurées, de 48 à 128 jetons, sur l'entrée de production. Aucune ne
+tronque un seul ticket et la qualité ne bouge pas d'un millième d'une configuration à l'autre,
+0,8644 avec les règles métier partout. Le coût d'inférence, lui, est divisé par 2,4 entre le
+réglage d'origine et la longueur utile. Une piste voisine a été explorée et abandonnée : l'export
+au format ONNX en entiers huit bits ne gagne rien en temps et son accord avec le modèle d'origine
+tombe à 0,5112, soit une prédiction sur deux. Nous la mentionnons parce qu'une voie fermée après
+mesure en vaut une autre.
 
-La figure~\ref{fig:f1cat4} détaille cette complémentarité, les deux modèles étant pris sans aucune
-règle. CamemBERT relève en outre \emph{Microsoft} de 0,00 à 0,58, et régresse sur
-\emph{Communication}, de 0,56 à 0,32. \emph{Infrastructure} et \emph{Sécurité} restent à zéro pour
-les deux modèles, ce qui éclaire l'apport des règles : elles interviennent là où aucun des deux
-apprentissages ne produit de signal.
+\textbf{Ce que ces deux mesures changent, et ce qu'elles ne changent pas.} Elles lèvent l'objection
+de \emph{qualité} : le meilleur modèle mesuré n'est pas à seize millièmes de la cible de 0,85, il la
+franchit, et il franchit aussi celle du rappel sur \emph{Sécurité}. Elles réduisent l'objection de
+\emph{coût} sans la supprimer : 128,5\,ms au lieu de 305,9 restent 128,5\,ms de plus que les
+5,0\,ms de la chaîne lexicale, quand la campagne de charge du chapitre~6 place déjà la requête
+complète au-dessus du budget. Servir le transformer ferait donc franchir celui-ci plus nettement,
+non moins.
 
-\subsection{Audit des règles métier}
-\label{sec:audit}
+Elles ne changent pas non plus le modèle servi. Le faire supposerait un réentraînement, un passage
+par la porte de promotion du chapitre~7 — donc une lecture décisionnelle de plus sur le jeu gelé —
+et un arbitrage qui revient au service. Ce mémoire rapporte la mesure et laisse la décision où elle
+se prend.
 
-Une vérification menée après coup a révisé ces chiffres à la baisse, et la démarche mérite d'être
-rapportée. Les règles avaient été enrichies au fil des expériences ; en reprenant leur historique,
-nous avons constaté qu'un commentaire du code justifiait l'ajout d'un mot-clé par un titre
-appartenant au jeu de test. Nous avons alors confronté chaque mot-clé au jeu d'entraînement.
 
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Mots-clés retirés à l'issue de l'audit}
-\label{tab:audit}
-\begin{tabular}{|Bp{3.6cm}|Lp{3.4cm}|Cp{3.0cm}|Cp{2.6cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Mot-clé} & \textbf{Catégorie forcée} & \textbf{Tickets d'entraînement} &
-\textbf{Tickets de test} \\
-\hline
-\texttt{onedrive} & Microsoft & 0 & 45 \\
-\hline
-\texttt{san} & Infrastructure & 0 & 21 \\
-\hline
-\texttt{ids} & Sécurité & 0 & 12 \\
-\hline
-\texttt{acces non autorisé} & Sécurité & 0 & redondant \\
-\hline
-\end{tabular}
-\end{table}
-
-Quatre d'entre eux, réunis au tableau~\ref{tab:audit}, ne figuraient dans aucun ticket
-d'entraînement et ne se déclenchaient que sur des tickets de test. Un mot-clé introduit après avoir
-observé une erreur sur le jeu de test ajuste le système aux données qui servent à le juger, et le
-score cesse alors de mesurer la généralisation. Nous les avons retirés et remesuré l'ensemble des
-configurations.
-
-L'effet est considérable : le F1-macro de CamemBERT accompagné des règles passe de 0,9499 à 0,8343,
-et celui de la chaîne lexicale de 0,7513 à 0,5827. La part non généralisable atteignait donc 0,116
-d'un côté et 0,169 de l'autre. Tous les chiffres de ce chapitre sont ceux mesurés après retrait.
-
-Ces quatre termes désignent pourtant des technologies dont la catégorie ne prête pas à discussion :
-OneDrive est un produit Microsoft, un IDS un équipement de détection d'intrusion, un SAN une baie de
-stockage. Le défaut tient au moment de leur introduction, non à leur contenu. Ils pourraient être
-réintroduits si le service les validait par écrit comme référentiel métier, établi sans consultation
-des résultats de test ; cette validation n'a pas été obtenue dans le temps du projet. La règle de
-conduite retenue figure désormais en tête du module : un mot-clé n'y est admis que s'il est attesté
-dans le jeu d'entraînement, ou s'il reste sans effet sur le jeu de test.
-
-\subsection{Origine de l'écart résiduel}
-\label{sec:pourquoi}
-
-Il manque 0,016 de F1-macro pour atteindre l'exigence ENF-02. Six catégories sur huit
-dépassent 0,74 et quatre atteignent 1,00. La plus faible est \emph{Microsoft}, à 0,4463, dont les
-93 tickets de test se répartissent en deux scénarios : le modèle traite le premier sans erreur et
-manque le second, faute du terme discriminant que l'audit a écarté. Sa précision reste à 0,96, son
-rappel tombe à 0,29. Comme le F1-macro accorde un huitième du total à chaque catégorie, il suffirait
-que \emph{Microsoft} passe de 0,4463 à 0,5719 pour franchir la barre, sans qu'aucune autre catégorie
-ait besoin de bouger.
-
-La limite de fond reste celle qu'a posée le chapitre~3. Le corpus contient 1\,800 tickets pour
-58 scénarios distincts, dont 46 servent à l'entraînement. Ces 46 situations, répétées une trentaine
-de fois chacune, sont tout ce dont dispose un modèle de langue conçu pour vivre de la diversité. Ce
-qu'il faut ajouter au corpus se compte en scénarios, pas en tickets : multiplier les instances d'un
-scénario déjà présent revient à recopier ce que le modèle sait déjà.
-
+% Aucun flottant du corps ne doit franchir la conclusion.
 \FloatBarrier
-
-\section{Sélection du modèle final}
-
-\subsection{Le modèle retenu pour la production}
-\label{sec:production}
-
-Le système servi est le LinearSVC calibré accompagné des règles métier, alors que la comparaison à
-configuration égale donne l'avantage au transformer de 0,25 point de F1-macro. Un écart de cette
-taille appelle une justification chiffrée, et non un argument de principe. Le tableau~\ref{tab:cout}
-donne le coût de service des deux chaînes, mesuré sur la machine de développement du projet, sur le
-même jeu de test et avec le même code d'inférence.
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Coût de service des deux chaînes de classification}
-\label{tab:cout}
-% La latence est rapportee en part du budget plutot qu'en millisecondes brutes :
-% le lecteur voit immediatement que le transformer depasse a lui seul l'enveloppe
-% entiere, sans avoir a rapprocher deux nombres. Les valeurs en millisecondes
-% figurent dans le paragraphe qui suit, pour qui veut le detail.
-\renewcommand{\arraystretch}{1.25}
-\begin{tabular}{|Bp{4.6cm}|Cp{3.1cm}|Cp{3.1cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Grandeur mesurée} & \textbf{TF-IDF et règles} & \textbf{CamemBERT et règles} \\
-\hline
-Qualité, F1-macro & 0,5827 & 0,8343 \\
-\hline
-Part du budget de latence, sur processeur & 2\,\% & 109\,\% \\
-\hline
-Artefact à déployer & 0,31\,Mo & 6,5\,Mo, plus le modèle de base \\
-\hline
-\end{tabular}
-\end{table}
-
-La ligne centrale rapporte la latence en part du budget plutôt qu'en millisecondes : la chaîne
-servie en consomme le cinquantième, le transformer le dépasse à lui seul.
-
-La latence tranche l'arbitrage. L'exigence ENF-01 fixe la prédiction à 300\,ms au
-quatre-vingt-quinzième centile, et la composition Docker livrée ne suppose aucune carte graphique.
-Sur processeur, l'inférence du transformer coûte à elle seule 325,8\,ms par ticket, soit davantage
-que le budget entier, avant même la recherche de cas comparables et l'accès à la base. La chaîne
-servie consomme 5,0\,ms pour la même opération, et la campagne de charge du chapitre~7 la mesure
-déjà à 330\,ms au quatre-vingt-quinzième centile pour la requête complète. Substituer le
-transformer ferait passer un dépassement de trente millisecondes à un dépassement d'un facteur
-supérieur à deux.
-
-Le meilleur résultat expérimental n'est donc pas automatiquement le meilleur modèle de production.
-Nous assumons ce choix et ses conditions de révision. Sur une machine équipée d'une carte
-graphique, l'inférence retombe à 58,7\,ms et la bascule redevient défendable. Une seconde voie
-existe sans matériel supplémentaire : réserver le transformer aux seuls tickets que la chaîne
-lexicale ne qualifie pas de façon sûre, ce qui limiterait son coût à la fraction des cas concernés.
-Aucune des deux n'a été mise en œuvre, et toutes deux figurent aux perspectives du chapitre~7.
-L'adaptateur reste versionné dans le dépôt, où il documente la comparaison et resterait mobilisable
-si le corpus gagnait en diversité.
-
-Deux propriétés de la chaîne légère ont pesé au moment du choix initial et restent vraies.
-L'artefact tient dans un fichier de 0,31\,Mo, ce qui rend le déploiement indépendant d'un
-téléchargement de modèle. Et la décision produite par une règle nommée s'explique au consultant, le
-chapitre~1 ayant placé ce système en position d'assistant. Cette seconde propriété ne départage
-cependant pas les deux approches, puisqu'elles partagent la même couche de règles.
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Modèle de production, mesuré sous le protocole du pipeline}
-\label{tab:prod}
-% Tableau ramene aux quatre indicateurs que le texte exploite. Le F1-macro du
-% modele seul, la precision macro et le rappel macro ont ete retires : aucun
-% passage ne les cite, et leur presence multipliait les portees a lire.
-\renewcommand{\arraystretch}{1.25}
-\begin{tabular}{|Bp{6.2cm}|Cp{2.6cm}|Lp{4.4cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Indicateur} & \textbf{Valeur} & \textbf{Portée} \\
-\hline
-F1-macro & 0,5829 & les 8 catégories \\
-\hline
-F1-macro, catégories représentées au test & 0,6995 & 5 catégories \\
-\hline
-Exactitude & 0,8202 & 356 tickets \\
-\hline
-Tickets requalifiés par une règle & 37,4\,\% & 356 tickets \\
-\hline
-\end{tabular}
-\end{table}
-
-Le pipeline réentraîne le modèle de production sous le découpage non stratifié, si bien que les
-chiffres du tableau~\ref{tab:prod} ne sont pas comparables aux précédents. Les trois catégories
-absentes du jeu de test expliquent seules l'écart entre 0,5829 et 0,6995 : leur F1 vaut zéro parce
-qu'aucun ticket ne les représente, non parce que le modèle les manque. Nous rapportons les deux
-valeurs ; la seconde sert de métrique de décision au mécanisme de promotion du modèle. Aucune n'est
-comparable au 0,5827 du protocole stratifié.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.92\textwidth]{ch04_confusion_production.png}
-\caption{Matrice de confusion du modèle servi, sous le protocole du pipeline}
-\label{fig:prodconf}
-\end{figure}
-
-La figure~\ref{fig:prodconf} ajoute deux lectures au tableau. Les 33 tickets \emph{Sécurité} partent
-tous dans \emph{Réseau}, sans la moindre dispersion : ce qui échoue est un scénario entier, non une
-hésitation entre catégories voisines. Et \emph{Applicatifs} reçoit 23 prédictions sans compter un
-seul ticket réel, ce qui dégrade la précision sur cette catégorie sans qu'aucun rappel ne le
-signale.
-\emph{Infrastructure} est la seule catégorie dont les erreurs se répartissent, 23 vers
-\emph{Applicatifs} et 8 vers \emph{Microsoft} pour 60 tickets correctement classés.
-
-Le rappel sur \emph{Sécurité} tombe à zéro sous ce protocole, pour une cible de 0,70. Les trois
-scénarios de sécurité tirés au test relèvent tous de l'intrusion détectée, et le terme qui les
-caractérisait a été écarté par l'audit. Le même système atteint un rappel de 0,40 sous le protocole
-stratifié, où d'autres scénarios sont tirés. Cet écart de zéro à 0,40 pour un système inchangé
-illustre ce que le chapitre~3 annonçait : sur douze scénarios de test, une mesure par catégorie se
-déplace par paliers entiers.
-
-\subsection{Calibration de la confiance et routage}
-\label{sec:calibration}
-
-Le système renvoie un index de confiance destiné à décider quels tickets peuvent être routés
-automatiquement et lesquels demandent une revue humaine. Encore faut-il que cet index ordonne
-correctement la fiabilité. Une machine à vecteurs de support ne produit pas de probabilité, et la
-sortie brute de sa fonction de décision ne s'interprète pas comme une confiance ; nous la
-convertissons par la méthode de Platt~\cite{platt1999}, qui ajuste une sigmoïde sur les scores en
-validation croisée. La littérature montre par ailleurs qu'un modèle bien calibré ne se reconnaît
-pas à sa justesse mais à la concordance entre la confiance annoncée et la précision
-observée~\cite{guo2017}, et c'est cette concordance que le tableau qui suit examine.
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Précision observée par tranche de confiance, protocole des expériences}
-\label{tab:calib}
-\begin{tabular}{|Bp{3.0cm}|Cp{2.4cm}|Cp{2.2cm}|Cp{2.6cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Tranche} & \textbf{Tickets} & \textbf{Part} & \textbf{Précision} \\
-\hline
-Sous 40\,\% & 42 & 11,8\,\% & 0,0\,\% \\
-\hline
-40 à 60\,\% & 121 & 34,1\,\% & 33,9\,\% \\
-\hline
-60 à 80\,\% & 110 & 31,0\,\% & 89,1\,\% \\
-\hline
-Au-dessus de 80\,\% & 82 & 23,1\,\% & 81,7\,\% \\
-\hline
-\end{tabular}
-\end{table}
-
-Le tableau~\ref{tab:calib} confronte les tranches de confiance à la précision réellement observée.
-L'index sépare correctement les deux extrémités : sous 40\,\%, aucune prédiction n'est juste ;
-au-delà de 60\,\%, plus de quatre sur cinq le sont.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch04_seuil_routage.png}
-\caption{Précision et couverture du routage automatique selon le seuil}
-\label{fig:confiance}
-\end{figure}
-
-Une anomalie subsiste. La tranche 60 à 80\,\% est plus fiable, à 89,1\,\%, que la tranche supérieure
-à 80\,\%, qui tombe à 81,7\,\%. Un index de confiance devrait être monotone ; il ne l'est pas ici.
-Il renseigne donc sur l'ordre de grandeur de la fiabilité, sans permettre de distinguer finement
-deux prédictions toutes deux assurées. C'est la réserve portée à l'exigence EF-07.
-
-La figure~\ref{fig:confiance} donne l'arbitrage que commande le seuil, mesuré sur le jeu de test.
-Les deux courbes se croisent entre 0,40 et 0,45 : au-delà, chaque point de précision gagné se paie
-en tickets renvoyés vers une revue humaine.
-
-Nous avions d'abord fixé le seuil à 0,40, valeur qui envoie 88,2\,\% des tickets en traitement
-automatique pour une précision de 65,8\,\%. Un tel réglage laisse passer un tiers d'erreurs sans
-relecture, ce qui contredit le principe de maintien de la décision humaine posé en introduction du
-mémoire. Nous l'avons relevé à 0,60 en production.
-
-Ce que ce relèvement produit réellement mérite d'être énoncé, car les métadonnées du modèle
-l'annonçaient sans l'avoir vérifié. Elles prévoyaient environ 70\,\% de routage automatique pour
-85\,\% de précision. La mesure confirme la précision, à 85,9\,\%, et dément la couverture : 54,1\,\%
-seulement des tickets franchissent le seuil, seize points sous l'estimation. Le réglage retenu
-qualifie donc automatiquement un peu plus d'un ticket sur deux, et non sept sur dix. Nous rapportons
-l'écart plutôt que de conserver le chiffre annoncé, et il ne remet pas en cause le choix du seuil :
-il en corrige le coût.
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
 
-Trois approches ont été éprouvées sous un protocole unique couvrant les huit catégories. La
-vectorisation classique atteint 0,3753 et ignore la moitié du référentiel ; lui adjoindre les règles
-métier porte le résultat à 0,5827 ; CamemBERT adapté par LoRA atteint 0,5685 sans aucune règle.
+Trois approches ont été construites et mesurées. La chaîne lexicale seule, la même complétée de
+règles métier, et un transformer francophone adapté par LoRA sur une carte graphique de deux
+gigaoctets.
 
-Le résultat décisif vient de leur combinaison. Les règles ne dépendent d'aucun modèle : appliquées
-aux sorties du transformer, elles portent le F1-macro à \textbf{0,8343}, à 0,016 de la cible.
-CamemBERT devance la chaîne lexicale dans les deux configurations, de 0,19 sans les règles et de
-0,25 avec. Ce chiffre est celui qui subsiste après l'audit : quatre mots-clés absents du jeu
-d'entraînement et actifs sur le seul jeu de test ont été retirés, ramenant le meilleur score de
-0,9499 à 0,8343. La différence mesurait ce que le système avait mémorisé plutôt qu'appris.
+Le protocole d'évaluation a été arrêté avant chaque entraînement, règle qui engage la validité des
+résultats et qui sera rappelée à chaque fois qu'un chiffre est cité. Les paramètres, les conditions
+matérielles et les temps d'inférence sont donnés pour que les mesures se reproduisent.
 
-Le modèle mis en service reste la chaîne TF-IDF complétée par les règles, choisie pour sa latence et
-sa légèreté à un moment où les deux approches paraissaient équivalentes. L'écart désormais mesuré
-invite à rouvrir cet arbitrage, ce que la conclusion générale porte aux perspectives. L'index de
-confiance sépare utilement les prédictions fiables des autres sans être strictement monotone, ce qui
-justifie de conserver la revue humaine sur les cas peu assurés.
-
-Reste le verdict sur les deux exigences chiffrées. L'écart à l'exigence ENF-02 tient à
-une seule catégorie, \emph{Microsoft}, dont le terme le plus discriminant a été écarté faute de
-support à l'entraînement. L'exigence ENF-03, qui visait un rappel d'au moins 0,70 sur
-\emph{Sécurité}, n'est atteinte par aucune configuration : le meilleur rappel mesuré vaut 0,60. La
-précision atteint 1,00, si bien que chaque incident de sécurité signalé en est bien un, quand quatre
-sur dix échappent encore au système. La conclusion générale reprend ces deux écarts.
-
-Le plafond rencontré est celui des 46 scénarios distincts disponibles à l'entraînement. Le
-chapitre~5 construit le second volet de la solution : un moteur de recherche qui retrouve dans
-l'historique les résolutions comparables, et pour lequel la redondance du corpus devient un atout.
+Le chapitre suivant construit le second moteur, celui qui retrouve dans l'historique les résolutions
+comparables. La comparaison des approches et la sélection du modèle servi attendent le chapitre~6.

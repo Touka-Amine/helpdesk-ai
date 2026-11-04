@@ -51,3 +51,54 @@
 \widowpenalty=10000
 \clubpenalty=10000
 \displaywidowpenalty=10000
+
+%========== Titres jamais isoles en bas de page ==========%
+% Un titre imprime en fin de page annonce une section dont rien ne suit :
+% le lecteur tourne la page pour trouver le contenu. needspace reserve la
+% place de quatre lignes sous chaque titre et, faute de place, reporte le
+% titre sur la page suivante.
+\usepackage{needspace}
+\usepackage{etoolbox}
+\pretocmd{\section}{\needspace{4\baselineskip}}{}{}
+% La reserve devant les SOUS-sections a ete retiree le 2026-10-10. needspace
+% pose un \penalty-100 devant le titre, c'est-a-dire une invitation a rompre la
+% page juste la ; sur un chapeau de section court, LaTeX la saisissait et
+% laissait la page a moitie blanche — c'etait le cas de la page 45. La garde
+% reste assuree autrement : \@afterheading et \clubpenalty=10000, declares plus
+% haut, interdisent deja qu'un titre de sous-section reste seul en bas de page.
+% Verifie apres retrait : zero titre orphelin sur les 117 du memoire.
+
+%========== Phases CRISP-DM dans la table des matieres ==========%
+% Le jury doit voir la demarche des la table des matieres, sans que les
+% titres de chapitre cessent d'etre academiques. Une ligne de phase est
+% inseree dans le .toc avant l'entree concernee, par \addtocontents.
+% needspace evite qu'un bandeau de phase reste seul en bas de page,
+% separe de l'entree de chapitre qu'il annonce.
+\newcommand{\phasecrisp}[1]{%
+  \needspace{4\baselineskip}%
+  \addvspace{12\p@}%
+  {\noindent\small\bfseries #1\par}%
+  \addvspace{4\p@}%
+}
+
+%============ Placement des flottants ====================%
+% Les valeurs par defaut de LaTeX exigent qu'une page porte au moins
+% 20 % de texte : une figure un peu haute ne peut donc pas partager sa
+% page, et le bas de page reste blanc. Le memoire comptant quatre-vingt-dix
+% flottants, ce refus coutait une quarantaine de fonds de page vides.
+% Les valeurs ci-dessous autorisent un remplissage plus serre sans
+% permettre qu'un flottant derive loin du texte qui l'appelle.
+\renewcommand{\topfraction}{0.90}          % hauteur max d'un flottant en haut de page
+\renewcommand{\bottomfraction}{0.70}       % idem en bas de page
+\renewcommand{\textfraction}{0.07}         % texte minimal exige sur une page mixte
+\renewcommand{\floatpagefraction}{0.72}    % remplissage minimal d'une page de flottants
+\renewcommand{\dblfloatpagefraction}{0.72}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+
+%========== Teintes des grilles de comparaison ==========%
+% Vert et rouge tres pales : la grille se lit d'un coup d'oeil sans que
+% la couleur crie, et reste lisible en niveaux de gris a l'impression.
+\definecolor{tenu}{RGB}{212,237,216}
+\definecolor{refus}{RGB}{250,219,219}

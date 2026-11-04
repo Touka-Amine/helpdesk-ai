@@ -1,666 +1,1181 @@
-\chapter{Développement et intégration de la plateforme}
+\addtocontents{toc}{\protect\phasecrisp{Phase 5 --- Évaluation}}
+\chapter{Évaluation et validation de la solution}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
 
-Les deux chapitres précédents ont livré des composants isolés : un classifieur affecte une
-catégorie, un moteur de recherche retrouve des cas comparables, un modèle de langage les reformule.
-Ce chapitre construit l'application qui les rassemble, un service exposant un contrat stable, une
-interface web à deux espaces, et le parcours métier qui relie le dépôt d'une demande à sa clôture.
-Une exigence a orienté chaque décision de conception : le système ne décide rien, il propose une
-catégorie et des cas voisins, l'administrateur tranche. Toutes les prédictions sont enregistrées à
-côté des décisions humaines, jamais à leur place, ce que montrent les sections~\ref{sec:classes6}
-et~\ref{sec:bouclage6}.
+Les deux moteurs sont construits. Ce chapitre ouvre la cinquième phase de la démarche et les
+confronte à la mesure, puis confronte le système entier aux exigences posées au chapitre~1.
 
-Le dossier de spécification du chapitre~2 confie onze de ses quatorze exigences fonctionnelles à
-cette étape, les trois autres relevant des chapitres~4 et~5. Le bilan est annoncé d'emblée.
+L'évaluation procède du composant vers l'ensemble. Les approches de classification sont d'abord
+comparées sous un protocole unique, ce qui permet d'attribuer chaque écart à sa cause et de
+sélectionner le modèle servi. Le moteur de recherche est ensuite mesuré, avec la réserve que son
+protocole appelle. Les tests automatisés protègent le comportement acquis. La campagne de charge et
+le bilan de conformité referment le chapitre, et les limites du système y sont énoncées.
 
-\begin{puces}
-  \item \textbf{Sept sont pleinement satisfaites} : contrôle d'accès RBAC, dépôt d'une demande
-        décrite librement, traçabilité de chaque modification, suivi de l'avancement par le
-        demandeur, correction de la catégorie par l'administrateur, recueil de son avis,
-        consultation des volumes et des catégories traitées.
-  \item \textbf{Une l'est en partie}, l'orientation selon l'index de confiance : l'index est
-        calculé et enregistré pour chaque ticket sans qu'aucun routage automatique ne s'en serve,
-        si bien que toute demande passe par la file d'approbation. Le dispositif technique étant en
-        place, ce point relève d'un arbitrage de produit.
-  \item \textbf{Trois n'ont pas été traitées} : le résumé automatique du ticket, la suggestion de
-        priorité et l'analyse de tonalité, toutes rangées en priorité moyenne ou faible. Le champ
-        de priorité prédite existe dans le schéma d'échange, aucun modèle ne le renseigne.
-\end{puces}
+Nous annonçons d'emblée le résultat le plus inconfortable : l'exigence de temps de réponse n'est pas
+tenue, y compris sans concurrence. Une exigence non tenue mesurée vaut mieux qu'une exigence tenue
+par affirmation, et c'est dans cet esprit que le chapitre est écrit.
 
-S'y ajoute une capacité qui ne figure dans aucune exigence, un chemin d'ingestion des demandes
-arrivées par messagerie, fonctionnel et protégé par une clé, dont le déclencheur reste à installer
-du côté du service.
+Deux distinctions commandent la lecture de tout ce qui suit, et les confondre rendrait les chiffres
+incomparables. La première oppose le \textbf{meilleur modèle mesuré}, un CamemBERT adapté par LoRA,
+au \textbf{modèle servi}, une chaîne lexicale : le premier n'est pas déployé, et la
+section~\ref{sec:production} dit pourquoi. La seconde oppose le \textbf{protocole des expériences},
+qui compare les approches sur un test stratifié couvrant les huit catégories, au \textbf{protocole
+du pipeline}, qui mesure le modèle servi sur le jeu de test gelé, lequel n'en couvre que cinq. Le
+tableau~\ref{tab:protocoles} les oppose terme à terme.
 
-\section{Architecture applicative}
-\label{sec:archi6}
+Le piège a bien failli se refermer sur ce mémoire. La chaîne lexicale complétée des règles obtient
+0,5827 sous le premier protocole, et les versions précédentes lui attribuaient 0,5829 sous le
+second : deux millièmes séparaient deux mesures qui ne portent ni sur le même jeu, ni sur le même
+nombre de catégories. Cette quasi-égalité était elle-même un artefact, celui d'une moyenne dont le
+dénominateur suivait les prédictions du modèle ; la section~\ref{sec:production} l'établit et la
+corrige. Mesurée sur le référentiel entier comme l'est le premier chiffre, la chaîne servie obtient
+0,4372. L'écart qui semblait nul vaut en réalité quinze points, et il tient tout entier à la
+composition des deux jeux de test.
 
-L'application s'organise en quatre couches, présentées de haut en bas à la
-figure~\ref{fig:archi6} : les acteurs entrent par le haut, l'interface recueille et présente, la
-couche de traitement décide et sollicite les composants d'intelligence artificielle, les données se
-conservent en bas. L'ensemble tient dans le réseau interne de l'entreprise et aucune donnée de
-ticket n'en sort. Les flux du chemin principal sont numérotés de un à sept.
+L'annexe~D, tableau~\ref{tab:chiffres}, donne pour chaque valeur publiée dans ce
+mémoire, sa configuration, son protocole et le fichier du dépôt qui la porte.
+
+\section{Comparaison des approches}
+
+La modélisation est close et la phase d'évaluation commence. Les approches construites se comparent
+sous un protocole unique, ce qui permet d'attribuer chaque écart à sa cause.
+
+\subsection{Tableau d'ensemble et combinaison manquante}
+
+Les approches mesurées se comparent enfin sur une même échelle et sous un protocole unique.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.94\textwidth]{ch06_architecture.png}
-\caption{Architecture applicative en quatre couches}
-\label{fig:archi6}
+\includegraphics[width=\textwidth]{ch04_benchmark.png}
+\caption{F1-macro des approches comparées, jeu de test de 355 tickets}
+\label{fig:bench4}
 \end{figure}
 
-\begin{puces}
-  \item L'\textbf{interface} est le seul point d'entrée du demandeur et de l'administrateur, une
-        application web portant le dépôt, le suivi et le traitement, plus un tableau de bord
-        réservé à la supervision. Ni l'un ni l'autre n'accède directement aux données.
-  \item La couche de \textbf{traitement} porte tout ce qui décide. Le service de tickets y tient
-        les règles métier, le contrôle d'accès et la traçabilité des états, et constitue le seul
-        point d'entrée vers les données. Trois composants d'intelligence artificielle travaillent
-        sous son contrôle sans rien décider : le classificateur propose une catégorie assortie d'un
-        index de confiance, le moteur de recherche retrouve les tickets résolus comparables, le
-        modèle de langage les reformule à la demande.
-  \item La couche de \textbf{données} distingue deux fonds. La base applicative conserve les
-        comptes, les tickets et l'historique des modifications ; la base de connaissances conserve
-        les résolutions passées, indexées pour la recherche par similarité sémantique, et reçoit
-        chaque solution validée par un administrateur, ce qui referme la boucle décrite à la
-        section~\ref{sec:workflow6}.
-\end{puces}
+La figure~\ref{fig:bench4} rassemble les sept approches sous le protocole unique de la
+section~\ref{sec:protocole}. Quatre paliers s'y lisent : le hasard à 0,138 ; les modèles purement
+lexicaux autour de 0,375, quelle que soit leur famille ; l'approche par règles et le transformer
+seul autour de 0,58 ; leur combinaison à 0,8343.
 
-Ce découpage logique ne dit rien du déploiement, et deux décisions méritent d'être explicitées.
+Toutes ces valeurs sont rejouables. Un script du dépôt reconstruit le découpage, réentraîne la
+chaîne lexicale, recharge l'adaptateur du transformer et recalcule les cinq configurations en une
+exécution, dont il dépose le résultat dans un fichier daté. Les chiffres publiés dans ce chapitre
+sont ceux de ce fichier, et non des valeurs reportées à la main depuis un carnet de travail.
 
-\begin{puces}
-  \item Le classifieur et le moteur de recherche sont chargés en mémoire dans le processus du
-        service applicatif. Les isoler aurait imposé un appel réseau sur le chemin de création d'un
-        ticket, là où un appel de fonction suffit ; le service et ses modèles partagent donc le
-        même cycle de vie et la même consommation de mémoire.
-  \item ChromaDB fonctionne en mode embarqué, ouvert par une bibliothèque intégrée au service et
-        non par un serveur autonome. La base persiste sur un volume dédié, ce qui la rend durable
-        sans la rendre indépendante. Aucun autre processus ne peut l'interroger simultanément, ce
-        qui interdirait de répliquer le service applicatif sans passer au mode serveur.
-\end{puces}
+\label{sec:combinaison}
 
-Le style retenu est celui du monolithe modulaire. Le découpage en microservices aurait multiplié
-les interfaces réseau et les points de défaillance pour un service qui traite quelques dizaines de
-tickets par jour. La séparation des responsabilités est obtenue par les couches internes plutôt que
-par des frontières de processus.
+\textbf{La combinaison qui manquait.} La comparaison telle qu'elle vient d'être conduite oppose une chaîne lexicale complétée par des
+règles à un transformer qui n'en reçoit aucune. Les deux systèmes ne sont donc pas dans la même
+configuration, et l'écart mesuré entre eux ne dit rien de leurs mérites respectifs. Les règles ne
+dépendent pourtant d'aucun modèle : elles lisent le texte brut et reçoivent une catégorie prédite
+accompagnée d'un index de confiance, sans se soucier de leur provenance.
 
 \begin{table}[!htbp]
 \centering
 \styletableau
-\caption{Technologies mobilisées et motif de leur choix}
-\label{tab:techno6}
-\begin{tabular}{|Bp{2.8cm}|Lp{3.4cm}|Lp{6.8cm}|}
+\caption[Les deux modèles, avec et sans les règles métier — protocole des
+expériences]{Les deux modèles, avec et sans les règles métier — protocole des expériences
+(355 tickets, 8 catégories) ; origine des valeurs au tableau~\ref{tab:chiffres}}
+\label{tab:croise}
+\begin{tabular}{|Bp{4.0cm}|Cp{2.8cm}|Cp{2.8cm}|Cp{2.6cm}|}
 \hline
 \rowcolor{enteteTab}
-\textbf{Rôle} & \textbf{Technologie} & \textbf{Motif du choix} \\
+& \textbf{TF-IDF} & \textbf{CamemBERT} & \textbf{Écart} \\
 \hline
-Service applicatif & FastAPI, Python & Engendre la documentation du contrat à partir des
-signatures typées, ce qui a permis de valider les échanges sans rédiger de spécification séparée \\
+Sans les règles & 0,3753 & 0,5685 & +0,1932 \\
 \hline
-Interface & Angular, Material, Tailwind & Typage strict et injection de dépendances, utiles sur
-une application à quinze écrans et deux espaces de droits distincts \\
+Avec les règles & 0,5827 & \textbf{0,8343} & +0,2516 \\
 \hline
-Base relationnelle & PostgreSQL, SQLAlchemy & Transactions et contraintes d'intégrité pour les
-tickets et leur journal de modifications \\
-\hline
-Base vectorielle & ChromaDB & Fonctionne en mode embarqué, sans serveur supplémentaire à exploiter
-sur l'unique hôte disponible \\
-\hline
-Modèle de langage & Ollama, \texttt{llama3.2:3b} & Exécution locale, condition posée par le service
-support : aucune donnée de ticket ne sort de l'infrastructure \\
-\hline
-Orchestration & Docker Compose & Une commande démarre l'application complète et garantit que
-l'environnement de démonstration reproduit celui de développement \\
+Apport des règles & +0,2074 & +0,2658 & \\
 \hline
 \end{tabular}
 \end{table}
 
-\FloatBarrier
-
-\section{Conception et modélisation UML}
-\label{sec:conception6}
-
-La conception est présentée selon cinq vues, du plus général au plus détaillé : le contexte et les
-cas d'utilisation, le domaine, les deux moments décisifs du cycle, puis la traçabilité des états.
-
-\subsection{Contexte et cas d'utilisation}
-\label{sec:contexte6}
-
-Un diagramme de contexte est une vue statique qui délimite le périmètre d'un système en le
-représentant comme une entité unique, entourée des acteurs et des systèmes extérieurs avec lesquels
-il échange. Il ne décrit aucun traitement interne : son objet est de fixer ce qui appartient au
-système et ce qui lui reste extérieur. Il sert de point de départ à la spécification, en rendant
-explicites les frontières que les diagrammes suivants viendront détailler.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch06_contexte.png}
-\caption{Diagramme de contexte : le système et ses interlocuteurs}
-\label{fig:contexte6}
-\end{figure}
-
-La figure~\ref{fig:contexte6} délimite le périmètre. Deux entités extérieures sont identifiées et
-aucune n'est un système tiers : le \textbf{demandeur} dépose une demande, en suit l'avancement et
-signale si la réponse lui a été utile ; l'\textbf{administrateur} qualifie la demande, la clôt et
-consulte les indicateurs de supervision.
-
-Le circuit de messagerie du service n'y figure pas. Le chemin d'ingestion existe dans l'application,
-son déclencheur côté messagerie n'a pas été installé, et aucun flux ne le traverse : le représenter
-reviendrait à faire figurer sur un diagramme de périmètre un échange qui n'a pas lieu.
-
-Une absence constitue une décision de conception à part entière : aucun annuaire d'entreprise ne
-figure ici. L'application conserve ses propres comptes et ses propres empreintes de mots de passe,
-l'intégration à un annuaire supposant des droits d'accès à l'infrastructure d'\otbs et une
-procédure de validation qui excèdent le cadre d'un projet de fin d'études. La contrepartie doit
-être assumée : chaque utilisateur dispose d'un compte supplémentaire, ce qui augmente la charge
-d'administration et le risque de mots de passe faibles, et la sortie d'un collaborateur ne
-désactive pas automatiquement son accès. Le raccordement à un annuaire par un protocole standard
-constitue de ce fait la première évolution à envisager.
-
-Un diagramme de cas d'utilisation représente les fonctionnalités offertes par un système du point de
-vue de ceux qui s'en servent. Il associe des acteurs, rôles tenus par des personnes ou par des
-systèmes extérieurs, à des cas d'utilisation qui décrivent chacun un service rendu. Les relations
-d'inclusion, d'extension et de généralisation y expriment le comportement partagé entre plusieurs
-cas. Ce diagramme fixe ce que le système doit offrir sans préjuger de la façon dont il le réalisera,
-et sert de référence commune entre les besoins exprimés et la conception.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.92\textwidth]{ch06_cas_utilisation.png}
-\caption{Diagramme de cas d'utilisation}
-\label{fig:cas6}
-\end{figure}
-
-La figure~\ref{fig:cas6} recense ce que chaque rôle peut faire. L'administrateur dispose des mêmes
-possibilités de dépôt que le demandeur, auxquelles s'ajoutent la consultation de la file, le
-traitement, la clôture, la modification et la suppression d'un ticket, la consultation de son
-historique, la supervision de l'activité et la gestion des comptes. La modification se distingue du
-traitement : elle porte sur les champs de qualification, sans changement de statut, et reste
-ouverte après la clôture pour corriger une erreur découverte après coup.
-
-Le cas \emph{S'authentifier} est relié à tous les autres par une relation d'inclusion, ce qui
-exprime une propriété du système : aucune action n'est possible sans session valide, et le contrôle
-est porté par le service, non par l'interface, donc s'applique à tout appel y compris hors du
-navigateur.
-
-Le service support d'\otbs distingue en pratique plusieurs niveaux de traitement. Cette hiérarchie
-n'a pas été transposée dans les rôles applicatifs, faute de description formelle et parce qu'un
-troisième rôle aurait démultiplié les combinaisons de droits à tester sans répondre à un besoin
-exprimé. Le contrôle d'accès reposant sur une chaîne de dépendances déclaratives, un rôle
-intermédiaire reste implémentable sans refonte.
-
-\FloatBarrier
-
-\subsection{Diagramme de classes}
-\label{sec:classes6}
-
-Un diagramme de classes est une vue statique qui représente la structure d'un système en modélisant
-ses classes, leurs attributs, leurs méthodes ainsi que les relations qui les unissent. Il en montre
-le contenu, propriétés et opérations, et les associations qui les relient : héritage, agrégation,
-composition. Central dans la conception orientée objet et dans la notation UML, il sert à
-comprendre et à communiquer la structure d'un système logiciel avant d'en écrire le code.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.95\textwidth]{ch06_classes.png}
-\caption{Diagramme de classes du domaine}
-\label{fig:classes6}
-\end{figure}
-
-La figure~\ref{fig:classes6} donne la vue d'analyse du domaine, sans les identifiants ni les clés
-étrangères qui appartiennent à la couche de persistance. La classe \textsc{User} porte l'identité
-et les droits communs ; \textsc{Demandeur} et \textsc{Administrateur} la spécialisent et se
-distinguent par ce qu'elles savent faire ; \textsc{Ticket} porte la demande et tout ce que son
-traitement produit ; \textsc{Historique} conserve la trace horodatée des modifications successives.
-
-Cette spécialisation est une vue d'analyse. L'implémentation conserve une seule table
-d'utilisateurs porteuse d'un attribut de rôle, forme suffisante pour deux profils dont les données
-sont identiques. Le diagramme dit ce que le domaine distingue, le schéma dit comment il est rangé.
-Deux choix de placement traduisent des règles du service.
+Le tableau~\ref{tab:croise} se lit dans les deux sens et donne deux résultats.
 
 \begin{puces}
-  \item La \emph{filiale} est portée par \textsc{Demandeur} et non par \textsc{User} : elle
-        qualifie l'origine d'une demande, qu'un administrateur ne formule pas.
-  \item Le \emph{demandeur} figure à la fois comme attribut du ticket et comme extrémité de
-        l'association \emph{dépose}. La redondance est assumée, elle permet de lire la classe
-        isolément.
+\item \textbf{CamemBERT devance la chaîne lexicale dans les deux configurations}, de 0,19 sans les
+règles et de 0,25 avec. L'hypothèse posée au démarrage du projet, selon laquelle un transformer
+francophone adapté surpasse la baseline, est donc vérifiée ; la lecture inverse, celle d'une
+équivalence entre les deux approches, provenait uniquement de la comparaison asymétrique.
+\item \textbf{Les règles profitent davantage au transformer}, +0,266 contre +0,207. Les deux
+composants ne corrigent pas les mêmes erreurs : CamemBERT traite seul \emph{Backup} et
+\emph{Système} à 1,00, là où la chaîne lexicale les abandonne ; les règles récupèrent
+\emph{Infrastructure} et \emph{Sécurité}, que les deux modèles laissent à zéro.
 \end{puces}
 
-Les attributs de \textsc{Ticket} sont ceux que porte toute demande. Le titre, la description et la
-date de dépôt viennent du demandeur ; la catégorie, la classification et la priorité qualifient la
-demande, renseignées dès l'arrivée par le système et corrigées si besoin par l'administrateur ; le
-statut situe le ticket dans son cycle de vie, dont la section~\ref{sec:etats6} détaille les
-transitions.
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch04_f1_par_categorie.png}
+\caption{F1 par catégorie des deux modèles pris seuls, sans les règles métier}
+\label{fig:f1cat4}
+\end{figure}
 
-La \emph{catégorie} apparaît comme un attribut unique, alors que la base en conserve deux, la
-proposition du système et la valeur retenue après relecture. La distinction est indispensable au
-niveau du schéma : le taux de correction, qui mesure la fréquence à laquelle l'administrateur
-contredit la proposition, se calcule par comparaison de ces deux valeurs et sert à évaluer le
-modèle en service.
+La figure~\ref{fig:f1cat4} détaille cette complémentarité, les deux modèles étant pris sans aucune
+règle. CamemBERT relève en outre \emph{Microsoft} de 0,00 à 0,58, et régresse sur
+\emph{Communication}, de 0,56 à 0,32. \emph{Infrastructure} et \emph{Sécurité} restent à zéro pour
+les deux modèles, ce qui éclaire l'apport des règles : elles interviennent là où aucun des deux
+apprentissages ne produit de signal.
 
-La classe \textsc{Historique} sert trois usages, reconstituer le déroulé d'un traitement, qualifier
-la force d'une étiquette pour la collecte des données de réentraînement, et fournir la trace
-demandée par une démarche de gouvernance. Son attribut \emph{modification} réunit ce que la base
-range en trois colonnes, le champ touché, sa valeur avant et sa valeur après. Trois précisions
-évitent de lui prêter plus qu'elle ne fait.
+\subsection{Audit des règles métier et origine de l'écart}
+
+\label{sec:audit}
+
+Une vérification menée après coup a révisé ces chiffres à la baisse, et la démarche mérite d'être
+rapportée. Les règles avaient été enrichies au fil des expériences ; en reprenant leur historique,
+nous avons constaté qu'un commentaire du code justifiait l'ajout d'un mot-clé par un titre
+appartenant au jeu de test. Nous avons alors confronté chaque mot-clé au jeu d'entraînement.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Mots-clés retirés à l'issue de l'audit}
+\label{tab:audit}
+\begin{tabular}{|Bp{3.6cm}|Lp{3.4cm}|Cp{3.0cm}|Cp{2.6cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Mot-clé} & \textbf{Catégorie forcée} & \textbf{Tickets d'entraînement} &
+\textbf{Tickets de test} \\
+\hline
+\texttt{onedrive} & Microsoft & 0 & 45 \\
+\hline
+\texttt{san} & Infrastructure & 0 & 21 \\
+\hline
+\texttt{ids} & Sécurité & 0 & 12 \\
+\hline
+\texttt{acces non autorisé} & Sécurité & 0 & redondant \\
+\hline
+\end{tabular}
+\end{table}
+
+Quatre d'entre eux, réunis au tableau~\ref{tab:audit}, ne figuraient dans aucun ticket
+d'entraînement et ne se déclenchaient que sur des tickets de test. Un mot-clé introduit après avoir
+observé une erreur sur le jeu de test ajuste le système aux données qui servent à le juger, et le
+score cesse alors de mesurer la généralisation. Nous les avons retirés et remesuré l'ensemble des
+configurations.
+
+L'effet est considérable : le F1-macro de CamemBERT accompagné des règles passe de 0,9499 à 0,8343,
+et celui de la chaîne lexicale de 0,7513 à 0,5827. La part non généralisable atteignait donc 0,116
+d'un côté et 0,169 de l'autre. Tous les chiffres de ce chapitre sont ceux mesurés après retrait.
+
+Ces quatre termes désignent pourtant des technologies dont la catégorie ne prête pas à discussion :
+OneDrive est un produit Microsoft, un IDS un équipement de détection d'intrusion, un SAN une baie de
+stockage. Le défaut tient au moment de leur introduction, non à leur contenu. Ils pourraient être
+réintroduits si le service les validait par écrit comme référentiel métier, établi sans consultation
+des résultats de test ; cette validation n'a pas été obtenue dans le temps du projet. La règle de
+conduite retenue figure désormais en tête du module : un mot-clé n'y est admis que s'il est attesté
+dans le jeu d'entraînement, ou s'il reste sans effet sur le jeu de test.
+
+\label{sec:pourquoi}
+
+\textbf{L'origine de l'écart résiduel.} Il manque 0,016 de F1-macro au \emph{meilleur modèle mesuré} pour atteindre l'exigence ENF-02
+dans la configuration publiée ici ; le modèle servi, lui, en est à 0,267, et c'est sur lui que
+porte le bilan de conformité. Ce paragraphe examine le premier, dont l'écart est assez étroit pour
+qu'on puisse en nommer la cause — étant entendu que la section~\ref{sec:servable4} du chapitre~4
+montre cet écart comblé dès que le modèle reçoit l'entrée que l'application lui enverra
+réellement, à 0,8644.
+Six catégories sur huit
+dépassent 0,74 et quatre atteignent 1,00. La plus faible est \emph{Microsoft}, à 0,4463, dont les
+93 tickets de test se répartissent en deux scénarios : le modèle traite le premier sans erreur et
+manque le second, faute du terme discriminant que l'audit a écarté. Sa précision reste à 0,96, son
+rappel tombe à 0,29. Comme le F1-macro accorde un huitième du total à chaque catégorie, il suffirait
+que \emph{Microsoft} passe de 0,4463 à 0,5719 pour franchir la barre, sans qu'aucune autre catégorie
+ait besoin de bouger.
+
+La limite de fond reste celle qu'a posée le chapitre~2. Le corpus contient 1\,800 tickets pour
+58 scénarios distincts, dont 46 servent à l'entraînement. Ces 46 situations, répétées une trentaine
+de fois chacune, sont tout ce dont dispose un modèle de langue conçu pour vivre de la diversité. Ce
+qu'il faut ajouter au corpus se compte en scénarios, pas en tickets : multiplier les instances d'un
+scénario déjà présent revient à recopier ce que le modèle sait déjà.
+
+\section{Sélection du modèle final}
+
+Le meilleur modèle mesuré n'est pas celui que l'API sert. Cette section expose
+l'arbitrage, puis la manière dont la confiance du modèle retenu est calibrée.
+
+\subsection{Le modèle retenu pour la production}
+
+\label{sec:production}
+
+Le système servi est le LinearSVC calibré accompagné des règles métier, alors que la comparaison à
+configuration égale donne l'avantage au transformer de 0,25 point de F1-macro. Un écart de cette
+taille appelle une justification chiffrée, et non un argument de principe. Le tableau~\ref{tab:cout}
+donne le coût de service des deux chaînes, mesuré sur la machine de développement du projet, sur le
+même jeu de test et avec le même code d'inférence.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Coût de service des deux chaînes de classification}
+\label{tab:cout}
+% La latence est rapportee en part du budget plutot qu'en millisecondes brutes :
+% le lecteur voit immediatement que le transformer depasse a lui seul l'enveloppe
+% entiere, sans avoir a rapprocher deux nombres. Les valeurs en millisecondes
+% figurent dans le paragraphe qui suit, pour qui veut le detail.
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{|Bp{4.6cm}|Cp{3.1cm}|Cp{3.1cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Grandeur mesurée} & \textbf{TF-IDF et règles} & \textbf{CamemBERT et règles} \\
+\hline
+Qualité, F1-macro & 0,5827 & 0,8343 \\
+\hline
+Part du budget de latence, sur processeur & 2\,\% & 109\,\% \\
+\hline
+Artefact à déployer & 0,31\,Mo & 6,5\,Mo, plus le modèle de base \\
+\hline
+\end{tabular}
+\end{table}
+
+La ligne centrale rapporte la latence en part du budget plutôt qu'en millisecondes : la chaîne
+servie en consomme le cinquantième, le transformer le dépasse à lui seul.
+
+La latence tranche l'arbitrage. L'exigence ENF-01 fixe la prédiction à 300\,ms au
+quatre-vingt-quinzième centile, et la composition Docker livrée ne suppose aucune carte graphique.
+Sur processeur, l'inférence du transformer coûte à elle seule 325,8\,ms par ticket, soit davantage
+que le budget entier, avant même la recherche de cas comparables et l'accès à la base. La chaîne
+servie consomme 5,0\,ms pour la même opération, et la campagne de charge rapportée plus loin place
+déjà la requête complète au-dessus du budget. Substituer le transformer ferait passer un
+dépassement de quelques dizaines de millisecondes à un dépassement d'un facteur supérieur à deux.
+
+Le meilleur résultat expérimental n'est donc pas automatiquement le meilleur modèle de production.
+Nous assumons ce choix et ses conditions de révision. Sur une machine équipée d'une carte
+graphique, l'inférence retombe à 58,7\,ms et la bascule redevient défendable. Une seconde voie
+existe sans matériel supplémentaire : réserver le transformer aux seuls tickets que la chaîne
+lexicale ne qualifie pas de façon sûre, ce qui limiterait son coût à la fraction des cas concernés.
+Aucune des deux n'a été mise en œuvre, et toutes deux figurent aux perspectives du chapitre~7.
+
+\textbf{Une troisième voie, mesurée depuis, qui réduit l'écart sans le combler.} Le coût de
+325,8\,ms a été relevé à la longueur de séquence de l'entraînement, 128 jetons. Or le ticket le
+plus long du corpus en fait 48 : le modèle calculait quatre-vingts positions de remplissage par
+ticket. Ramenée à 48 jetons, aucune troncature n'apparaît, la qualité ne bouge pas d'un millième et
+le coût tombe à 128,5\,ms, comme le rapporte la section~\ref{sec:servable4} du chapitre~4. Cela ne
+renverse pas l'arbitrage : 128,5\,ms restent vingt-cinq fois le coût de la chaîne servie, et
+s'ajouteraient à une requête déjà mesurée au-dessus du budget. Mais l'écart cesse d'être d'un facteur
+supérieur à deux, et la bascule n'attend plus une carte graphique — elle attend une décision.
+L'adaptateur reste versionné dans le dépôt, où il documente la comparaison et resterait mobilisable
+si le corpus gagnait en diversité.
+
+Deux propriétés de la chaîne légère ont pesé au moment du choix initial et restent vraies.
+L'artefact tient dans un fichier de 0,31\,Mo, ce qui rend le déploiement indépendant d'un
+téléchargement de modèle. Et la décision produite par une règle nommée s'explique au consultant, le
+chapitre~1 ayant placé ce système en position d'assistant. Cette seconde propriété ne départage
+cependant pas les deux approches, puisqu'elles partagent la même couche de règles.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption[Modèle servi, mesuré sous le protocole du pipeline]{Modèle servi, mesuré
+sous le protocole du pipeline (356 tickets,
+5 catégories représentées) ; origine des valeurs au tableau~\ref{tab:chiffres}}
+\label{tab:prod}
+% Tableau ramene aux quatre indicateurs que le texte exploite. Le F1-macro du
+% modele seul, la precision macro et le rappel macro ont ete retires : aucun
+% passage ne les cite, et leur presence multipliait les portees a lire.
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{|Bp{6.2cm}|Cp{2.6cm}|Lp{4.4cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Indicateur} & \textbf{Valeur} & \textbf{Portée} \\
+\hline
+F1-macro, référentiel entier & 0,4372 & 8 catégories, dont 3 sans ticket \\
+\hline
+F1-macro, catégories représentées au test & 0,6995 & 5 catégories \\
+\hline
+Exactitude & 0,8202 & 356 tickets \\
+\hline
+Tickets requalifiés par une règle & 37,4\,\% & 356 tickets \\
+\hline
+\end{tabular}
+\end{table}
+
+Le pipeline réentraîne le modèle de production sous le découpage non stratifié, si bien que les
+chiffres du tableau~\ref{tab:prod} ne sont pas comparables aux précédents. Les trois catégories
+absentes du jeu de test expliquent seules l'écart entre 0,4372 et 0,6995 : leur F1 vaut zéro parce
+qu'aucun ticket ne les représente, non parce que le modèle les manque. Nous rapportons les deux
+valeurs ; la seconde sert de métrique de décision au mécanisme de promotion du modèle.
+
+\textbf{Une valeur que ce mémoire a d'abord publiée fausse.} Les versions précédentes annonçaient
+ici 0,5829 « sur les 8 catégories ». Ce nombre n'était calculé ni sur huit catégories ni sur cinq,
+mais sur six, et la relecture de l'encadrant nous a conduits à l'établir. L'appel
+\texttt{f1\_score(\dots, average=\textquotesingle macro\textquotesingle)} de
+\texttt{src/pipeline/train.py} ne recevait pas d'argument \texttt{labels} : en son absence,
+\emph{scikit-learn} moyenne sur l'union des catégories présentes dans les étiquettes vraies et dans
+les prédictions. Le modèle prononçant \emph{Applicatifs}, absente du jeu de test, la somme des F1
+était divisée par six.
+
+Le défaut dépasse la légende du tableau. Un dénominateur qui suit les catégories prononcées suit
+les erreurs du modèle : un classifieur qui n'aurait pas commis cette prédiction aurait été divisé
+par cinq et aurait affiché 0,6995, à qualité rigoureusement identique. Deux modèles n'y étaient
+donc pas comparés à armes égales, et c'est cette valeur que le registre enregistrait comme métrique
+de référence. La portée est désormais figée sur le référentiel du service, elle est écrite à côté
+de chaque valeur dans le fichier de métriques, et un test automatique refuse toute moyenne par
+catégorie dont la portée serait calculée sur les prédictions. Trois autres chiffres du même fichier
+se corrigent de la même façon : le F1-macro du modèle seul passe de 0,2708 à 0,2031, la précision
+macro de 0,5868 à 0,4401 et le rappel macro de 0,6099 à 0,4574.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{ch04_confusion_production.png}
+\caption{Matrice de confusion du modèle servi, sous le protocole du pipeline}
+\label{fig:prodconf}
+\end{figure}
+
+La figure~\ref{fig:prodconf} ajoute deux lectures au tableau. Les 33 tickets \emph{Sécurité} partent
+tous dans \emph{Réseau}, sans la moindre dispersion : ce qui échoue est un scénario entier, non une
+hésitation entre catégories voisines. Et \emph{Applicatifs} reçoit 23 prédictions sans compter un
+seul ticket réel, ce qui dégrade la précision sur cette catégorie sans qu'aucun rappel ne le
+signale.
+\emph{Infrastructure} est la seule catégorie dont les erreurs se répartissent, 23 vers
+\emph{Applicatifs} et 8 vers \emph{Microsoft} pour 60 tickets correctement classés.
+
+Le rappel sur \emph{Sécurité} tombe à zéro sous ce protocole, pour une cible de 0,70. Les trois
+scénarios de sécurité tirés au test relèvent tous de l'intrusion détectée, et le terme qui les
+caractérisait a été écarté par l'audit. Le même système atteint un rappel de 0,40 sous le protocole
+stratifié, où d'autres scénarios sont tirés. Cet écart de zéro à 0,40 pour un système inchangé
+illustre ce que le chapitre~3 annonçait : sur douze scénarios de test, une mesure par catégorie se
+déplace par paliers entiers.
+
+\textbf{Une incohérence entre la mesure et le service.} Les valeurs du tableau~\ref{tab:prod} supposent que l'application soumet au modèle le
+même texte que celui sur lequel il a été entraîné, c'est-à-dire le titre suivi de la description.
+Une vérification de la chaîne de prédiction a montré que ce n'était pas le cas : l'API ne
+transmettait que la description, et le titre, qui porte l'essentiel du signal dans un corpus
+organisé par scénarios, n'atteignait jamais le classifieur. Le mémoire mesurait donc un système que
+le service n'exécutait pas.
+
+L'écart a été chiffré sur le jeu de test gelé, à modèle identique. Le classifieur seul passe de
+31,7\,\% à 44,7\,\% d'exactitude lorsqu'il reçoit le titre, et sa confiance moyenne de 0,41 à 0,46 ;
+la proportion de tickets classés sous le seuil de confiance recule de 94\,\% à 80\,\%. Une fois les
+règles métier appliquées, les deux variantes se rejoignent à 82,0\,\% d'exactitude, le F1-macro
+passant de 0,4294 à 0,4372. Les chiffres publiés ici correspondent à la variante complète : ils
+restent valides, et c'est l'application qui a été mise en conformité avec eux.
+
+La correction porte sur deux appels du code de service et se trouve verrouillée par des tests
+dédiés. Son effet principal ne se lit pas dans l'exactitude mais dans la confiance, et il faut dire
+où. Sous le seuil de routage de 0,60, la part des tickets recule de 94\,\% à 80\,\%. Sous le seuil
+de 0,70, celui qui active le filtre de catégorie de la recherche de cas comparables, elle ne recule
+pas : le jeu de test gelé ne contient que des scénarios inédits, sur lesquels le classifieur reste
+peu sûr quoi qu'on lui donne. Le gain se produit sur les demandes dont le sujet figure au corpus,
+c'est-à-dire le cas courant en service, et il ne se mesure donc pas sur ce jeu. Nous le signalons
+plutôt que de laisser croire que le filtre s'active davantage.
+
+\subsection{Calibration de la confiance et routage}
+
+\label{sec:calibration}
+
+Le système renvoie un index de confiance destiné à décider quels tickets peuvent être routés
+automatiquement et lesquels demandent une revue humaine. Encore faut-il que cet index ordonne
+correctement la fiabilité. Une machine à vecteurs de support ne produit pas de probabilité, et la
+sortie brute de sa fonction de décision ne s'interprète pas comme une confiance ; nous la
+convertissons par la méthode de Platt~\cite{platt1999}, qui ajuste une sigmoïde sur les scores en
+validation croisée. La littérature montre par ailleurs qu'un modèle bien calibré ne se reconnaît
+pas à sa justesse mais à la concordance entre la confiance annoncée et la précision
+observée~\cite{guo2017}, et c'est cette concordance que le tableau qui suit examine.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Précision observée par tranche de confiance, protocole des expériences}
+\label{tab:calib}
+\begin{tabular}{|Bp{3.0cm}|Cp{2.4cm}|Cp{2.2cm}|Cp{2.6cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Tranche} & \textbf{Tickets} & \textbf{Part} & \textbf{Précision} \\
+\hline
+Sous 40\,\% & 42 & 11,8\,\% & 0,0\,\% \\
+\hline
+40 à 60\,\% & 121 & 34,1\,\% & 33,9\,\% \\
+\hline
+60 à 80\,\% & 110 & 31,0\,\% & 89,1\,\% \\
+\hline
+Au-dessus de 80\,\% & 82 & 23,1\,\% & 81,7\,\% \\
+\hline
+\end{tabular}
+\end{table}
+
+Le tableau~\ref{tab:calib} confronte les tranches de confiance à la précision réellement observée.
+L'index sépare correctement les deux extrémités : sous 40\,\%, aucune prédiction n'est juste ;
+au-delà de 60\,\%, plus de quatre sur cinq le sont.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch04_seuil_routage.png}
+\caption{Précision et couverture du routage automatique selon le seuil}
+\label{fig:confiance}
+\end{figure}
+
+Une anomalie subsiste. La tranche 60 à 80\,\% est plus fiable, à 89,1\,\%, que la tranche supérieure
+à 80\,\%, qui tombe à 81,7\,\%. Un index de confiance devrait être monotone ; il ne l'est pas ici.
+Il renseigne donc sur l'ordre de grandeur de la fiabilité, sans permettre de distinguer finement
+deux prédictions toutes deux assurées. C'est la réserve portée à l'exigence EF-07.
+
+La figure~\ref{fig:confiance} donne l'arbitrage que commande le seuil, mesuré sur le jeu de test.
+Les deux courbes se croisent entre 0,40 et 0,45 : au-delà, chaque point de précision gagné se paie
+en tickets renvoyés vers une revue humaine.
+
+Nous avions d'abord fixé le seuil à 0,40, valeur qui envoie 88,2\,\% des tickets en traitement
+automatique pour une précision de 65,8\,\%. Un tel réglage laisse passer un tiers d'erreurs sans
+relecture, ce qui contredit le principe de maintien de la décision humaine posé en introduction du
+mémoire. Nous l'avons relevé à 0,60 en production.
+
+Ce que ce relèvement produit réellement mérite d'être énoncé, car les métadonnées du modèle
+l'annonçaient sans l'avoir vérifié. Elles prévoyaient environ 70\,\% de routage automatique pour
+85\,\% de précision. La mesure confirme la précision, à 85,9\,\%, et dément la couverture : 54,1\,\%
+seulement des tickets franchissent le seuil, seize points sous l'estimation. Le réglage retenu
+qualifie donc automatiquement un peu plus d'un ticket sur deux, et non sept sur dix. Nous rapportons
+l'écart plutôt que de conserver le chiffre annoncé, et il ne remet pas en cause le choix du seuil :
+il en corrige le coût.
+
+\section{Évaluation du RAG}
+
+\label{sec:eval5}
+
+Les trois moteurs et l'assistant sont construits, la phase d'évaluation peut commencer. Évaluer une
+recherche suppose de savoir ce qu'est une bonne réponse ; faute de jeu annoté, le protocole retenu
+repose sur une approximation dont nous énonçons d'abord la portée.
+
+\subsection{Protocole et dimensions non couvertes}
+
+La campagne interroge les trois moteurs avec quarante requêtes tirées du jeu de test par
+échantillonnage stratifié, en demandant trois passages, et les sollicite exactement comme le fait
+l'application, mécanisme de repli compris. Une version antérieure de ce chapitre en annonçait
+quatre-vingts : ce tirage a été remplacé par les quarante requêtes annotées à la main, et les
+anciens chiffres n'étaient plus reproductibles. Cinq indicateurs sont calculés.
 
 \begin{puces}
-  \item Le journal couvre huit champs, dont le statut, la catégorie, la priorité, l'affectation et
-        la solution appliquée.
-  \item Une écriture qui ne change rien n'y laisse aucune trace, l'enregistrement étant ignoré
-        lorsque l'ancienne valeur égale la nouvelle.
-  \item L'auteur du changement n'est pas toujours renseigné : un dépôt effectué par un demandeur
-        inscrit sa première ligne avant toute intervention d'un administrateur.
+  \item \textbf{Précision à trois passages} : nombre de passages pertinents rapporté à trois,
+        que le moteur en ait rendu trois ou moins.
+  \item \textbf{Précision de ce qui est affiché} : même numérateur, mais rapporté au nombre de
+        passages réellement rendus. La distinction n'apparaît que lorsque le seuil tronque la
+        liste, et c'est alors elle qui dit ce que vaut ce que lit l'administrateur.
+  \item \textbf{Rang réciproque moyen} : récompense un premier passage pertinent placé tôt.
+  \item \textbf{Gain cumulé actualisé normalisé} : pondère chaque passage pertinent par sa position
+        et rapporte le résultat au classement idéal.
+  \item \textbf{Similarité moyenne} : valeur brute rendue par le moteur, comparée au seuil de
+        pertinence.
 \end{puces}
 
-Une lacune doit être signalée au même titre : l'avis du demandeur est écrit sur le ticket sans
-laisser de ligne d'historique. La traçabilité du « qui a changé quoi », complète sur le parcours de
-traitement, s'arrête donc au retour de l'utilisateur.
+Décider si un passage est pertinent suppose de savoir ce qui l'est, information qui n'existe pas :
+le jeu de référence a été constitué mais n'est pas
+annoté. Le protocole considère donc comme pertinent tout passage de la même catégorie que la
+requête. La règle est grossière, deux tickets \emph{Réseau}
+pouvant décrire des incidents sans rapport.
 
-L'entité \emph{catégorie} aurait pu figurer sur ce diagramme sous forme de classe reliée au ticket.
-Elle reste une valeur portée par le ticket : le référentiel provient du service et n'a pas varié
-sur les quatorze mois du corpus, et le classifieur produit une étiquette textuelle qu'une entité
-intermédiaire obligerait à traduire à chaque prédiction comme à chaque évaluation. La
-simplification deviendrait coûteuse si le référentiel évoluait, puisque renommer une catégorie
-exigerait une migration de données et que rien n'empêche aujourd'hui l'enregistrement d'une valeur
-absente du référentiel, la contrainte d'intégrité reposant sur le code et non sur le schéma.
+Une seconde raison avait été avancée pour justifier cette approximation, et l'annotation conduite
+plus bas la dément. Nous pensions qu'une définition stricte donnerait \textbf{zéro} pour les trois
+moteurs : les scénarios du jeu de test et ceux de la base étant disjoints
+(section~\ref{sec:antifuite5}), la bonne réponse est absente de l'index par construction. Le
+raisonnement confondait le scénario et le geste. Une résolution écrite pour un autre scénario reste
+utile quand elle décrit le bon geste — réinstaller un pilote d'impression aide un ticket
+d'impression, quel que soit le ticket d'origine. Sur les quarante requêtes annotées, trente ont
+reçu au moins un passage jugé utile. L'argument ne tient pas, et nous le retirons plutôt que de le
+laisser justifier l'approximation.
 
-\FloatBarrier
+Il reste que, faute d'annotation, les valeurs de la section~\ref{sec:resultats5} servent à
+\textbf{comparer les trois moteurs entre eux} et ne mesurent pas la pertinence perçue. Le rappel à
+trois passages n'y est pas publié pour la même raison, l'ensemble des passages pertinents y étant
+la catégorie entière, soit plusieurs centaines de tickets ; l'annotation le rend calculable, et le
+tableau~\ref{tab:protocoles5} le donne.
 
-\subsection{Diagramme de séquence : dépôt d'une demande}
-\label{sec:seqdemandeur6}
+\textbf{Ce que l'approximation coûte, mesuré.} Qualifier la règle de grossière ne suffit pas : son
+effet se chiffre. Un jeu d'annotation de quarante requêtes a été constitué pour la suite de ce
+travail, chacune accompagnée des dix meilleurs candidats du moteur. Avant toute annotation, il
+livre déjà un constat. Sur ces quarante requêtes, le meilleur candidat proposé par le moteur relève
+d'une autre catégorie que la requête dans \textbf{vingt et un cas, soit 52\,\%} : le protocole
+d'approximation les compte comme des échecs sans avoir lu leur contenu.
 
-Un diagramme de séquence est une vue dynamique qui décrit l'enchaînement des messages échangés entre
-des participants au cours d'un scénario précis. Le temps s'y lit verticalement : chaque participant
-dispose d'une ligne de vie sur laquelle apparaissent ses périodes d'activité, et chaque flèche porte
-un appel ou une réponse. Il rend visible l'ordre des échanges, ce que chacun attend de l'autre et
-les chemins alternatifs, ce qui en fait l'outil de choix pour détailler un cas d'utilisation au
-niveau des interactions. Les deux diagrammes qui suivent couvrent les deux extrémités du cycle de
-vie d'un ticket.
+Un exemple suffit à montrer ce que cela écarte. À la demande « Erreur lors de l'impression des
+documents », classée \emph{Infrastructure}, le moteur répond en tête « Mettre à jour le composant
+d'impression, réinstaller le driver d'imprimante par défaut ». La résolution est manifestement
+utile ; elle est enregistrée sous \emph{Applicatifs}, et le protocole la rejette. Les chiffres de
+la section suivante sont donc vraisemblablement des \textbf{bornes inférieures}, et nous ne les
+présentons pas autrement.
 
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch06_sequence_demandeur.png}
-\caption{Dépôt d'une demande par le demandeur}
-\label{fig:seqdem6}
-\end{figure}
+\textbf{Une annotation manuelle, et ce qu'elle vaut.} Les quarante requêtes ont été annotées à la
+main, une par une, sur le critère suivant : la résolution proposée traite-t-elle le problème décrit
+par le ticket ? Deux précautions encadrent ce jugement. Les candidats ont été présentés
+\textbf{sans leur rang ni leur score}, et mélangés : annoter en voyant le classement du moteur
+reviendrait à le confirmer plutôt qu'à l'évaluer. Et le jugement a été porté une seule fois par
+couple distinct — les quarante requêtes ne portent que douze scénarios et le vivier quarante et une
+résolutions, soit 152 couples réellement différents — puis reporté, pour qu'une même situation ne
+reçoive pas deux verdicts contradictoires. Vingt-deux couples sur 152 ont été jugés utiles, et dix
+requêtes sur quarante n'ont reçu aucun candidat pertinent, ce que la séparation anti-fuite rendait
+attendu.
 
-La figure~\ref{fig:seqdem6} suit le dépôt d'une demande, de l'ouverture du formulaire à la remise
-du numéro de suivi, sur cinq lignes de vie : le demandeur, l'interface, le service de tickets, le
-classificateur et le moteur de recherche. Le fragment alternatif traduit une règle de saisie, un
-titre d'au moins cinq caractères et une description d'au moins trente étant exigés avant tout
-traitement, ce qui écarte les demandes trop brèves pour être classées.
+Cette annotation a été faite par l'auteur de ce mémoire, non par un consultant du service, et nous
+l'écrivons parce que la portée du résultat en dépend. Elle établit qu'une résolution traite ou non
+le problème décrit ; elle n'établit pas qu'elle aurait fait gagner du temps en conditions réelles,
+ce qui demande de savoir ce qu'un ticket coûte à traiter dans ce service. Elle remplace une
+approximation par un jugement, elle n'en fait pas une référence. Sa confirmation par un consultant
+reste la première chose à faire, et les perspectives de la section~\ref{sec:perspectives7} la
+portent. L'instrument est prêt plutôt que seulement souhaité : un extrait de quarante couples,
+tiré au hasard et présenté à l'aveugle, s'écrit par
+\texttt{scripts/verification/revue\_consultant.py}, qui rend ensuite l'accord brut, le kappa de
+Cohen et la liste des désaccords. Un extrait de cette taille donne un ordre de grandeur de
+l'accord, non un kappa à la deuxième décimale : le tirage uniforme n'y place qu'une poignée de
+couples jugés utiles. Le tableau~\ref{tab:protocoles5} en donne le résultat, une fois les
+résultats bruts présentés.
 
-Le message~(6.1) porte le point notable de ce parcours. L'analyse n'est pas reportée à un
-traitement différé : le classement et la recherche de cas comparables interviennent dans la même
-opération que l'enregistrement, pendant que le demandeur valide son formulaire, et cette
-synchronicité se paie sur la latence, qui se dégrade nettement sous charge concurrente. Le modèle
-de langage n'intervient pas ici, faire attendre le demandeur une vingtaine de secondes pour une
-reformulation qui ne lui est pas destinée constituant un mauvais échange ; cet appel est déclenché
-plus tard par l'administrateur.
 
-Un arbitrage discutable se loge dans ce même message. Le composant sollicité pour la classification
-est la chaîne lexicale complétée par les règles métier, non le transformer adapté par LoRA, alors
-que le chapitre~4 a établi que la seconde approche obtient un F1-macro de 0,8343 contre 0,5829 pour
-celle qui est servie. La chaîne lexicale a été retenue à un moment où les deux approches
-paraissaient équivalentes, pour sa latence et sa légèreté ; l'écart désormais mesuré invite à
-rouvrir ce choix, ce que la conclusion générale porte aux perspectives.
-
-\FloatBarrier
-
-\subsection{Diagramme de séquence : clôture d'un ticket}
-\label{sec:seqadmin6}
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch06_sequence_admin.png}
-\caption{Clôture d'un ticket par l'administrateur}
-\label{fig:seqadmin6}
-\end{figure}
-
-La figure~\ref{fig:seqadmin6} prend le point de vue de l'administrateur au moment où il clôt un
-ticket, moment qui porte les garanties du dispositif : la plateforme y vérifie ce qu'on lui
-demande, journalise ce qui change et décide de ce qui entre dans la base de connaissances.
-
-Deux vérifications précèdent l'enregistrement, réunies dans le message~(6). La première porte sur
-la transition d'état, le passage demandé devant figurer parmi ceux qu'autorise l'état courant. La
-seconde porte sur la solution appliquée et commande le fragment alternatif : lorsque la recherche
-n'a trouvé aucun cas voisin suffisamment proche, la clôture est refusée tant que l'administrateur
-n'a pas décrit ce qu'il a fait.
-
-La branche supérieure enchaîne trois effets. Le ticket passe à l'état résolu et reçoit le message
-destiné au demandeur, chaque champ réellement modifié écrit sa ligne d'historique, et la solution
-rédigée est versée à la base de connaissances en tâche de fond pour ne pas retarder l'affichage.
-Seule une solution écrite par un humain y entre, ce qui interdit au système d'apprendre de ses
-propres suggestions.
-
-Ces deux figures ne couvrent pas tout le cycle : la prise en charge, la correction de la catégorie
-et la reformulation des cas voisins se placent entre elles, et la section~\ref{sec:workflow6} les
-remet en ordre. Le dépôt et la clôture ont été retenus parce que le premier montre où l'automatique
-intervient, le second où l'humain tranche. Cette répartition suit deux principes que les recommandations
-sur l'interaction entre un humain et un système automatique énoncent explicitement~\cite{amershi2019chi} :
-rendre lisible ce que le système sait faire, et permettre de corriger sa proposition sans quitter la
-tâche en cours.
-
-\FloatBarrier
-
-\subsection{Traçabilité des états du ticket}
-\label{sec:etats6}
-
-Un diagramme d'états-transitions décrit le cycle de vie d'un objet en énumérant les états qu'il peut
-prendre et les événements qui le font passer de l'un à l'autre. Chaque transition porte l'événement
-qui la déclenche et, le cas échéant, la condition qui l'autorise. Appliqué à une entité dont le
-statut évolue, il permet de vérifier qu'aucun état n'est atteint sans transition d'entrée, ni
-bloquant faute de transition de sortie.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch06_etats_ticket.png}
-\caption{Cycle de vie du ticket et transitions autorisées}
-\label{fig:etats6}
-\end{figure}
-
-Un ticket occupe l'un de cinq états, et la figure~\ref{fig:etats6} présente la machine à états
-complète avec les neuf transitions autorisées et leurs déclencheurs. Ces transitions sont déclarées
-dans une table du code, à laquelle toute demande de changement d'état est confrontée avant d'être
-appliquée. Une transition non prévue est refusée par le serveur, indépendamment de ce que
-l'interface propose : placer ce contrôle côté serveur est ce qui le rend effectif, un appel direct
-hors du navigateur se heurtant à la même règle.
-
-Les états \emph{Résolu} et \emph{Rejeté} n'ont aucune transition sortante et restent pourtant
-modifiables, la catégorie, la priorité et la solution appliquée pouvant être corrigées après
-clôture, le contrôle n'exigeant une transition permise que si le statut soumis diffère réellement
-du statut courant. Ce comportement répond à une situation observée, où une erreur de qualification
-découverte après clôture n'aurait pu être corrigée qu'en rouvrant le ticket, ce qui aurait faussé
-les délais de traitement.
-
-\FloatBarrier
-
-\section{Développement du backend}
-\label{sec:backend6}
-
-Le service compte environ 3\,000 lignes de Python, organisées en trois couches.
+\textbf{Les dimensions que la campagne ne couvre pas.} Deux dimensions échappent entièrement à la campagne, et le fichier de résultats les énumère.
 
 \begin{puces}
-  \item Les \emph{routers} exposent les chemins, valident les entrées et les sorties par des
-        schémas typés et déclarent leurs dépendances de sécurité, sans porter de règle métier. Cinq
-        routers couvrent trente-quatre chemins : authentification, tickets, administration,
-        ingestion externe et diagnostic des prédictions.
-  \item Les \emph{services} portent la logique, également au nombre de cinq : authentification,
-        tickets, intelligence artificielle, recherche et modèle de langage.
-  \item Les \emph{repositories} encapsulent l'accès aux données, par SQLAlchemy pour la base
-        relationnelle et par un module dédié pour la base vectorielle.
+  \item La \textbf{fidélité de la génération}. Le chemin de classification n'appelle aucun modèle
+        de langage, et la reformulation destinée à l'administrateur constitue un appel séparé et
+        facultatif, qui supposerait un protocole distinct.
+  \item L'\textbf{utilité perçue}. Elle demanderait un retour explicite de l'administrateur sur
+        chaque recommandation, que l'interface ne collecte pas.
 \end{puces}
 
-Cette organisation reste inégalement épaisse, et nous le signalons parce qu'une revue attentive le
-verra. Le router des tickets compte 587 lignes, la logique de transition de statut y étant restée
-au lieu de descendre dans un service ; les repositories, à l'inverse, sont pratiquement vides et
-déclarent une intention d'architecture que le code n'a pas encore remplie. C'est la principale
-dette de conception du service.
+La conclusion générale porte cette lacune aux perspectives.
 
-Le contrôle d'accès RBAC s'appuie sur ce découpage. L'authentification repose sur un jeton signé,
-délivré à la connexion et valable huit heures, et les droits s'expriment par des dépendances
-déclaratives : un chemin réservé à l'administration vérifie le rôle porté par le jeton avant même
-que le corps de la fonction ne s'exécute, ce qui rend le contrôle visible à la lecture de la
-signature et évite l'oubli silencieux. Les mots de passe sont conservés sous forme d'empreintes
-bcrypt, et un compte créé par un administrateur reçoit un mot de passe temporaire que son titulaire
-doit changer au premier accès. Trois réserves doivent être énoncées.
+\subsection{Résultats mesurés}
 
-\begin{puces}
-  \item Le fichier d'environnement d'exemple ne porte aucun secret exploitable, et le service
-        refuse de démarrer en mode production tant qu'un marqueur y subsiste ; la génération des
-        valeurs reste à la charge de la procédure de mise en service.
-  \item La limitation des tentatives de connexion, fixée à dix par minute et par adresse, conserve
-        son décompte en mémoire du processus : un second processus serveur double le quota réel, et
-        un redémarrage remet le compteur à zéro.
-  \item Aucune analyse de vulnérabilité n'est menée sur les images conteneurisées, ce qui reste à
-        faire avant toute mise en production.
-\end{puces}
+\label{sec:resultats5}
 
-\section{Développement du frontend}
-\label{sec:frontend6}
+Les trois moteurs ont été soumis au même jeu de requêtes, les quarante dont les candidats ont été
+jugés un à un. Leurs scores, en revanche, ne vivent pas sur la même échelle : 0,1877 en moyenne
+pour le lexical, 0,5752 pour le sémantique, 0,3564 pour l'hybride. Un même nombre y désigne donc
+trois sévérités différentes, et les comparer sous un seuil commun reviendrait à les juger à des
+exigences inégales. Le tableau~\ref{tab:moteurs5} les compare sans filtre, chacun rendant les trois
+passages demandés quand il en trouve trois.
 
-L'interface est développée avec Angular et compte dix-sept écrans, cinq communs d'authentification,
-cinq pour l'espace du demandeur et sept pour la console d'administration. Deux gardes protègent le
-routage, l'une exigeant une session valide, l'autre le rôle d'administration, et un intercepteur
-ajoute le jeton à chaque appel sortant puis déclenche la déconnexion lorsque le serveur signale que
-la session a expiré.
-
-\subsection{Accès à la plateforme}
-\label{sec:acces6}
-
-Les cinq écrans communs couvrent l'entrée dans l'application : la connexion, la création de compte,
-le changement de mot de passe imposé au premier accès, la demande de réinitialisation et la saisie
-du nouveau mot de passe. Ils partagent un cadre unique, décliné en un panneau latéral sur écran
-large et en un bandeau sur écran étroit, de sorte que l'identité de l'entreprise reste présente à
-toutes les largeurs.
+La figure~\ref{fig:moteurs5} les rapproche sur les mêmes indicateurs.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=\textwidth]{ch06_ecran_connexion.jpg}
-\caption{Écran de connexion}
-\label{fig:ecran_connexion6}
+\includegraphics[width=\textwidth]{ch05_moteurs.png}
+\caption[Comparaison des trois moteurs de recherche, 40 requêtes
+annotées]{Comparaison des trois moteurs de recherche, 40 requêtes annotées, trois passages
+demandés}
+\label{fig:moteurs5}
 \end{figure}
 
-La figure~\ref{fig:ecran_connexion6} donne l'écran de connexion. Le formulaire ne demande que
-l'adresse et le mot de passe ; aucun mécanisme d'authentification tierce n'est proposé, l'annuaire
-d'entreprise n'étant pas raccordé, comme la section~\ref{sec:contexte6} l'a exposé. Le lien
-\emph{Oublié ?} ouvre le parcours de réinitialisation.
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption[Comparaison des trois moteurs sans filtre, jugement humain,
+40 requêtes]{Comparaison des trois moteurs sans filtre, jugement humain, 40 requêtes ;
+origine des valeurs au tableau~\ref{tab:chiffres}}
+\label{tab:moteurs5}
+\begin{tabular}{|Bp{2.7cm}|Cp{1.7cm}|Cp{2.1cm}|Cp{1.7cm}|Cp{1.5cm}|Cp{1.6cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Moteur} & \textbf{Précision @3} & \textbf{Suggestions rendues} & \textbf{Rappel @3} &
+\textbf{MRR @3} & \textbf{nDCG @3} \\
+\hline
+Lexical & 0,2417 & 3,00 & 0,2687 & 0,5083 & 0,5105 \\
+\hline
+Sémantique & 0,3333 & 3,00 & \textbf{0,4604} & \textbf{0,5750} & \textbf{0,6073} \\
+\hline
+Hybride (servi) & \textbf{0,3667} & 3,00 & \textbf{0,4604} & 0,5333 & 0,5658 \\
+\hline
+\end{tabular}
+\end{table}
+
+Une colonne a disparu de ce tableau depuis la version précédente, et il vaut mieux dire pourquoi
+que de la retirer en silence. Le mémoire distinguait la \textbf{précision@3}, qui divise par trois
+quel que soit le nombre de passages rendus, de la \textbf{précision de l'affiché}, qui ne porte que
+sur les passages effectivement montrés. Cette distinction n'avait de sens que parce que le moteur
+sémantique ne rendait, sans filtre, que 1,70 suggestion sur les trois demandées. La
+section~\ref{sec:doublons5} établit que ce déficit venait d'un défaut et non du corpus : les trois
+moteurs rendent maintenant les trois passages demandés, et les deux précisions coïncident. La
+colonne reparaît plus loin, là où elle garde un sens : sous le filtre de pertinence, qui raccourcit
+réellement la liste.
+
+Le moteur lexical est distancé sur tous les indicateurs. Il ne retrouve que 0,2687 des résolutions
+jugées utiles quand les deux autres en retrouvent 0,4604, et sa précision est inférieure d'un tiers.
+Dans un corpus rédigé en langage libre, le partage de vocabulaire manque les reformulations que la
+proximité de sens retrouve : \emph{session Outlook bloquée} et \emph{messagerie qui ne s'ouvre
+plus} ne partagent aucun terme.
+
+Entre le sémantique et l'hybride, le départage est plus serré et aucun indicateur ne tranche seul.
+Le sémantique ordonne mieux : son rang réciproque atteint 0,5750 contre 0,5333, et son gain cumulé
+0,6073 contre 0,5658 — quand il trouve une résolution utile, il la place plus haut. L'hybride en
+place davantage dans le trio de tête, 0,3667 contre 0,3333, pour un rappel identique. La fusion
+fait donc entrer des passages que le sémantique relègue, au prix d'un classement un peu moins sûr.
+
+Pour un usage où l'administrateur parcourt jusqu'à trois propositions avant de choisir, c'est le
+nombre de propositions utiles qui pèse plus que leur ordre, et c'est ce qui justifie le moteur
+hybride. L'écart reste de 0,0334 sur quarante requêtes, soit un peu plus d'une requête de
+différence : nous ne le présentons pas comme une démonstration.
+
+\textbf{Les mêmes moteurs sous jugement humain.} Le tableau~\ref{tab:protocoles5} reprend les
+trois moteurs sur les quarante requêtes annotées, sous les deux protocoles, pour que l'écart se lise
+directement.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Le jugement manuel confronté au protocole d'approximation, 40 requêtes, seuil servi}
+\label{tab:protocoles5}
+\begin{tabular}{|Bp{2.6cm}|Lp{2.3cm}|Cp{1.6cm}|Cp{1.6cm}|Cp{1.7cm}|Cp{1.7cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Moteur} & \textbf{Protocole} & \textbf{Préc. @3} & \textbf{MRR @3} & \textbf{nDCG @3} &
+\textbf{Rappel @3} \\
+\hline
+Lexical & jugement & 0,1667 & 0,5000 & 0,5000 & 0,1896 \\
+\hline
+Lexical & approximation & 0,1667 & 0,4458 & 0,4533 & --- \\
+\hline
+Sémantique & jugement & 0,3333 & \textbf{0,5750} & \textbf{0,6073} & \textbf{0,4604} \\
+\hline
+Sémantique & approximation & 0,3333 & 0,6000 & 0,6257 & --- \\
+\hline
+Hybride (servi) & jugement & \textbf{0,3500} & 0,5333 & 0,5678 & 0,4396 \\
+\hline
+Hybride (servi) & approximation & 0,3417 & 0,5667 & 0,6022 & --- \\
+\hline
+\end{tabular}
+\end{table}
+
+Trois enseignements s'en dégagent, et le premier dément ce que nous attendions. \textbf{Au niveau
+agrégé, l'approximation ne se trompe pas beaucoup} : l'écart de précision à trois passages ne
+dépasse jamais trois centièmes, alors que 52\,\% des meilleurs candidats changent de catégorie. Les
+erreurs se compensent, l'approximation rejetant des passages utiles d'une autre catégorie et en
+acceptant d'inutiles de la même.
+
+\textbf{Elle sous-estime légèrement le moteur servi, et lui seul.} Pour l'hybride, la précision à
+trois passages monte de 0,3417 à 0,3500 une fois le jugement humain substitué, et celle de
+l'affiché de 0,5062 à 0,5185. Pour les deux autres moteurs, l'écart est rigoureusement nul. Le
+chiffre publié à la section~\ref{sec:resultats5} est donc, pour le moteur déployé, une borne
+inférieure — d'un peu moins d'un centième, ce qui ne change aucune conclusion.
+
+\textbf{Une affirmation de la version précédente est retirée.} Nous écrivions que le classement
+entre moteurs s'inversait selon le protocole, le sémantique paraissant mieux ordonner sous
+l'approximation et l'hybride sous le jugement. Cela n'est plus vrai après la correction du moteur
+sémantique exposée à la section~\ref{sec:doublons5} : sous les deux protocoles, c'est désormais le
+sémantique qui ordonne le mieux, 0,5750 contre 0,5333 au jugement et 0,6000 contre 0,5667 à
+l'approximation. L'arbitrage en faveur de l'hybride ne tient donc pas au classement mais au nombre
+de passages utiles trouvés, et c'est sur ce terrain-là qu'il doit être défendu.
+
+Enfin, l'annotation rend calculable ce que l'approximation interdisait : le \textbf{rappel à trois
+passages}, 0,4396 pour l'hybride et 0,4604 pour le sémantique. Sur les quarante requêtes, le moteur
+ramène donc un peu plus de deux cinquièmes des résolutions jugées utiles, ce qu'aucun chiffre de ce
+mémoire ne pouvait dire jusqu'ici.
+
+\subsection{Quarante-six réponses pour mille trois cent cinquante-sept passages}
+
+\label{sec:doublons5}
+
+La base interrogée compte 1\,357 passages, mais seulement \textbf{46 résolutions distinctes} : le
+champ de résolution, celui du titre et celui de la base de connaissances prennent chacun exactement
+quarante-six valeurs. Chaque réponse y figure donc une trentaine de fois en médiane, et jusqu'à
+quarante-neuf. Le chapitre~2 établissait cette redondance pour le corpus entier ; la base de
+connaissances en hérite.
+
+La question que cela pose n'est pas la redondance elle-même mais son effet. Si les trois passages
+rendus pour une demande portent la même résolution écrite trois fois, alors « trois suggestions »
+n'en vaut qu'une, et la précision publiée mesure autre chose que ce qu'elle annonce.
+
+Sur ce point précis, le système était déjà prémuni : les trois moteurs écartent une résolution déjà
+vue avant de constituer leur liste. Mesuré sur les quarante requêtes, aucun doublon n'atteint
+l'administrateur.
+
+\textbf{L'effet était ailleurs, et il était réel.} Dédoublonner suppose d'avoir de quoi remplacer
+ce qu'on écarte. Le moteur sémantique récupérait trois fois le nombre de passages demandés — neuf —
+avant de filtrer, avec en commentaire du code la mention \emph{récupérer davantage pour filtrer les
+doublons}. Ce facteur convient à une base où chaque réponse apparaît deux ou trois fois. Avec une
+trentaine d'exemplaires, les neuf plus proches voisins d'une demande sont neuf copies de la même
+résolution, et le dédoublonnage n'en laissait qu'une.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption[Élargissement nécessaire pour obtenir trois réponses
+différentes]{Élargissement nécessaire pour obtenir trois réponses différentes, moteur sémantique,
+filtre de pertinence retiré}
+\label{tab:doublons5}
+\begin{tabular}{|Cp{3.6cm}|Cp{4.0cm}|Cp{4.4cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Passages consultés} & \textbf{Réponses distinctes} & \textbf{Requêtes servies au complet} \\
+\hline
+9 \emph{(code d'origine)} & 1,57 & 1 sur 40 \\
+\hline
+18 & 1,85 & 7 sur 40 \\
+\hline
+36 & 2,25 & 13 sur 40 \\
+\hline
+75 & 2,75 & 30 sur 40 \\
+\hline
+\textbf{150} & \textbf{3,00} & \textbf{40 sur 40} \\
+\hline
+\end{tabular}
+\end{table}
+
+Le tableau~\ref{tab:doublons5} chiffre ce qu'il fallait lire pour que trois réponses différentes
+sortent : cent cinquante passages, soit onze pour cent de l'index. Un facteur écrit en dur se
+tromperait d'ailleurs à la première évolution du corpus ; l'élargissement double donc désormais
+jusqu'à ce que le compte y soit, ou jusqu'à épuisement de l'index. Le coût ne se mesure pas : une
+recherche sur treize cents vecteurs prend quelques dizaines de microsecondes, et les résolutions
+sont mises en cache pour que le parcours ne touche pas la base ligne à ligne.
+
+Le moteur servi y gagne sur les deux plans à la fois, ce qui est rare : il rend 2,02 suggestions
+par requête au lieu de 1,75, et la précision de ce qu'il affiche monte de 0,4429 à 0,5185. Tous les
+chiffres de cette section sont postérieurs à cette correction.
+
+\subsection{Le seuil que le moteur servi n'atteignait jamais}
+
+\label{sec:seuil5}
+
+Le paramétrage fixait un seuil de pertinence à 0,50 et un plancher de repli à 0,20. Une requête
+dont aucun passage n'atteint le seuil n'est servie que par le repli, et ce taux valait
+\textbf{1,000} pour le moteur hybride : la totalité des requêtes.
+
+Le mécanisme est arithmétique. Le score hybride est la moyenne du score sémantique, 0,5752 en
+moyenne, et du score lexical, 0,1877. La distribution du meilleur score par requête, portée à
+gauche de la figure~\ref{fig:seuil5}, s'étend de 0,3366 à \textbf{0,4886}. Elle n'atteint jamais
+0,50 et ne le peut pas : il y faudrait un score sémantique d'environ 0,79, quand le maximum observé
+du sémantique est 0,7024 et celui du lexical 0,3099. Le seuil avait été calibré sur l'échelle du
+cosinus puis conservé tel quel, alors que la fusion change l'échelle des scores en même temps que
+le classement.
+
+Un second facteur pèse sur ces valeurs sans se confondre avec le premier : les scores sont bas en
+partie parce qu'aucune requête d'évaluation n'a sa réponse dans la base
+(section~\ref{sec:antifuite5}). Le diagnostic d'échelle reste valable indépendamment, la moyenne
+avec un score lexical borné vers 0,18 divisant par deux l'écart au seuil.
+
+La conséquence n'est pas celle que le chiffre suggère. Un seuil hors de portée ne filtre rien : le
+repli ramasse alors tous les passages au-dessus de 0,20, si bien que la sortie à 0,50 est
+identique, passage pour passage, à celle d'un seuil de 0,20. Le taux de repli de 100 \% ne
+signalait donc aucune dégradation de la qualité. Il signalait une étiquette vide, apposée sur
+chaque suggestion sans jamais rien distinguer.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=\textwidth]{ch06_ecran_inscription.jpg}
-\caption{Création de compte}
-\label{fig:ecran_inscription6}
+\includegraphics[width=\textwidth]{ch05_seuil.png}
+\caption{Distribution du meilleur score hybride et effet du seuil de pertinence}
+\label{fig:seuil5}
 \end{figure}
 
-La figure~\ref{fig:ecran_inscription6} présente la création de compte. Le rôle n'y figure pas : il
-est déterminé par le serveur à partir de l'adresse, les adresses déclarées comme administratives
-recevant ce rôle et toutes les autres celui de demandeur. Un demandeur ne peut donc pas s'attribuer
-de droits en remplissant un formulaire.
+\textbf{Ce que vaut le score, et où le couper.} Encore faut-il que le score mérite un seuil. Il
+discrimine nettement : la probabilité qu'un passage jugé utile soit mieux noté qu'un passage jugé
+inutile tiré au hasard vaut \textbf{0,8303}. Et la précision ne monte pas régulièrement, elle
+saute. En deçà de 0,35, elle stagne autour de 0,09 ; entre 0,35 et 0,40 elle atteint 0,5106 ;
+au-delà de 0,40, 0,9375. La coupure n'est donc pas arbitraire : elle se place sur une
+discontinuité que les données dessinent.
+
+Nous retenons \textbf{0,35}. C'est la valeur où la précision de ce qui est affiché est la plus
+haute, 0,5185 contre 0,3667 sans filtre effectif, et où le taux de repli, 15 \%, redevient un
+signal au lieu d'une constante. La contrepartie est assumée, et nous la chiffrons plutôt que de la
+taire : la liste passe de 3,00 à 2,02 suggestions par requête, et la précision@3 recule de 0,3667 à
+0,3500 — non parce que les suggestions sont moins bonnes, mais parce que cet indicateur divise par
+trois une liste qui n'en compte plus trois.
+
+\textbf{Une réserve sur ce chiffre, et sa mesure.} Le seuil a été choisi sur les quarante requêtes
+annotées, et la précision qui le justifie est relue sur ces mêmes quarante requêtes. Un réglage
+choisi et jugé sur les mêmes données est nécessairement flatteur, et l'annoncer sans réserve
+reviendrait à présenter un ajustement comme un résultat.
+
+La réserve se chiffre plutôt qu'elle ne se déclare. Les requêtes sont découpées en cinq plis ; sur
+chacun, le seuil est choisi sur les trente-deux autres requêtes, puis mesuré sur les huit
+réservées, qui n'ont pas servi à le choisir. La précision hors échantillon tombe alors à 0,4886
+contre 0,5652 obtenue sur l'échantillon complet, soit \textbf{sept à huit points d'optimisme},
+environ un septième de la valeur. La valeur 0,4886 désigne aussi, plus haut dans cette section, le
+plafond du score hybride : la rencontre est fortuite, là une similarité, ici une proportion de
+passages jugés utiles. Deux choses rassurent malgré tout : le seuil retenu pli après pli
+reste entre 0,35 et 0,38, donc le choix est stable ; et les valeurs absolues varient beaucoup d'un
+pli à l'autre, de 0 à 0,89, ce qui rappelle qu'avec huit requêtes par pli aucune de ces précisions
+ne se lit à la deuxième décimale. La valeur de 0,5185 doit donc se lire comme un ordre de grandeur
+majoré, non comme une mesure.
+
+L'autre correction envisagée était de relever $\alpha$ pour rapprocher l'échelle hybride de
+l'échelle sémantique. Mesurée au seuil recalibré, elle se révèle n'être pas une correction
+distincte : relever $\alpha$ déplace les scores vers le haut, donc rend le seuil moins mordant. À
+$\alpha = 0{,}7$ le repli tombe à zéro et la liste remonte à 2,92 suggestions, pour une précision
+de l'affiché de 0,3761 ; à $\alpha = 1{,}0$ le moteur cesse d'être hybride sans rien gagner de
+plus. Les deux réglages commandent la même quantité — le nombre de passages qui franchissent le
+filtre — et c'est pourquoi nous n'en bougeons qu'un. La pondération à parts égales est conservée
+parce qu'elle donne la précision la plus haute sur ce qui est affiché, 0,5185.
+
+\textbf{Un seuil, deux décisions sans rapport.} Le module de traitement des tickets utilisait ce
+même 0,50 pour décider qu'un ticket constitue un \emph{cas nouveau}, pour lequel l'administrateur
+doit rédiger la solution appliquée avant de clore. Une règle métier dépendait ainsi d'un réglage de
+pertinence, et l'aurait suivi à chaque recalibration. Les deux valeurs sont désormais distinctes et
+nommées séparément. Le seuil de nouveauté est maintenu au-dessus de la plage atteignable : la règle
+se déclenche sur tous les tickets, et c'est l'effet recherché, puisque la solution rédigée à la
+clôture est ce qui alimente la base de connaissances décrite à la section~\ref{sec:boucle5}. Ce qui
+était un accident de calibrage devient une décision énoncée.
+
+Un dernier écart a été corrigé au passage : le seuil servi était recopié dans le code de
+l'application au lieu d'être lu dans le fichier de paramètres, de sorte que le service et la mesure
+pouvaient diverger sans que rien ne le signale. Ils partagent maintenant une source unique, et un
+test automatique échoue si un seuil hors de portée du score hybride est réintroduit.
+
+\textbf{Une mesure ancienne à ne pas citer.} Les métadonnées du moteur sémantique rapportent une similarité moyenne de 0,9321 contre 0,7646 pour
+la recherche lexicale. Un lecteur qui ouvre ces fichiers rencontrera ces nombres, que deux
+précisions écartent de toute citation.
+
+La quantité mesurée n'est pas celle du tableau~\ref{tab:moteurs5} : il s'agit de la similarité du
+\emph{meilleur} passage, quand la campagne rapporte la similarité moyenne des \emph{trois} passages
+retenus. Et cette mesure a été conduite sur un index de \textbf{476 documents}, à un stade
+antérieur du projet, alors que l'index servi en contient 1\,357. La campagne rapportée au
+tableau~\ref{tab:moteurs5} reste la référence unique de ce chapitre, parce qu'elle mesure les trois
+moteurs sous un protocole identique et sur l'index réellement servi.
+
+\section{Validation de la solution}
+
+\label{sec:validation7}
+
+Cette section réunit ce qui atteste de la validité de la solution livrée : la suite de tests
+automatisés et ce qu'elle couvre, puis la confrontation des exigences du chapitre~1 aux mesures
+obtenues.
+
+\subsection{Tests de la solution}
+
+\label{sec:tests7}
+
+Une suite de deux cent soixante tests automatisés accompagne le service. Elle s'exécute en
+une minute vingt et passe intégralement. Ce nombre ne dit rien à lui seul, et cette section décrit
+ce qu'il couvre et ce qu'il laisse de côté. La grille d'évaluation proposée par Breck et ses
+coauteurs~\cite{breck2017} rappelle qu'un système d'apprentissage se teste sur quatre fronts, les
+données, le modèle, l'infrastructure et la surveillance, et que le dernier est le plus souvent
+négligé. Notre bilan ne fait pas exception.
+
+\textbf{Le périmètre de la suite automatisée.} La figure~\ref{fig:tests7} donne l'exécution de la suite et la couverture qu'elle atteint.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=\textwidth]{ch06_ecran_motdepasse.jpg}
-\caption{Demande de réinitialisation du mot de passe}
-\label{fig:ecran_motdepasse6}
+\includegraphics[width=\textwidth]{ch07_tests.png}
+\caption{Exécution de la suite de tests et couverture mesurée}
+\label{fig:tests7}
 \end{figure}
 
-La figure~\ref{fig:ecran_motdepasse6} ouvre le parcours de réinitialisation. L'écran annonce qu'un
-lien sera envoyé si l'adresse correspond à un compte, formulation prudente qui reprend celle du
-serveur : répondre différemment selon l'existence du compte transformerait ce point d'entrée en
-annuaire des collaborateurs. Le lien reçu expire au bout de trente minutes et ne sert qu'une fois,
-et seule son empreinte est conservée en base.
+La couverture est forte là où une régression serait silencieuse, les règles métier à 100\,\%, le
+contrôle qualité à 99\,\% et le registre des modèles à 95\,\%. Elle est nulle sur la surveillance,
+dont les scripts lisent la production et ne transforment rien.
 
-\subsection{Portail du demandeur}
+\textbf{Des tests qui protègent des règles.} Quelques tests méritent d'être cités parce qu'ils inscrivent une règle métier plutôt qu'un
+comportement technique, et qu'ils la rendent indélébile.
 
-Le portail comporte un accueil, un formulaire de dépôt, la liste des demandes, le détail d'une
-demande et le profil.
+La frontière anti-fuite vérifie qu'aucune ligne issue de la production ne peut entrer dans le jeu
+de test gelé. Sans elle, le corpus collecté en exploitation contaminerait progressivement la
+référence d'évaluation, et les mesures des chapitres suivants perdraient leur sens sans que
+personne s'en aperçoive.
+
+Le refus des suggestions produites par le système vérifie qu'une solution non relue par un humain
+ne peut pas entrer dans la base de connaissances. C'est la règle décrite au chapitre~5, et le test
+la protège contre une évolution ultérieure qui la lèverait par commodité.
+
+L'idempotence de la promotion couvre un défaut trouvé en relecture, où la porte échouait lorsqu'on
+la rejouait sur une décision déjà prise. Le test existe parce que le défaut a existé, et il
+appartient à ce titre à l'histoire du projet autant qu'à sa qualité.
+
+\textbf{Les zones non couvertes.} Plusieurs manques doivent être énoncés, faute de quoi le nombre de deux cent soixante donnerait une
+impression de couverture que la réalité ne soutient pas.
+
+L'interface n'est pas couverte. Quatorze fichiers de test existent du côté Angular, mais ils
+totalisent treize cas, pour la plupart issus de la génération automatique, et quatre d'entre eux ne
+contiennent aucun cas. Un rendu correct des écrans décrits au chapitre~7 ne repose donc sur aucune
+vérification automatique.
+
+Les tests de charge ne font pas partie de la suite. Ils constituent une campagne distincte, dont la
+section suivante rend compte, et ils ne sont pas rejoués à chaque modification.
+
+\textbf{Exécution automatique et couverture mesurée.} Une chaîne d'intégration continue exécute la suite à chaque poussée et à chaque demande de fusion
+vers la branche principale. Elle installe les dépendances sur une copie propre du dépôt, lance les
+tests, échoue si l'un d'eux échoue, et conserve le rapport de couverture.
+
+Cette copie propre impose une restriction qu'il faut énoncer. Le corpus, le pipeline entraîné et
+l'index vectoriel sont suivis par le gestionnaire de versions de données et absents du dépôt de
+code : l'export d'origine porte les noms des demandeurs, et c'est de lui que descendent ces
+artefacts. Les vingt-six tests d'intégration du
+service chargent le pipeline au démarrage et ne peuvent donc pas s'exécuter dans cet environnement.
+La chaîne en exécute deux cent trente-quatre, qui couvrent les règles métier, la préparation des textes, les
+moteurs de recherche, le registre des modèles, la porte de promotion et le cycle de vie de la base
+de connaissances.
+
+La couverture mesurée sur ces deux cent trente-quatre tests s'établit à 51\,\% des instructions du
+code source de traitement, et le chiffre ne bouge pas lorsque la suite entière s'exécute en local,
+les tests d'intégration portant sur le service et non sur ce code. Rapportée au service entier,
+couche applicative comprise, elle atteint 58\,\%. Ce chiffre recouvre des situations très
+différentes. La préparation des textes et
+les règles métier sont couvertes intégralement, le registre des modèles à 95\,\% et la fusion
+hybride à 89\,\%. À l'inverse, les deux modules de surveillance ne sont atteints par aucun test. Le
+moteur sémantique, lui, passe de 29 à 67\,\% : la correction de son élargissement, décrite à la
+section~\ref{sec:doublons5}, a été accompagnée des tests qui manquaient.
+La couverture est donc forte là où une régression serait silencieuse, et faible là où elle serait
+immédiatement visible.
+
+\subsection{Le temps de réponse, exigence non tenue}
+
+L'exigence de performance fixe la latence de prédiction à 300\,ms au quatre-vingt-quinzième
+centile. Une campagne de charge a été menée sur le point d'entrée de prédiction, dans
+l'environnement conteneurisé décrit à la section~\ref{sec:conteneurs7}, donc avec deux processus de
+travail. La figure~\ref{fig:charge7} en rapporte le relevé.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=\textwidth]{ch06_ecran_depot.jpg}
-\caption{Portail du demandeur, formulaire de dépôt guidé}
-\label{fig:ecran_depot6}
+\includegraphics[width=\textwidth]{ch07_charge.jpg}
+\caption{Campagne de charge sur le point d'entrée de prédiction}
+\label{fig:charge7}
 \end{figure}
 
-Le formulaire de dépôt a été reconstruit après une observation d'usage : sa première version
-demandait un titre et une description sans indication, et produisait des descriptions d'un ou deux
-mots, inexploitables par le classifieur comme par l'administrateur. La version reproduite ci-dessus
-remplace la zone libre par quatre questions, dont une seule est obligatoire : ce qui ne va pas,
-depuis quand, quel message d'erreur s'affiche, et ce qui a déjà été tenté. Chaque champ porte un
-exemple de formulation, un sélecteur permet de partir d'un cas courant, et le choix de la filiale
-complète la saisie.
+Le budget n'est tenu dans aucun des trois scénarios. Le cas séquentiel en approche pourtant : avec
+330\,ms au quatre-vingt-quinzième centile pour un budget de 300, l'écart tient à quelques dizaines
+de millisecondes. La médiane, à 105\,ms, montre que la majorité des requêtes passe largement sous
+le budget, et que ce sont les requêtes lentes qui font échouer la mesure.
 
-Ce découpage n'est pas une simple commodité d'écran. Les réponses fournies sont assemblées en un
-texte unique qui devient la description transmise au service, et c'est ce texte que le classifieur
-lit pour proposer une catégorie, le titre ne lui étant pas soumis ; une question laissée vide
-n'ajoute rien à l'assemblage. Le corpus du chapitre~3 montrait une longueur médiane de description
-de trente-trois mots : la qualité de la saisie conditionne directement celle de la proposition.
+La dégradation sous concurrence est d'une autre nature. Le quatre-vingt-quinzième centile est
+multiplié par trois entre une requête à la fois et cinq requêtes simultanées, puis par quinze entre
+cinq et vingt. À vingt requêtes simultanées, près d'une sur cinq n'aboutit pas.
 
-\begin{figure}[!htbp]
+L'explication tient à la conception du point d'entrée plutôt qu'à un défaut d'implémentation. Le
+traitement d'une prédiction est gourmand en calcul : encodage du texte, prédiction du classifieur,
+recherche dans l'index. Ce traitement est écrit de manière synchrone et occupe donc son processus
+de bout en bout. Avec deux processus de travail seulement, deux requêtes suffisent à saturer le
+service, et les suivantes attendent. Le langage employé ne permet pas à plusieurs fils d'exécution
+de contourner cette limite sur un traitement de cette nature.
+
+Trois voies de correction existent, et nous les énonçons sans en avoir mesuré l'effet. Augmenter le
+nombre de processus de travail est immédiat et sans risque fonctionnel. Rendre le point d'entrée
+asynchrone et déporter le calcul sur un exécuteur dédié demande une reprise du code. Séparer les
+composants d'intelligence artificielle dans un service distinct, choix écarté au chapitre~7 pour
+éviter un appel réseau, redeviendrait défendable si la charge le justifiait.
+
+Une réserve de méthode s'impose sur ces chiffres. La campagne a été conduite sur une machine de
+développement, sur trente à deux cents requêtes selon le scénario, et sur un seul point d'entrée.
+Elle établit un ordre de grandeur et un comportement sous concurrence, non une caractérisation de
+production.
+
+\subsection{Bilan de conformité}
+
+\label{sec:conformite7}
+
+Le tableau~\ref{tab:conformite7} reprend les catégories d'exigences non fonctionnelles du
+chapitre~1 et leur oppose l'état mesuré. La confidentialité y occupe deux lignes plutôt qu'une,
+parce que ses deux volets ne connaissent pas le même sort et qu'une appréciation unique les
+confondrait.
+
+\begin{table}[!htbp]
 \centering
-\includegraphics[width=\textwidth]{ch06_ecran_suivi.jpg}
-\caption{Portail du demandeur, suivi d'une demande}
-\label{fig:ecran_suivi6}
-\end{figure}
+\styletableau
+\caption{Conformité aux exigences non fonctionnelles}
+\label{tab:conformite7}
+\begin{tabular}{|Bp{3.3cm}|Cp{2.2cm}|Lp{8.1cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Catégorie} & \textbf{État} & \textbf{Constat} \\
+\hline
+Performance & Non tenue & 330\,ms au quatre-vingt-quinzième centile sans concurrence, pour un
+budget de 300\,ms \\
+\hline
+Qualité de l'IA & Non tenue & Protocole arrêté avant l'expérimentation et respecté, seuils non
+franchis \emph{par le modèle servi}. Le meilleur modèle mesuré atteint 0,8343 de F1-macro dans la
+configuration publiée, et 0,8644 sur l'entrée que l'application lui enverrait réellement
+(section~\ref{sec:servable4}), donc au-dessus de la cible de 0,85 ; mais il n'est pas servi, et le
+classifieur livré obtient 0,5827 sous le même protocole. Même partage sur \emph{Sécurité} : 0,90
+pour le meilleur modèle sur l'entrée de production, une cible à 0,70, et zéro pour le classifieur
+livré sur le jeu de test gelé, où trois scénarios de sécurité seulement sont tirés \\
+\hline
+Confidentialité, services externes & Tenue & Aucun appel à un service externe, modèle de langage
+exécuté localement \\
+\hline
+Confidentialité, données personnelles & Partielle & Pseudonymisation par empreinte à clé posée sur
+le corpus et la chaîne d'export ; audit de 322 fragments de noms, aucun retrouvé hors de l'export
+d'origine. Les durées de conservation attendent un arbitrage écrit du service, et les personnes
+n'ont pas été informées \\
+\hline
+Sécurité & Tenue & Jeton signé, contrôle de rôle, empreintes bcrypt ; aucun secret exploitable dans
+le dépôt, démarrage en production refusé sans génération \\
+\hline
+Fiabilité & Tenue & Le modèle de langage n'intervient sur aucun chemin obligatoire \\
+\hline
+Maintenabilité & Partielle & 260 tests côté service, dont 234 rejoués par l'intégration continue
+pour 51\,\% de couverture du code de traitement, 58\,\% sur le service entier ; interface non
+couverte \\
+\hline
+Reproductibilité & Tenue & Pipeline déclaré, jeu de test gelé et référencé par empreinte \\
+\hline
+Portabilité & Tenue & Quatre services conteneurisés, démarrage par une commande \\
+\hline
+\end{tabular}
+\end{table}
 
-L'écran de suivi répond à l'attente la plus simple du demandeur, savoir où en est son dossier sans
-relancer le service, en présentant l'état d'avancement en langage courant, les cas comparables déjà
-traités et un moyen de contact.
+Sur les neuf lignes, cinq sont tenues, deux le sont partiellement et deux ne le sont pas. La qualité
+de l'IA figure parmi ces dernières, et le motif demande à être énoncé précisément : l'exigence
+porte sur le classifieur, et le classifieur livré obtient 0,5827 pour une cible de 0,85. Les 0,8343
+que ce chapitre rapporte, et les 0,8644 que le chapitre~4 mesure sur l'entrée de production, sont
+les scores d'un modèle que le service n'exécute pas, pour les raisons de coût exposées à la
+section~\ref{sec:production}. Juger l'exigence sur lui reviendrait à certifier un système qui n'est
+pas livré, et le fait que ce modèle franchisse désormais la cible ne change rien à cette règle : il
+déplace la question de la qualité vers le coût de service, il ne la supprime pas. Le volet
+des données personnelles a changé d'état depuis la première rédaction, et nous disons ce qui a
+bougé et ce qui n'a pas bougé. Le corpus et la chaîne d'export pseudonymisent désormais les
+personnes par empreinte à clé : la même personne reçoit toujours le même pseudonyme, le service
+peut réidentifier avec la clé, et aucune table de correspondance n'est conservée. Un auditeur
+indépendant cherche 322 fragments de noms relevés dans l'export d'origine et n'en retrouve aucun
+ailleurs. Ce qui manque n'est plus technique : les durées de conservation sont déclarées avec les
+autres paramètres mais le script de purge refuse de tourner tant que le service ne les a pas
+arrêtées, et les personnes n'ont pas été informées. La section~\ref{sec:rgpd} chiffre l'exposition
+d'origine : 202 collaborateurs et onze consultants nommés dans le corpus. Ces deux décisions
+relèvent du service et non du stage ; elles figurent au registre des risques sous la référence R-05
+et aux perspectives du chapitre~7. La fiabilité, elle,
+mérite une justification, car elle repose sur une propriété de conception. Le modèle de langage
+n'est joignable que par deux points d'entrée dédiés, l'un pour la synthèse des cas voisins, l'autre
+pour l'échange avec l'administrateur. Ni le dépôt d'une demande ni la clôture d'un ticket ne le
+sollicitent. Son indisponibilité prive donc l'administrateur d'une aide à la lecture, sans arrêter
+le service.
 
-Ce qu'il ne montre pas résulte d'une décision : ni la catégorie proposée, ni l'index de confiance,
-ni le score de similarité. Une première version les affichait. Un index de confiance n'a pas de
-signification pour qui ignore comment il est calculé, et il inquiète plus qu'il n'informe ; surtout,
-afficher une catégorie proposée avant qu'un administrateur ne l'ait confirmée revient à annoncer un
-diagnostic que le service peut contredire devant l'utilisateur.
+Du côté fonctionnel, le tableau~\ref{tab:ef} du chapitre~1 en compte quatorze. Douze sont
+satisfaites ; deux ne le sont pas, et ne peuvent pas l'être sur ce corpus. Onze relèvent du
+chapitre~7, qui en satisfait neuf ; les trois autres, la classification automatique, la recherche
+de cas comparables et la synthèse rédigée, relèvent des chapitres~4 et~5 et sont satisfaites.
 
-Un bouton d'avis permet de signaler si la réponse apportée a été utile. Il n'apparaît qu'une fois la
-demande résolue, et seulement tant qu'aucun avis n'a été donné, ce qui explique son absence sur la
-figure~\ref{fig:ecran_suivi6}, prise sur un ticket encore en cours de traitement. Sa première
-version affichait un remerciement sans rien transmettre au serveur, défaut trouvé en vérification
-et corrigé.
+\textbf{Deux exigences reprises après la première rédaction.} EF-07, l'orientation selon l'index
+de confiance, était calculée sans servir : le score était affiché et rangé par tranches, et aucun
+routage ne s'en emparait. Le ticket porte désormais une décision d'orientation prise à sa création
+et journalisée avec son motif en clair, que trois raisons déclenchent — une confiance sous le seuil,
+une catégorie imposée par une règle métier, ou l'absence de tout cas comparable. EF-11, le résumé
+automatique, est livrée par retrait extractif : les seize formules de civilité du corpus ont été
+trouvées par une règle — une ligne présente sous au moins la moitié des titres d'entraînement
+n'appartient à aucun scénario — et non écrites à la main. Le gain est de 33,3\,\% du texte sur le
+jeu de test gelé, donc sur des scénarios inédits, et aucun ticket n'y perd.
 
+\textbf{Deux exigences que la mesure déclare hors d'atteinte.} EF-12, la suggestion de priorité, a
+été entraînée puis écartée : le modèle à trois niveaux a un rappel nul sur la priorité basse, et
+ramené au binaire, lorsqu'il annonce « priorité haute » il a raison 51,3\,\% du temps pour un taux
+de base de 44,1\,\%. Un gain de sept points sur le hasard ne justifie pas d'afficher une priorité
+qu'un administrateur suivrait. EF-13, l'analyse de tonalité, échoue plus nettement encore : sur
+vingt-cinq termes d'urgence du français courant posés \emph{avant} la mesure, vingt sont absents du
+corpus, il n'y a aucun point d'exclamation dans 1\,444 tickets, et sur les 97 mots qui séparent le
+mieux les priorités, 95 n'apparaissent que sous un ou deux titres — ils reconnaissent un scénario,
+pas une humeur. À la place, un relevé de signaux de gravité énoncés par le demandeur est livré,
+dont l'écart au taux de base est mesuré : perte de données $+0{,}28$, indisponibilité $+0{,}16$,
+blocage $+0{,}13$. Un quatrième signal, l'impossibilité, a été retiré après mesure : 44\,\% des
+tickets pour deux centièmes de point. Ces deux exigences sont donc closes par une démonstration
+d'impossibilité sur ce corpus, non par abandon, et c'est une réponse différente.
+
+\section{Limites du système}
+
+\label{sec:limites7}
+
+Les chapitres précédents ont signalé leurs limites au fil de l'exposé. Le
+tableau~\ref{tab:limites7} les rassemble, sans en ajouter ni en retrancher, parce qu'un lecteur a
+besoin de les voir ensemble pour juger de ce que le système permet. La colonne de droite renvoie au
+registre des risques du projet lorsque la limite y est suivie.
+
+{\singlespacing
+\styletableau
+\setlength{\LTcapwidth}{\textwidth}
+\begin{longtable}{|Bp{3.3cm}|Lp{8.6cm}|Cp{1.2cm}|}
+\caption{Limites du système, regroupées par origine}
+\label{tab:limites7} \\
+\hline
+\rowcolor{enteteTab}
+\textbf{Limite} & \textbf{Ce qu'elle implique} & \textbf{Suivi} \\
+\hline
+\endfirsthead
+\multicolumn{3}{l}{\small\itshape Tableau \thetable\,: suite de la page précédente} \\
+\hline
+\rowcolor{enteteTab}
+\textbf{Limite} & \textbf{Ce qu'elle implique} & \textbf{Suivi} \\
+\hline
+\endhead
+\hline
+\multicolumn{3}{r}{\small\itshape suite page suivante} \\
+\endfoot
+\hline
+\endlastfoot
+\multicolumn{3}{|l|}{\cellcolor{enteteTab}\textit{Corpus}} \\
+\hline
+Diversité insuffisante & 58 titres distincts pour 1\,800 tickets, soit 3\,\%. Le système apprend
+sur un petit nombre de scénarios répétés & \\
+\hline
+Jeu de test partiel & Cinq catégories sur huit seulement. Les trois absentes obtiennent un score nul
+faute d'exemples, non par défaut du modèle & \\
+\hline
+Déséquilibre persistant & Quelques tickets suffisent à déplacer d'un palier entier le score d'une
+catégorie minoritaire & \\
+\hline
+\multicolumn{3}{|l|}{\cellcolor{enteteTab}\textit{Composants d'intelligence artificielle}} \\
+\hline
+Classifieur servi en deçà du meilleur mesuré & 0,5827 contre 0,8343 de F1-macro, et 0,8644 sur
+l'entrée de production, sous le protocole des expériences qui seul permet de les comparer.
+Arbitrage fondé sur le coût d'inférence, 128,5\,ms à la longueur utile contre 5,0\,ms par ticket :
+il appelle une décision du service, non l'attente d'une carte graphique & \\
+\hline
+Règles liées au référentiel & Un autre service, ou un autre découpage des catégories, exigerait de
+les réécrire & \\
+\hline
+Arbitrage du seuil non tranché par la mesure & Le seuil recalibré à 0,35 privilégie la pureté des
+suggestions, 0,5185, sur leur nombre, 2,02 au lieu de 3,00. Il a de plus été choisi sur les
+requêtes qui servent à le juger : hors échantillon, la précision retombe à 0,4886 & R-20 \\
+\hline
+Annotation non validée par un expert & Les quarante requêtes sont annotées, mais par l'auteur et non par un consultant du service : le jugement porte sur l'adéquation au problème, pas sur le temps réellement gagné
+& R-22 \\
+\hline
+Latence du modèle de langage & De treize à vingt secondes, contrepartie directe de l'exécution
+locale. Tolérable parce que l'appel reste facultatif et réservé à l'administrateur & \\
+\hline
+\multicolumn{3}{|l|}{\cellcolor{enteteTab}\textit{Exploitation}} \\
+\hline
+Temps de réponse hors budget & Mesuré et expliqué à la section~\ref{sec:validation7}, y compris sans
+concurrence & \\
+\hline
+Secrets par défaut & Les fichiers d'exemple portent des marqueurs, et aucune analyse de
+vulnérabilité n'est menée sur les images conteneurisées & R-09 \\
+\hline
+Données personnelles : le volet organisationnel reste ouvert & Le corpus et la chaîne d'export sont
+pseudonymisés et l'audit ne retrouve aucun nom, mais les durées de conservation ne sont pas
+arrêtées et les personnes n'ont pas été informées. Le volet (b) de l'exigence ENF-04 n'est donc
+satisfait qu'à moitié, et le reste demande une décision du service & R-05 \\
+\hline
+Couverture de tests incomplète & L'intégration continue écarte les dix-huit tests exigeant des
+artefacts versionnés, et l'interface n'est couverte par aucune vérification automatique & \\
+\hline
+Routage automatique non branché & L'appareillage existe, aucun routage ne s'en sert. Arbitrage de
+produit plutôt que manque technique & R-16 \\
+\hline
+\multicolumn{3}{|l|}{\cellcolor{enteteTab}\textit{Portée des mesures}} \\
+\hline
+Jeu de test étroit & 356 tickets, cinq catégories, douze scénarios. Une mesure par catégorie se
+déplace par paliers entiers & \\
+\hline
+Campagne de charge indicative & Machine de développement, un seul point d'entrée, quelques centaines
+de requêtes. Ordre de grandeur, non caractérisation de production & \\
+\hline
+Aucune mesure sur trafic réel & Le service n'a pas encore d'usage. Savoir si les propositions aident
+le support suppose d'observer ce que les administrateurs en font & \\
+\hline
+\end{longtable}}
+
+
+
+Deux de ces limites tiennent à des choix assumés plutôt qu'à des défauts. Le classifieur servi est
+moins performant que le meilleur mesuré parce que le budget de latence l'imposait, et la latence du
+modèle de langage est le prix de la confidentialité exigée au chapitre~1. Les autres appellent un
+travail que la conclusion générale porte aux perspectives.
+
+
+% Aucun flottant du corps ne doit franchir la conclusion.
 \FloatBarrier
-
-\subsection{Console d'administration et file d'approbation}
-
-La console comporte un tableau de bord, la file d'approbation, la liste complète des tickets, le
-détail d'un ticket, un écran de veille, la gestion des comptes et la supervision.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch06_ecran_file.jpg}
-\caption{Console d'administration, file d'approbation}
-\label{fig:ecran_file6}
-\end{figure}
-
-La file d'approbation est le point d'entrée de l'administrateur. Sa première version présentait un
-formulaire de décision qui dupliquait l'écran de détail sans rien apporter, l'administrateur
-validant sans lire puis rouvrant le ticket pour le traiter réellement ; il a été retiré.
-
-Un simple clic sur une ligne déclenche désormais quatre effets enchaînés : le statut passe à la
-prise en charge, un message d'information est déposé sur le ticket à l'intention du demandeur, le
-ticket est affecté à l'administrateur qui a cliqué, et l'interface redirige vers l'écran de détail. Le message reste
-volontairement générique à ce stade, informant que la demande est traitée sans promesse de délai ;
-le message personnalisé intervient à la clôture, moment où l'administrateur dispose effectivement
-de quelque chose à annoncer.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch06_ecran_bord.jpg}
-\caption{Console d'administration, tableau de bord}
-\label{fig:ecran_bord6}
-\end{figure}
-
-Le tableau de bord donne au responsable du service la vue d'ensemble que le circuit par messagerie
-ne permettait pas : combien de demandes, de quelle nature, et en combien de temps traitées. Les
-valeurs lisibles sur la figure~\ref{fig:ecran_bord6} proviennent de l'environnement de recette et
-n'ont aucun rapport avec le corpus étudié au chapitre~3, elles illustrent la forme de l'écran.
-
-Un écran de supervision distinct expose la version du modèle servi, la décision de promotion la
-plus récente, les indicateurs de dérive et l'état de la base de connaissances. Il lit les mêmes
-fichiers que la chaîne de traitement des données et des modèles, sans les recalculer.
-
-L'écran de veille rassemble ce qui appelle l'attention de l'administrateur au moment où il se
-connecte : les demandes en attente, celles ouvertes depuis plus de vingt-quatre heures, les
-derniers avis déposés par les demandeurs et les comptes créés dans la semaine. Ces listes sont
-calculées à partir des tickets et des comptes déjà chargés dans la console. Aucun courriel ni
-aucune alerte n'est émis vers le demandeur, conformément au périmètre posé au chapitre~1.
-
-\FloatBarrier
-
-\subsection{Validation humaine et bouclage de la résolution}
-\label{sec:bouclage6}
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch06_ecran_detail.jpg}
-\caption{Console d'administration, traitement d'un ticket}
-\label{fig:ecran_detail6}
-\end{figure}
-
-L'écran de détail concentre l'essentiel du travail de l'administrateur et matérialise la garantie
-énoncée en introduction. Le traitement s'y déroule en trois temps.
-
-\begin{puces}
-  \item La \textbf{revue} présente la demande, la catégorie proposée, les cas voisins et leur
-        reformulation ; l'administrateur y forme son diagnostic sans rien saisir. C'est ce moment
-        que reproduit la figure~\ref{fig:ecran_detail6}, où la fenêtre de solution suggérée expose
-        deux tickets historiques voisins et la reformulation qui les accompagne.
-  \item Les \textbf{champs de clôture} rassemblent la catégorie finale, la priorité finale et le
-        statut visé. Les regrouper à ce moment plutôt qu'à la prise en charge correspond à l'ordre
-        réel du travail, puisqu'ils ne sont connus qu'une fois le problème compris.
-  \item La \textbf{solution appliquée} fait l'objet d'une fenêtre distincte, ouverte à
-        l'enregistrement, ce qui matérialise le fait qu'il s'agit de la contribution durable de
-        l'administrateur.
-\end{puces}
-
-Cette dernière étape est obligatoire. Lorsqu'un ticket est clos avec le statut \emph{Résolu} et que
-son score de similarité n'atteint pas le seuil de nouveauté, le service refuse la clôture tant que
-la solution n'est pas rédigée ; le chapitre~5 a montré que le moteur servi n'atteint jamais ce
-seuil en évaluation, ce qui revient à dire que la solution est en pratique exigée à chaque clôture.
-
-L'obligation sert deux fins. Elle garantit que la base de connaissances reçoit une solution rédigée
-par un humain, condition sans laquelle le contrôle qualité du chapitre~5 la refuserait, et elle
-interdit qu'une suggestion produite par le système soit acceptée sans qu'un administrateur l'ait
-reprise à son compte. La séparation des attributs de proposition et de décision, exposée à la
-section~\ref{sec:classes6}, complète le dispositif au niveau des données.
-
-Un espace de dialogue permet de poser des questions de suivi à l'assistant sur le ticket courant,
-dans les limites décrites au chapitre~5. La liste des tickets autorise par ailleurs l'édition
-directe des champs de qualification, sans passer par l'écran de détail, possibilité demandée en
-cours de projet pour les corrections en série sur des tickets déjà traités.
-
-\FloatBarrier
-
-\section{Workflow global de traitement d'un ticket}
-\label{sec:workflow6}
-
-Une demande naît dans le formulaire du portail. Le classement et la recherche de cas voisins
-s'appliquent aussitôt, et le ticket est enregistré avec sa proposition, son index de confiance et
-la règle métier éventuellement déclenchée, puis le demandeur reçoit son numéro de suivi. Le
-connecteur d'ingestion constitue un second chemin d'entrée qui rejoint exactement le même
-traitement, sans qu'aucune demande ne l'emprunte à ce jour.
-
-Le ticket rejoint la file d'approbation, où toutes les demandes passent quelle que soit la
-confiance du classifieur. La prise en charge fait basculer le statut, affecte le ticket et prévient
-le demandeur. L'administrateur revoit ensuite le dossier, corrige la qualification si la
-proposition était fausse, demande au besoin une reformulation des cas voisins, et rédige la
-solution qu'il a appliquée. Le serveur contrôle la transition d'état demandée, refuse la clôture
-sans solution, puis journalise champ par champ ce qui a changé, avec son auteur et son horodatage.
-
-La clôture ne termine pas le parcours. La solution rédigée passe par le contrôle qualité du
-chapitre~5, qui vérifie notamment qu'elle provient bien d'un humain, puis rejoint la base de
-connaissances où elle devient candidate dès le ticket similaire suivant. Le ticket clos reste
-modifiable, une erreur de qualification découverte après coup se corrigeant sans rouvrir le
-dossier.
-
-Le parcours se referme ainsi sur lui-même. Le service résout une demande, la résolution enrichit la
-base, et la demande suivante en bénéficie. C'est le seul mécanisme par lequel la plateforme
-s'améliore sans intervention sur son code.
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
 
-Ce chapitre a transformé trois composants isolés en une application utilisable. Un service en trois
-couches expose trente-quatre chemins sous un contrat typé, protégés par des jetons signés et un
-contrôle d'accès RBAC déclaratif ; une interface de quinze écrans sert deux espaces distincts, et
-un parcours métier contrôlé côté serveur relie le dépôt à la clôture. La conception a été gouvernée
-par une exigence unique, celle de ne jamais laisser le système décider, qui se traduit dans le
-diagramme de classes où proposition et décision occupent des attributs séparés, dans la traçabilité
-des états où la solution rédigée par un humain conditionne la clôture, et dans l'interface où le
-demandeur ne voit pas une catégorie que le service n'a pas encore confirmée.
+L'évaluation est close. Sous le protocole des expériences, la meilleure combinaison mesurée — un
+transformer adapté par LoRA et complété de règles métier — atteint 0,8343 de F1-macro dans la
+configuration publiée et 0,8644 sur l'entrée que l'application lui enverrait, contre
+0,5827 pour la chaîne lexicale munie des mêmes règles. C'est pourtant la seconde qui est servie,
+parce que l'inférence du transformer coûte 128,5\,ms par ticket sur processeur, à la longueur de
+séquence que le corpus demande, contre 5,0\,ms.
+Mesurée sous le protocole du pipeline, sur le jeu de test gelé où trois catégories n'ont aucun
+ticket, cette même chaîne obtient 0,4372 ; les deux nombres ne se comparent pas. L'arbitrage est
+assumé et son prix est chiffré — et le chiffre a baissé depuis la première rédaction, ce qui en
+fait désormais une décision à prendre plutôt qu'une impossibilité à constater.
 
-Plusieurs choix rapportés ici sont des corrections issues d'un usage qui a contredit une hypothèse
-de départ : le formulaire de dépôt reconstruit après avoir produit des descriptions inexploitables,
-la file d'approbation simplifiée après avoir dupliqué l'écran de détail, l'affichage client épuré
-après avoir exposé des scores mal interprétés.
+Le moteur hybride place 0,3667 de passages pertinents dans le trio de tête, meilleure valeur des
+trois moteurs comparés sans filtre, et ses suggestions sont justes à 0,5185 une fois le seuil
+recalibré — chiffre à lire comme une borne haute, le seuil ayant été choisi sur les requêtes qui
+le jugent. L'analyse de ce seuil a surtout révélé un défaut de conception que la mesure seule
+aurait laissé passer : fixé à 0,50 sur une échelle où le score hybride plafonne à 0,4886, il ne
+filtrait rien et marquait pourtant « repli » la totalité des recommandations.
 
-Quatre limites tempèrent ce bilan. Les repositories attendent le code qu'ils annoncent, et la
-logique de transition réside toujours dans le router. Le routage par index de confiance attend un
-arbitrage de produit. Trois exigences de priorité moyenne ou faible n'ont pas été traitées. Le
-classifieur servi reste enfin la chaîne lexicale, moins performante de 0,25 point de F1-macro que
-le transformer disponible, arbitrage que le chapitre suivant mesure et justifie. Le chapitre~7 met
-la plateforme à l'épreuve : déploiement, chaîne d'apprentissage, tests, campagne de charge et bilan
-de conformité aux exigences.
+Trois exigences chiffrées ne sont pas tenues : le temps de réponse, le rappel sur la catégorie
+\emph{Sécurité}, et la qualité du classifieur, dont la cible de 0,85 n'est atteinte par aucun des
+deux modèles et surtout pas par celui qui est servi. Les limites du système sont énoncées plutôt que masquées. Le chapitre suivant
+ouvre la dernière phase et montre comment la solution devient un service installable.

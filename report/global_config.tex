@@ -14,9 +14,8 @@
 
 %========= Config the cover section ==========%
 
-\title{Conception et développement d'une plateforme intelligente de
-classification et d'assistance à la résolution de tickets informatiques
-par NLP et RAG}
+\title{Conception et développement d'un assistant de qualification et de
+résolution des tickets informatiques}
 
 \author{Mohamed Amine TOUKABRI}
 
@@ -44,35 +43,45 @@ par NLP et RAG}
 \academicSignSentence{J'autorise l'étudiant à faire le dépôt de son rapport de stage en vue d'une soutenance.}
 
 %%% FR
-\frenchAbstract{Le service support de OneTech Business Solutions traite les demandes informatiques de huit filiales du
-groupe. Ses tickets résolus s'accumulent dans une liste partagée sans jamais être réutilisés. Ce mémoire
-présente HelpDesk AI, une plateforme qui qualifie une demande déposée en texte libre et lui associe
-les cas déjà résolus les plus proches. Le corpus compte 1\,800 tickets répartis en huit catégories.
-Le meilleur système de classification obtenu, un transformer francophone adapté par LoRA et complété
-par des règles métier, atteint 0,8343 de F1-macro ; la version servie repose sur une chaîne lexicale
-plus légère. La recherche de cas comparables combine similarité lexicale et similarité sémantique,
-et obtient une précision à trois passages de 0,3542. Un modèle de langage exécuté localement
-reformule la solution retenue. Aucune donnée ne quitte le réseau de l'entreprise, et la décision
-finale sur chaque ticket reste à l'administrateur. Les limites du travail tiennent à la faible
-diversité du corpus, à un temps de réponse qui n'atteint pas encore le budget fixé, et à
-l'absence de mesure du gain d'usage.}
+\frenchAbstract{Le service support de OneTech Business Solutions traite les demandes informatiques
+de huit filiales. Ses tickets s'accumulent dans une liste partagée sans jamais resservir. Ce
+mémoire présente HelpDesk AI, une plateforme qui qualifie une demande rédigée en texte libre et lui
+rattache les cas déjà traités les plus proches.
+\par\smallskip
+Le corpus réunit 1\,800 tickets en huit catégories, dont 476 au statut \emph{Résolu}. Le meilleur
+classifieur mesuré, un transformer francophone adapté par LoRA et complété de règles métier,
+atteint 0,8343 de F1-macro sous un découpage stratifié par titre, et 0,8644 sur l'entrée que la
+production lui fournirait ; trop coûteux à servir sur processeur, il cède la place à une chaîne
+lexicale qui obtient 0,5827 sous le même protocole. La
+recherche de cas comparables croise similarité lexicale et sémantique : son seuil recalibré, elle
+rend 2,0 suggestions par demande, justes à 0,5185 — valeur majorée, le seuil ayant été choisi sur
+le jeu qui l'évalue. Un modèle de langage exécuté sur place reformule la solution retenue.
+\par\smallskip
+Aucune donnée ne quitte le réseau de l'entreprise, et la décision finale revient à
+l'administrateur. Trois limites subsistent : la faible diversité du corpus, un temps de réponse
+au-dessus du budget fixé, et l'absence de mesure du gain d'usage.}
 
 \frenchAbstractKeywords{classification de tickets, traitement automatique du langage naturel,
 CamemBERT, génération augmentée par récupération, recherche hybride, exécution locale, MLOps}
 
 %%% EN
 \englishAbstract{The IT support desk of OneTech Business Solutions handles requests from eight
-subsidiaries of the group. Its resolved tickets pile up in a shared list and are never reused again. This
-thesis presents HelpDesk AI, a platform that classifies a request written in free text and attaches
-the closest cases already solved. The corpus holds 1,800 tickets across eight categories. The best
-classification system obtained, a French transformer adapted with LoRA and completed by business
-rules, reaches a macro F1 of 0.8343 under a leakage-free split grouped by ticket type; the served
-version relies on a lighter lexical chain, since running the transformer on CPU costs 325.8 ms per
-ticket against 5.0 ms. Case retrieval combines lexical and semantic similarity and reaches a
-precision at three passages of 0.3542. A locally executed language model rephrases the retrieved
-solution. No data leaves the company network, and the final decision on every ticket remains with
-the administrator. The limitations of this work lie in the low diversity of the corpus, a response
-time that does not yet meet the stated budget, and the absence of a measured usage gain.}
+subsidiaries. Its tickets pile up in a shared list and are never reused. This thesis presents
+HelpDesk AI, a platform that classifies a request written in free text and attaches the closest
+cases already handled.
+\par\smallskip
+The corpus holds 1,800 tickets across eight categories, 476 of them marked \emph{Resolved}. The
+best classifier measured, a French transformer adapted with LoRA and completed by business rules,
+reaches a macro F1 of 0.8343 under a leakage-free split stratified over ticket types, and 0.8644 on
+the input production would actually give it; too costly to serve on CPU, it gives way to a lexical
+chain scoring 0.5827 under the same protocol. Case
+retrieval combines lexical and semantic similarity: once its threshold is recalibrated, it returns
+2.0 suggestions per request at a precision of 0.5185 — an upper bound, as the threshold was chosen
+on the very set that scores it. A locally executed language model rephrases the retrieved solution.
+\par\smallskip
+No data leaves the company network, and the final decision rests with the administrator. Three
+limitations remain: the low diversity of the corpus, a response time above the stated budget, and
+the absence of a measured usage gain.}
 
 \englishAbstractKeywords{ticket classification, natural language processing, CamemBERT,
 retrieval-augmented generation, hybrid search, on-premise inference, MLOps}

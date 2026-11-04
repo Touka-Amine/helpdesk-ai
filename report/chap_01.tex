@@ -1,12 +1,13 @@
+\addtocontents{toc}{\protect\phasecrisp{Phase 1 --- Compréhension du métier}}
 \chapter{Contexte général du projet}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
 
-Ce premier chapitre situe le projet. Il présente l'organisme d'accueil et le service au sein duquel
-les travaux se sont déroulés, analyse le fonctionnement du support informatique avant notre
-intervention, en déduit la problématique et expose la solution retenue. Il décrit ensuite la
-démarche de conduite adoptée, qui commande le découpage des chapitres suivants.
+Ce premier chapitre situe le projet et fixe ce qu'il doit accomplir. Il présente l'organisme d'accueil, étudie
+le fonctionnement du support informatique avant notre intervention, en déduit la problématique et
+expose la solution retenue. Il traduit ensuite le besoin en exigences vérifiables, puis décrit la
+démarche de conduite adoptée.
 
 Une précision de méthode s'impose d'emblée, car elle vaut pour tout le chapitre. Les éléments
 relatifs au groupe et à la filiale proviennent de deux sources nommément citées : la présentation
@@ -15,9 +16,16 @@ l'entreprise~\cite{otbs-site}. Tout ce qui concerne le service support et son fo
 déduit du fichier d'export des tickets, dont le chapitre~3 détaille la constitution. Lorsqu'une
 information nous a manqué, nous le disons plutôt que de la combler.
 
+Dans la démarche CRISP-DM, que sa dernière section expose, ce chapitre porte la phase de
+compréhension du métier.
+
 \section{Présentation de l'organisme d'accueil}
 
-\subsection{Le groupe OneTech}
+Le projet s'est déroulé dans une filiale d'un groupe industriel tunisien, au sein d'une
+direction restreinte, et sous des règles de confidentialité qui ont pesé sur les choix
+techniques dès le premier jour.
+
+\subsection{Le groupe OneTech et sa filiale Business Solutions}
 
 OneTech Group est un groupe industriel tunisien présent sur les marchés de l'automobile, de
 l'énergie et de l'industrie. Il revendique quarante années d'expertise sur trois métiers, le câble,
@@ -29,20 +37,20 @@ présence dans plus de cinquante pays et plus de 4\,500 collaborateurs~\cite{otb
 trois ordres de grandeur situent l'échelle de l'ensemble auquel appartient notre structure
 d'accueil, et expliquent la diversité des filiales que le service support dessert.
 
-\subsection{OneTech Business Solutions}
-
 \otbs, désignée par le sigle \OTBS dans la suite du mémoire, est la filiale qui porte l'activité des
 technologies de l'information. Elle se présente comme un intégrateur indépendant de solutions à
-forte valeur ajoutée, du conseil jusqu'à l'exploitation.
+forte valeur ajoutée, du conseil jusqu'à l'exploitation. Son identité visuelle est celle que porte
+la figure~\ref{fig:logo-otbs}.
 
 % Logo institutionnel, repris de la page de garde (tpl/cover_page.tex, img/logoSociete.png).
-% Bloc centre plutot que flottant : il doit rester sous le paragraphe de presentation.
-\begin{center}
+% Place avec [H] plutot que flottant : il doit rester sous le paragraphe de presentation.
+\begin{figure}[H]
+\centering
 \includegraphics[width=0.45\textwidth]{logoSociete.png}
-\end{center}
+\caption{Logo de \otbs}
+\label{fig:logo-otbs}
+\end{figure}
 
-% Le tableau d'identite ouvre la page suivante (demande de mise en page).
-\newpage
 
 Le tableau~\ref{tab:otbs} rassemble les éléments d'identité de l'entreprise, tels que la
 présentation d'intégration les énonce.
@@ -81,9 +89,8 @@ Sa clientèle se répartit entre les télécommunications, le pétrole et le gaz
 secteur financier. Ces domaines partagent une sensibilité marquée à la circulation de leurs données,
 ce qui pèse directement sur les choix techniques que nous exposons plus loin.
 
-\FloatBarrier
+\subsection{Organisation interne et cadre de confidentialité}
 
-\subsection{Organisation interne}
 \label{sec:organigramme1}
 
 Six directions se rattachent à la direction générale : les opérations, les systèmes d'information,
@@ -114,8 +121,19 @@ interviennent aussi en prestation chez les clients. L'organigramme dit qui exist
 autorité ; il ne dit pas qui prend en charge tel ticket un jour donné. Seul l'export de l'outil de
 suivi répond à cette question, et la section~\ref{sec:perimetre1} s'y emploie.
 
-% Figure placee en fin de sous-section : le commentaire qui l'accompagne se lit
-% d'abord, l'organigramme le referme. [H] l'empeche de deriver ailleurs.
+\textbf{Le cadre de confidentialité.} La session d'intégration consacre une section entière aux règles de qualité et de sécurité :
+confidentialité des informations, sauvegarde, bureau propre, encadrement de l'accès sans fil,
+supervision et vigilance~\cite{otbs-integration}. Ces règles s'appliquent à tout intervenant, stagiaire
+compris.
+
+Nous en avons tiré une contrainte de conception, posée avant toute étude technique et jamais
+remise en cause depuis : aucune donnée de ticket ne peut être transmise à un service d'intelligence
+artificielle hébergé par un tiers. Ce chapitre la formalise en exigence non fonctionnelle, et les
+chapitres~4 et~5 montrent ce qu'elle a coûté, en performance comme en temps de réponse.
+
+% Figure placee en fin de sous-section : tout le commentaire, y compris le cadre
+% de confidentialite qui clot le propos, se lit d'abord ; l'organigramme referme
+% la sous-section. [H] l'empeche de deriver ailleurs.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{ch01_organigramme.pdf}
@@ -124,71 +142,29 @@ générale hors branche des opérations}
 \label{fig:organigramme1}
 \end{figure}
 
-\subsection{Le cadre de confidentialité}
+\section{Cadre du projet}
 
-La session d'intégration consacre une section entière aux règles de qualité et de sécurité :
-confidentialité des informations, sauvegarde, bureau propre, encadrement de l'accès sans fil,
-supervision et vigilance~\cite{otbs-integration}. Ces règles s'appliquent à tout intervenant, stagiaire
-compris.
+Cette section étudie le service tel qu'il fonctionnait avant notre intervention, confronte ce
+diagnostic aux outils du marché, puis formule la question à laquelle le travail répond. Tout ce qui
+suit est déduit du fichier d'export des tickets, dont le chapitre~3 détaille la constitution.
 
-Nous en avons tiré une contrainte de conception, posée avant toute étude technique et jamais
-remise en cause depuis : aucune donnée de ticket ne peut être transmise à un service d'intelligence
-artificielle hébergé par un tiers. Le chapitre~2 la formalise en exigence non fonctionnelle, et les
-chapitres~4 et~5 montrent ce qu'elle a coûté, en performance comme en temps de réponse.
+\subsection{Étude de l'existant}
 
-\section{Le service support et son fonctionnement}
-
-\subsection{Le ticketing, socle organisationnel du support}
 \label{sec:ticketing1}
 
-Une équipe informatique traite chaque jour des incidents techniques, des problèmes d'accès, des
-dysfonctionnements applicatifs, des demandes de configuration et des pannes d'équipement. Gérées
-par courrier électronique, par téléphone ou par messagerie instantanée, ces demandes se suivent mal.
-L'information se perd, les délais s'allongent, et la charge réelle de l'équipe devient invisible.
+\textbf{Le ticketing, socle organisationnel du support.} Un système de gestion de tickets
+centralise les demandes, les trace et les affecte. Chaque demande y devient un ticket portant une
+description, une catégorie, une priorité, un statut et l'historique de son traitement. En disposer
+ne garantit pourtant pas un traitement efficace : quand le volume augmente, les consultants restent
+absorbés par la lecture des descriptions, la qualification, l'orientation et la recherche d'une
+solution déjà appliquée. Ce sont ces opérations que la littérature sur l'automatisation des tickets
+cherche à alléger~\cite{alhawari2019,zangari2023}, en qualifiant automatiquement la demande et en
+retrouvant les cas semblables, la décision restant au consultant. C'est le principe retenu pour
+HelpDesk AI, et les pages qui suivent le confrontent à la situation observée chez \OTBS.
 
-Les systèmes de gestion de tickets répondent à ce besoin en centralisant, structurant et traçant les
-demandes. Chaque demande devient un ticket portant un identifiant, une description, une catégorie,
-une priorité, un statut, un demandeur et l'historique de son traitement. Cette structuration
-conserve les interactions et permet de suivre le ticket de sa création à sa résolution.
-
-Quatre apports en découlent, et ils fondent l'intérêt du dispositif.
-
-\begin{puces}
-  \item \textbf{Traçabilité.} L'historique d'un ticket dit quelles actions ont été menées, par qui,
-        et où en est le traitement. Il rend aussi visibles les incidents qui se répètent.
-  \item \textbf{Priorisation et affectation.} Les tickets se classent par nature, par priorité ou
-        par impact, puis s'orientent vers l'équipe compétente. La charge se répartit, et les
-        incidents critiques passent devant.
-  \item \textbf{Pilotage.} Les données accumulées alimentent des indicateurs : volumes reçus,
-        catégories les plus fréquentes, délais de traitement, charge par équipe. Le responsable y
-        lit les difficultés récurrentes et arbitre l'organisation du service.
-  \item \textbf{Capitalisation.} Les tickets résolus forment progressivement un fonds de solutions
-        déjà éprouvées, réutilisable sur les incidents semblables, ce qui réduit la dépendance à la
-        mémoire de tel ou tel consultant.
-\end{puces}
-
-Disposer d'un tel système ne garantit pourtant pas un traitement efficace. Quand le volume augmente,
-les consultants restent absorbés par des tâches répétitives : lire la description, qualifier
-l'incident, l'orienter vers le bon intervenant, chercher une solution dans l'historique. Ces
-opérations consomment une part importante de leur temps sans produire de valeur nouvelle, et ce sont
-elles que la littérature sur l'automatisation des tickets cherche à
-alléger~\cite{alhawari2019,zangari2023}.
-
-C'est là que l'apprentissage automatique complète le dispositif. Un système intelligent qualifie
-automatiquement le ticket, assortit sa proposition d'un index de confiance, retrouve les tickets
-semblables et suggère les solutions consignées dans la base de connaissances. Son objet n'est pas de
-se substituer au consultant : il lui présente les éléments dont il a besoin pour décider plus vite.
-
-Le système de gestion de tickets reste donc le socle organisationnel qui centralise et trace les
-demandes, et la couche d'intelligence artificielle vient améliorer certaines étapes du traitement.
-Cette complémentarité est le principe retenu pour HelpDesk AI, où les fonctions automatiques
-assistent le consultant tout en laissant la validation à un humain. Les sections qui suivent
-confrontent ce principe à la situation observée chez \OTBS.
-
-\subsection{Périmètre et acteurs du service}
 \label{sec:perimetre1}
 
-Le projet s'est déroulé au sein du service assurant le support informatique interne, sous
+\textbf{Périmètre et acteurs du service.} Le projet s'est déroulé au sein du service assurant le support informatique interne, sous
 l'encadrement de Mme Rahma Oueslati, consultante en systèmes d'information.
 
 L'organigramme de la section~\ref{sec:organigramme1} situe les directions de l'entreprise sans
@@ -232,9 +208,7 @@ changement. Une colonne de priorité en distingue quatre, du mineur au critique.
 donc déjà d'un vocabulaire de gestion de services, sans qu'aucun de ces trois axes ne soit exploité
 autrement que par lecture humaine.
 
-\subsection{Volumétrie observée}
-
-Le corpus couvre quatorze mois, du 1\textsuperscript{er} janvier 2025 au 17 février 2026, pour
+\textbf{Volumétrie observée.} Le corpus couvre quatorze mois, du 1\textsuperscript{er} janvier 2025 au 17 février 2026, pour
 1\,800 tickets déposés. La figure~\ref{fig:volumetrie} en donne la répartition mensuelle.
 
 \begin{figure}[!htbp]
@@ -253,41 +227,17 @@ n'a pas de pic à absorber, et le gain attendu d'une assistance automatique ne r
 l'écrêtage d'une surcharge. Il réside dans le temps passé, ticket après ticket, sur des gestes que
 la section~\ref{sec:repetitivite} montre concentrés sur un petit nombre de cas.
 
-\subsection{L'outil de suivi et la qualité de ses données}
-
-L'enregistrement reposait sur une liste SharePoint. Nous ne le déduisons pas d'un entretien mais du
+\textbf{L'outil de suivi et la qualité de ses données.} L'enregistrement reposait sur une liste SharePoint. Nous ne le déduisons pas d'un entretien mais du
 fichier d'export : la colonne \texttt{Chemin d'accès} porte, sur les 1\,800 lignes et sans exception,
 la valeur \texttt{sites/IT-Check/Lists/HelpDesk}. Une telle liste assure la saisie et
 l'historisation, sans offrir ni tri automatique ni recherche dans les résolutions passées. Surtout,
 elle ne contient que ce qu'un consultant a pris le temps d'y consigner.
 
-L'export porte dix-huit colonnes, dont six ne sont pas systématiquement renseignées. Le
-tableau~\ref{tab:completude1} donne leur taux de remplissage.
+L'export porte dix-huit colonnes, dont six ne sont pas systématiquement renseignées : la
+priorité, l'affectation, l'analyse, la résolution, l'identifiant de rattachement et la date de
+résolution. Le chapitre~2 en donne les taux et les interprète, la qualité des données relevant de
+l'étude du corpus plutôt que de l'état des lieux du service.
 
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Taux de remplissage des colonnes incomplètes de l'export}
-\label{tab:completude1}
-\begin{tabular}{|Bp{4.6cm}|Cp{2.6cm}|Lp{6.8cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Colonne} & \textbf{Rempli} & \textbf{Lecture} \\
-\hline
-Priorité & 97\,\% & Champ facultatif à la saisie \\
-\hline
-Assigné à & 97\,\% & Cinquante-cinq tickets n'ont jamais été affectés \\
-\hline
-Analyse & 94\,\% & Renseignée après l'intervention \\
-\hline
-Résolution ou motif & 94\,\% & Renseignée après l'intervention \\
-\hline
-CID & 50\,\% & Identifiant de rattachement, souvent omis \\
-\hline
-Date de résolution & 26\,\% & Ne concerne que les tickets résolus \\
-\hline
-\end{tabular}
-\end{table}
 
 Un défaut plus discret mérite d'être signalé, car il illustre ce qu'une saisie sans contrôle
 produit. La colonne des dates de création mêle deux formats, 972 lignes au format jour, mois, année
@@ -295,9 +245,7 @@ et 828 au format année, mois, jour. Une lecture naïve du fichier n'en interpr�
 silencieusement 46\,\% du corpus. Le chapitre~3 revient sur les nettoyages que cet état de fait a
 rendus nécessaires.
 
-\subsection{Le cycle de vie du ticket}
-
-Le processus n'ayant jamais été formalisé, nous l'avons déduit des données. Le champ \texttt{STATUT}
+\textbf{Le cycle de vie du ticket.} Le processus n'ayant jamais été formalisé, nous l'avons déduit des données. Le champ \texttt{STATUT}
 prend cinq valeurs qui décrivent un cycle de vie complet, restitué à la figure~\ref{fig:processus}.
 
 \begin{figure}[!htbp]
@@ -319,10 +267,9 @@ demande sur deux parvenue à son terme se solde par un refus. Ce taux renseigne 
 difficulté des cas soumis au service que sur l'absence de contrôle à l'entrée. Le fichier
 n'enregistre aucun motif structuré de rejet, et nous ne pouvons donc pas en décomposer les causes.
 
-\subsection{Répétitivité des résolutions}
 \label{sec:repetitivite}
 
-Une dernière observation achève de caractériser ce travail. Sur les 1\,800 tickets du corpus, la
+\textbf{Répétitivité des résolutions.} Une dernière observation achève de caractériser ce travail. Sur les 1\,800 tickets du corpus, la
 colonne consacrée aux gestes de résolution ne compte que 58 valeurs distinctes. Les colonnes de
 titre, d'analyse et de base de connaissances en comptent exactement autant, ce qui indique qu'elles
 sont solidaires : le service traite cinquante-huit situations types, répétées une trentaine de fois
@@ -337,9 +284,7 @@ Le temps des consultants se concentre alors sur des tâches sans valeur ajoutée
 qualifier la demande pour l'orienter, retrouver un cas comparable dans l'historique, rédiger la
 réponse au demandeur. Aucune n'exige l'expertise pour laquelle ils ont été recrutés.
 
-\subsection{Limites du diagnostic}
-
-L'honnêteté du diagnostic exige d'en marquer les bords. Plusieurs éléments qu'un état des lieux
+\textbf{Limites du diagnostic.} L'honnêteté du diagnostic exige d'en marquer les bords. Plusieurs éléments qu'un état des lieux
 complet comporterait nous ont manqué, faute de réponse à la demande d'informations adressée à
 l'entreprise. Nous les énonçons ici plutôt que de les combler par des suppositions.
 
@@ -354,9 +299,7 @@ gain de temps attendu de la plateforme. Ils ne l'affaiblissent pas sur ce que le
 directement, à savoir la répétitivité du travail, le déséquilibre des catégories, le taux de rejet
 et l'absence de mémoire interrogeable. Ce risque est suivi au registre du projet.
 
-\section{Problématique et solution proposée}
-
-\subsection{Limites de l'existant et besoins associés}
+\subsection{Limites de l'existant et solutions du marché}
 
 Le tableau~\ref{tab:limites} met les limites constatées en regard du besoin qu'elles engendrent.
 
@@ -394,9 +337,7 @@ Contrôler la saisie à la source plutôt qu'après coup \\
 Ces limites partagent une même origine : le dispositif en place enregistre une partie de
 l'information, après coup, sans jamais l'exploiter.
 
-\subsection{Les solutions du marché}
-
-Trois familles d'outils auraient pu répondre au besoin, et aucune ne le fait entièrement dans notre
+\textbf{Les solutions du marché.} Trois familles d'outils auraient pu répondre au besoin, et aucune ne le fait entièrement dans notre
 contexte.
 
 Les plateformes en mode service, telles Zendesk ou Freshdesk, supposent l'hébergement des données
@@ -406,11 +347,47 @@ proposer nativement de classification apprise sur l'historique du service. Les s
 gestion des services informatiques, du type ServiceNow, sont dimensionnées pour des organisations
 d'une tout autre échelle que celle d'une équipe de onze personnes.
 
-Aucune ne réunit simultanément le traitement du français métier tel que ce service l'écrit,
-l'exécution sur l'infrastructure de l'entreprise et l'exploitation de l'historique propre au
-service. C'est ce constat qui fonde la problématique du projet.
+Le tableau~\ref{tab:marche1} confronte ces trois familles aux trois exigences que le contexte
+impose. Aucune colonne n'est pleine, et c'est ce constat qui fonde la problématique du projet.
 
-\subsection{Énoncé de la problématique}
+\begin{table}[!htbp]
+\centering
+\singlespacing
+\styletableau
+\renewcommand{\arraystretch}{1.25}
+\caption{Les trois familles d'outils du marché face aux exigences du contexte}
+\label{tab:marche1}
+\begin{tabular}{|Lp{4.0cm}|Cp{3.1cm}|Cp{3.1cm}|Cp{3.3cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Exigence du contexte} &
+\textbf{Plateformes en mode service}\newline \small\textit{Zendesk, Freshdesk} &
+\textbf{Solutions libres hébergeables}\newline \small\textit{GLPI} &
+\textbf{Suites complètes de gestion}\newline \small\textit{ServiceNow} \\
+\hline
+Les données ne quittent pas l'infrastructure de l'entreprise &
+\cellcolor{refus}\textbf{Non}\newline \small hébergement chez l'éditeur &
+\cellcolor{tenu}\textbf{Oui} &
+\cellcolor{tenu}\textbf{Oui} \\
+\hline
+Classification apprise sur l'historique propre au service &
+\cellcolor{tenu}\textbf{Oui} &
+\cellcolor{refus}\textbf{Non}\newline \small pas de classification native &
+\cellcolor{tenu}\textbf{Oui} \\
+\hline
+Dimensionnement adapté à une équipe de onze personnes &
+\cellcolor{tenu}\textbf{Oui} &
+\cellcolor{tenu}\textbf{Oui} &
+\cellcolor{refus}\textbf{Non}\newline \small échelle bien supérieure \\
+\hline
+\end{tabular}
+\end{table}
+
+Aucune famille ne réunit simultanément le traitement du français métier tel que ce service l'écrit,
+l'exécution sur l'infrastructure de l'entreprise et l'exploitation de l'historique propre au
+service.
+
+\subsection{Problématique}
 
 \begin{center}
 \begin{minipage}{0.92\textwidth}
@@ -430,7 +407,7 @@ minoritaires ? Une recherche sémantique fondée sur des représentations vector
 surpasse-t-elle une recherche lexicale ? Comment calibrer la confiance du modèle pour définir un
 seuil au-delà duquel sa proposition peut être tenue pour suffisamment sûre ?
 
-\subsection{La solution proposée}
+\section{Solution proposée et périmètre du travail}
 
 Nous proposons une plateforme, nommée HelpDesk AI, dont la figure~\ref{fig:solution} donne la vue
 fonctionnelle.
@@ -457,9 +434,7 @@ base de connaissances. L'application distingue en conséquence deux parcours, un
 demandeur crée et suit ses tickets, et une console d'administration où le consultant examine les
 propositions, les corrige si nécessaire et clôt les demandes.
 
-\subsection{Périmètre du travail}
-
-Reste à délimiter le périmètre, ce que fait le tableau~\ref{tab:perimetre}. Poser cette frontière
+\textbf{Périmètre du travail.} Reste à délimiter le périmètre, ce que fait le tableau~\ref{tab:perimetre}. Poser cette frontière
 dès le cadrage protège l'évaluation contre le reproche de ne pas avoir traité ce qui n'a jamais été
 promis.
 
@@ -494,9 +469,297 @@ Supervision en exploitation et reprise sur incident \\
 Le livrable attendu est une plateforme démontrable et documentée, accompagnée d'une évaluation
 honnête de ce qu'elle apporte et de ses limites. Sa mise en exploitation reste hors sujet.
 
+\textbf{Les contraintes qui ont pesé.} Quatre contraintes ont pesé sur le travail du cadrage jusqu'à la
+soutenance. Le
+tableau~\ref{tab:contraintes1} les réunit avec ce que chacune a écarté.
+
+\begin{table}[!htbp]
+\centering
+\singlespacing
+\styletableau
+\renewcommand{\arraystretch}{1.15}
+\caption{Contraintes du projet, leur origine et ce qu'elles ont écarté}
+\label{tab:contraintes1}
+\begin{tabular}{|Bp{2.9cm}|Lp{5.4cm}|Lp{4.8cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Contrainte} & \textbf{Origine} & \textbf{Ce qu'elle a écarté} \\
+\hline
+Confidentialité des tickets &
+Règles de sécurité de l'entreprise, énoncées à la session d'intégration et reprises en ENF-04 &
+Les services d'inférence hébergés. Le modèle de langage s'exécute sur place, ce qui pèse sur le
+temps de réponse \\
+\hline
+Un corpus étroit &
+L'historique que le service a pu fournir : 1\,800 lignes, 58 types de demandes, 8 catégories dont
+deux réunissent moins de cinq pour cent des tickets &
+L'entraînement d'un modèle depuis zéro. Le travail porte sur l'adaptation d'un modèle déjà
+pré-entraîné \\
+\hline
+Un matériel modeste &
+Le processeur graphique mis à disposition dispose de 2\,Go de mémoire vidéo &
+L'ajustement complet d'un transformer. L'adaptation à faible rang répond à cette limite \\
+\hline
+La décision reste humaine &
+Principe posé au cadrage avec le service support &
+La clôture prononcée par le système. Toute demande passe par une file d'approbation \\
+\hline
+\end{tabular}
+\end{table}
+
+Ces contraintes ne sont pas des obstacles rencontrés en chemin. Elles étaient connues au cadrage,
+elles commandent les choix techniques des chapitres~4 et~5, et le chapitre~6 chiffre ce qu'elles ont
+coûté.
+
+\label{sec:positionnement2}
+
+\textbf{Ce que le travail apporte en propre.} Les techniques mobilisées sont d'usage courant. Ce
+qui distingue ce travail tient aux conditions dans lesquelles elles sont mises en œuvre et à ce que
+nous avons choisi de mesurer : l'apport de règles métier ajoutées à un modèle statistique, mesuré au
+lieu d'être supposé, et des scores obtenus sous un découpage qui regroupe les tickets par type avant
+le tirage, précaution qui empêche un même type de demande de figurer à la fois dans l'apprentissage
+et dans l'évaluation. Les chapitres~4 et~6 rapportent ces mesures. Elles valent dans les limites de
+leur cadre : un seul service, une seule entreprise, un corpus francophone dont la faible diversité
+interdit de présumer que les résultats se transporteraient ailleurs.
+
+\section{Analyse et spécification des besoins}
+
+\label{sec:besoins1}
+
+Le besoin décrit plus haut se traduit ici en exigences vérifiables, chacune portant un
+identifiant auquel les chapitres suivants se réfèrent.
+
+\subsection{Objectifs du projet}
+\label{sec:objectifs1}
+
+Sept objectifs résument ce que la plateforme doit accomplir. Doter le service d'un point
+d'entrée unique où aucune demande n'échappe à l'historique. Proposer une catégorie à chaque
+demande entrante, sans laisser passer celles qui relèvent de la sécurité. Remonter des
+résolutions passées comparables avec leurs sources, et les présenter assez vite pour que l'outil
+soit préféré à la lecture directe du ticket. Laisser la décision à l'administrateur, aucune
+clôture n'étant prononcée par le système. Rendre enfin la chaîne de traitement des données et
+des modèles rejouable à l'identique.
+
+Chacun se traduit dans les pages qui suivent en exigences numérotées, dont le critère
+d'acceptation permet au chapitre~6 de conclure sans avoir à juger du résultat.
+
+\subsection{Acteurs du système}
+
+La plateforme distingue deux profils, récapitulés au tableau~\ref{tab:acteurs}. Cette distinction se
+traduit directement dans le contrôle d'accès RBAC de l'application, qui ne connaît que deux rôles.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Acteurs du système et responsabilités associées}
+\label{tab:acteurs}
+\begin{tabular}{|Bp{3.4cm}|Cp{2.2cm}|Lp{8.2cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Acteur} & \textbf{Rôle} & \textbf{Responsabilités} \\
+\hline
+Demandeur & \texttt{client} & Créer une demande, suivre son avancement, consulter la réponse
+apportée \\
+\hline
+Administrateur & \texttt{admin} & Traiter les tickets : consulter la qualification proposée et les
+cas comparables avec leurs sources, valider ou corriger, répondre au demandeur. Superviser
+l'activité : volumes, catégories, délais, gestion des comptes \\
+\hline
+\end{tabular}
+\end{table}
+
+Les administrateurs sont les consultants du service support eux-mêmes ; le terme désigne leur rôle
+dans l'application, non une fonction distincte dans l'organisation. Ce regroupement du traitement et
+de la supervision s'écarte des référentiels de gestion de services informatiques, qui séparent
+l'agent du responsable. Cette séparation n'aurait ici aucun objet : le service compte onze
+consultants qui traitent les demandes et suivent collectivement l'activité, sans échelon
+intermédiaire.
+
+Le demandeur n'a délibérément aucune visibilité sur les mécanismes de classification : ni la
+catégorie prédite ni l'index de confiance ne lui sont présentés. Exposer une prédiction incertaine à
+un utilisateur non spécialiste reviendrait à lui faire porter un arbitrage qui ne lui revient pas.
+
+\subsection{Besoins fonctionnels}
+
+Chaque exigence porte un critère d'acceptation vérifiable et un niveau de priorité : \textbf{élevée}
+lorsqu'elle conditionne la livraison, \textbf{moyenne} lorsque son report resterait acceptable,
+\textbf{faible} pour un apport de confort. Le tableau~\ref{tab:ef} les regroupe par niveau ; la
+colonne \emph{Domaine} rappelle à quelle partie du parcours du ticket chacune se rattache.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Exigences fonctionnelles et critères d'acceptation}
+\label{tab:ef}
+% Meme interligne resserre que le tableau des exigences non fonctionnelles :
+% les deux tableaux de specification gardent ainsi la meme densite.
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{|Cp{1.3cm}|Lp{4.2cm}|Lp{5.1cm}|Lp{2.5cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Réf.} & \textbf{Exigence} & \textbf{Critère d'acceptation} & \textbf{Domaine} \\
+\hline
+\multicolumn{4}{|l|}{\cellcolor{enteteTab}\textbf{Priorité élevée} : conditionne la livraison} \\
+\hline
+EF-01 & Authentification et gestion des rôles & Accès restreint selon le rôle, jeton vérifié à chaque appel & Cycle de vie \\
+\hline
+EF-02 & Création d'un ticket par le demandeur & Ticket persisté, statut initial renseigné & Cycle de vie \\
+\hline
+EF-03 & Journal d'audit des modifications & Chaque changement tracé avec son auteur et sa date & Cycle de vie \\
+\hline
+EF-04 & Suivi du ticket par le demandeur & Statut et réponse consultables & Cycle de vie \\
+\hline
+EF-05 & Classification automatique en catégorie & Catégorie et index de confiance retournés & Traitement \\
+\hline
+EF-06 & Recherche de cas comparables & Trois résolutions proposées avec leurs sources & Traitement \\
+\hline
+EF-07 & Orientation selon l'index de confiance & Cas peu assurés dirigés vers une revue humaine & Traitement \\
+\hline
+EF-08 & Validation ou correction par l'administrateur & Catégorie finale et solution enregistrées & Qualité \\
+\hline
+\multicolumn{4}{|l|}{\cellcolor{enteteTab}\textbf{Priorité moyenne} : le report resterait acceptable} \\
+\hline
+EF-09 & Synthèse rédigée à l'attention du consultant & Réponse formulée, sources citées, garde-fous actifs & Traitement \\
+\hline
+EF-10 & Recueil du retour du demandeur & Avis persisté et exploitable & Qualité \\
+\hline
+EF-11 & Résumé automatique du ticket & Résumé affiché à l'administrateur & Qualité \\
+\hline
+EF-12 & Suggestion de priorité & Niveau proposé à la prise en charge & Qualité \\
+\hline
+\multicolumn{4}{|l|}{\cellcolor{enteteTab}\textbf{Priorité faible} : apport de confort} \\
+\hline
+EF-13 & Analyse de tonalité du message & Indicateur d'urgence affiché & Qualité \\
+\hline
+EF-14 & Tableau de bord d'activité & Volumes, catégories et délais consultables & Qualité \\
+\hline
+\end{tabular}
+\end{table}
+
+% Le commentaire qui suit porte sur le tableau : la barriere empeche le flottant
+% de deriver apres lui, ce qui ferait lire l'explication avant la piece expliquee.
+
+Le classement en trois niveaux suit les dépendances du parcours d'un ticket. Les huit exigences de
+priorité élevée forment la chaîne minimale sans laquelle une demande ne peut ni exister, ni être
+qualifiée, ni être tranchée : la déposer (EF-02), la qualifier (EF-05, EF-06, EF-07), décider de son
+sort (EF-08), la suivre (EF-04) et savoir qui est intervenu (EF-01, EF-03). En retirer une seule
+interrompt le parcours décrit plus haut, et la solution cesse alors de répondre au problème qui
+l'a motivée.
+
+Les exigences de priorité moyenne allègent le travail du consultant sans conditionner ce parcours.
+Un ticket se traite sans synthèse rédigée ni résumé automatique : le consultant lit la description
+lui-même, comme il le faisait avant l'outil. Celles de priorité faible n'interviennent pas dans le
+traitement d'une demande ; elles servent à observer l'activité une fois celle-ci traitée.
+
+Une exigence appelle une réserve, posée ici plutôt que laissée à la découverte du lecteur :
+l'exigence EF-09 s'appuie sur des gabarits de texte et non sur une génération libre par le modèle
+de langage.
+
+\subsection{Besoins non fonctionnels}
+
+Les exigences non fonctionnelles fixent les seuils que la solution devra tenir, et ce sont eux que le chapitre~6 confrontera aux mesures.
+
+% Placement [H] : le tableau doit suivre immediatement le titre de la sous-section.
+% En [!htbp] il flottait vers la page suivante et laissait une demi-page blanche.
+\begin{table}[H]
+\centering
+\styletableau
+\caption{Exigences non fonctionnelles}
+\label{tab:enf}
+% Interligne resserre et colonne d'exigence elargie : neuf lignes tiennent ainsi
+% sous le titre de la sous-section, au lieu d'imposer une page a elles seules.
+\renewcommand{\arraystretch}{1.05}
+\begin{tabular}{|Cp{1.4cm}|Bp{3.2cm}|Lp{9.4cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Réf.} & \textbf{Catégorie} & \textbf{Exigence} \\
+\hline
+ENF-01 & Performance & Prédiction et recherche servies sous 300\,ms au quatre-vingt-quinzième centile \\
+\hline
+ENF-02 & Qualité de l'IA & F1-macro du classifieur d'au moins 0,85, mesuré selon un protocole arrêté
+avant l'expérimentation \\
+\hline
+ENF-03 & Qualité de l'IA & Rappel d'au moins 0,70 sur la catégorie \emph{Sécurité} \\
+\hline
+ENF-04 & Confidentialité & (a) Aucune donnée de ticket transmise à un service externe ;
+(b) traitement des données personnelles conforme à la réglementation \\
+\hline
+ENF-05 & Sécurité & Authentification par jeton, contrôle d'accès RBAC, secrets non exposés \\
+\hline
+ENF-06 & Fiabilité & Fonctionnement dégradé mais opérationnel en cas d'indisponibilité du modèle de
+langage \\
+\hline
+ENF-07 & Maintenabilité & Code structuré en couches et couvert par des tests automatisés \\
+\hline
+ENF-08 & Reproductibilité & Chaîne de traitement des données et des modèles réexécutable à l'identique \\
+\hline
+ENF-09 & Portabilité & Déploiement conteneurisé sur une infrastructure standard \\
+\hline
+\end{tabular}
+\end{table}
+
+Le tableau~\ref{tab:enf} référence les exigences non fonctionnelles sur le même principe que les
+exigences fonctionnelles, de sorte que les chapitres suivants puissent s'y référer sans ambiguïté.
+
+Ces neuf exigences ne proviennent pas d'un référentiel appliqué par principe. Chacune répond à une
+propriété que le service attendait ou à une contrainte qui s'imposait au projet. Le temps de réponse
+(ENF-01) tient à ce qu'un outil plus lent que la lecture directe d'un ticket ne serait pas adopté.
+Le rappel sur la catégorie \emph{Sécurité} (ENF-03) tient à ce qu'elle compte parmi les plus rares du
+référentiel et que l'erreur y coûte le plus cher. Le fonctionnement dégradé (ENF-06) tient à ce que
+le modèle de langage s'exécute sur une machine de l'entreprise, donc peut cesser de répondre.
+
+L'exigence ENF-04 occupe une place à part. Les autres se négocient, une latence pouvant être améliorée ou
+une couverture de tests complétée. Celle-ci traduit une règle interne de l'entreprise et une
+obligation réglementaire sur les données personnelles. Elle a été traitée comme un axiome de
+conception, et c'est elle qui a imposé l'exécution locale du modèle de langage.
+
+Ses deux volets n'ont cependant pas connu le même sort, et nous les distinguons dès leur énoncé
+pour que le bilan du chapitre~6 puisse les juger séparément. Le volet (a), l'absence de service
+externe, relève de l'architecture et se vérifie dans le code livré. Le volet (b), le traitement des
+données personnelles, se partage entre un traitement technique et une décision d'organisation :
+pseudonymisation du corpus d'un côté, durée de conservation et information des personnes de
+l'autre. Le premier a été mis en œuvre et vérifié ; les deux autres dépassent le cadre du stage, et
+présenter le volet comme entièrement satisfait serait inexact. La section~\ref{sec:rgpd} en
+détaille la portée exacte, et le bilan du chapitre~6 le déclare partiellement tenu.
+
+\textbf{Traçabilité des exigences.} Le tableau~\ref{tab:tracabilite} rattache chaque domaine d'exigences au chapitre qui en rend compte.
+La conclusion générale revient sur celles que la solution livrée ne tient pas.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Traçabilité des exigences vers les chapitres de traitement}
+\label{tab:tracabilite}
+\begin{tabular}{|Bp{6.4cm}|Cp{2.2cm}|Lp{4.6cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Domaine d'exigences} & \textbf{Chapitre} & \textbf{Nature du traitement} \\
+\hline
+Gouvernance et qualité des données & 3 & Constitution du corpus, séparation anti-fuite,
+versionnement \\
+\hline
+Classification automatique, qualité de l'IA & 4 & Comparaison des approches, évaluation \\
+\hline
+Assistance à la résolution, confidentialité & 5 & Moteur de similarité, modèle de langage local \\
+\hline
+Cycle de vie, accès, boucle de qualité & 7 & Application web, workflow, validation humaine \\
+\hline
+Sécurité, fiabilité, reproductibilité, portabilité & 3 et 7 & Traitement transverse au fil des
+chapitres, bilan de conformité au chapitre~6 \\
+\hline
+\end{tabular}
+\end{table}
+
 \section{Méthodologie de travail}
 
+Le projet mêle du développement logiciel, dont le résultat se planifie, et de
+l'expérimentation, dont le résultat ne se planifie pas. Le choix d'une démarche devait
+tenir compte des deux.
+
 \subsection{Comparaison des démarches envisagées}
+
+Trois démarches de conduite ont été examinées avant de trancher, chacune portant une
+conception différente de ce qui peut être planifié à l'avance.
 
 \begin{table}[H]
 \centering
@@ -521,7 +784,7 @@ Gestion de l'incertitude & Faible & Bonne sur le produit & Bonne sur la donnée 
 Livrable intermédiaire & Documents de spécification & Incrément fonctionnel & Modèle évalué \\
 \hline
 Limite dans notre contexte & Les résultats d'un modèle ne se planifient pas & Ne couvre pas le cycle
-de vie de la donnée & Ne couvre pas le développement applicatif \\
+de vie de la donnée & Ne décrit pas le développement applicatif, rattaché ici au déploiement \\
 \hline
 \end{tabular}
 \end{table}
@@ -540,20 +803,56 @@ produit logiciel et en laissant de côté la préparation et l'évaluation des d
 jusqu'au déploiement en passant par la préparation, la modélisation et l'évaluation ; il ignore en
 revanche le développement applicatif qui doit rendre le modèle utilisable.
 
-\subsection{Démarche hybride retenue}
+\subsection{Démarche retenue : CRISP-DM}
 
-Nous avons retenu une démarche hybride. Le pilotage général suit une logique agile : le projet est
-découpé en itérations d'une durée comparable. Chacune s'ouvre sur un objectif explicite et se ferme
-sur un livrable démontrable, revu avec l'encadrement avant de passer à la suivante. À l'intérieur
-des itérations consacrées à l'intelligence artificielle, la progression suit le séquencement de
-CRISP-DM : aucun modèle n'a été entraîné avant que les données ne soient comprises et documentées,
-et le protocole d'évaluation de chaque modèle a été arrêté avant son entraînement.
+CRISP-DM est la méthodologie officielle de ce projet. C'est le seul des trois cadres examinés qui
+traite la préparation et l'évaluation des données comme des étapes à part entière, alors qu'elles
+concentrent l'essentiel de la difficulté ici. La figure~\ref{fig:crispdm} en donne la représentation
+usuelle.
 
-Ce dernier point engage la validité des résultats. Définir la métrique et le protocole avant
+% Schema fourni par l'auteur (images/crisp.jpg). Il mesure 552x510 px, ce qui donne
+% environ 145 dpi a cette largeur : lisible a l'ecran, un peu doux a l'impression.
+% Un export du meme schema en 1500 px de large reglerait le point sans rien changer ici.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.62\textwidth]{ch01_crispdm.jpg}
+\caption{Les six phases de la démarche CRISP-DM}
+\label{fig:crispdm}
+\end{figure}
+
+Le schéma se lit comme un cycle fermé : la compréhension du métier l'ouvre, le déploiement y ramène.
+C'est ce bouclage qui a joué ici. L'analyse du corpus, au chapitre~2, a fait apparaître une
+contrainte que l'entretien initial n'avait pas révélée, et le chapitre~6 rapporte des résultats qui
+contredisent l'hypothèse de départ. Chaque retour de ce genre a ouvert une itération nouvelle, où la
+question de départ était reposée avant que le travail technique ne reprenne.
+
+Le développement logiciel ne constitue pas une phase supplémentaire. Il se répartit entre la phase
+de déploiement et d'intégration, qui dans le standard comprend la production du mécanisme de
+livraison, et les itérations successives du projet. L'application du chapitre~7 est ce qui rend les
+modèles utilisables, la conteneurisation du chapitre~7 ce qui les rend installables ailleurs.
+
+La figure~\ref{fig:phases1} place les six phases en regard des sept chapitres.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.98\textwidth]{ch01_crispdm_chapitres.png}
+\caption{Les six phases de CRISP-DM en regard des sept chapitres du mémoire}
+\label{fig:phases1}
+\end{figure}
+
+Deux traits de ce découpage méritent d'être énoncés. La modélisation et l'évaluation se dédoublent,
+parce que le travail a produit deux moteurs et non un, chacun avec sa propre campagne de mesure. Et
+tout n'est pas rattaché à une phase unique : les concepts théoriques sont exposés dans le chapitre qui les mobilise plutôt que rassemblés à part, et deux sections le sont également, la gouvernance des
+données en 3.6 et la chaîne d'apprentissage automatisé en 7.2.
+
+Une règle a été tenue d'un bout à l'autre, et elle engage la validité des résultats : le protocole
+d'évaluation de chaque modèle a été arrêté avant son entraînement. Définir la métrique avant
 l'expérimentation ferme la porte au biais qui consiste à retenir a posteriori l'indicateur le plus
-flatteur. Le chapitre~4 en donne l'illustration : le protocole y a été fixé d'abord, et les
-résultats sont rapportés tels qu'ils sont sortis, y compris lorsqu'ils contredisent l'hypothèse
-initiale.
+flatteur. Le chapitre~6 en donne l'illustration, les résultats y étant rapportés tels qu'ils sont
+sortis, y compris lorsqu'ils contredisent l'hypothèse initiale.
+
+% Aucun flottant du corps ne doit franchir la conclusion.
+\FloatBarrier
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
@@ -563,28 +862,14 @@ mutualisée : onze consultants traitent les demandes de huit filiales du groupe,
 demandeurs. Les interventions sont consignées dans une liste SharePoint qui ne trie rien
 automatiquement et que personne ne peut interroger.
 
-Les 1\,800 tickets accumulés sur quatorze mois donnent quatre constats mesurés. La charge est
-stable, autour de 129 tickets par mois. Le référentiel compte huit catégories, dont la plus
-fréquente dépasse la plus rare d'un facteur 5,93. Près d'une demande close sur deux est un rejet.
-Enfin, cinquante-huit gestes de résolution distincts répondent à 1\,535 formulations différentes.
-Ce dernier écart est le cœur du problème : les questions sont variées, les réponses ne le sont pas.
-
 Trois familles d'outils du marché ont été examinées. Aucune ne réunit à la fois le traitement du
 français tel que ce service l'écrit, l'exécution sur l'infrastructure de l'entreprise et
 l'exploitation de l'historique propre au service. Nous avons donc conçu une plateforme spécifique,
-HelpDesk AI, articulée autour d'un point d'entrée unique, d'un classifieur, d'un moteur de recherche
-par similarité et d'un modèle de langage exécuté localement, chaque décision restant soumise à la
+articulée autour d'un point d'entrée unique, d'un classifieur, d'un moteur de recherche par
+similarité et d'un modèle de langage exécuté localement, chaque décision restant soumise à la
 validation d'un consultant.
 
-Le périmètre a été posé dans le même mouvement. Le livrable attendu est une plateforme démontrable
-et documentée ; sa mise en exploitation chez \OTBS reste hors sujet. La conduite du travail suit une
-démarche hybride, agile pour le pilotage et inspirée de CRISP-DM pour les itérations de
-modélisation, avec une règle qui engage la validité des résultats : le protocole d'évaluation de
-chaque modèle a été arrêté avant son entraînement.
-
-Le chapitre suivant prépare la réalisation. Il expose d'abord les concepts sur lesquels la solution
-repose : la représentation du texte, les modèles \emph{transformers} et CamemBERT, l'adaptation
-économe en paramètres, la classification en présence de classes déséquilibrées, la génération
-augmentée par récupération, l'exécution locale d'un modèle de langage et l'industrialisation des
-modèles d'apprentissage. Il traduit ensuite le besoin décrit ici en exigences fonctionnelles et non
-fonctionnelles, qui serviront de référence à l'évaluation conduite au chapitre~7.
+Le besoin est désormais traduit en exigences numérotées, auxquelles le chapitre~6 confrontera les
+mesures. La conduite du travail suit CRISP-DM, dont les six phases commandent le découpage des
+chapitres qui suivent. Le prochain ouvre la deuxième phase : comprendre les données avant de
+prétendre en tirer quoi que ce soit.

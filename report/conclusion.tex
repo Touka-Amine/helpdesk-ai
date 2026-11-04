@@ -3,41 +3,56 @@
 \markboth{\textbf{Conclusion générale}}{}
 
 Le service support de \otbs réunit onze consultants au service de huit filiales du groupe. En
-quatorze mois, il avait accumulé 1\,800 tickets résolus dont aucun n'était réutilisé. La question
-posée en introduction était de savoir si cet historique pouvait devenir un actif exploitable, sans
+quatorze mois, il avait accumulé 1\,800 tickets, dont 476 seulement menés jusqu'au statut
+\emph{Résolu}, sans qu'aucun ne soit jamais réutilisé. La question posée en introduction était de
+savoir si cet historique pouvait devenir un actif exploitable, sans
 qu'aucune donnée ne sorte de l'infrastructure interne et sans dessaisir le consultant de sa
 décision.
 
 HelpDesk AI y répond. Une demande déposée en texte libre reçoit une catégorie proposée par un
-modèle, accompagnée des tickets déjà résolus les plus proches. L'administrateur corrige, traite et
+modèle, accompagnée des tickets déjà traités les plus proches. L'administrateur corrige, traite et
 rédige la solution appliquée, laquelle rejoint la base de connaissances interrogée par la demande
-suivante. La plateforme compte dix-sept écrans, quatre composants conteneurisés, et cent cinquante
-tests automatisés en protègent le comportement.
+suivante. La plateforme compte dix-sept écrans, quatre composants conteneurisés, et deux cent
+soixante tests automatisés en protègent le comportement.
 
 Le meilleur système de classification obtenu, un transformer francophone adapté par LoRA et complété
-de règles métier, atteint 0,8343 de F1-macro, à seize millièmes de l'objectif fixé avant
-l'expérimentation. La version servie repose sur une chaîne lexicale plus légère, à 0,5829, parce que
-l'inférence du transformer coûte 325,8\,ms par ticket sur processeur contre 5,0\,ms, davantage à
-elle seule que le budget de latence entier. Le moteur de recherche hybride obtient 0,3542 de
-précision à trois passages, et le modèle de langage s'exécute localement sans intervenir sur aucun
-chemin obligatoire.
+de règles métier, atteint 0,8343 de F1-macro dans la configuration publiée, à seize millièmes de
+l'objectif fixé avant l'expérimentation — et 0,8644 lorsqu'il reçoit l'entrée que l'application lui
+enverrait réellement, donc au-dessus de cet objectif. La version servie repose sur une chaîne
+lexicale plus légère, qui obtient 0,5827 sous ce même protocole, parce que l'inférence du
+transformer coûte 128,5\,ms par ticket sur processeur contre 5,0\,ms, à quoi s'ajoute une requête
+déjà mesurée au-dessus du budget de latence. Le moteur de recherche hybride rend 2,0 suggestions par
+demande, justes à 0,5185 une fois son seuil de pertinence recalibré sur l'échelle réelle de ses
+scores — valeur à lire comme majorée, puisque ce seuil a été choisi sur les quarante requêtes qui
+l'évaluent, et qu'il perd sept à huit points hors échantillon. Le modèle de langage, enfin,
+s'exécute localement sans intervenir sur aucun chemin obligatoire.
 
-Deux exigences chiffrées ne sont pas tenues, et nous les énonçons plutôt que de les laisser
-découvrir : le temps de réponse atteint 330\,ms au quatre-vingt-quinzième centile pour un budget de
-300, et le rappel sur la catégorie \emph{Sécurité} plafonne à 0,60 pour une cible de 0,70. La
+Trois exigences chiffrées ne sont pas tenues par le système livré, et nous les énonçons plutôt que
+de les laisser découvrir : le temps de réponse dépasse de quelques dizaines de millisecondes le
+budget fixé au quatre-vingt-quinzième centile ; le rappel sur la catégorie \emph{Sécurité} et la qualité du classifieur,
+visée à 0,85 de F1-macro, ne sont atteints ni par la chaîne servie — 0,5827, et zéro de rappel sur
+\emph{Sécurité} au jeu de test gelé — ni par le modèle dans sa configuration publiée. Sur ces deux
+dernières, une nuance s'est imposée en cours de route et nous la portons ici : mesuré sur l'entrée
+que la production lui fournirait, le transformer franchit les deux seuils, 0,8644 et 0,90. Ce
+n'est pas lui qui est servi, l'exigence porte sur ce qui l'est, et elle reste donc non tenue ; mais
+l'obstacle n'est plus la qualité du modèle, il est le coût de son exécution et la décision de
+l'assumer. La
 limite de fond tient au corpus, dont les 1\,800 tickets ne portent que cinquante-huit titres
 distincts, si bien que le jeu de test gelé ne couvre que cinq des huit catégories. Trois réserves
-subsistent enfin : la conformité au règlement sur les données personnelles attend un arbitrage
-écrit du service, l'interface n'est couverte par aucun test automatique, et la valeur d'usage n'a
-pas été mesurée auprès des consultants.
+subsistent enfin. La confidentialité est tenue sur son volet technique et pas sur l'autre : aucune
+donnée ne quitte l'infrastructure, le corpus et la chaîne d'export pseudonymisent les personnes et
+un audit de 322 fragments de noms n'en retrouve aucun, mais les durées de conservation attendent un
+arbitrage écrit du service et les personnes n'ont pas été informées. L'interface, ensuite, n'est
+couverte par aucun test automatique. La valeur d'usage, enfin, n'a pas été mesurée auprès des
+consultants.
 
 Servir le transformer redeviendra défendable dès que la machine hôte disposera d'une carte
 graphique, où son coût retombe à 58,7\,ms par ticket. La perspective de fond reste l'enrichissement
 du corpus par l'exploitation elle-même, chaque ticket traité produisant une étiquette vérifiée :
 c'est le seul chemin qui lève la limite de diversité, et le mécanisme est déjà en place.
 
-Ce travail nous a conduits à couvrir une chaîne complète, de la préparation des données jusqu'au
-déploiement. Il nous a surtout appris à distinguer un résultat d'une mesure, et à préférer un
+Ce travail nous a conduits à parcourir les six phases de CRISP-DM, de la compréhension du métier
+jusqu'au déploiement. Il nous a surtout appris à distinguer un résultat d'une mesure, et à préférer un
 chiffre plus bas qui tient à un chiffre flatteur qui ne tient pas. Un service support ne manque pas
 de données, il manque de moyens de s'en servir. La plateforme livrée en fournit un, qui propose sans
 décider : elle qualifie, retrouve et suggère, elle ne clôt aucun ticket.

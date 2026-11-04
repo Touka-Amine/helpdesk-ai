@@ -1,0 +1,82 @@
+' Les six phases de CRISP-DM en regard des sept chapitres du memoire.
+'
+' Le schema remplace un tableau de correspondance difficile a lire. Il rend
+' visibles deux faits que le tableau noyait :
+'   - la modelisation et l'evaluation se dedoublent, parce que deux moteurs ont
+'     ete construits, un classifieur et un moteur de recherche ;
+'   - le developpement logiciel n'est pas une phase separee : il se loge dans
+'     la phase de deploiement et d'integration.
+'
+' SOURCES DES FAITS : numeros de sections releves dans report/chap_0*.tex.
+@startuml ch01_crispdm_chapitres
+!include _style.puml
+
+skinparam nodesep 14
+skinparam ranksep 18
+skinparam rectangle {
+  FontSize 12
+  BorderThickness 1.1
+}
+
+rectangle "**Chapitre 2 · transversal**  ·  concepts mobilisés par toutes les phases, et exigences auxquelles l'évaluation se réfère" as TR #F2F3F5
+
+rectangle "**1 · Compréhension du métier**" as P1 #FAEFD0 {
+  rectangle "1.2  le service support et son fonctionnement" as A1 #FFFFFF
+  rectangle "1.3  problématique et solution" as A2 #FFFFFF
+  A1 -[hidden]right- A2
+}
+
+rectangle "**2 · Compréhension des données**" as P2 #DCE9F8 {
+  rectangle "3.1  présentation des données" as B1 #FFFFFF
+  rectangle "3.2  analyse exploratoire" as B2 #FFFFFF
+  B1 -[hidden]right- B2
+}
+
+rectangle "**3 · Préparation des données**" as P3 #DCE9F8 {
+  rectangle "3.3  préparation" as C1 #FFFFFF
+  rectangle "3.4  corpus de classification" as C2 #FFFFFF
+  rectangle "3.5  connaissances pour le RAG" as C3 #FFFFFF
+  C1 -[hidden]right- C2
+  C2 -[hidden]right- C3
+}
+
+rectangle "**4 · Modélisation**" as P4 #E2E3F5 {
+  rectangle "**classifieur**\n4.2 TF-IDF · 4.3 règles métier\n4.4 CamemBERT et LoRA" as D1 #FFFFFF
+  rectangle "**moteur de recherche**\n5.3 mise en œuvre\n5.4 modèle de langage" as D2 #FFFFFF
+  D1 -[hidden]right- D2
+}
+
+rectangle "**5 · Évaluation**" as P5 #E2E3F5 {
+  rectangle "**classifieur**\n4.5 comparaison\n4.6 sélection du modèle" as E1 #FFFFFF
+  rectangle "**moteur de recherche**\n5.5 évaluation du RAG" as E2 #FFFFFF
+  rectangle "**système**\n7.4 validation" as E3 #FFFFFF
+  E1 -[hidden]right- E2
+  E2 -[hidden]right- E3
+}
+
+rectangle "**6 · Déploiement et intégration**" as P6 #D6EFE7 {
+  rectangle "**chapitre 6**\nl'application qui rend\nles modèles utilisables" as F1 #FFFFFF
+  rectangle "7.1  conteneurisation\n7.2  chaîne d'apprentissage" as F2 #FFFFFF
+  F1 -[hidden]right- F2
+}
+
+TR .[#9AA3B0,dashed].> P1 : sert toutes les phases
+P1 --> P2
+P2 --> P3
+P3 --> P4
+P4 --> P5
+P5 --> P6
+
+note right of P4
+  Deux moteurs ont été construits,
+  donc la modélisation et l'évaluation
+  se dédoublent.
+end note
+
+note right of P6
+  Le développement logiciel n'est pas
+  une phase à part : il produit le
+  mécanisme de livraison, ce que le
+  standard range dans le déploiement.
+end note
+@enduml

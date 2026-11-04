@@ -16,9 +16,10 @@ rédaction.
 \renewcommand{\thetable}{A.\arabic{table}}
 \setcounter{table}{0}
 
-Le corps du mémoire renvoie à ce registre chaque fois qu'une limite est identifiée sans être
-résolue. Le tableau ci-dessous en donne la version condensée, tenue à jour dans le dépôt du projet.
-Un risque clos l'est parce que le défaut a été corrigé et la correction vérifiée.
+Ce registre recense les risques rencontrés pendant le projet, ce qu'ils menaçaient et l'état dans
+lequel le mémoire les laisse. Il est tenu à jour dans le dépôt. Un risque est clos lorsque le
+défaut a été corrigé et la correction vérifiée ; il reste ouvert lorsque la limite est connue et
+assumée.
 
 \begin{center}
 \styletableau
@@ -80,12 +81,13 @@ Ouvert \\
 \hline
 R-19 & Latence de l'inférence du modèle de langage sur processeur & Ouvert \\
 \hline
-R-20 & Seuils non calibrés sur un volume observé, faute de trafic réel : déclencheurs de
-réentraînement et seuil de pertinence de la recherche & Ouvert \\
+R-20 & Seuils calibrés sur le jeu d'évaluation et non sur un volume observé, faute de trafic
+réel : déclencheurs de réentraînement, et arbitrage du seuil de pertinence entre pureté et nombre
+des suggestions & Ouvert \\
 \hline
 R-21 & Fuite par paraphrase non détectée à la construction du jeu d'apprentissage & Ouvert \\
 \hline
-R-22 & Absence de jeu annoté pour l'évaluation de la recherche, d'où un protocole indirect &
+R-22 & Annotation de référence portée par l'auteur et non par un consultant du service : elle établit qu'une résolution traite le problème, non qu'elle aurait fait gagner du temps &
 Ouvert \\
 \hline
 R-23 & Règles métier ajustées sur le jeu de test : quatre mots-clés retirés après audit & Clos \\
@@ -104,64 +106,15 @@ Ouvert \\
 \FloatBarrier
 
 %===================== ANNEXE B =====================%
-\section*{Annexe B : composition du jeu de données}
-\addcontentsline{toc}{section}{Annexe B : composition du jeu de données}
+\section*{Annexe B : cycle de vie du ticket}
+\addcontentsline{toc}{section}{Annexe B : cycle de vie du ticket}
 \renewcommand{\thetable}{B.\arabic{table}}
 \setcounter{table}{0}
 
-Le corpus de 1\,800 tickets est réparti en trois ensembles disjoints quant à leur usage. Les deux
-premiers servent à l'apprentissage et à l'évaluation du classifieur. Le troisième alimente la base
-de connaissances interrogée par le moteur de recherche, et ne retient que les tickets dont le champ
-de résolution est renseigné.
-
-Le tableau~\ref{tab:composition} donne la répartition par catégorie. Il rend visible la principale
-limite du protocole d'évaluation : trois catégories n'ont aucun représentant au test, alors
-qu'elles rassemblent 539 tickets à l'apprentissage.
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Répartition des tickets par catégorie et par ensemble}
-\label{tab:composition}
-\begin{tabular}{|Bp{3.2cm}|Cp{3.0cm}|Cp{2.0cm}|Cp{3.0cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Catégorie} & \textbf{Apprentissage} & \textbf{Test} & \textbf{Connaissances} \\
-\hline
-Applicatifs & 326 & 0 & 303 \\
-\hline
-Backup & 69 & 0 & 66 \\
-\hline
-Communication & 144 & 0 & 133 \\
-\hline
-Infrastructure & 133 & 91 & 123 \\
-\hline
-Microsoft & 274 & 135 & 263 \\
-\hline
-Réseau & 324 & 45 & 305 \\
-\hline
-Système & 134 & 52 & 128 \\
-\hline
-Sécurité & 40 & 33 & 36 \\
-\hline
-\rowcolor{enteteTab}
-\textbf{Total} & \textbf{1\,444} & \textbf{356} & \textbf{1\,357} \\
-\hline
-\end{tabular}
-\end{table}
-
-\FloatBarrier
-
-%===================== ANNEXE C =====================%
-\section*{Annexe C : cycle de vie du ticket}
-\addcontentsline{toc}{section}{Annexe C : cycle de vie du ticket}
-\renewcommand{\thetable}{C.\arabic{table}}
-\setcounter{table}{0}
-
-Le diagramme d'états du chapitre~6 donne la vue d'ensemble. Le tableau~\ref{tab:transitions}
-énumère les transitions effectivement autorisées par le service, telles que la table de contrôle du
-code les déclare. Toute transition absente de cette table est refusée par le serveur,
-indépendamment de ce que l'interface propose.
+Le diagramme d'états du chapitre~7 donne la vue d'ensemble ; cette annexe en donne le détail. Le
+tableau qui suit énumère les transitions que le service autorise réellement, telles que la table de
+contrôle du code les déclare. Toute transition qui n'y figure pas est refusée par le serveur, quoi
+que propose l'interface.
 
 \begin{table}[!htbp]
 \centering
@@ -192,53 +145,19 @@ contrôle n'exigeant une transition permise que lorsque le statut soumis diffèr
 
 \FloatBarrier
 
-%===================== ANNEXE D =====================%
-\section*{Annexe D : détail de la campagne de charge}
-\addcontentsline{toc}{section}{Annexe D : détail de la campagne de charge}
-\renewcommand{\thetable}{D.\arabic{table}}
+%===================== ANNEXE C =====================%
+% L'ancienne annexe D reprenait la distribution complete des latences. Elle
+% doublait la figure de la campagne de charge du chapitre 6, qui porte les
+% memes releves ; retiree le 2026-10-14, les annexes suivantes avancent d'une
+% lettre.
+\section*{Annexe C : paramètres de la chaîne de traitement}
+\addcontentsline{toc}{section}{Annexe C : paramètres de la chaîne de traitement}
+\renewcommand{\thetable}{C.\arabic{table}}
 \setcounter{table}{0}
 
-Une campagne de charge a été conduite sur le point d'entrée de prédiction, dans l'environnement
-conteneurisé servi par deux processus de travail, afin de vérifier l'exigence de temps de réponse
-fixée à 300 millisecondes au quatre-vingt-quinzième centile. Le tableau~\ref{tab:chargedetail} en
-donne la distribution complète. L'exigence n'est pas tenue, y compris sans concurrence.
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Distribution des latences mesurées, en millisecondes}
-\label{tab:chargedetail}
-\begin{tabular}{|Bp{2.8cm}|Cp{1.5cm}|Cp{1.5cm}|Cp{1.5cm}|Cp{1.5cm}|Cp{1.5cm}|Cp{1.6cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Scénario} & \textbf{Min} & \textbf{Moy.} & \textbf{P50} & \textbf{P95} & \textbf{P99} &
-\textbf{Max} \\
-\hline
-Concurrence 1 & 84 & 199 & 105 & 330 & 368 & 1\,763 \\
-\hline
-Concurrence 5 & 113 & 449 & 373 & 1\,068 & 1\,493 & 1\,731 \\
-\hline
-Concurrence 20 & 132 & 3\,884 & 1\,462 & 15\,022 & 15\,031 & 15\,035 \\
-\hline
-\end{tabular}
-\end{table}
-
-Le scénario séquentiel porte sur trente requêtes, le deuxième sur cent, le troisième sur deux
-cents. Les deux premiers n'enregistrent aucune erreur ; le troisième en compte trente-huit, soit
-dix-neuf pour cent, toutes par dépassement du délai d'attente. La valeur maximale du dernier
-scénario, à quinze secondes, correspond à ce délai et non à un temps de traitement observé.
-
-\FloatBarrier
-
-%===================== ANNEXE E =====================%
-\section*{Annexe E : paramètres de la chaîne de traitement}
-\addcontentsline{toc}{section}{Annexe E : paramètres de la chaîne de traitement}
-\renewcommand{\thetable}{E.\arabic{table}}
-\setcounter{table}{0}
-
-Les valeurs ci-dessous gouvernent le comportement du système. Elles sont déclarées dans un fichier
-unique, versionné avec le code, de sorte qu'une exécution du pipeline soit entièrement décrite par
-son contenu.
+Les valeurs qui suivent gouvernent le comportement du système. Elles tiennent dans un fichier
+unique, versionné avec le code : une exécution de la chaîne est donc entièrement décrite par son
+contenu, et deux exécutions d'un même fichier donnent le même résultat.
 
 \begin{table}[!htbp]
 \centering
@@ -262,7 +181,7 @@ Représentation & Longueur des séquences de mots & 1 à 2 \\
 \hline
 Recherche & Nombre de passages retournés & 3 \\
 \hline
-Recherche & Seuil de pertinence & 0,50 \\
+Recherche & Seuil de pertinence & 0,35 \\
 \hline
 Recherche & Seuil de repli & 0,20 \\
 \hline
@@ -293,9 +212,144 @@ Collecte & Poids d'une étiquette confirmée & 0,7 \\
 \end{tabular}
 \end{table}
 
-Deux de ces valeurs appellent une réserve. Le seuil de pertinence de 0,50 a
-été calibré sur l'échelle du moteur sémantique et conservé lorsque le moteur hybride l'a remplacé.
-Les seuils de réentraînement sont des ordres de grandeur raisonnés, faute d'un volume observé sur
-lequel les calibrer.
+Deux de ces valeurs appellent une réserve. Le seuil de pertinence valait 0,50, calibré sur l'échelle
+du moteur sémantique et conservé lorsque le moteur hybride l'a remplacé, alors que la fusion change
+l'échelle des scores : il était devenu inatteignable. Il a été ramené à 0,35 sur la distribution
+mesurée, décrite à la section~\ref{sec:seuil5} ; cette calibration repose sur les quatre-vingts
+requêtes du protocole d'évaluation, non sur du trafic réel. Les seuils de réentraînement, eux,
+restent des ordres de grandeur raisonnés, faute d'un volume observé sur lequel les calibrer.
+
+\FloatBarrier
+
+%===================== ANNEXE D =====================%
+\section*{Annexe D : traçabilité des chiffres publiés}
+\addcontentsline{toc}{section}{Annexe D : traçabilité des chiffres publiés}
+\renewcommand{\thetable}{D.\arabic{table}}
+\setcounter{table}{0}
+
+Un même indicateur peut prendre deux valeurs dans ce mémoire sans qu'aucune soit fausse. Le
+F1-macro de la chaîne lexicale vaut 0,5827 d'un côté et 0,4372 de l'autre : ce ne sont ni le même
+jeu de test, ni le même découpage, ni le même nombre de catégories. Les rapprocher serait une
+faute, et c'est pour l'éviter que cette annexe existe. Elle donne, pour chaque valeur publiée, la
+configuration mesurée, le protocole employé et le fichier du dépôt qui la porte. Les
+tableaux~\ref{tab:croise}, \ref{tab:prod}, \ref{tab:moteurs5} et~\ref{tab:baseline} y renvoient.
+
+Le \emph{protocole des expériences} sert à comparer les approches entre elles. Son découpage est
+tiré par catégorie sur les 58 titres, et son jeu de test de 355 tickets représente les
+8 catégories. Le \emph{protocole du pipeline} mesure le modèle réellement servi. Son découpage est
+tiré par titres, son jeu de test est gelé, et il ne compte que 356 tickets pour 5 catégories. Le
+tableau~\ref{tab:protocoles} les met face à face.
+
+La même distinction vaut pour les modèles. Le \emph{meilleur modèle mesuré} est un CamemBERT adapté
+par LoRA, complété des règles métier ; il n'est pas servi. Le \emph{modèle servi} est la chaîne
+lexicale TF-IDF, complétée des mêmes règles. Le tableau~\ref{tab:cout} en donne le prix.
+
+Les fichiers cités se trouvent dans \texttt{helpdesk-ai/metrics/} et l'extension \texttt{.json} est
+sous-entendue. Deux exceptions : \texttt{couverture\_tests.txt}, et \texttt{feuille\_jugement}, qui
+est dans \texttt{helpdesk-ai/scripts/verification/}. Cinq valeurs n'ont pas de fichier parce
+qu'elles ne sont pas mesurées : les quatre écarts du tableau~\ref{tab:croise} se calculent entre
+deux de ses lignes, et le 0,5719 de la section~\ref{sec:pourquoi} est un objectif à atteindre, pas
+un relevé.
+
+\begin{longtable}{|Cp{1.7cm}|Bp{3.9cm}|Lp{3.1cm}|Lp{4.0cm}|}
+\caption{Origine de chaque chiffre publié}
+\label{tab:chiffres} \\
+\hline
+\rowcolor{enteteTab}
+\textbf{Valeur} & \textbf{Ce qu'elle mesure} & \textbf{Protocole} & \textbf{Fichier du dépôt} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{enteteTab}
+\textbf{Valeur} & \textbf{Ce qu'elle mesure} & \textbf{Protocole} & \textbf{Fichier du dépôt} \\
+\hline
+\endhead
+
+0,1382 & F1-macro, tirage au hasard stratifié & Expériences, 355 tickets, 8 catégories &
+\texttt{campagne\_\allowbreak apres\_\allowbreak nettoyage} \\
+\hline
+0,3753 & F1-macro, TF-IDF seul & Expériences & idem \\
+\hline
+0,5827 & F1-macro, TF-IDF + règles & Expériences & idem \\
+\hline
+0,5685 & F1-macro, CamemBERT + LoRA seul & Expériences & idem \\
+\hline
+\textbf{0,8343} & \textbf{F1-macro, CamemBERT + LoRA + règles — meilleur modèle mesuré, non servi} &
+Expériences & idem \\
+\hline
+\textbf{0,8644} / 0,90 & \textbf{Le même, mesuré sur l'entrée de production} : F1-macro et rappel
+\emph{Sécurité} & Expériences, 355 tickets &
+\texttt{camembert\_\allowbreak servable} \\
+\hline
++0,0303 & Écart médian entre la configuration publiée et l'entrée de production, sur dix
+découpages appariés & Expériences &
+\texttt{camembert\_\allowbreak servable\_\allowbreak robustesse} \\
+\hline
+5,0 / 325,8 / 58,7\,ms & Coût d'inférence par ticket : TF-IDF, CamemBERT sur processeur, sur carte
+graphique & Expériences & idem, clé \texttt{cout\_de\_service} \\
+\hline
+128,5 / 305,9\,ms & Coût de CamemBERT par ticket à 48 puis 128 jetons, qualité inchangée &
+Expériences & \texttt{cout\_\allowbreak longueur\_\allowbreak sequence} \\
+\hline
+0,2031 & F1-macro, modèle servi sans les règles & Pipeline, 356 tickets, 8 catégories dont 3 sans
+ticket & \texttt{ml\_eval} \\
+\hline
+\textbf{0,4372} & \textbf{F1-macro, modèle servi — chaîne lexicale + règles, référentiel entier} &
+Pipeline & idem \\
+\hline
+0,6995 & F1-macro sur les 5 catégories représentées, métrique de décision de la promotion &
+Pipeline & idem \\
+\hline
+0,8202 & Exactitude du modèle servi & Pipeline & idem \\
+\hline
+37,4\,\% & Part des tickets requalifiés par une règle & Pipeline & idem \\
+\hline
+0,2112 → 0,2031 & F1-macro du modèle seul, description seule puis titre + description &
+Pipeline & \texttt{coherence\_\allowbreak entree\_\allowbreak modele} \\
+\hline
+0,4294 → 0,4372 & F1-macro avec règles, mêmes deux variantes & Pipeline & idem \\
+\hline
+94\,\% → 80\,\% & Part des tickets sous le seuil de confiance de 0,60 & Pipeline & idem \\
+\hline
+0,2417 / 0,3333 / 0,3667 & Précision@3 sans filtre : lexical, sémantique, hybride &
+Évaluation RAG, 40 requêtes annotées, jugement humain & \texttt{rag\_\allowbreak seuil\_\allowbreak balayage} \\
+\hline
+0,5185 & Précision de l'affiché, moteur hybride au seuil servi & Évaluation RAG &
+\texttt{rag\_eval} \\
+\hline
+0,3366 à 0,4886 & Plage du meilleur score hybride par requête, qui a commandé le seuil &
+Évaluation RAG, 40 requêtes annotées &
+\texttt{rag\_\allowbreak seuil\_\allowbreak balayage} \\
+\hline
+0,4463 / 0,5719 & F1 de \emph{Microsoft} mesuré, et valeur qu'il faudrait pour atteindre ENF-02 &
+Pipeline, valeur calculée & \texttt{ml\_eval} \\
+\hline
+330\,ms & Temps de réponse au 95\textsuperscript{e} centile & Campagne de charge &
+\texttt{load\_test} \\
+\hline
+260 / 234 & Tests automatisés, et sous-ensemble rejoué par l'intégration continue & — &
+\texttt{suite\_\allowbreak tests.json} \\
+\hline
+51\,\% / 58\,\% & Couverture : code de traitement seul, puis service entier & — &
+\texttt{couverture\_\allowbreak tests.txt} \\
+\hline
+0,3500 / 0,5333 / 0,5678 & Précision@3, MRR@3 et nDCG@3 du moteur hybride sous annotation
+manuelle & Annotation, 40 requêtes & \texttt{rag\_\allowbreak protocoles} \\
+\hline
+0,4396 / 0,4604 & Rappel@3 de l'hybride et du sémantique, que seule l'annotation rend
+calculable & Annotation & idem \\
+\hline
+22 / 152 & Couples (requête, résolution) jugés utiles sur les couples distincts &
+Annotation & \texttt{feuille\_\allowbreak jugement} \\
+\hline
+\end{longtable}
+
+\textbf{Une exception, que nous signalons plutôt que de la masquer.} Les quatre valeurs du
+tableau~\ref{tab:baseline} — 0,3746 et 0,4789 notamment — proviennent du carnet d'expérimentation
+\texttt{05\_camembert\_finetuning}, où elles sont inscrites en dur dans une cellule de synthèse.
+Elles ont été mesurées, mais aucun artefact du dépôt ne permet de les recalculer, à la différence
+de toutes les autres lignes de ce tableau. Elles servent à montrer que quatre familles de modèles
+s'arrêtent au même niveau, constat que la campagne tracée confirme par ailleurs avec 0,3753 pour le
+meilleur d'entre eux.
 
 \FloatBarrier

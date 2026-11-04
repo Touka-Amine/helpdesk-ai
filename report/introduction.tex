@@ -22,8 +22,9 @@ de l'entreprise.
 C'est dans ce cadre que s'inscrit le présent projet de fin d'études, réalisé au sein de
 \textbf{OneTech Business Solutions} et consacré à la plateforme \textbf{HelpDesk AI}. Le service
 support étudié est mutualisé : onze consultants traitent les demandes de huit filiales du groupe, et
-l'historique disponible compte 1\,800 tickets répartis en huit catégories. La plateforme poursuit
-deux objectifs, qualifier une demande déposée en texte libre et lui associer les cas déjà résolus
+l'historique disponible compte 1\,800 tickets répartis en huit catégories, dont 476 seulement
+portent le statut \emph{Résolu}. La plateforme poursuit deux objectifs, qualifier une demande
+déposée en texte libre et lui associer les cas déjà traités
 les plus proches, dans une application qui centralise le traitement des tickets et conserve la
 validation des utilisateurs habilités.
 
@@ -32,19 +33,31 @@ consultant valide et résout. Le travail couvre l'ensemble de la chaîne, de la 
 données jusqu'à l'intégration applicative, et s'inscrit dans une démarche d'industrialisation
 destinée à assurer la reproductibilité et le suivi des composants d'apprentissage.
 
+La conduite du travail suit CRISP-DM, démarche standard des projets de science des données. Ses six
+phases commandent le découpage qui suit, le développement logiciel relevant de la phase de
+déploiement et d'intégration plutôt que d'une étape distincte.
+
+% La liste des sept chapitres ne doit pas se couper : un seul item reste sinon
+% en bas de la premiere page, le reste passe a la suivante. La reserve fait
+% basculer l'annonce et sa liste ensemble sur la page suivante.
+\par\Needspace*{18\baselineskip}
 Ce mémoire est structuré en sept chapitres :
 
 \begin{puces}
-\item le \textbf{chapitre 1} : le contexte du projet, l'organisme d'accueil, le fonctionnement du
-service support avant notre intervention et la problématique qui en découle ;
-\item le \textbf{chapitre 2} : les concepts techniques mobilisés et la spécification des besoins ;
-\item le \textbf{chapitre 3} : la constitution, la préparation et la gouvernance du jeu de
-données ;
-\item le \textbf{chapitre 4} : le développement et l'évaluation des approches de classification ;
-\item le \textbf{chapitre 5} : la recherche de cas similaires et l'assistance à la résolution ;
-\item le \textbf{chapitre 6} : la conception, le développement et l'intégration de la plateforme ;
-\item le \textbf{chapitre 7} : le déploiement, l'industrialisation de la chaîne d'apprentissage,
-les tests et la campagne de charge.
+\item le \textbf{chapitre 1} porte la \textbf{compréhension du métier} : l'organisme d'accueil, le
+fonctionnement du service support avant notre intervention, la problématique, les exigences et la
+démarche retenue ;
+\item le \textbf{chapitre 2} porte la \textbf{compréhension des données} : provenance du corpus,
+schéma, qualité, distribution et redondance ;
+\item le \textbf{chapitre 3} porte la \textbf{préparation des données} : nettoyage, variables
+construites, découpage anti-fuite et constitution de la base de connaissances ;
+\item les \textbf{chapitres 4 et 5} portent la \textbf{modélisation}, le premier sur la
+classification automatique des tickets, le second sur la recherche de cas comparables et
+l'assistance à la résolution ;
+\item le \textbf{chapitre 6} porte l'\textbf{évaluation} : comparaison des approches, sélection du
+modèle servi, mesure du moteur de recherche, tests, campagne de charge et bilan de conformité ;
+\item le \textbf{chapitre 7} porte le \textbf{déploiement} : conception, développement de la
+plateforme, intégration des moteurs, conteneurisation et chaîne d'apprentissage automatisé.
 \end{puces}
 
 La conclusion générale revient sur les résultats obtenus, expose les limites du travail et propose

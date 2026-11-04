@@ -19,7 +19,39 @@
 % poursuivre. Sans lui, un tableau trop haut pour tenir en fin de page est
 % reporte au sommet de la suivante et se retrouve apres le debut de la section
 % qui suit, donc detache du texte qui l'annonce.
+% Les tableaux de plus d'une page se paginent au lieu de deborder.
+\usepackage{longtable}
 \usepackage{placeins}
+
+% Un titre de section suivi de deux ou trois lignes, puis une rupture de page :
+% le lecteur tourne la page pour trouver la premiere sous-section, et le titre
+% reste seul en bas. \Needspace reserve la place avant d'ecrire le titre, et
+% reporte l'ensemble a la page suivante quand elle manque.
+\usepackage{needspace}
+\usepackage{etoolbox}
+% Place demandee avant un titre de section : son chapeau, le titre de la
+% premiere sous-section, et de quoi commencer a la lire.
+% Le \par ferme le paragraphe courant : sans lui, la reserve est demandee en
+% mode horizontal et ne mesure pas la place qui reste reellement sur la page.
+%
+% La reserve est une longueur plutot qu'une constante : quelques sections ont
+% un chapeau plus court que la moyenne, et leur demander seize lignes laisse un
+% demi-feuillet blanc derriere elles. \reserveCourte, ecrite devant une section
+% dans le fichier du chapitre, abaisse la demande pour celle-la seulement ; la
+% valeur revient d'elle-meme a seize lignes ensuite.
+\newlength{\reserveAvantSection}
+\setlength{\reserveAvantSection}{16\baselineskip}
+\newcommand{\reserveCourte}{\global\setlength{\reserveAvantSection}{8\baselineskip}}
+\newcommand{\reserveLongue}{\global\setlength{\reserveAvantSection}{30\baselineskip}}
+\newcommand{\sectionAvecSaSuite}{\par\Needspace*{\reserveAvantSection}%
+  \global\setlength{\reserveAvantSection}{16\baselineskip}}
+% Conserve pour les chapitres qui l'appellent encore ; equivaut a \reserveLongue.
+\newcommand{\sectionAvecSaSuiteLongue}{\par\Needspace*{30\baselineskip}}
+% Applique la regle a tous les titres de section, plutot qu'a la main devant
+% chacun : une retouche ailleurs dans le memoire deplace les pages, et une liste
+% ecrite a la main serait fausse des la compilation suivante.
+\pretocmd{\section}{\sectionAvecSaSuite}{}{\PackageWarning{memoire}{reserve
+  d'espace avant les sections non posee}}
 
 \input{./tpl/new_commands}
 \input{commandes_locales}
@@ -84,6 +116,9 @@
         \clearpage
 
         \printbibliography[title={Bibliographie et webographie},heading=bibintoc]
+        \clearpage
+
+        \input{annexes}
         \clearpage
 
     \backmatter

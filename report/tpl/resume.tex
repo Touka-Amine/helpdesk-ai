@@ -13,7 +13,10 @@
 %==========================================================%
 
 \thispagestyle{backcover}
-\newgeometry{bottom=25mm,left=15mm,top=20mm,right=15mm}
+% Marges resserrees par rapport au gabarit d'origine : la page porte deux
+% resumes et non un seul, et les 20 mm de haut comme les 25 mm de bas faisaient
+% deborder le bloc d'une ligne, ce qui engendrait une page vide derriere.
+\newgeometry{bottom=15mm,left=15mm,top=15mm,right=15mm}
 
 \begin{changemargin}{3mm}{0cm}
     \begin{minipage}[c]{0.96\columnwidth}
@@ -26,36 +29,42 @@
         
         \selectlanguage{french}
         
+        % Corps en taille normale, non plus en \large : avec deux resumes sur la
+        % page, le \large d'origine faisait deborder les mots cles sur une
+        % seconde page, qui recuperait au passage l'en-tete du dernier chapitre
+        % et un numero de page au milieu de la liste.
         {\LARGE\textbf{Résumé}}
         \vskip1mm
             \begingroup
-                \large
+                \normalsize
                 \@frenchAbstract
             \endgroup
-        \vskip1mm
-        {\textbf{Mots clés : }
-            \begingroup
-                \@frenchAbstractKeywords
-            \endgroup
+        \vskip2mm
+        % Les % de fin de ligne suppriment l'espace que le retour a la ligne
+        % ajoutait apres le deux-points, et qui doublait celui du libelle.
+        {\normalsize\textbf{Mots clés :}~%
+            \begingroup%
+                \@frenchAbstractKeywords%
+            \endgroup%
         }
 
         % Bloc anglais ajoute pour ce memoire. Les commandes \englishAbstract et
         % \englishAbstractKeywords existaient deja dans tpl/new_commands.tex ;
         % seule leur impression manquait sur cette page.
-        \vskip7mm
+        \vskip6mm
         \selectlanguage{english}
 
         {\LARGE\textbf{Abstract}}
         \vskip1mm
             \begingroup
-                \large
+                \normalsize
                 \@englishAbstract
             \endgroup
-        \vskip1mm
-        {\textbf{Keywords: }
-            \begingroup
-                \@englishAbstractKeywords
-            \endgroup
+        \vskip2mm
+        {\normalsize\textbf{Keywords:}~%
+            \begingroup%
+                \@englishAbstractKeywords%
+            \endgroup%
         }
 
         \selectlanguage{french}

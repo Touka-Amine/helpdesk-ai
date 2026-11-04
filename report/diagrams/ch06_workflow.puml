@@ -1,0 +1,46 @@
+' Parcours complet d'un ticket, du depot a l'enrichissement de la base.
+'
+' SOURCES DES FAITS
+'   report/chap_06.tex, section 6.5  le parcours et son bouclage
+'   api/routers/tickets.py           les deux chemins d'entree, portail et /ingest
+'   api/services/                    controle de transition, refus de cloture sans solution
+'   src/knowledge/quality.py         le controle qualite avant entree en base
+'
+' Le bouclage est le point du schema : la resolution redigee revient alimenter
+' la recherche de cas voisins qui sert la demande suivante.
+@startuml ch06_workflow
+!include _style.puml
+
+skinparam nodesep 40
+skinparam ranksep 20
+skinparam rectangle {
+  FontSize 12
+  BorderThickness 1.1
+}
+
+together {
+  rectangle "**Dépôt**\nformulaire du portail" as DEPOT #DCE9F8
+  rectangle "**Connecteur d'ingestion**\nsecond chemin d'entrée,\naucune demande à ce jour" as ING #F2F3F5
+}
+
+rectangle "**Traitement automatique**\ncatégorie proposée, indice de confiance,\nrègle déclenchée, cas voisins retrouvés" as AUTO #E2E3F5
+
+rectangle "**File d'approbation**\ntoutes les demandes y passent,\nquelle que soit la confiance" as FILE #FAEFD0
+
+rectangle "**Prise en charge et revue**\naffectation, notification, correction de la\nqualification, rédaction de la solution" as REVUE #FAEFD0
+
+rectangle "**Contrôle serveur**\ntransition vérifiée, clôture refusée sans\nsolution, journalisation champ par champ" as CTRL #E2E3F5
+
+rectangle "**Contrôle qualité**\nprovenance humaine vérifiée" as QUAL #E2E3F5
+
+rectangle "**Base de connaissances**" as KB #D6EFE7
+
+DEPOT --> AUTO
+ING --> AUTO : même traitement
+AUTO --> FILE
+FILE --> REVUE
+REVUE --> CTRL
+CTRL --> QUAL : clôture
+QUAL --> KB
+KB -[#1E7A64,thickness=2]-> AUTO : **la demande suivante en bénéficie**
+@enduml

@@ -103,9 +103,6 @@ UC_SUPER   ..> UC_AUTH
 UC_AJOUT   ..> UC_AUTH
 UC_COMPTES ..> UC_AUTH
 
-legend bottom
-  Toute relation en pointillé vers « S'authentifier » est une inclusion :
-  aucun cas d'utilisation n'est accessible sans authentification.
-endlegend
 
+' Legende reportee dans le texte : la convention d'inclusion y est enoncee.
 @enduml

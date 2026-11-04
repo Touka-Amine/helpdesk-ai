@@ -72,13 +72,6 @@ PG  -right-> VPG
 API -right-> VAPI
 OLL -right-> VOLL
 
-legend bottom
-  Deux ports seulement sont publiés sur la machine hôte : 8081 vers frontend
-  et 8000 vers api.
-  PostgreSQL et Ollama n'en publient aucun et ne sont joignables que depuis le
-  réseau interne de la composition. Aucun service ne sort vers l'extérieur :
-  aucune donnée de ticket ne quitte le serveur.
-  Les trois volumes nommés survivent à la destruction des conteneurs.
-endlegend
 
+' Legende reportee dans le texte : reduite a l'echelle d'une page elle etait illisible.
 @enduml

@@ -1,0 +1,65 @@
+' Chaine d'apprentissage automatise : les huit etapes declarees et les deux
+' chaines qui partent du meme corpus nettoye.
+'
+' SOURCES DES FAITS
+'   helpdesk-ai/dvc.yaml            les huit etapes, leurs dependances et leurs sorties
+'   src/pipeline/promote.py         la porte de promotion, refus par defaut
+'   report/chap_07.tex, section 7.2 ce qui est tenu hors du pipeline et pourquoi
+'
+' Aucun element n'est ajoute par rapport a dvc.yaml : les huit rectangles
+' portent le nom exact des huit etapes declarees.
+'
+' MISE EN PAGE : la chaine compte sept rangs. Rendue d'un seul tenant elle
+' donne soit une colonne trop haute, soit une bande trop large pour rester
+' lisible a la largeur du texte. Les liens caches la replient en trois
+' rangees : le tronc commun, la chaine de classification, la chaine de
+' connaissance.
+@startuml ch07_pipeline
+!include _style.puml
+
+skinparam nodesep 16
+skinparam ranksep 30
+skinparam rectangle {
+  FontSize 13
+  BorderThickness 1.1
+}
+
+rectangle "**Corpus**\n1 800 tickets" as CORPUS #DCE9F8
+rectangle "**preprocess**\nnettoyage des textes" as PRE #E2E3F5
+rectangle "**split**\ntrain 1 444 · test gelé 356 · RAG 1 357" as SPLIT #E2E3F5
+
+rectangle "**build_dataset**\njeu d'apprentissage" as BD #E2E3F5
+rectangle "**train**\nmodèle candidat" as TR #E2E3F5
+rectangle "**promote**\nrefus par défaut" as PROMO #FAEFD0
+rectangle "**Modèle servi**\nbest_pipeline.pkl" as SERVI #D6EFE7
+
+rectangle "**rag_build**\nindex lexical" as RB #E2E3F5
+rectangle "**rag_semantic_build**\nindex sémantique" as RSB #E2E3F5
+rectangle "**rag_eval**\nprécision à trois passages" as RE #E2E3F5
+rectangle "**Index servis**\nlexical et sémantique" as IDX #D6EFE7
+
+' --- rangee 1 : tronc commun
+CORPUS --> PRE
+PRE --> SPLIT
+
+' --- rangee 2 : chaine de classification
+SPLIT --> BD : chaîne de classification
+BD --> TR
+TR --> PROMO
+PROMO -right-> SERVI : trois conditions\nréunies
+
+' --- rangee 3 : chaine de connaissance
+SPLIT --> RB : chaîne de connaissance
+SPLIT --> RSB
+RB -[hidden]right- RSB
+RB --> RE
+RSB --> RE
+RE -right-> IDX
+
+note bottom of PROMO
+  **Les trois conditions**
+  gain ≥ 0,005 sur la métrique principale
+  aucune classe ne perd plus de 0,05
+  l'exactitude ne recule pas
+end note
+@enduml

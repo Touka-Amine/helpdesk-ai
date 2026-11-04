@@ -1,9 +1,14 @@
-' Diagramme de contexte, en etoile : le systeme etudie au centre, ses
-' interlocuteurs autour. Habillage aligne sur les autres diagrammes du
-' chapitre : fond blanc, bordures noires, fleches noires, bloc central bleu.
+' Diagramme de contexte : le systeme etudie au centre, ses interlocuteurs de
+' part et d'autre. Habillage aligne sur les autres diagrammes du chapitre :
+' fond blanc, bordures noires, fleches noires, bloc central bleu.
 ' Deux acteurs seulement : le connecteur d'ingestion existe dans le code mais son
 ' declencheur cote messagerie n'est pas installe, aucun flux reel ne le traverse.
 ' Absence d'annuaire verifiee dans api/routers/auth.py (comptes locaux, bcrypt).
+'
+' MISE EN PAGE : quatre elements empiles verticalement donnaient une image plus
+' haute que large, occupant presque une page entiere pour trois boites. Le sens
+' horizontal place le demandeur a gauche, l'administrateur a droite, et ramene
+' la figure au tiers d'une page.
 @startuml ch06_contexte
 !include _charte.puml
 
@@ -18,20 +23,22 @@ skinparam rectangle {
 
 skinparam ArrowColor #000000
 skinparam ArrowFontColor #000000
-skinparam ArrowFontSize 12
+skinparam ArrowFontSize 13
 skinparam ArrowThickness 1
-skinparam nodesep 50
-skinparam ranksep 60
+skinparam nodesep 30
+skinparam ranksep 110
 
 actor "Demandeur" as DEM
-actor "Admin" as ADM
+actor "Administrateur" as ADM
 
 rectangle "  HelpDesk AI  " as SYS
+
+DEM -[hidden]right- ADM
 
 DEM --> SYS : dépose une demande
 SYS --> DEM : présente l'avancement\net la réponse
 
-ADM --> SYS : qualifie, corrige,\nclôture
 SYS --> ADM : propose une catégorie\net des cas comparables
+ADM --> SYS : qualifie, corrige, clôture
 
 @enduml

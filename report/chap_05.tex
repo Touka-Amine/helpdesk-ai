@@ -1,37 +1,141 @@
-\chapter{Système RAG et assistance intelligente}
+\chapter{RAG et assistance à la résolution}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
 
-Le classifieur du chapitre précédent affecte une catégorie à chaque ticket. Savoir qu'une demande
-relève de la catégorie \emph{Microsoft} oriente son affectation sans dire comment la traiter. Ce
-chapitre construit le second volet de la solution : un moteur qui retrouve dans l'historique les
-tickets comparables et présente leur résolution à l'administrateur. La redondance du corpus, qui a
-bridé le classifieur, devient ici un atout, puisque cinquante-huit scénarios réinstanciés rendent
-probable qu'un nouveau ticket ressemble à un ticket déjà résolu.
+Le classifieur affecte une catégorie à chaque ticket. Savoir qu'une demande relève de la catégorie
+\emph{Microsoft} oriente son affectation sans dire comment la traiter. Ce chapitre poursuit la phase
+de modélisation et construit le second volet de la solution : un moteur qui retrouve dans
+l'historique les tickets comparables et présente leur résolution à l'administrateur.
 
-Trois moteurs ont été construits et comparés sous un protocole unique, recherche lexicale,
-recherche sémantique et leur combinaison, complétés par un modèle de langage exécuté sur
-l'infrastructure du service. Deux résultats et deux limites sont annoncés d'emblée.
+Il s'ouvre sur les concepts mobilisés, la génération augmentée par récupération et les modèles de
+langage, puis construit la base de connaissances, met en œuvre trois moteurs de recherche et intègre
+un modèle de langage exécuté sur l'infrastructure du service.
+
+La redondance du corpus, qui a bridé le classifieur, devient ici un atout : cinquante-huit scénarios
+réinstanciés rendent probable qu'un nouveau ticket ressemble à un ticket déjà résolu. La mesure de
+ce que le dispositif rapporte relève du chapitre~6.
+
+\section{Concepts mobilisés}
+
+Deux familles de techniques se combinent dans ce chapitre : la recherche de passages pertinents
+dans un fonds documentaire, et la reformulation de ces passages par un modèle de langage. Cette
+section expose les notions que la suite mobilise.
+
+\subsection{Génération augmentée par récupération}
+
+Plutôt que d'interroger la mémoire du modèle, l'architecture RAG recherche d'abord dans une base
+documentaire les passages les plus proches de la question, puis les lui fournit avec
+celle-ci~\cite{lewis2020}. Deux phases s'exécutent à des fréquences différentes, distinction que la
+figure~\ref{fig:rag} met en évidence.
 
 \begin{puces}
-  \item Le moteur hybride, celui qui est servi, obtient la meilleure précision à trois passages,
-        0,3542 contre 0,2917 pour le sémantique seul.
-  \item Sa similarité moyenne, 0,3551, n'atteint jamais le seuil de pertinence de 0,50 : aucune des
-        quatre-vingts requêtes d'évaluation n'a été servie autrement que par le mécanisme de repli
-        (section~\ref{sec:seuil5}).
-  \item Aucun jeu d'évaluation annoté n'existe pour la recherche, si bien que les mesures reposent
-        sur un protocole indicatif (section~\ref{sec:eval5}).
-  \item Le découpage anti-fuite place les scénarios du jeu de test hors de la base : aucune requête
-        d'évaluation n'admet de bonne réponse, et les valeurs constituent un plancher
-        (section~\ref{sec:antifuite5}).
+\item \textbf{Hors ligne} : le corpus est encodé une fois pour toutes en vecteurs rangés dans un
+index, rejoué seulement lorsque le corpus change.
+\item \textbf{En ligne} : à chaque question, celle-ci est encodée par le même modèle, comparée aux
+vecteurs de l'index, et les passages les plus proches accompagnent la question soumise au modèle de
+langue.
 \end{puces}
 
-\section{Présentation du système RAG}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch02_principe_rag.png}
+\caption{Principe de la génération augmentée par récupération}
+\label{fig:rag}
+\end{figure}
+
+L'encodage doit employer le même modèle dans les deux phases : deux modèles différents placeraient
+documents et questions dans des espaces sans rapport, et la mesure de proximité perdrait tout sens.
+
+Un exemple mesuré sur notre corpus donne la mesure du procédé. Le ticket \og Erreur activation
+Office 365 \fg{} retrouve, avec une similarité sémantique de 0,78, la résolution \og vérifier la
+connexion, réactiver la licence avec l'outil de récupération Microsoft \fg{}, alors qu'aucun terme du
+premier ne figure dans la seconde.
+
+Trois propriétés en découlent : la réponse s'appuie sur des documents identifiables, donc citables et
+vérifiables ; la base s'enrichit sans réentraîner quoi que ce soit ; le modèle reste cantonné à ce
+qu'on lui fournit, ce qui réduit le risque d'invention. Appliquée au support informatique, cette
+architecture rend l'historique des résolutions interrogeable en langage naturel.
+
+\textbf{Recherche lexicale et recherche sémantique.} La qualité d'un système RAG dépend d'abord de l'étape de récupération, où deux approches s'opposent.
+
+\begin{puces}
+\item \textbf{Recherche lexicale} : comparaison des termes par pondération TF-IDF et similarité
+cosinus, famille à laquelle appartient aussi la fonction BM25~\cite{robertson2009}. Rapide, sans modèle, efficace lorsque la question emploie le vocabulaire des documents.
+Elle échoue dès que ce vocabulaire diffère, situation fréquente entre un demandeur non spécialiste
+et un ticket rédigé par un consultant.
+\item \textbf{Recherche sémantique} : question et documents convertis en vecteurs denses, comparés
+par le cosinus de l'angle formé. Deux formulations d'un même problème deviennent proches. Le coût
+est un encodage préalable de chaque document et une dépendance au modèle d'encodage.
+\end{puces}
+
+Ces défaillances étant complémentaires, une recherche hybride agrège les deux scores selon une
+pondération réglable. Ce chapitre met en œuvre et compare ces trois variantes.
+
+\subsection{Bases vectorielles et évaluation d'un système RAG}
+
+Rechercher les plus proches voisins d'un vecteur par comparaison exhaustive devient coûteux. Les
+bibliothèques d'indexation vectorielle restreignent la recherche à une fraction de la base, au prix
+d'une exactitude approchée mais contrôlée~\cite{johnson2021}. Deux outils conviennent à un projet de
+cette taille : une bibliothèque d'indexation pure, très rapide, qui laisse à l'application la charge
+de la persistance et des métadonnées, ou une base vectorielle complète, qui stocke vecteurs,
+métadonnées et documents d'origine. Le choix se décide sur le mode d'exploitation attendu plutôt que
+sur la performance brute ; ce chapitre expose la décision retenue.
+
+\textbf{L'évaluation d'un système RAG.} Évaluer un système RAG soulève une difficulté propre : il n'existe pas de réponse unique de
+référence. Le cadre RAGAS propose des mesures calculées séparément sur les deux
+étages~\cite{es2024}. Côté récupération, la précision sur les $k$ premiers résultats donne la
+proportion de passages pertinents, et le rang réciproque moyen la position du premier d'entre eux.
+Côté génération, la pertinence évalue l'adéquation de la réponse à la question, et la fidélité
+vérifie que chaque affirmation est soutenue par un passage récupéré.
+
+La fidélité appelle une mise en garde développée plus loin : elle n'a de sens que si le
+système génère librement. Un système qui assemble des extraits selon un gabarit obtient
+mécaniquement le score maximal, sans que cela renseigne sur sa capacité à ne pas inventer.
+
+\subsection{Grands modèles de langage}
+
+Les grands modèles de langage prolongent l'architecture \emph{transformer} à des échelles très
+supérieures et rédigent un texte cohérent à partir d'une consigne. Leur intégration soulève des
+questions d'implantation, d'instruction et de fiabilité.
+
+\textbf{Exécution locale et confidentialité.} L'usage courant de ces modèles passe par des interfaces exploitées à distance, ce qui suppose de
+transmettre la requête au fournisseur du service. Cette modalité était exclue ici : les tickets
+contiennent des noms de collaborateurs, des éléments d'architecture réseau et des signalements de
+sécurité, et les règles internes de confidentialité d'\otbs, rappelées dès l'accueil des
+stagiaires~\cite{otbs-integration}, encadrent la circulation de ces contenus.
+
+L'alternative consiste à exécuter un modèle ouvert sur l'infrastructure interne. Les modèles de
+quelques milliards de paramètres le permettent sur du matériel ordinaire, au prix d'une qualité de
+rédaction inférieure et d'une latence sensiblement plus élevée. Le chapitre~6 mesure ces deux effets.
+
+\textbf{La conception des consignes.} La consigne adressée au modèle, communément désignée par le terme \emph{prompt}, détermine largement
+la qualité de la sortie. Elle précise le rôle attendu, le format de la réponse, les données sur
+lesquelles s'appuyer et le comportement à adopter en cas d'information manquante. C'est un artefact
+du système au même titre que le code : elle se teste, se révise et gagne à être versionnée, une
+modification apparemment anodine pouvant changer sensiblement le comportement observé.
+
+\textbf{Hallucinations et garde-fous.} Un modèle de langage produit le texte le plus vraisemblable au regard de sa consigne, sans mécanisme
+lui permettant de distinguer le vrai du plausible. Il peut énoncer avec assurance un identifiant de
+ticket inexistant ou une procédure reconstituée. Ce comportement, appelé
+hallucination~\cite{ji2023}, est
+particulièrement dommageable en support, où la réponse sera appliquée sur un système réel. Quatre
+garde-fous se combinent.
+
+\begin{puces}
+\item La consigne instruit le modèle de ne s'appuyer que sur les passages fournis et de signaler son
+incapacité à répondre plutôt que de combler un vide.
+\item Un filtrage des entrées écarte les tentatives de détournement de la consigne.
+\item Un contrôle des sorties vérifie que les identifiants cités figurent parmi les documents
+récupérés.
+\item La validation humaine reste déterminante : aucune réponse n'est appliquée sans qu'un
+consultant l'ait examinée.
+\end{puces}
+
+\section{La chaîne servie et sa base de connaissances}
 
 Le principe de la génération augmentée par récupération, introduit par Lewis et
-ses coauteurs~\cite{lewis2020} et depuis largement décliné~\cite{gao2023}, a été exposé au
-chapitre~2. Sa déclinaison ici tient en peu de mots : une demande entrante est comparée aux résolutions déjà consignées, les
+ses coauteurs~\cite{lewis2020} et depuis largement décliné~\cite{gao2023}, a été exposé plus haut. Sa déclinaison ici tient en peu de mots : une demande entrante est comparée aux résolutions déjà consignées, les
 plus proches sont retenues, un modèle de langage les reformule avant affichage. Le système ne
 produit aucune connaissance nouvelle, il retrouve et met en forme ce que le service sait déjà.
 
@@ -46,16 +150,19 @@ lequel une solution validée par un administrateur revient enrichir la base.
 \label{fig:chaine5}
 \end{figure}
 
-\FloatBarrier
+La base interrogée par le moteur est construite au même moment que les jeux
+d'apprentissage. Sa composition, la brièveté de ses textes et sa diversité réelle
+commandent ce que la recherche pourra retrouver.
 
-\section{Construction de la base de connaissances}
-
-\subsection{Composition de la base}
+\subsection{Composition et format des résolutions}
 
 La base est produite par le module de découpage du corpus, au même moment que les jeux
-d'entraînement et de test. Elle retient tout ticket du jeu d'entraînement dont le champ
-\emph{Résolution\,/\,Motif} est renseigné, soit \textbf{1\,357 tickets} sur les huit catégories du
-référentiel, sans restriction au statut \emph{Résolu}.
+d'entraînement et de test. Elle retient les \emph{tickets documentés} du jeu d'entraînement au sens
+du chapitre~2 — ceux dont le champ \emph{Résolution\,/\,Motif} est renseigné —, soit
+\textbf{1\,357 tickets} sur les huit catégories du référentiel. La restriction au statut
+\emph{Résolu} n'est pas appliquée, et seuls 358 de ces 1\,357 tickets le portent.
+
+Le tableau~\ref{tab:kb5} en donne la composition par statut.
 
 \begin{table}[!htbp]
 \centering
@@ -92,9 +199,7 @@ Ces documents sont conservés dans ChromaDB, que le service applicatif interroge
 indexés selon les deux représentations de la section suivante. La base n'est pas figée : la
 section~\ref{sec:boucle5} montre comment une solution validée en exploitation vient s'y ajouter.
 
-\subsection{Format des résolutions}
-
-Les textes retenus sont courts, de longueur médiane \textbf{12 mots} et d'étendue 7 à 16 mots.
+\textbf{Le format des résolutions.} Les textes retenus sont courts, de longueur médiane \textbf{12 mots} et d'étendue 7 à 16 mots.
 
 \begin{quote}
 \og Vérifier les entrées DNS, vider le cache DNS client, forcer l'enregistrement du serveur. \fg{}
@@ -106,13 +211,16 @@ langage peut en tirer, puisqu'il n'a rien à résumer, et explique que l'assista
 section~\ref{sec:llm5} soit conçu pour reformuler. Le moteur épargne une recherche manuelle dans
 plusieurs milliers de lignes, il ne remplace pas l'expertise de l'administrateur.
 
-\subsection{Volume indexé et diversité réelle des réponses}
+\subsection{Volume indexé et coût de la contrainte anti-fuite}
+
 \label{sec:diversite5}
 
 Le décompte de 1\,357 tickets décrit un volume, non une richesse. Les tickets indexés portent
 \textbf{46 résolutions distinctes} pour 46 titres distincts, dans une correspondance exacte : à
 chaque scénario du corpus d'entraînement répond une résolution et une seule, réinstanciée en
 médiane 31 fois, de 4 à 49 fois selon les cas.
+
+Le tableau~\ref{tab:diversite5} répartit ces réponses par catégorie.
 
 \begin{table}[!htbp]
 \centering
@@ -140,10 +248,9 @@ appliquée, usage précisément visé ; un incident inédit ne trouve rien, la b
 quarante-six situations. Quatre réponses pour toute la catégorie \emph{Sécurité} laissent peu de
 marge à la variété des incidents que ce mot recouvre.
 
-\subsection{Le coût de la contrainte anti-fuite}
 \label{sec:antifuite5}
 
-Aucun ticket du jeu de test ne figure dans la base. Sans cette restriction, une requête
+\textbf{Le coût de la contrainte anti-fuite.} Aucun ticket du jeu de test ne figure dans la base. Sans cette restriction, une requête
 d'évaluation s'y retrouverait elle-même avec une similarité proche de~1, et toute mesure de qualité
 deviendrait sans objet.
 
@@ -162,13 +269,14 @@ règles de lecture en découlent.
         section~\ref{sec:seuil5} tire les conséquences.
 \end{puces}
 
-\FloatBarrier
-
 \section{Mise en œuvre de la recherche}
 
-\subsection{Recherche lexicale}
+Trois moteurs ont été construits. Chacun cherche différemment, et c'est cette différence
+que la fin de section met en regard.
 
-Le premier moteur applique la représentation vectorielle du chapitre~4, pondération TF-IDF sur cinq
+\subsection{Les trois moteurs}
+
+\textbf{La recherche lexicale.} Le premier moteur applique la représentation vectorielle du chapitre~4, pondération TF-IDF sur cinq
 mille descripteurs en unigrammes et bigrammes, avec classement par similarité cosinus dans l'espace
 des documents indexés.
 
@@ -178,9 +286,7 @@ corpus rédigé par des utilisateurs : une même panne de messagerie se dit \og 
 mails \fg{}, \og la synchronisation échoue \fg{} ou \og Outlook ne se connecte plus \fg{}, sans
 qu'aucun mot commun ne subsiste.
 
-\subsection{Recherche sémantique}
-
-Le second moteur encode chaque ticket par un modèle de plongements de phrases,
+\textbf{La recherche sémantique.} Le second moteur encode chaque ticket par un modèle de plongements de phrases,
 \texttt{paraphrase-multilingual-mpnet-base-v2}, qui produit un vecteur de 768 dimensions. Ce modèle
 traite le français sans traduction intermédiaire, a été entraîné à rapprocher des paraphrases et
 s'exécute sans accélération graphique.
@@ -190,31 +296,45 @@ rend le produit scalaire égal au cosinus, donc la similarité bornée entre $-1
 d'une requête à l'autre. Un index global est complété par un index par catégorie, ce qui permet de
 restreindre la recherche lorsque la catégorie prédite est jugée fiable.
 
-\subsection{Recherche hybride}
-
-Le troisième moteur interroge les deux précédents et fusionne leurs scores. Nous retenons une
+\textbf{La recherche hybride.} Le troisième moteur interroge les deux précédents et fusionne leurs scores. Nous retenons une
 combinaison linéaire des scores plutôt qu'une fusion par les rangs~\cite{cormack2009}, afin de
-conserver une échelle de similarité comparable à celle du seuil de pertinence :
+conserver une valeur numérique interprétable passage par passage, que la fusion par les rangs ne
+donne pas :
 
 \[
 \text{score}_{\text{hybride}} = \alpha \cdot \text{score}_{\text{sémantique}}
 + (1 - \alpha) \cdot \text{score}_{\text{lexical}}
 \]
 
-Le paramètre $\alpha$ vaut 0,5 dans la configuration servie. Chaque sous-moteur remonte quinze
-candidats sans filtrage, la fusion s'applique ensuite, le filtrage par seuil intervient en dernier,
-ordre qui évite qu'un ticket écarté trop tôt soit perdu pour la fusion. L'intention est de réunir
-la tolérance à la reformulation du sémantique et la précision du lexical sur les tickets répétés à
-l'identique ; la section~\ref{sec:seuil5} montre l'effet secondaire que cette fusion produit.
+Le paramètre $\alpha$ vaut 0,5 dans la configuration servie. Cette combinaison a une conséquence
+qu'il faut énoncer ici : la moyenne de deux similarités ne vit pas sur l'échelle de chacune d'elles.
+Le score hybride est borné par la moyenne des maxima des deux moteurs, et un seuil repris de
+l'échelle du cosinus y devient inatteignable. La section~\ref{sec:seuil5} mesure cet effet et en
+tire le seuil servi. La figure~\ref{fig:hybride5} donne la chaîne complète, dont l'ordre importe
+autant que la formule.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{ch05_hybride.png}
+\caption{Chaîne de la recherche hybride, des deux moteurs au seuil}
+\label{fig:hybride5}
+\end{figure}
+
+L'intention est de réunir la tolérance à la reformulation du sémantique et la précision du lexical
+sur les tickets répétés à l'identique ; la section~\ref{sec:seuil5} montre l'effet secondaire que
+cette fusion produit.
 
 \subsection{Comparaison des approches}
 
 Ce qui sépare les trois moteurs tient moins à leur qualité qu'à ce que chacun sait voir.
 
+Le tableau~\ref{tab:comparaison5} met en regard la portée et l'angle mort
+de chacun.
+
 \begin{table}[!htbp]
 \centering
 \styletableau
-\caption{Ce que chaque moteur retrouve, et ce qui lui échappe}
+\caption{Portée et angle mort de chaque moteur}
 \label{tab:comparaison5}
 \begin{tabular}{|Bp{2.4cm}|Lp{5.6cm}|Lp{5.4cm}|}
 \hline
@@ -233,149 +353,12 @@ celle sur laquelle le seuil a été calibré \\
 \end{tabular}
 \end{table}
 
-\FloatBarrier
+\section{Intégration du modèle de langage}
 
-\section{Évaluation du RAG}
-\label{sec:eval5}
-
-\subsection{Protocole et approximation de la pertinence}
-
-La campagne interroge les trois moteurs avec quatre-vingts requêtes du jeu de test, en demandant
-trois passages, et les sollicite exactement comme le fait l'application, mécanisme de repli
-compris. Quatre indicateurs sont calculés.
-
-\begin{puces}
-  \item \textbf{Précision à trois passages} : proportion de passages pertinents parmi les trois
-        retournés.
-  \item \textbf{Rang réciproque moyen} : récompense un premier passage pertinent placé tôt.
-  \item \textbf{Gain cumulé actualisé normalisé} : pondère chaque passage pertinent par sa position
-        et rapporte le résultat au classement idéal.
-  \item \textbf{Similarité moyenne} : valeur brute rendue par le moteur, comparée au seuil de
-        pertinence.
-\end{puces}
-
-Décider si un passage est pertinent suppose de savoir ce qui l'est, information qui n'existe pas :
-aucun jeu de référence annoté n'a été constitué. Le protocole considère comme pertinent tout
-passage de la même catégorie que la requête. La règle est grossière, deux tickets \emph{Réseau}
-pouvant décrire des incidents sans rapport.
-
-Une raison plus contraignante que l'absence d'annotation impose cette approximation. Les scénarios
-du jeu de test et ceux de la base sont disjoints (section~\ref{sec:antifuite5}), si bien qu'une
-définition stricte donnerait \textbf{zéro} pour les trois moteurs, la bonne réponse étant absente
-de l'index par construction. Le fichier de résultats porte cet avertissement : les valeurs servent
-à \textbf{comparer les trois moteurs entre eux}, elles ne mesurent pas la pertinence perçue par un
-administrateur. Le rappel à trois passages n'est pas publié pour la même raison, l'ensemble des
-passages pertinents étant la catégorie entière, soit plusieurs centaines de tickets.
-
-\subsection{Dimensions non couvertes par la campagne}
-
-Deux dimensions échappent entièrement à la campagne, et le fichier de résultats les énumère.
-
-\begin{puces}
-  \item La \textbf{fidélité de la génération}. Le chemin de classification n'appelle aucun modèle
-        de langage, et la reformulation destinée à l'administrateur constitue un appel séparé et
-        facultatif, qui supposerait un protocole distinct.
-  \item L'\textbf{utilité perçue}. Elle demanderait un retour explicite de l'administrateur sur
-        chaque recommandation, que l'interface ne collecte pas.
-\end{puces}
-
-La commande d'évaluation produit sur option le gabarit d'annotation, soit quatre-vingts requêtes et
-leurs dix meilleurs candidats. Le travail restant se compte en une demi-journée d'annotation par un
-administrateur du service, et la conclusion générale porte cette lacune aux perspectives.
-
-\FloatBarrier
-
-\subsection{Résultats mesurés}
-\label{sec:resultats5}
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch05_moteurs.png}
-\caption{Comparaison des trois moteurs de recherche, 80 requêtes du jeu de test, trois passages
-demandés}
-\label{fig:moteurs5}
-\end{figure}
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Comparaison des trois moteurs de recherche sous le protocole d'approximation}
-\label{tab:moteurs5}
-\begin{tabular}{|Bp{3.0cm}|Cp{2.0cm}|Cp{1.8cm}|Cp{1.8cm}|Cp{2.2cm}|Cp{1.8cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Moteur} & \textbf{Précision @3} & \textbf{MRR @3} & \textbf{nDCG @3} &
-\textbf{Similarité moyenne} & \textbf{Taux de repli} \\
-\hline
-Lexical & 0,1542 & 0,4354 & 0,4391 & 0,2117 & 1,000 \\
-\hline
-Sémantique & 0,2917 & \textbf{0,5813} & \textbf{0,5960} & \textbf{0,6099} & 0,0125 \\
-\hline
-Hybride (servi) & \textbf{0,3542} & 0,5375 & 0,5754 & 0,3551 & 1,000 \\
-\hline
-\end{tabular}
-\end{table}
-
-Le moteur sémantique domine le lexical sur les quatre indicateurs, l'écart le plus net portant sur
-la précision, de 0,1542 à 0,2917, et sur la similarité moyenne, de 0,2117 à 0,6099. Dans un corpus
-rédigé en langage libre, la proximité de sens retrouve des cas que le partage de vocabulaire
-manque.
-
-Le moteur hybride obtient la meilleure précision mesurée, 0,3542, quand ses indicateurs de
-classement restent derrière le sémantique, 0,5375 contre 0,5813 pour le rang réciproque et 0,5754
-contre 0,5960 pour le gain cumulé. La précision compte les passages pertinents sans considérer leur
-ordre, tandis que les deux autres récompensent le fait de placer le bon passage en tête : la fusion
-fait entrer dans le trio de tête des passages que le sémantique écartait, en ordonnant l'ensemble
-un peu moins bien. Pour un usage où l'administrateur lit les trois propositions, la précision est
-l'indicateur qui compte, ce qui justifie le choix du moteur hybride.
-
-\subsection{Le seuil que le moteur servi n'atteint jamais}
-\label{sec:seuil5}
-
-Le paramétrage fixe un seuil de pertinence à 0,50 et un seuil de repli à 0,20. Une requête dont
-aucun passage n'atteint 0,50 n'est servie que par le repli, et la dernière colonne du
-tableau~\ref{tab:moteurs5} compte ces requêtes : 0,0125 pour le sémantique, soit une requête sur
-quatre-vingts, et \textbf{1,000} pour l'hybride.
-
-Le mécanisme est arithmétique. Le score hybride est la moyenne du score sémantique, 0,6099, et du
-score lexical, 0,2117, soit 0,3551, très en dessous de 0,50. Atteindre le seuil avec un score
-lexical de l'ordre de 0,21 exigerait un score sémantique d'environ 0,79, valeur que le moteur
-sémantique lui-même n'atteint pas en moyenne. Le seuil a donc été calibré sur l'échelle du moteur
-sémantique puis conservé tel quel, alors que la fusion change l'échelle des scores en même temps
-que le classement.
-
-Un second facteur pèse sur ces valeurs sans se confondre avec le premier : les scores sont bas en
-partie parce qu'aucune requête d'évaluation n'a sa réponse dans la base
-(section~\ref{sec:antifuite5}). Le diagnostic d'échelle reste valable indépendamment, la moyenne
-avec un score lexical borné vers 0,21 divisant par deux l'écart au seuil.
-
-La conséquence sur l'application est directe. Le module de traitement des tickets utilise le même
-seuil de 0,50 pour décider qu'un ticket constitue un \emph{cas nouveau}, pour lequel
-l'administrateur doit rédiger la solution appliquée avant de clore : un score systématiquement
-inférieur revient à traiter tout ticket comme un cas nouveau. L'effet garantit que la base est
-alimentée à chaque clôture, ce qui est l'intention de la boucle décrite à la
-section~\ref{sec:boucle5}, mais il l'obtient par accident de calibrage et prive le seuil de sa
-fonction de discrimination. Deux corrections sont envisageables, que nous énonçons sans trancher
-faute de trafic réel : relever $\alpha$ pour rapprocher l'échelle hybride de l'échelle sémantique,
-ou fixer un seuil propre au moteur hybride.
-
-\subsection{Une mesure ancienne à ne pas citer}
-
-Les métadonnées du moteur sémantique rapportent une similarité moyenne de 0,9321 contre 0,7646 pour
-la recherche lexicale. Un lecteur qui ouvre ces fichiers rencontrera ces nombres, que deux
-précisions écartent de toute citation.
-
-La quantité mesurée n'est pas celle du tableau~\ref{tab:moteurs5} : il s'agit de la similarité du
-\emph{meilleur} passage, quand la campagne rapporte la similarité moyenne des \emph{trois} passages
-retenus. Et cette mesure a été conduite sur un index de \textbf{476 documents}, à un stade
-antérieur du projet, alors que l'index servi en contient 1\,357. La campagne rapportée au
-tableau~\ref{tab:moteurs5} reste la référence unique de ce chapitre, parce qu'elle mesure les trois
-moteurs sous un protocole identique et sur l'index réellement servi.
-
-\FloatBarrier
-
-\section{Intégration du LLM}
 \label{sec:llm5}
+
+Le modèle de langage n'invente rien : il reformule des résolutions déjà écrites. Son
+exécution locale et ses garde-fous découlent de cette intention.
 
 \subsection{Un modèle exécuté sur site}
 
@@ -475,9 +458,8 @@ quatre-vingt-dix secondes, l'application retombe sur un récapitulatif brut des 
 maintien du modèle en mémoire pendant trente minutes évite le rechargement entre deux appels
 rapprochés, ce qui explique l'écart mesuré plus haut entre le premier appel et les suivants.
 
-\FloatBarrier
-
 \section{Apprentissage continu}
+
 \label{sec:boucle5}
 
 Le niveau inférieur de la figure~\ref{fig:chaine5} porte le parcours dont il est question ici.
@@ -495,9 +477,11 @@ défaut propre à l'exécution multi-processus, la collection étant mise en cac
 serveur ne voyait pas les écritures faites par l'autre. La correction porte sur la fraîcheur de la
 collection entre processus, et l'incident est clos.
 
-\subsection{Le contrôle qualité}
+\subsection{Le contrôle qualité et le cycle de vie des connaissances}
 
 Un module de contrôle applique quatre règles avant indexation.
+
+Le tableau~\ref{tab:qualite5} les énonce.
 
 \begin{table}[!htbp]
 \centering
@@ -526,9 +510,7 @@ administrateur ne l'a pas reprise à son compte. Elle ferme la voie d'auto-conta
 elle, le système apprendrait de ses propres sorties et un écart introduit une fois se propagerait
 de recommandation en recommandation.
 
-\subsection{Le cycle de vie des connaissances}
-
-Une connaissance indexée porte un statut, et aucune suppression automatique n'intervient.
+\textbf{Le cycle de vie des connaissances.} Une connaissance indexée porte un statut, et aucune suppression automatique n'intervient.
 
 \begin{puces}
   \item \emph{Actif} : la connaissance peut être proposée par le moteur.
@@ -543,31 +525,22 @@ statut, et le filtrage les considère comme actives ; filtrer côté base les au
 silencieusement, ce qui aurait vidé la base d'une partie de son contenu sans qu'aucune erreur ne
 soit levée.
 
+
+% Aucun flottant du corps ne doit franchir la conclusion.
 \FloatBarrier
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
 
-Une base de 1\,357 tickets, constituée à partir du seul jeu d'entraînement pour rester mesurable,
-alimente trois moteurs comparés sous un protocole unique. Elle porte quarante-six réponses
-distinctes, une par scénario, ce qui dit à la fois la force du dispositif sur les incidents
-récurrents et son silence sur les incidents inédits. La similarité sémantique porte la précision à
-trois passages de 0,1542 à 0,2917, leur combinaison à 0,3542, meilleure valeur mesurée, au prix
-d'un classement légèrement inférieur. C'est ce moteur hybride qui est servi.
+Une base de 1\,357 tickets, constituée à partir du seul jeu d'apprentissage pour rester mesurable,
+alimente trois moteurs de recherche. Elle porte quarante-six réponses distinctes, une par scénario,
+ce qui dit à la fois la force du dispositif sur les incidents récurrents et son silence sur les
+incidents inédits.
 
-L'analyse du seuil a révélé un défaut de conception que la mesure seule aurait laissé passer. Le
-seuil de pertinence de 0,50, calibré sur l'échelle du moteur sémantique, a été conservé lorsque la
-fusion a changé cette échelle. Le moteur servi ne l'atteint jamais, ce qui conduit l'application à
-traiter tout ticket comme un cas nouveau : l'effet garantit l'alimentation de la base tout en
-résultant d'un accident de calibrage. Le modèle de langage exécuté sur site, imposé par une
-contrainte de confidentialité, se paie en latence de treize à vingt secondes, et ses garde-fous
-bornent le risque d'invention sans le supprimer, la fidélité du texte reformulé n'étant pas
-vérifiée automatiquement.
+Le modèle de langage s'exécute sur site, imposé par la contrainte de confidentialité posée au
+chapitre~1. Il ne produit aucune connaissance nouvelle : il reformule des résolutions déjà écrites,
+et ses garde-fous bornent le risque d'invention sans le supprimer.
 
-Deux limites bornent la portée de ces chiffres. L'absence de jeu d'évaluation annoté laisse les
-valeurs comparer les moteurs entre eux sans mesurer la pertinence perçue ; le gabarit est
-disponible et représente une demi-journée de travail. Le découpage anti-fuite prive ensuite chaque
-requête d'évaluation de bonne réponse ; ce second point n'appelle pas de correction, lever la
-contrainte revenant à évaluer le système sur des données qu'il a mémorisées, mais il appelle une
-mesure complémentaire sur du trafic réel que la conclusion générale porte aux perspectives. Le
-chapitre~6 rassemble ces deux volets dans une application.
+Le mécanisme d'apprentissage continu referme la boucle, une solution validée en exploitation
+rejoignant la base interrogée par la demande suivante. Les deux moteurs sont construits ; le
+chapitre suivant ouvre la phase d'évaluation et les mesure.

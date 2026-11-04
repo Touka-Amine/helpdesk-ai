@@ -1,30 +1,580 @@
-\chapter{Industrialisation, tests et validation de la solution}
+\addtocontents{toc}{\protect\phasecrisp{Phase 6 --- Déploiement}}
+\chapter{Conception, intégration, industrialisation et déploiement}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
 
-Un système qui ne fonctionne que sur le poste de son auteur ne prouve rien. Ce chapitre porte sur
-ce qui sépare une maquette d'un service : se déployer ailleurs sans intervention manuelle, se
-réentraîner sans se dégrader, se laisser tester, et savoir dire ce qu'il ne fait pas.
+La solution est construite et mesurée. Ce chapitre ouvre la sixième et dernière phase de la
+démarche : rendre les modèles utilisables, puis installables ailleurs.
 
-Nous annonçons d'emblée son résultat le plus inconfortable. L'exigence de temps de réponse inscrite
-au cahier des charges du chapitre~2 n'est pas tenue, y compris sans concurrence, et la
-section~\ref{sec:validation7} en donne la mesure avant d'en donner l'explication. Une exigence non
-tenue mesurée vaut mieux qu'une exigence tenue par affirmation, et c'est dans cet esprit que le
-chapitre est écrit.
+Le développement logiciel n'y est pas une activité séparée. Il produit le mécanisme de livraison,
+ce que le standard range dans le déploiement. Nous exposons d'abord les concepts d'industrialisation
+et la pile technique retenue, puis l'architecture applicative, la conception détaillée en UML, le
+service, l'interface et le parcours métier qui relie le dépôt d'une demande à sa clôture.
 
-L'exposé suit l'ordre de la mise en exploitation. La conteneurisation rend le déploiement
-reproductible. La chaîne d'apprentissage automatisé encadre le passage d'un modèle en service. Les
-tests protègent le comportement acquis. La validation confronte les exigences aux mesures. Les
-limites et les perspectives referment le travail.
+La conteneurisation et la chaîne d'apprentissage automatisé referment le travail. Une exigence a
+orienté chaque décision de conception : le système ne décide rien, il propose une qualification que
+l'administrateur confirme ou corrige.
 
-\section{Conteneurisation et déploiement}
+\section{Industrialisation et outils}
+
+\label{sec:industrialisation7}
+
+Deux préalables avant de décrire la plateforme : la démarche qui sépare un travail exploratoire
+d'un travail livrable, et les technologies retenues pour la mettre en œuvre.
+
+\subsection{Démarche MLOps}
+
+Un modèle qui ne fonctionne que sur la machine de son auteur n'a pas de valeur industrielle. Le
+terme MLOps désigne les pratiques qui séparent un travail exploratoire d'un travail livrable. La
+littérature a documenté ce qui distingue un système d'apprentissage d'un logiciel ordinaire : le
+code n'y est qu'une petite partie de l'ensemble, et l'essentiel de la dette s'accumule autour de
+lui, dans les données, la configuration et les dépendances~\cite{sculley2015,amershi2019se}.
+
+\textbf{Le versionnement des données et des modèles.} Un dépôt Git conserve mal des fichiers volumineux et binaires, or un jeu de données et un modèle
+entraîné sont précisément cela. Les outils dédiés dissocient le contenu de sa référence : les
+fichiers sont stockés hors du dépôt, qui ne conserve que des empreintes légères. Ils décrivent en
+outre la chaîne de traitement en étapes enchaînées, chacune déclarant ses entrées, ses sorties et sa
+commande. Réexécuter la chaîne devient une commande unique, et seules les étapes dont les entrées
+ont changé sont recalculées. Une chaîne ainsi décrite est reproductible par un tiers, condition
+d'une évaluation sérieuse des résultats annoncés.
+
+\textbf{Le suivi des expérimentations.} Un projet d'apprentissage produit des dizaines d'exécutions différant par un hyperparamètre, une
+variante de prétraitement ou une version des données. Un système de suivi enregistre pour chacune
+les hyperparamètres, les métriques et les artefacts produits, puis permet de les comparer. Il tient
+également lieu de registre de modèles, où chaque version est conservée avec le contexte qui l'a
+produite.
+
+\textbf{La conteneurisation et l'intégration continue.} La portabilité passe par la conteneurisation : chaque service est décrit avec ses dépendances dans
+une image reproductible, et l'orchestration se déclare dans un fichier unique. L'application se
+lance par une commande, indépendamment de la machine hôte. L'intégration continue exécute
+automatiquement, à chaque modification du code, les contrôles de qualité et la campagne de tests,
+détectant les régressions au moment où elles sont introduites. Une telle chaîne est en place sur
+ce projet ; la section~\ref{sec:tests7} décrit ce qu'elle rejoue et les tests que son environnement
+l'oblige à écarter.
+
+\subsection{Outils technologiques utilisés}
+
+Le tableau~\ref{tab:stack} recense les technologies retenues et la raison de chaque choix. Les
+alternatives écartées sont discutées au fil des chapitres, là où la décision se pose.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Environnement technologique du projet}
+\label{tab:stack}
+\begin{tabular}{|Bp{3.2cm}|Lp{5.1cm}|Lp{5.1cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Couche} & \textbf{Technologies} & \textbf{Justification} \\
+\hline
+Données & pandas, NumPy & Manipulation du corpus \\
+\hline
+Apprentissage & scikit-learn, LightGBM, imbalanced-learn & Modèles de référence et déséquilibre \\
+\hline
+Modèles de langue & HuggingFace Transformers, PEFT & CamemBERT et adaptation LoRA \\
+\hline
+Recherche sémantique & sentence-transformers, FAISS, ChromaDB & Encodage, indexation, persistance \\
+\hline
+Modèle génératif & Ollama & Exécution locale, sans appel externe \\
+\hline
+Application & FastAPI, PostgreSQL, Angular & API typée, base et interface web \\
+\hline
+Industrialisation & DVC, MLflow, Docker, pytest & Reproductibilité, suivi, déploiement \\
+\hline
+\end{tabular}
+\end{table}
+
+Deux choix appellent un commentaire immédiat. Le modèle d'encodage produit des vecteurs de
+768 dimensions et gère plusieurs langues, ce qui convient à des tickets rédigés en français mais
+parsemés de termes techniques anglais. Le modèle génératif a été choisi pour tenir sur le matériel
+disponible plutôt que pour ses performances de rédaction : l'arbitrage est assumé et ses conséquences sont mesurées au chapitre~6.
+
+\section{Conception de la solution}
+
+\label{sec:conception7}
+
+La conception se présente du plus général au plus détaillé : l'organisation de l'application en
+couches, puis cinq vues UML — le contexte, les cas d'utilisation, le domaine, les deux moments
+décisifs du cycle et la traçabilité des états. Chaque vue est introduite par ce que sa notation
+permet de dire, puis lue sur le cas du projet. Les décisions de conception que ces diagrammes
+traduisent, et les lacunes qu'ils laissent voir, sont rassemblées en fin de section.
+
+\subsection{Architecture applicative}
+
+\label{sec:archi6}
+
+L'application s'organise en quatre couches, présentées de haut en bas à la
+figure~\ref{fig:archi6} : les acteurs entrent par le haut, l'interface recueille et présente, la
+couche de traitement décide et sollicite les composants d'intelligence artificielle, les données se
+conservent en bas. L'ensemble tient dans le réseau interne de l'entreprise et aucune donnée de
+ticket n'en sort. Les flux du chemin principal sont numérotés de un à sept.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.94\textwidth]{ch06_architecture.png}
+\caption{Architecture applicative en quatre couches}
+\label{fig:archi6}
+\end{figure}
+
+\begin{puces}
+  \item L'\textbf{interface} est le seul point d'entrée du demandeur et de l'administrateur, une
+        application web portant le dépôt, le suivi et le traitement, plus un tableau de bord
+        réservé à la supervision. Ni l'un ni l'autre n'accède directement aux données.
+  \item La couche de \textbf{traitement} porte tout ce qui décide. Le service de tickets y tient
+        les règles métier, le contrôle d'accès et la traçabilité des états, et constitue le seul
+        point d'entrée vers les données. Trois composants d'intelligence artificielle travaillent
+        sous son contrôle sans rien décider : le classificateur propose une catégorie assortie d'un
+        index de confiance, le moteur de recherche retrouve les tickets déjà documentés
+        comparables, le modèle de langage les reformule à la demande.
+  \item La couche de \textbf{données} distingue deux fonds. La base applicative conserve les
+        comptes, les tickets et l'historique des modifications ; la base de connaissances conserve
+        les réponses déjà apportées, indexées pour la recherche par similarité sémantique, et reçoit
+        chaque solution validée par un administrateur, ce qui referme la boucle décrite à la
+        section~\ref{sec:workflow6}.
+\end{puces}
+
+Ce découpage logique ne dit rien du déploiement, et deux décisions méritent d'être explicitées.
+
+\begin{puces}
+  \item Le classifieur et le moteur de recherche sont chargés en mémoire dans le processus du
+        service applicatif. Les isoler aurait imposé un appel réseau sur le chemin de création d'un
+        ticket, là où un appel de fonction suffit ; le service et ses modèles partagent donc le
+        même cycle de vie et la même consommation de mémoire.
+  \item ChromaDB fonctionne en mode embarqué, ouvert par une bibliothèque intégrée au service et
+        non par un serveur autonome. La base persiste sur un volume dédié, ce qui la rend durable
+        sans la rendre indépendante. Aucun autre processus ne peut l'interroger simultanément, ce
+        qui interdirait de répliquer le service applicatif sans passer au mode serveur.
+\end{puces}
+
+Le style retenu est celui du monolithe modulaire. Le découpage en microservices aurait multiplié
+les interfaces réseau et les points de défaillance pour un service qui traite quelques dizaines de
+tickets par jour. La séparation des responsabilités est obtenue par les couches internes plutôt que
+par des frontières de processus.
+
+Le tableau~\ref{tab:techno6} récapitule les technologies mobilisées et le
+motif de chaque choix.
+
+\begin{table}[!htbp]
+\centering
+\styletableau
+\caption{Technologies mobilisées et motif de leur choix}
+\label{tab:techno6}
+\begin{tabular}{|Bp{2.8cm}|Lp{3.4cm}|Lp{6.8cm}|}
+\hline
+\rowcolor{enteteTab}
+\textbf{Rôle} & \textbf{Technologie} & \textbf{Motif du choix} \\
+\hline
+Service applicatif & FastAPI, Python & Engendre la documentation du contrat à partir des
+signatures typées, ce qui a permis de valider les échanges sans rédiger de spécification séparée \\
+\hline
+Interface & Angular, Material, Tailwind & Typage strict et injection de dépendances, utiles sur
+une application à dix-sept écrans et deux espaces de droits distincts \\
+\hline
+Base relationnelle & PostgreSQL, SQLAlchemy & Transactions et contraintes d'intégrité pour les
+tickets et leur journal de modifications \\
+\hline
+Base vectorielle & ChromaDB & Fonctionne en mode embarqué, sans serveur supplémentaire à exploiter
+sur l'unique hôte disponible \\
+\hline
+Modèle de langage & Ollama, \texttt{llama3.2:3b} & Exécution locale, condition posée par le service
+support : aucune donnée de ticket ne sort de l'infrastructure \\
+\hline
+Orchestration & Docker Compose & Une commande démarre l'application complète et garantit que
+l'environnement de démonstration reproduit celui de développement \\
+\hline
+\end{tabular}
+\end{table}
+
+% Le tableau des technologies occupe presque toute la page precedente : sans
+% cette barriere, la reserve d'espace mesure une place que le flottant en
+% attente va prendre, et le titre reste seul en bas.
+\clearpage
+\subsection{Cas d'utilisation et modèle du domaine}
+
+\label{sec:conception6}
+
+\label{sec:contexte6}
+
+Un diagramme de contexte est une vue statique qui délimite le périmètre d'un système en le
+représentant comme une entité unique, entourée des acteurs et des systèmes extérieurs avec lesquels
+il échange. Il ne décrit aucun traitement interne : son objet est de fixer ce qui appartient au
+système et ce qui lui reste extérieur.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_contexte.png}
+\caption{Diagramme de contexte : le système et ses interlocuteurs}
+\label{fig:contexte6}
+\end{figure}
+
+La figure~\ref{fig:contexte6} délimite le périmètre. Deux entités extérieures sont identifiées et
+aucune n'est un système tiers : le \textbf{demandeur} dépose une demande, en suit l'avancement et
+signale si la réponse lui a été utile ; l'\textbf{administrateur} qualifie la demande, la clôt et
+consulte les indicateurs de supervision.
+
+Un diagramme de cas d'utilisation représente les fonctionnalités offertes par un système du point de
+vue de ceux qui s'en servent. Il associe des acteurs à des cas décrivant chacun un service rendu, et
+les relations d'inclusion y expriment le comportement partagé entre plusieurs cas.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{ch06_cas_utilisation.png}
+\caption{Diagramme de cas d'utilisation}
+\label{fig:cas6}
+\end{figure}
+
+La figure~\ref{fig:cas6} recense ce que chaque rôle peut faire. L'administrateur dispose des mêmes
+possibilités de dépôt que le demandeur, auxquelles s'ajoutent la consultation de la file, le
+traitement, la clôture, la modification et la suppression d'un ticket, la consultation de son
+historique, la supervision et la gestion des comptes. Chaque trait en pointillé se lit comme une inclusion : le cas \emph{S'authentifier} est ainsi relié à tous
+les autres : aucune action n'est possible sans session valide, et le contrôle est
+porté par le service plutôt que par l'interface, donc s'applique à tout appel y compris hors du
+navigateur.
+
+\label{sec:classes6}
+
+\textbf{Le modèle du domaine.} Un diagramme de classes est une vue statique qui représente la structure d'un système en modélisant
+ses classes, leurs attributs et les relations qui les unissent. Il sert à comprendre et à
+communiquer cette structure avant d'écrire le code.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{ch06_classes.png}
+\caption{Diagramme de classes du domaine}
+\label{fig:classes6}
+\end{figure}
+
+La figure~\ref{fig:classes6} donne la vue d'analyse du domaine, sans les identifiants ni les clés
+étrangères qui appartiennent à la couche de persistance. La classe \textsc{User} porte l'identité et
+les droits communs ; \textsc{Demandeur} et \textsc{Administrateur} la spécialisent et se distinguent
+par ce qu'elles savent faire ; \textsc{Ticket} porte la demande et tout ce que son traitement
+produit ; \textsc{Historique} conserve la trace horodatée des modifications successives.
+
+\subsection{Le cycle de vie du ticket : séquences et états}
+
+\label{sec:seqdemandeur6}
+
+\textbf{Le dépôt d'une demande.} Un diagramme de séquence est une vue dynamique qui décrit l'enchaînement des messages échangés entre
+des participants au cours d'un scénario. Le temps s'y lit verticalement, chaque flèche portant un
+appel ou une réponse. Les deux diagrammes qui suivent couvrent les deux extrémités du cycle de vie
+d'un ticket.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_sequence_demandeur.png}
+\caption{Dépôt d'une demande par le demandeur}
+\label{fig:seqdem6}
+\end{figure}
+
+La figure~\ref{fig:seqdem6} suit le dépôt d'une demande, de l'ouverture du formulaire à la remise du
+numéro de suivi. Le fragment alternatif traduit une règle de saisie qui écarte les demandes trop
+brèves pour être classées. Le message~(6.1) porte le point notable du parcours : le classement et la
+recherche de cas comparables interviennent dans la même opération que l'enregistrement, pendant que
+le demandeur valide son formulaire, et cette synchronicité se paie sur la latence. Le modèle de
+langage n'intervient pas ici, sa reformulation n'étant pas destinée au demandeur.
+
+\label{sec:seqadmin6}
+
+\textbf{La clôture d'un ticket.} Le second parcours suit l'administrateur, du moment où il ouvre un ticket à celui où il le clôt.
+C'est le moment qui porte les garanties du dispositif.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_sequence_admin.png}
+\caption{Clôture d'un ticket par l'administrateur}
+\label{fig:seqadmin6}
+\end{figure}
+
+La figure~\ref{fig:seqadmin6} montre deux vérifications réunies dans le message~(6) : la transition
+d'état demandée doit figurer parmi celles qu'autorise l'état courant, et la clôture est refusée tant
+que l'administrateur n'a pas décrit ce qu'il a fait lorsque aucun cas voisin n'a été trouvé. La
+branche supérieure enchaîne alors trois effets : le ticket passe à l'état résolu, chaque champ
+modifié écrit sa ligne d'historique, et la solution rédigée est versée à la base de connaissances en
+tâche de fond. Seule une solution écrite par un humain y entre, ce qui interdit au système
+d'apprendre de ses propres suggestions.
+
+\label{sec:etats6}
+
+\textbf{La traçabilité des états.} Un diagramme d'états-transitions décrit le cycle de vie d'un objet en énumérant les états qu'il peut
+prendre et les événements qui le font passer de l'un à l'autre. Il permet de vérifier qu'aucun état
+n'est atteint sans transition d'entrée, ni bloquant faute de transition de sortie.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_etats_ticket.png}
+\caption{Cycle de vie du ticket et transitions autorisées}
+\label{fig:etats6}
+\end{figure}
+
+Un ticket occupe l'un de cinq états, et la figure~\ref{fig:etats6} donne les neuf transitions
+autorisées avec leurs déclencheurs. Ces transitions sont déclarées dans une table du code, à laquelle
+toute demande de changement est confrontée avant d'être appliquée. Placer ce contrôle côté serveur
+est ce qui le rend effectif : un appel direct hors du navigateur se heurte à la même règle.
+
+Ces cinq vues traduisent des décisions, et en laissent voir les limites. Deux principes les
+gouvernent, empruntés aux recommandations sur l'interaction entre un humain et un système
+automatique~\cite{amershi2019chi} : rendre lisible ce que le système sait faire, et permettre
+de corriger sa proposition sans quitter la tâche en cours. Trois réserves accompagnent ce
+parti. Le contrôle d'accès ne connaît que deux rôles, alors que le service distingue en
+pratique plusieurs niveaux de traitement ; il reste déclaratif, donc extensible sans refonte.
+La catégorie n'est pas réifiée en classe, si bien que rien n'interdit aujourd'hui
+l'enregistrement d'une valeur hors référentiel, la contrainte reposant sur le code et non sur
+le schéma. L'avis du demandeur est écrit sur le ticket sans ligne d'historique, ce qui arrête
+la traçabilité du « qui a changé quoi » au retour de l'utilisateur.
+
+\section{Développement de la plateforme}
+
+\label{sec:developpement7}
+
+Cette section décrit la réalisation : d'abord le service, ensuite les écrans, enfin le parcours
+complet d'un ticket à travers les deux.
+
+\subsection{Développement du backend}
+
+\label{sec:backend6}
+
+Le service compte environ 3\,400 lignes de Python, organisées en trois couches que la
+figure~\ref{fig:couches6} présente. Une requête entre par les \emph{routers}, descend vers les
+\emph{services} puis les \emph{repositories}, et n'atteint la persistance qu'en bout de chaîne.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{ch06_couches.png}
+\caption{Architecture en trois couches du service}
+\label{fig:couches6}
+\end{figure}
+
+\begin{puces}
+  \item Les \emph{routers} exposent les chemins, valident les entrées et les sorties par des
+        schémas typés et déclarent leurs dépendances de sécurité, sans porter de règle métier. Cinq
+        routers couvrent trente-six chemins : authentification, tickets, administration,
+        ingestion externe et diagnostic des prédictions.
+  \item Les \emph{services} portent la logique, au nombre de six : authentification, tickets,
+        intelligence artificielle, recherche, modèle de langage et messagerie.
+  \item Les \emph{repositories} encapsulent l'accès aux données, par SQLAlchemy pour la base
+        relationnelle et par un module dédié pour la base vectorielle.
+\end{puces}
+
+Ce découpage est mieux tenu sur le papier que dans le code, et nous le signalons plutôt que de
+laisser une revue attentive le découvrir. Le router des tickets compte 587 lignes, la logique de
+transition de statut y étant restée au lieu de descendre dans un service ; les repositories, à
+l'inverse, totalisent dix lignes et déclarent une intention que le code n'a pas encore remplie.
+C'est la principale dette de conception du service.
+
+Le contrôle d'accès RBAC s'appuie sur ce découpage. L'authentification repose sur un jeton signé,
+délivré à la connexion et valable huit heures, et les droits s'expriment par des dépendances
+déclaratives : un chemin réservé à l'administration vérifie le rôle porté par le jeton avant même
+que le corps de la fonction ne s'exécute, ce qui rend le contrôle visible à la lecture de la
+signature et évite l'oubli silencieux. Les mots de passe sont conservés sous forme d'empreintes
+bcrypt, et un compte créé par un administrateur reçoit un mot de passe temporaire que son titulaire
+doit changer au premier accès. Trois réserves doivent être énoncées.
+
+\begin{puces}
+  \item Le fichier d'environnement d'exemple ne porte aucun secret exploitable, et le service
+        refuse de démarrer en mode production tant qu'un marqueur y subsiste ; la génération des
+        valeurs reste à la charge de la procédure de mise en service.
+  \item La limitation des tentatives de connexion, fixée à dix par minute et par adresse, conserve
+        son décompte en mémoire du processus : un second processus serveur double le quota réel, et
+        un redémarrage remet le compteur à zéro.
+  \item Aucune analyse de vulnérabilité n'est menée sur les images conteneurisées, ce qui reste à
+        faire avant toute mise en production.
+\end{puces}
+
+\subsection{L'interface et l'espace du demandeur}
+
+\label{sec:frontend6}
+
+L'interface est développée avec Angular et compte dix-sept écrans, cinq communs d'authentification,
+cinq pour l'espace du demandeur et sept pour la console d'administration. Deux gardes protègent le
+routage, l'une exigeant une session valide, l'autre le rôle d'administration, et un intercepteur
+ajoute le jeton à chaque appel sortant.
+
+\label{sec:acces6}
+
+Les cinq écrans communs couvrent l'entrée dans l'application : la connexion, la création de compte,
+le changement de mot de passe imposé au premier accès, la demande de réinitialisation et la saisie
+du nouveau mot de passe. Ils partagent un cadre unique, décliné en panneau latéral sur écran large
+et en bandeau sur écran étroit.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_connexion.jpg}
+\caption{Écran de connexion}
+\label{fig:ecran_connexion6}
+\end{figure}
+
+La figure~\ref{fig:ecran_connexion6} donne l'écran de connexion. Aucun mécanisme d'authentification
+tierce n'est proposé, l'annuaire d'entreprise n'étant pas raccordé, comme la
+section~\ref{sec:contexte6} l'a exposé.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_inscription.jpg}
+\caption{Création de compte}
+\label{fig:ecran_inscription6}
+\end{figure}
+
+Sur la figure~\ref{fig:ecran_inscription6}, le rôle ne figure pas : il est déterminé par le serveur
+à partir de l'adresse. Un demandeur ne peut donc pas s'attribuer de droits en remplissant un
+formulaire.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_motdepasse.jpg}
+\caption{Demande de réinitialisation du mot de passe}
+\label{fig:ecran_motdepasse6}
+\end{figure}
+
+La figure~\ref{fig:ecran_motdepasse6} ouvre le parcours de réinitialisation. L'écran annonce qu'un
+lien sera envoyé si l'adresse correspond à un compte, formulation prudente : répondre différemment
+selon l'existence du compte transformerait ce point d'entrée en annuaire des collaborateurs. Le lien
+expire au bout de trente minutes, ne sert qu'une fois, et seule son empreinte est conservée.
+
+\textbf{Le portail du demandeur.} Il comporte un accueil, un formulaire de dépôt, la liste des demandes, le détail d'une
+demande et le profil. La figure~\ref{fig:ecran_depot6} montre le formulaire de dépôt.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_depot.jpg}
+\caption{Portail du demandeur, formulaire de dépôt guidé}
+\label{fig:ecran_depot6}
+\end{figure}
+
+Ce formulaire a été reconstruit après une observation d'usage : sa première version demandait un
+titre et une description sans indication, et produisait des descriptions d'un ou deux mots,
+inexploitables. La version reproduite remplace la zone libre par quatre questions dont une seule est
+obligatoire. Les réponses sont assemblées en un texte unique qui devient la description transmise au
+service, et c'est ce texte que le classifieur lit pour proposer une catégorie. La qualité de la
+saisie conditionne donc directement celle de la proposition.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_suivi.jpg}
+\caption{Portail du demandeur, suivi d'une demande}
+\label{fig:ecran_suivi6}
+\end{figure}
+
+La figure~\ref{fig:ecran_suivi6} donne l'écran de suivi, qui répond à l'attente la plus simple du
+demandeur : savoir où en est son dossier sans relancer le service. Ce qu'il ne montre pas résulte d'une décision : ni la catégorie proposée, ni
+l'index de confiance, ni le score de similarité. Une première version les affichait. Un index de
+confiance n'a pas de signification pour qui ignore comment il est calculé, et afficher une catégorie
+avant qu'un administrateur ne l'ait confirmée revient à annoncer un diagnostic que le service peut
+contredire devant l'utilisateur. Un bouton d'avis apparaît une fois la demande résolue, ce qui
+explique son absence sur cette capture prise en cours de traitement.
+
+\subsection{Console d'administration et validation humaine}
+
+La console comporte un tableau de bord, la file d'approbation, la liste complète des tickets, le
+détail d'un ticket, un écran de veille, la gestion des comptes et la supervision. La
+figure~\ref{fig:ecran_file6} montre la file d'approbation.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_file.jpg}
+\caption{Console d'administration, file d'approbation}
+\label{fig:ecran_file6}
+\end{figure}
+
+La file est le point d'entrée de l'administrateur. Sa première version présentait un formulaire de
+décision qui dupliquait l'écran de détail sans rien apporter ; il a été retiré. Un simple clic sur
+une ligne déclenche désormais quatre effets enchaînés : le statut passe à la prise en charge, un
+message générique est déposé à l'intention du demandeur, le ticket est affecté à l'administrateur
+qui a cliqué, et l'interface redirige vers le détail. Le message personnalisé intervient à la
+clôture, moment où l'administrateur a effectivement quelque chose à annoncer.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_bord.jpg}
+\caption{Console d'administration, tableau de bord}
+\label{fig:ecran_bord6}
+\end{figure}
+
+Le tableau de bord donne au responsable la vue d'ensemble que le circuit par messagerie ne
+permettait pas : combien de demandes, de quelle nature, en combien de temps traitées. Les valeurs
+lisibles sur la figure~\ref{fig:ecran_bord6} proviennent de l'environnement de recette et n'ont
+aucun rapport avec le corpus étudié au chapitre~2. Deux écrans complètent la console : la
+supervision, qui expose la version du modèle servi et la décision de promotion la plus récente sans
+rien recalculer, et la veille, qui rassemble les demandes en attente, celles ouvertes depuis plus de
+vingt-quatre heures et les derniers avis déposés. Aucun courriel n'est émis vers le demandeur,
+conformément au périmètre posé au chapitre~1.
+
+\label{sec:bouclage6}
+
+\textbf{Le bouclage de la résolution.} Le dernier écran de la console est celui où se joue la garantie de non-automatisation.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch06_ecran_detail.jpg}
+\caption{Console d'administration, traitement d'un ticket}
+\label{fig:ecran_detail6}
+\end{figure}
+
+L'écran de détail concentre l'essentiel du travail de l'administrateur. Le traitement s'y déroule en
+trois temps.
+
+\begin{puces}
+  \item La \textbf{revue} présente la demande, la catégorie proposée, les cas voisins et leur
+        reformulation ; l'administrateur y forme son diagnostic sans rien saisir. C'est ce moment
+        que reproduit la figure~\ref{fig:ecran_detail6}.
+  \item Les \textbf{champs de clôture} rassemblent la catégorie finale, la priorité finale et le
+        statut visé, connus seulement une fois le problème compris.
+  \item La \textbf{solution appliquée} fait l'objet d'une fenêtre distincte, ce qui matérialise
+        qu'il s'agit de la contribution durable de l'administrateur.
+\end{puces}
+
+Cette dernière étape est obligatoire. Le service refuse la clôture tant que la solution n'est pas
+rédigée, et le chapitre~6 montre que le moteur servi n'atteint jamais le seuil de nouveauté, ce qui
+revient à dire que la solution est exigée à chaque clôture. L'obligation sert deux fins : la base de
+connaissances ne reçoit que des solutions rédigées par un humain, condition sans laquelle le
+contrôle qualité du chapitre~5 la refuserait, et aucune suggestion du système ne peut être acceptée
+sans qu'un administrateur l'ait reprise à son compte. La séparation des attributs de proposition et
+de décision, exposée à la section~\ref{sec:classes6}, complète le dispositif au niveau des données.
+
+\subsection{Workflow global de traitement d'un ticket}
+
+\label{sec:workflow6}
+
+La figure~\ref{fig:workflow6} retrace le parcours entier. Une demande naît dans le formulaire du
+portail, ou par le connecteur d'ingestion qui rejoint exactement le même traitement sans qu'aucune
+demande ne l'emprunte à ce jour.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.66\textwidth]{ch06_workflow.png}
+\caption{Parcours d'un ticket, du dépôt à l'enrichissement de la base}
+\label{fig:workflow6}
+\end{figure}
+
+Deux points méritent d'être relevés sur ce tracé. La clôture ne termine pas le parcours : la
+solution rédigée passe par le contrôle qualité du chapitre~5, qui vérifie notamment qu'elle
+provient bien d'un humain, puis rejoint la base de connaissances où elle devient candidate dès le
+ticket similaire suivant. Et le ticket clos reste modifiable, une erreur de qualification
+découverte après coup se corrigeant sans rouvrir le dossier.
+
+La flèche de retour porte l'essentiel. Le service résout une demande, la résolution enrichit la
+base, et la demande suivante en bénéficie. C'est le seul mécanisme par lequel la plateforme
+s'améliore sans intervention sur son code.
+
+\section{Déploiement et apprentissage continu}
+
+\label{sec:deploiement7}
+
+Le chapitre~4 a produit un modèle, le chapitre~5 une base de connaissances. Aucun des deux ne
+survit à un changement de corpus si les étapes qui les produisent tiennent dans un carnet de notes.
+Cette section décrit d'abord comment la plateforme se déploie, puis la chaîne qui reconstruit ses
+composants d'apprentissage et, surtout, celle qui décide si le résultat mérite d'être servi.
+
+\subsection{Conteneurisation et déploiement}
+
 \label{sec:conteneurs7}
 
 L'application se lance par une seule commande, qui construit les images manquantes et démarre quatre
 services reliés par un réseau privé. Cette propriété n'est pas un confort de développement. Elle
 conditionne la reprise du travail par le service support, qui doit pouvoir installer la plateforme
 sans reconstituer un environnement Python, une base de données et un modèle de langage à la main.
+
+Le tableau~\ref{tab:services7} liste les services que la composition déploie.
 
 \begin{table}[!htbp]
 \centering
@@ -58,16 +608,14 @@ ollama & Modèle de langage exécuté localement & Image officielle \\
 La figure~\ref{fig:deploiement7} donne la topologie déployée. Elle se lit par ce qu'elle ne montre
 pas : aucune flèche ne franchit le cadre du serveur vers l'extérieur. La contrainte de
 confidentialité posée au chapitre~1 ne repose donc pas sur une promesse mais sur une composition où
-rien n'est câblé vers un service tiers.
+rien n'est câblé vers un service tiers. Deux ports seulement sont publiés sur la machine hôte, l'un vers l'interface et l'autre vers le service applicatif ; la base de données et le modèle de langage n'en publient aucun et ne sont joignables que depuis le réseau interne de la composition.
 
-\FloatBarrier
 
 Plusieurs traits de cette composition traduisent des décisions plutôt que des réglages par défaut.
 
 La base de données n'expose aucun port sur la machine hôte. Elle n'est joignable que depuis le
 réseau interne de la composition, ce qui interdit tout accès direct depuis l'extérieur du serveur.
-Le service applicatif reste le seul chemin vers les données, propriété déjà énoncée au
-chapitre~6 et que le déploiement rend effective.
+Le service applicatif reste le seul chemin vers les données, propriété déjà énoncée plus haut et que le déploiement rend effective.
 
 Le démarrage est ordonné par des contrôles de santé plutôt que par des attentes fixes. Le service
 applicatif attend que la base réponde à une sonde de disponibilité, et l'interface attend que le
@@ -93,10 +641,8 @@ la démonstration ne dépend pas du matériel disponible le jour où elle a lieu
 Le service applicatif est servi par deux processus de travail. Ce nombre paraît anodin, et la
 section~\ref{sec:validation7} montrera qu'il explique une part de l'échec sur le temps de réponse.
 
-La supervision de l'activité relève entièrement de la console d'administration décrite au
-chapitre~6 : la composition ne déploie aucun service distinct pour cet usage.
+La supervision de l'activité relève entièrement de la console d'administration décrite plus haut : la composition ne déploie aucun service distinct pour cet usage.
 
-\FloatBarrier
 
 Le relevé de la figure~\ref{fig:dockerps7} confirme ce que la composition déclare. Les quatre
 services tournent, trois d'entre eux répondent à leur sonde de disponibilité, et deux ports
@@ -130,46 +676,33 @@ transformer et ceux du modèle génératif. Un service de support qui déploiera
 doit donc prévoir une quinzaine de gigaoctets, contrainte à énoncer avant l'installation plutôt
 qu'à découvrir pendant.
 
-\FloatBarrier
+\subsection{Un pipeline reproductible et ce qu'il exclut}
 
-\section{Chaîne d'apprentissage automatisé}
 \label{sec:mlops7}
 
-Le chapitre~4 a produit un modèle, le chapitre~5 une base de connaissances. Aucun des deux ne
-survit à un changement de corpus si les étapes qui les produisent tiennent dans un carnet de notes.
-Cette section décrit la chaîne qui les reconstruit et, surtout, celle qui décide si le résultat
-mérite d'être servi.
-
-\subsection{Un pipeline reproductible, et ce qu'il exclut délibérément}
-
-Huit étapes déclarées relient les fichiers d'entrée aux artefacts produits. Chacune déclare ses
+La figure~\ref{fig:pipeline7} donne la chaîne complète. Huit étapes déclarent chacune ses
 dépendances, ses paramètres et ses sorties, si bien qu'une modification du corpus ou d'un paramètre
-suffit à recalculer ce qui en dépend, et rien d'autre.
+recalcule ce qui en dépend, et rien d'autre.
 
-Deux chaînes partent du même corpus nettoyé et ne se mélangent jamais. La première mène à la
-classification : préparation, découpage, construction du jeu d'apprentissage, entraînement,
-promotion. La seconde mène à la connaissance : préparation, découpage, construction des index
-lexical et sémantique, évaluation. Cette séparation reprend au niveau de l'outillage la distinction
-que le chapitre~3 a établie au niveau des données.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{ch07_pipeline.png}
+\caption{Les huit étapes du pipeline et la porte de promotion}
+\label{fig:pipeline7}
+\end{figure}
 
-Certains éléments sont volontairement tenus hors du pipeline, et l'explication vaut mieux que le
-silence.
+Deux chaînes partent du même corpus nettoyé et ne se mélangent jamais, l'une vers la
+classification, l'autre vers la connaissance. Cette séparation reprend au niveau de l'outillage la
+distinction que le chapitre~3 a établie au niveau des données.
 
-La collecte des tickets résolus lit la base applicative, dont l'état ne se résume pas à une
-empreinte de fichier. En faire une étape déclarée serait pire que de l'omettre : l'outil efface les
-sorties d'une étape avant de la rejouer, ce qui détruirait l'historique des lots déjà collectés. Le
-script se lance donc à la main, ou sur recommandation du dispositif de surveillance.
+Trois éléments restent volontairement hors du pipeline, et l'explication vaut mieux que le silence.
+La collecte des tickets résolus et le registre des modèles sont écartés pour une même raison :
+l'outil efface les sorties d'une étape avant de la rejouer, si bien que les déclarer détruirait
+l'historique des lots collectés et celui des versions promues, donc la possibilité de revenir en
+arrière. Les scripts de surveillance, eux, lisent la production plutôt que le corpus ; ils
+rapportent un état sans rien transformer, et rien ne dépend de leur sortie.
 
-Les scripts de surveillance lisent la production plutôt que le corpus. Ils rapportent un état, ils
-ne transforment rien, et rien ne dépend de leur sortie.
-
-Le registre des modèles est écarté pour la même raison que la collecte. Le placer en sortie d'étape
-reviendrait à l'effacer à chaque promotion, et le projet perdrait à la fois son historique de
-versions et la possibilité de revenir en arrière.
-
-\subsection{Un jeu de test gelé et un suivi des expériences}
-
-Comparer deux modèles suppose une référence stable. Le jeu de test est donc gelé : une fois
+\textbf{Un jeu de test gelé et un suivi des expériences.} Comparer deux modèles suppose une référence stable. Le jeu de test est donc gelé : une fois
 constitué, l'étape de découpage le relit au lieu de le régénérer, et un manifeste en conserve
 l'empreinte. Sans cette précaution, chaque exécution aurait produit un jeu de test légèrement
 différent, et les écarts mesurés entre deux versions auraient mêlé le progrès du modèle au hasard
@@ -184,403 +717,140 @@ registre d'expériences. Le suivi est facultatif au sens strict : si l'outil n'e
 l'entraînement se poursuit en signalant que le suivi est désactivé. Ce choix évite qu'une
 dépendance de confort bloque la production d'un modèle.
 
-\subsection{La porte de promotion}
+\subsection{La porte de promotion et le réentraînement contrôlé}
 
 Un modèle entraîné n'est pas un modèle servi. Entre les deux, une porte compare le candidat au
-modèle en production sur le jeu de test gelé, et refuse par défaut.
-
-Trois conditions doivent être réunies. La métrique principale doit progresser d'au moins cinq
-millièmes, seuil qui écarte les variations sans signification. Aucune catégorie ne doit régresser
-de plus de cinq centièmes, ce qui interdit d'améliorer la moyenne en sacrifiant une catégorie
-minoritaire. Et l'exactitude globale ne doit pas reculer.
-
-La décision est écrite dans un fichier, avec le détail de chaque condition, les métriques comparées
-et le motif du refus le cas échéant. La console d'administration lit ce fichier sans le recalculer,
-ce qui garantit que l'écran et la décision disent la même chose.
-
-Le dispositif a effectivement refusé. La dernière décision enregistrée rejette une version
-candidate au motif que la métrique principale n'a pas progressé : l'écart mesuré avec la version en
-production est nul, très en dessous du gain minimum exigé. Les deux autres conditions étaient
-pourtant satisfaites. Une porte qui n'a jamais refusé ne prouve rien, et nous préférons produire
-cette trace plutôt qu'une promotion réussie de complaisance.
-
-Une remarque de méthode s'impose sur la métrique retenue. La décision porte sur le F1-macro
-restreint aux catégories effectivement représentées dans le jeu de test, cinq sur huit. Ce choix
-évite qu'une catégorie sans aucun exemple de test tire mécaniquement la moyenne vers zéro et rende
-toute comparaison impossible. Il a pour contrepartie de produire une valeur plus flatteuse que le
-F1-macro complet rapporté au chapitre~4, et les deux nombres ne sont donc pas comparables entre
-eux. La porte reste juste pour ce qu'elle fait, comparer deux modèles sur la même base, sans être
-une mesure de la qualité absolue du système.
-
-\subsection{Le réentraînement contrôlé}
-
-Réentraîner à date fixe n'a pas de sens sur un flux de quelques dizaines de tickets par mois.
-Un dispositif évalue donc s'il y a matière, et écrit sa recommandation.
-
-Les déclencheurs examinés portent sur le volume collecté et sur le délai. Le volume de tickets doit
-dépasser cent cinquante, seuil en deçà duquel l'apport par catégorie reste sous le bruit
-d'échantillonnage du jeu de test. Une catégorie minoritaire qui gagne trente exemples déclenche à
-elle seule, car une classe faible progresse proportionnellement plus vite. Et un délai minimal de
-sept jours sépare deux promotions, pour éviter l'agitation.
-
-La qualité des étiquettes collectées est graduée selon ce que l'historique du ticket révèle. Une
-catégorie corrigée par un administrateur constitue une étiquette forte. Une catégorie journalisée
-et non modifiée constitue une étiquette moyenne. Une catégorie que l'administrateur n'a jamais
-touchée ne constitue qu'une confirmation par omission, et ces étiquettes faibles sont exclues du
-réentraînement. Les inclure reviendrait à réapprendre sur les sorties du modèle lui-même, ce qui
-amplifierait ses erreurs au lieu de les corriger. C'est ici que la traçabilité décrite au
-chapitre~6 devient un instrument plutôt qu'un ornement : sans le journal des modifications, cette
-graduation serait impossible.
-
-Le dispositif n'a pas encore recommandé de réentraînement, faute de volume. Cette absence de
-déclenchement est le comportement attendu sur un service qui vient d'ouvrir, et non un défaut.
-
-\FloatBarrier
-
-\section{Tests de la solution}
-\label{sec:tests7}
-
-Une suite de cent cinquante tests automatisés accompagne le service. Elle s'exécute en moins
-d'une minute et passe intégralement. Ce nombre ne dit rien à lui seul, et cette section décrit ce
-qu'il couvre et ce qu'il laisse de côté. La grille d'évaluation proposée par Breck et ses
-coauteurs~\cite{breck2017} rappelle qu'un système d'apprentissage se teste sur quatre fronts, les
-données, le modèle, l'infrastructure et la surveillance, et que le dernier est le plus souvent
-négligé. Notre bilan ne fait pas exception.
-
-\subsection{Périmètre de la suite automatisée}
-
-La figure~\ref{fig:tests7} donne l'exécution de la suite et la couverture qu'elle atteint.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch07_tests.jpg}
-\caption{Exécution de la suite de tests et couverture mesurée}
-\label{fig:tests7}
-\end{figure}
-
-La couverture est forte là où une régression serait silencieuse, les règles métier à 100\,\%, le
-contrôle qualité à 99\,\% et le registre des modèles à 95\,\%. Elle est nulle sur la surveillance,
-dont les scripts lisent la production et ne transforment rien.
-
-\subsection{Des tests qui protègent des règles, pas seulement du code}
-
-Quelques tests méritent d'être cités parce qu'ils inscrivent une règle métier plutôt qu'un
-comportement technique, et qu'ils la rendent indélébile.
-
-La frontière anti-fuite vérifie qu'aucune ligne issue de la production ne peut entrer dans le jeu
-de test gelé. Sans elle, le corpus collecté en exploitation contaminerait progressivement la
-référence d'évaluation, et les mesures des chapitres suivants perdraient leur sens sans que
-personne s'en aperçoive.
-
-Le refus des suggestions produites par le système vérifie qu'une solution non relue par un humain
-ne peut pas entrer dans la base de connaissances. C'est la règle décrite au chapitre~5, et le test
-la protège contre une évolution ultérieure qui la lèverait par commodité.
-
-L'idempotence de la promotion couvre un défaut trouvé en relecture, où la porte échouait lorsqu'on
-la rejouait sur une décision déjà prise. Le test existe parce que le défaut a existé, et il
-appartient à ce titre à l'histoire du projet autant qu'à sa qualité.
-
-\subsection{Zones non couvertes}
-
-Plusieurs manques doivent être énoncés, faute de quoi le nombre de cent cinquante donnerait une
-impression de couverture que la réalité ne soutient pas.
-
-L'interface n'est pas couverte. Quatorze fichiers de test existent du côté Angular, mais ils
-totalisent treize cas, pour la plupart issus de la génération automatique, et quatre d'entre eux ne
-contiennent aucun cas. Un rendu correct des écrans décrits au chapitre~6 ne repose donc sur aucune
-vérification automatique.
-
-Les tests de charge ne font pas partie de la suite. Ils constituent une campagne distincte, dont la
-section suivante rend compte, et ils ne sont pas rejoués à chaque modification.
-
-\subsection{Exécution automatique et couverture mesurée}
-
-Une chaîne d'intégration continue exécute la suite à chaque poussée et à chaque demande de fusion
-vers la branche principale. Elle installe les dépendances sur une copie propre du dépôt, lance les
-tests, échoue si l'un d'eux échoue, et conserve le rapport de couverture.
-
-Cette copie propre impose une restriction qu'il faut énoncer. Le corpus, le pipeline entraîné et
-l'index vectoriel sont suivis par le gestionnaire de versions de données et absents du dépôt de
-code, puisque le corpus porte des noms de demandeurs en clair. Les dix-huit tests d'intégration du
-service chargent le pipeline au démarrage et ne peuvent donc pas s'exécuter dans cet environnement.
-La chaîne en exécute cent trente-deux, qui couvrent les règles métier, la préparation des textes, les
-moteurs de recherche, le registre des modèles, la porte de promotion et le cycle de vie de la base
-de connaissances.
-
-La couverture mesurée sur ces cent trente-deux tests s'établit à 44\,\% des instructions du code source
-de traitement. Ce chiffre recouvre des situations très différentes. La préparation des textes et
-les règles métier sont couvertes intégralement, le registre des modèles à 95\,\% et la fusion
-hybride à 89\,\%. À l'inverse, les deux modules de surveillance ne sont atteints par aucun test, et
-le moteur sémantique l'est à 20\,\% parce que l'essentiel de son code suppose un index construit.
-La couverture est donc forte là où une régression serait silencieuse, et faible là où elle serait
-immédiatement visible.
-
-\FloatBarrier
-
-\section{Validation de la solution}
-\label{sec:validation7}
-
-Cette section confronte les exigences du chapitre~2 aux mesures obtenues. Nous commençons par celle
-qui n'est pas tenue.
-
-\subsection{Le temps de réponse, exigence non tenue}
-
-L'exigence de performance fixe la latence de prédiction à 300\,ms au quatre-vingt-quinzième
-centile. Une campagne de charge a été menée sur le point d'entrée de prédiction, dans
-l'environnement conteneurisé décrit à la section~\ref{sec:conteneurs7}, donc avec deux processus de
-travail. La figure~\ref{fig:charge7} en rapporte le relevé.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{ch07_charge.jpg}
-\caption{Campagne de charge sur le point d'entrée de prédiction}
-\label{fig:charge7}
-\end{figure}
-
-Le budget n'est tenu dans aucun des trois scénarios. Le cas séquentiel en approche pourtant : avec
-330\,ms au quatre-vingt-quinzième centile pour un budget de 300, l'écart tient à quelques dizaines
-de millisecondes. La médiane, à 105\,ms, montre que la majorité des requêtes passe largement sous
-le budget, et que ce sont les requêtes lentes qui font échouer la mesure.
-
-La dégradation sous concurrence est d'une autre nature. Le quatre-vingt-quinzième centile est
-multiplié par trois entre une requête à la fois et cinq requêtes simultanées, puis par quinze entre
-cinq et vingt. À vingt requêtes simultanées, près d'une sur cinq n'aboutit pas.
-
-L'explication tient à la conception du point d'entrée plutôt qu'à un défaut d'implémentation. Le
-traitement d'une prédiction est gourmand en calcul : encodage du texte, prédiction du classifieur,
-recherche dans l'index. Ce traitement est écrit de manière synchrone et occupe donc son processus
-de bout en bout. Avec deux processus de travail seulement, deux requêtes suffisent à saturer le
-service, et les suivantes attendent. Le langage employé ne permet pas à plusieurs fils d'exécution
-de contourner cette limite sur un traitement de cette nature.
-
-Trois voies de correction existent, et nous les énonçons sans en avoir mesuré l'effet. Augmenter le
-nombre de processus de travail est immédiat et sans risque fonctionnel. Rendre le point d'entrée
-asynchrone et déporter le calcul sur un exécuteur dédié demande une reprise du code. Séparer les
-composants d'intelligence artificielle dans un service distinct, choix écarté au chapitre~6 pour
-éviter un appel réseau, redeviendrait défendable si la charge le justifiait.
-
-Une réserve de méthode s'impose sur ces chiffres. La campagne a été conduite sur une machine de
-développement, sur trente à deux cents requêtes selon le scénario, et sur un seul point d'entrée.
-Elle établit un ordre de grandeur et un comportement sous concurrence, non une caractérisation de
-production.
-
-\subsection{Bilan de conformité}
-
-Le tableau~\ref{tab:conformite7} reprend les huit catégories d'exigences non fonctionnelles du
-chapitre~2 et leur oppose l'état mesuré.
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Conformité aux exigences non fonctionnelles}
-\label{tab:conformite7}
-\begin{tabular}{|Bp{3.3cm}|Cp{2.2cm}|Lp{8.1cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Catégorie} & \textbf{État} & \textbf{Constat} \\
-\hline
-Performance & Non tenue & 330\,ms au quatre-vingt-quinzième centile sans concurrence, pour un
-budget de 300\,ms \\
-\hline
-Qualité de l'IA & Partielle & Protocole arrêté avant l'expérimentation et respecté ; seuils non
-franchis, 0,8343 de F1-macro pour 0,85 et 0,60 de rappel sur \emph{Sécurité} pour 0,70 \\
-\hline
-Confidentialité & Tenue & Aucun appel à un service externe, modèle de langage exécuté localement \\
-\hline
-Sécurité & Tenue & Jeton signé, contrôle de rôle, empreintes bcrypt ; aucun secret exploitable dans
-le dépôt, démarrage en production refusé sans génération \\
-\hline
-Fiabilité & Tenue & Le modèle de langage n'intervient sur aucun chemin obligatoire \\
-\hline
-Maintenabilité & Partielle & 150 tests côté service, dont 132 rejoués par l'intégration continue
-pour 44\,\% de couverture ; interface non couverte \\
-\hline
-Reproductibilité & Tenue & Pipeline déclaré, jeu de test gelé et référencé par empreinte \\
-\hline
-Portabilité & Tenue & Quatre services conteneurisés, démarrage par une commande \\
-\hline
-\end{tabular}
-\end{table}
-
-Cinq exigences sur huit sont tenues, deux le sont partiellement, une ne l'est pas. La fiabilité
-mérite une justification, car elle repose sur une propriété de conception. Le modèle de langage
-n'est joignable que par deux points d'entrée dédiés, l'un pour la synthèse des cas voisins, l'autre
-pour l'échange avec l'administrateur. Ni le dépôt d'une demande ni la clôture d'un ticket ne le
-sollicitent. Son indisponibilité prive donc l'administrateur d'une aide à la lecture, sans arrêter
-le service.
-
-Du côté fonctionnel, le tableau~\ref{tab:ef} du chapitre~2 en compte quatorze. Dix sont pleinement
-satisfaites, une l'est en partie, trois n'ont pas été traitées. Onze relèvent du chapitre~6, qui en
-satisfait sept, en traite une partiellement et en laisse trois de côté ; les trois autres, la
-classification automatique, la recherche de cas comparables et la synthèse rédigée, relèvent des
-chapitres~4 et~5 et sont satisfaites.
-
-L'exigence partielle est EF-07, l'orientation selon l'index de confiance : le score est calculé,
-affiché et rangé par tranches, sans qu'aucun routage automatique s'en serve. Les trois exigences
-non traitées sont EF-11, EF-12 et EF-13, le résumé automatique du ticket, la suggestion de priorité
-et l'analyse de tonalité, toutes de priorité moyenne ou faible au dossier de spécification.
-
-\FloatBarrier
-
-\section{Limites du système}
-\label{sec:limites7}
-
-Les chapitres précédents ont signalé leurs limites au fil de l'exposé. Cette section les rassemble,
-sans en ajouter ni en retrancher, parce qu'un lecteur a besoin de les voir ensemble pour juger de
-ce que le système permet.
-
-\subsection{Diversité insuffisante du corpus}
-
-Le corpus compte 1\,800 tickets sur quatorze mois, et le chapitre~3 a établi que sa diversité pose
-le vrai problème. Cinquante-huit titres distincts seulement, soit trois pour cent, là où un jeu de
-référence public en compte quatre-vingt-onze pour cent. Le système apprend donc sur un petit nombre
-de scénarios répétés.
-
-Cette pauvreté se propage jusqu'à l'évaluation. Le jeu de test gelé ne contient que cinq des huit
-catégories : \emph{Applicatifs}, \emph{Communication} et \emph{Backup} n'y figurent pas, alors
-qu'elles rassemblent plus de cinq cents tickets à l'apprentissage. Le découpage par groupe de
-titres, choisi pour empêcher toute fuite, produit mécaniquement ce résultat lorsque les groupes sont
-si peu nombreux. Le chapitre~4 a mesuré la conséquence : une part de l'écart entre les valeurs
-rapportées tient à ces catégories vides, dont le score vaut zéro faute d'exemples plutôt que par
-défaut du modèle.
-
-Le déséquilibre entre catégories reste enfin marqué, et il place les catégories minoritaires dans
-une situation où quelques tickets suffisent à déplacer leur score d'un palier entier.
-
-\subsection{Écarts de performance des composants d'intelligence artificielle}
-
-Le classifieur servi n'est pas le meilleur dont nous disposons. La chaîne lexicale complétée par
-des règles obtient 0,5829 de F1-macro, quand le transformer adapté accompagné des mêmes règles
-atteint 0,8343. L'écart de 0,25 point est acquis et documenté au chapitre~4, qui en donne aussi le
-prix : sur processeur, l'inférence du transformer coûte 325,8\,ms par ticket contre 5,0\,ms pour la
-chaîne lexicale, davantage à elle seule que le budget de latence entier. Le choix est assumé sur
-cette mesure, et il reste ouvert à révision dès que la machine qui héberge le service dispose d'une
-carte graphique.
-
-Les règles métier qui complètent le classifieur sont liées à ce référentiel de huit catégories. Un
-autre service, ou un autre découpage des catégories, exigerait de les réécrire.
-
-Le moteur de recherche place en tête un passage pertinent dans un peu plus d'un tiers des cas, avec
-une précision à trois passages de 0,3542. Son score de similarité moyen, 0,3551, reste sous le
-seuil de pertinence de 0,50 retenu dans la configuration. Le chapitre~5 a établi l'origine de cet
-écart : le seuil a été calibré sur l'échelle du moteur sémantique, puis conservé lorsque le moteur
-hybride l'a remplacé, alors que les deux ne produisent pas des scores comparables. Le risque
-associé est suivi au registre sous la référence R-20.
-
-Ce décalage a une conséquence directe sur l'exploitation. Un score systématiquement inférieur au
-seuil revient à traiter chaque ticket comme un cas nouveau, donc à exiger de l'administrateur qu'il
-rédige une solution avant toute clôture. L'effet est bénéfique pour la base de connaissances, et il
-est obtenu par accident plutôt que par conception.
-
-L'évaluation du moteur de recherche ne repose sur aucun jeu annoté par un expert du domaine, limite
-signalée au chapitre~5 et suivie sous la référence R-22.
-
-Le modèle de langage se paie en attente, de treize à vingt secondes selon la configuration
-matérielle. Cette latence est la contrepartie directe de l'exigence de confidentialité, qui impose
-son exécution locale. Elle est tolérable parce que l'appel reste facultatif et destiné à
-l'administrateur, elle ne le serait pas sur le chemin du demandeur.
-
-\subsection{Réserves sur l'exploitation}
-
-Le temps de réponse ne respecte pas le budget fixé, y compris sans concurrence, et la
-section~\ref{sec:validation7} en a donné la mesure et la cause.
-
-Les secrets de déploiement portent leur valeur par défaut dans les fichiers d'exemple, risque suivi
-sous la référence R-09. Aucune analyse de vulnérabilité n'est menée sur les images conteneurisées.
-La chaîne d'intégration continue laisse de côté les dix-huit tests qui exigent des artefacts
-versionnés, et l'interface n'est couverte par aucune vérification automatique.
-
-Le signalement des cas les mieux assurés dispose enfin de tout son appareillage sans qu'aucun
-routage automatique s'en serve. Cette réserve relève d'un arbitrage de produit et non d'un manque
-technique ; elle est suivie sous la référence R-16.
-
-\subsection{Portée restreinte des mesures}
-
-Les mesures rapportées valent pour le protocole qui les a produites, et il faut le dire clairement.
-
-Le jeu de test gelé compte 356 tickets répartis sur cinq catégories, et douze scénarios distincts.
-À ce niveau, une mesure par catégorie se déplace par paliers entiers, ce que le chapitre~4 a
-illustré sur la catégorie \emph{Sécurité}, dont le rappel passe de zéro à 0,40 pour un système
-inchangé selon le protocole de découpage retenu.
-
-La campagne de charge a été conduite sur une machine de développement, sur un seul point d'entrée
-et sur quelques centaines de requêtes. Elle établit un ordre de grandeur et un comportement sous
-concurrence, non une caractérisation de production.
-
-Aucune mesure n'a été conduite sur du trafic réel. Le service n'a pas encore d'usage, et la seule
-manière de savoir si les propositions du système aident réellement le support consiste à observer
-ce que les administrateurs en font. Le chapitre~5 en avait fait une perspective, et elle le reste.
-
-\FloatBarrier
+modèle en production sur le jeu de test gelé et refuse par défaut. Ses trois conditions, portées sur
+la figure~\ref{fig:pipeline7}, exigent un gain minimum, interdisent la régression d'une catégorie et
+protègent l'exactitude globale ; la décision est écrite dans un fichier que la console
+d'administration lit sans le recalculer.
+
+Le dispositif a effectivement refusé : la dernière décision rejette une candidate dont la métrique
+principale n'a pas progressé d'un millième, les deux autres conditions étant pourtant satisfaites.
+Une réserve accompagne cette métrique. Elle porte sur le F1-macro restreint aux cinq catégories sur
+huit représentées au test, pour qu'une catégorie sans exemple ne tire pas la moyenne vers zéro :
+elle est donc plus flatteuse que le F1-macro complet du chapitre~6, et les deux ne sont pas
+comparables. La porte compare deux modèles sur la même base, elle ne mesure pas la qualité absolue
+du système.
+
+\textbf{Le jeu gelé est une porte, non un sélecteur.} Un jeu de test se dégrade par usage : chaque
+lecture qui \emph{tranche} fait passer une part de son information dans le modèle retenu. Il ne doit
+donc répondre qu'une fois par candidat, à une seule question ; les hyperparamètres et l'époque
+d'entraînement se choisissent ailleurs, par validation croisée par groupe de titres.
+
+Nous avons trouvé une exception en vérifiant la règle. Le seuil de pertinence du moteur de
+recherche, lui, a été choisi sur ce jeu : les quarante requêtes annotées en sont tirées, et le
+balayage qui a retenu 0,35 les parcourt. Le fait n'apparaissait dans aucun journal, ce balayage
+lisant le gabarit d'annotation et non le fichier du jeu. Les deux remarques de notre encadrant — le
+seuil choisi sur le jeu qui le juge, et le jeu gelé qui glisse vers un jeu de validation — n'en font
+donc qu'une, et la réserve de la section~\ref{sec:seuil5} en est la conséquence : sept à huit points
+d'optimisme.
+
+Trois dispositions rendent désormais la règle vérifiable : un journal versionné où chaque lecture
+porte sa date, son motif et ce qu'elle a servi à décider ; un test qui refuse qu'un fichier ouvre le
+jeu sans le déclarer ; et un budget qui arrête la porte une fois atteint. Les lectures qui tranchent
+y sont distinguées de celles qui rapportent. L'inventaire importait : la première version
+n'instrumentait que la porte, quand neuf autres points d'entrée ouvraient le même fichier en
+silence, dont deux qui tranchent. L'état connu est le double de ce que nous avions d'abord écrit,
+\textbf{six} lectures décisionnelles pour un budget de dix — trois pour les candidats v2, v3 et v4,
+trois pour le moteur de recherche, toutes antérieures au journal et signalées comme reconstituées.
+Deux aveux l'accompagnent : ces trois dernières n'apparaissaient nulle part avant cette
+vérification, et le compte des lectures \emph{de rapport} antérieures au 10 octobre mêle de vraies
+exécutions à des essais de la suite de tests. Le compte décisionnel n'en souffre pas, et le journal
+le déclare.
+
+\textbf{Le réentraînement contrôlé.} Réentraîner à date fixe n'a pas de sens sur quelques dizaines
+de tickets par mois : un dispositif évalue s'il y a matière et écrit sa recommandation. Il déclenche
+au-delà de cent cinquante tickets collectés, ou dès qu'une catégorie minoritaire en gagne trente, et
+sept jours séparent deux promotions. Les étiquettes sont graduées : une catégorie corrigée par un
+administrateur est forte, une catégorie journalisée et non modifiée est moyenne, une catégorie que
+l'administrateur n'a jamais touchée n'est qu'une confirmation par omission et se trouve exclue —
+l'inclure reviendrait à réapprendre sur les sorties du modèle et à amplifier ses erreurs. À ce jour,
+faute de volume, aucun réentraînement n'a été recommandé, ce qui est le comportement attendu d'un
+service qui vient d'ouvrir.
 
 \section{Perspectives}
+
 \label{sec:perspectives7}
 
-Les voies décrites ici découlent des limites qui précèdent. Aucune n'a été mesurée, et nous les
-présentons comme des directions plutôt que comme des gains acquis.
+Les voies décrites ici découlent des limites du chapitre précédent. Aucune n'a été mesurée, et nous
+les présentons comme des objectifs plutôt que comme des gains acquis. Dix se dégagent, rangées par
+ce qu'elles demandent : une configuration, une décision du service, du temps d'expert, ou de
+l'exploitation.
 
-\subsection{Actions immédiatement réalisables}
+\textbf{Ce qui ne demande qu'une configuration.} Aucun développement, aucun arbitrage.
 
-Augmenter le nombre de processus de travail du service est sans risque fonctionnel et attaque
-directement la dégradation sous concurrence. C'est le premier geste à tenter, avant toute reprise
-du code.
+\begin{puces}
+\item \textbf{Augmenter le nombre de processus de travail.} Cette voie attaque directement la
+dégradation observée sous concurrence, sans risque fonctionnel. C'est le premier geste à tenter,
+avant toute reprise du code.
+\item \textbf{Fermer les réserves de sécurité.} Remplacer les secrets par défaut, ajouter une
+analyse de vulnérabilité sur les images, et étendre l'intégration continue aux tests que son
+environnement l'oblige aujourd'hui à écarter.
+\end{puces}
 
-Remplacer les secrets par défaut relève de la procédure de mise en production. Ajouter une analyse
-de vulnérabilité sur les images, et étendre la chaîne d'intégration continue aux tests qu'elle
-écarte aujourd'hui, demande une configuration et non un développement. Ces trois actions ferment
-autant de réserves signalées au bilan de conformité.
+\textbf{Ce qui demande une décision du service.} Le travail technique est fait dans les quatre cas ;
+ce qui manque est un choix qui n'appartient pas au projet.
 
-\subsection{Arbitrages à trancher avant tout développement}
+\begin{puces}
+\item \textbf{Servir le transformer plutôt que la chaîne lexicale.} Il récupère 0,28 point de
+F1-macro sur l'entrée de production, et son coût d'inférence n'est plus celui qu'annonçait la
+première rédaction une fois ramené à la longueur de séquence que le corpus demande
+(section~\ref{sec:servable4}). La décision ne porte donc plus d'abord sur le matériel, mais sur le
+budget de temps de réponse que le service accepte. Une voie intermédiaire réserverait le
+transformer aux seuls tickets que la chaîne lexicale qualifie mal.
+\item \textbf{Trancher ce que porte le seuil de pertinence.} Il a été recalibré depuis
+(section~\ref{sec:seuil5}) ; ce qui reste à décider n'est plus sa valeur, mais l'arbitrage qu'elle
+porte entre des suggestions moins nombreuses et plus justes et une liste plus longue et plus mêlée,
+que le protocole d'approximation ne permet pas de départager.
+\item \textbf{Fixer jusqu'où l'orientation trie.} Chaque ticket reçoit déjà, à sa création, une
+décision de routage journalisée avec son motif, et la file dédiée la rend exploitable. Reste à
+décider de l'ampleur du tri, sachant qu'il ne ferme aucune porte et qu'un ticket orienté demeure
+modifiable comme les autres.
+\item \textbf{Arrêter le cadre de protection des données personnelles.} Le choix technique est fait
+et posé, la pseudonymisation par empreinte à clé. Restent à arrêter une durée de conservation,
+sans laquelle le script de purge refuse de s'exécuter, et à décider de l'information des personnes.
+\end{puces}
 
-Servir le transformer adapté à la place de la chaîne lexicale récupérerait 0,25 point de F1-macro.
-Le coût est mesuré au chapitre~4 : 325,8\,ms par ticket sur processeur, contre 58,7\,ms sur carte
-graphique. La décision porte donc moins sur le modèle que sur le matériel qui l'accueillera. Une
-troisième voie existe, réserver le transformer aux seuls tickets que la chaîne lexicale ne qualifie
-pas de façon sûre, ce qui suppose d'avoir d'abord activé le routage par index de confiance.
+\textbf{Ce qui demande du temps d'expert.} Ni configuration ni développement, seulement des heures
+d'un consultant du service.
 
-Recalibrer le seuil de pertinence sur l'échelle du moteur hybride rendrait au seuil sa fonction de
-discrimination. La conséquence doit être anticipée : des tickets cesseraient d'être considérés
-comme nouveaux, et l'obligation de rédiger une solution avant clôture s'assouplirait d'autant. Le
-gain de justesse se paierait en enrichissement de la base de connaissances, arbitrage qui appartient
-au service.
+\begin{puces}
+\item \textbf{Faire reprendre les quarante requêtes annotées.} Elles le sont par l'auteur de ce
+mémoire ; une demi-journée d'un consultant remplacerait un jugement d'adéquation par un jugement
+d'utilité réelle, seul capable de dire si une suggestion fait gagner du temps. La mesure annotée de
+la section~\ref{sec:eval5} montre déjà que l'approximation sous-estime le moteur servi ; savoir de
+combien exactement suppose cette reprise.
+\item \textbf{Annoter un jeu d'évaluation complet.} Quelques journées d'un expert, et le seul moyen
+de remplacer une mesure indirecte de pertinence par une mesure directe.
+\end{puces}
 
-Activer le routage automatique des cas les mieux assurés reste enfin une décision de produit. Le
-dispositif technique existe, l'indice de confiance est calculé et enregistré, et seule manque
-l'autorisation de s'en servir.
+\textbf{Ce qui demande de l'exploitation.} Ces deux voies ne s'achètent ni ne se programment.
 
-\subsection{Évolutions tributaires du temps et des données}
+\begin{puces}
+\item \textbf{Laisser le corpus s'enrichir.} C'est la réponse de fond à sa pauvreté : chaque ticket
+résolu produit une étiquette vérifiée, et c'est par cette voie que les catégories absentes du jeu
+de test y entreront. Le réentraînement se déclenchera alors de lui-même.
+\item \textbf{Observer du trafic réel.} La perspective la plus riche. Le taux de correction des
+catégories, le taux d'utilisation des suggestions et les avis des demandeurs sont déjà
+enregistrés ; il ne manque que des mois d'exploitation.
+\end{puces}
 
-Le mécanisme de collecte décrit à la section~\ref{sec:mlops7} constitue la réponse de fond à la
-pauvreté du corpus. Chaque ticket résolu par un administrateur produit une étiquette vérifiée, et
-c'est par cette voie que les catégories absentes du jeu de test finiront par y entrer. Le
-réentraînement contrôlé se déclenchera de lui-même lorsque le volume le justifiera.
-
-Constituer un jeu d'évaluation annoté pour le moteur de recherche demanderait quelques journées
-d'un expert du service. C'est le seul moyen de remplacer une mesure indirecte par une mesure
-directe de pertinence.
-
-Observer le comportement du système sur du trafic réel reste la perspective la plus riche. Le taux
-de correction des catégories, le taux d'utilisation des suggestions et les avis des demandeurs sont
-déjà enregistrés. Il ne manque que des mois d'exploitation pour que ces indicateurs disent quelque
-chose.
+% Aucun flottant du corps ne doit franchir la conclusion.
+\FloatBarrier
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
 
-Ce chapitre a mis la plateforme en conditions d'exploitation et l'a confrontée à ses exigences.
+La plateforme existe. Un service en trois couches expose trente-six chemins sous un contrat typé,
+une interface de dix-sept écrans sert deux espaces distincts, et un parcours métier contrôlé côté
+serveur relie le dépôt à la clôture. L'application se lance par une seule commande qui démarre
+quatre services conteneurisés, et la chaîne d'apprentissage encadre le passage d'un modèle en
+service par une porte qui refuse par défaut.
 
-Le déploiement est reproductible : quatre services, une commande, aucune donnée qui sorte du réseau
-interne. La chaîne d'apprentissage est déclarée et rejouable, et la porte de promotion a déjà
-refusé une version candidate, ce qui vaut mieux qu'une porte jamais éprouvée. Cent trente-trois
-tests protègent le comportement du service, dont plusieurs inscrivent une règle métier que le code
-seul ne suffirait pas à garantir.
+Le parcours se referme sur lui-même. Le service résout une demande, la résolution enrichit la base,
+et la demande suivante en bénéficie. C'est le seul mécanisme par lequel la plateforme s'améliore
+sans intervention sur son code.
 
-Sur les huit catégories d'exigences non fonctionnelles, cinq sont tenues, deux le sont
-partiellement, une ne l'est pas. Le temps de réponse échoue de trente millisecondes sans
-concurrence et s'effondre dès que plusieurs demandes arrivent ensemble. La cause est identifiée et
-la première correction est connue.
-
-Nous avons choisi de rapporter cet échec en ouverture du chapitre plutôt qu'en note de bas de page.
-Un travail d'ingénieur se juge autant à ce qu'il mesure qu'à ce qu'il réussit, et une exigence non
-tenue mais quantifiée oriente la suite du travail bien mieux qu'une exigence déclarée satisfaite
-sans preuve.
+Les six phases de la démarche sont parcourues. La conclusion générale revient sur les résultats
+obtenus, les limites du travail et les perspectives d'évolution.

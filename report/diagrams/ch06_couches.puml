@@ -1,0 +1,74 @@
+' Architecture en trois couches du service, vue d'ensemble.
+'
+' Le schema dit QUI FAIT QUOI, pas combien de lignes : il sert a faire saisir
+' l'idee d'un seul coup d'oeil. Le desequilibre reel entre les couches est
+' enonce dans le texte de la section 6.3, la ou il peut etre explique.
+'
+' SOURCES DES FAITS
+'   api/routers/          cinq routers
+'   api/services/         six services
+'   api/db/repositories/  acces aux donnees
+'   api/middleware/       jeton signe et controle d'acces par role
+'   docker/docker-compose.yml  PostgreSQL et ChromaDB
+@startuml ch06_couches
+!include _style.puml
+
+skinparam nodesep 14
+skinparam ranksep 16
+skinparam rectangle {
+  FontSize 13
+  BorderThickness 1.1
+}
+
+rectangle "**Interface Angular**" as UI #FAEFD0
+
+rectangle "**Routers** · exposent les chemins, valident les entrées et les sorties, vérifient les droits" as R #DCE9F8 {
+  rectangle "authentification" as R1 #FFFFFF
+  rectangle "tickets" as R2 #FFFFFF
+  rectangle "administration" as R3 #FFFFFF
+  rectangle "ingestion" as R4 #FFFFFF
+  rectangle "prédictions" as R5 #FFFFFF
+  R1 -[hidden]right- R2
+  R2 -[hidden]right- R3
+  R3 -[hidden]right- R4
+  R4 -[hidden]right- R5
+}
+
+rectangle "**Services** · portent la logique métier" as S #E2E3F5 {
+  rectangle "authentification" as S1 #FFFFFF
+  rectangle "tickets" as S2 #FFFFFF
+  rectangle "intelligence artificielle" as S3 #FFFFFF
+  rectangle "recherche" as S4 #FFFFFF
+  rectangle "modèle de langage" as S5 #FFFFFF
+  rectangle "messagerie" as S6 #FFFFFF
+  S1 -[hidden]right- S2
+  S2 -[hidden]right- S3
+  S3 -[hidden]right- S4
+  S4 -[hidden]right- S5
+  S5 -[hidden]right- S6
+}
+
+rectangle "**Repositories** · encapsulent l'accès aux données" as P #E8F0EC {
+  rectangle "tickets " as P1 #FFFFFF
+  rectangle "utilisateurs" as P2 #FFFFFF
+  P1 -[hidden]right- P2
+}
+
+rectangle "**Persistance**" as D #D6EFE7 {
+  rectangle "PostgreSQL\nétat des tickets" as DB #FFFFFF
+  rectangle "ChromaDB\nbase de connaissances" as VDB #FFFFFF
+  DB -[hidden]right- VDB
+}
+
+UI --> R : requête HTTP
+R --> S : aucune règle métier\nne reste ici
+S --> P
+P --> D
+
+note right of R
+  Le jeton signé et le
+  contrôle d'accès par rôle
+  s'appliquent avant que
+  la fonction ne s'exécute.
+end note
+@enduml

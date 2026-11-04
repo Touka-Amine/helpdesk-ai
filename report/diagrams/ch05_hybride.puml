@@ -1,0 +1,49 @@
+' Chaine de la recherche hybride : deux moteurs interroges en parallele, fusion,
+' puis seuil. L'ordre est le point du schema, et le texte seul le rend confus.
+'
+' SOURCES DES FAITS
+'   src/rag/hybrid_engine.py   alpha 0.5, top_k 3, sous-moteurs a top_k x 5 = 15
+'                              avec similarity_threshold 0.0, seuil applique apres fusion
+'   params.yaml                rag.top_k 3, rag.similarity_threshold 0.35,
+'                              rag.hybrid_alpha 0.5
+'   report/chap_05.tex 5.3     TF-IDF 5 000 descripteurs, mpnet 768 dimensions
+@startuml ch05_hybride
+!include _style.puml
+
+skinparam nodesep 22
+skinparam ranksep 24
+skinparam rectangle {
+  FontSize 12
+  BorderThickness 1.1
+}
+
+rectangle "**Demande en texte libre**" as Q #DCE9F8
+
+rectangle "**Moteur lexical**\nTF-IDF, 5 000 descripteurs\nunigrammes et bigrammes\nsimilarité cosinus" as LEX #E2E3F5
+rectangle "**Moteur sémantique**\nplongements de phrases, 768 dimensions\nFAISS, produit scalaire sur\nvecteurs normalisés" as SEM #E2E3F5
+
+rectangle "15 candidats\n**aucun seuil**" as CL #F7F8FA
+rectangle "15 candidats\n**aucun seuil**" as CS #F7F8FA
+
+rectangle "**Fusion linéaire**\nscore = 0,5 · sémantique  +  0,5 · lexical" as FUS #FAEFD0
+
+rectangle "**Seuil 0,35**\nappliqué en dernier" as SEUIL #FAEFD0
+
+rectangle "**3 passages proposés**\nà l'administrateur" as OUT #D6EFE7
+
+Q --> LEX
+Q --> SEM
+LEX --> CL
+SEM --> CS
+CL --> FUS
+CS --> FUS
+FUS --> SEUIL
+SEUIL --> OUT
+
+note right of SEUIL
+  Filtrer avant la fusion écarterait
+  un ticket que l'autre moteur aurait
+  fait remonter. L'ordre est donc
+  fusion d'abord, seuil ensuite.
+end note
+@enduml

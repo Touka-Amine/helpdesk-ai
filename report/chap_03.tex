@@ -1,351 +1,25 @@
-\chapter{Analyse et préparation des données}
+\addtocontents{toc}{\protect\phasecrisp{Phase 3 --- Préparation des données}}
+\chapter{Préparation et construction des données}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
 
-Un modèle ne vaut que ce que valent les données dont il apprend. Ce chapitre décrit le corpus de
-tickets du service support, mesure sa qualité et expose le travail de préparation conduit avant
-toute modélisation. L'analyse met au jour deux caractéristiques qui pèsent sur toute la suite : une
-distribution très inégale entre catégories et une forte redondance des situations décrites.
+La compréhension des données a livré un diagnostic. Ce chapitre ouvre la troisième phase de la
+démarche et transforme l'export brut en jeux exploitables, sans jamais altérer la substance d'un
+ticket.
 
-La section~\ref{sec:antifuite} occupe une place particulière : elle expose le découpage entre
-entraînement et test, dont dépend la validité de tous les résultats rapportés aux chapitres~4 et~5.
+Le travail se déroule en trois temps. Le nettoyage et la construction de variables d'abord. Le
+découpage entre apprentissage et test ensuite, dont dépend la validité de tous les résultats
+rapportés plus loin. La constitution de la base de connaissances enfin, qui n'est pas le même objet
+que le jeu d'apprentissage et ne doit jamais être confondue avec lui.
 
-\section{Présentation des données}
-
-\subsection{Provenance et mode de collecte}
-\label{sec:provenance}
-
-Le jeu de données nous a été fourni par l'entreprise. Il rassemble les demandes traitées par le
-service support dans le cadre de son activité courante : 1\,800 tickets créés entre le
-1\textsuperscript{er} janvier 2025 et le 17 février 2026, soit quatorze mois d'activité et une
-moyenne de 129 tickets par mois. Ils émanent de 202 demandeurs distincts répartis sur les huit
-filiales du groupe, et sont assignés à onze intervenants, ce qui recoupe l'effectif du service
-décrit au chapitre~1.
-
-Un défaut de saisie se voit dès l'ouverture du fichier. Le champ \texttt{Date de création} mélange
-deux formats : 828 lignes au format ISO \texttt{AAAA-MM-JJ hh:mm:ss} et 972 au format français
-\texttt{JJ/MM/AAAA hh:mm}. Une lecture qui n'essaierait qu'un seul format écarterait silencieusement
-plus de la moitié des dates. Nous reconnaissons donc les deux explicitement au chargement.
-
-\subsection{Schéma et variable cible}
-\label{sec:schema}
-
-Chaque ticket est décrit par dix-huit champs. Le tableau~\ref{tab:schema} les regroupe par rôle
-plutôt que dans l'ordre du fichier.
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Organisation des dix-huit champs du jeu de données}
-\label{tab:schema}
-\begin{tabular}{|Bp{2.6cm}|Lp{5.2cm}|Lp{5.8cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Groupe} & \textbf{Champs} & \textbf{Rôle dans le projet} \\
-\hline
-Identification & \texttt{ID}, \texttt{CID} & Clé du ticket et référence de configuration \\
-\hline
-Contenu & \texttt{Titre}, \texttt{Description} & Entrée textuelle des modèles \\
-\hline
-Classement & \texttt{Catégorie}, \texttt{Classification}, \texttt{Priorité} & \texttt{Catégorie}
-est la variable cible ; les deux autres servent de contexte \\
-\hline
-Acteurs & \texttt{Demandeur}, \texttt{Filiale}, \texttt{Assigné~à} & Traçabilité de la demande et
-de son traitement \\
-\hline
-Suivi & \texttt{STATUT}, \texttt{Date de création}, \texttt{Date de résolution} & Traçabilité des
-états du ticket \\
-\hline
-Résolution & \texttt{Résolution/Motif}, \texttt{Analyse}, \texttt{knowledge Base} & Matière de la
-base de connaissances interrogée par le moteur RAG \\
-\hline
-Provenance & \texttt{Type d'élément}, \texttt{Chemin~d'accès} & Champs techniques hérités de
-l'outil de gestion, non exploités par les modèles \\
-\hline
-\end{tabular}
-\end{table}
-
-La variable cible est le champ \texttt{Catégorie}, qui prend huit modalités : \emph{Microsoft},
-\emph{Réseau}, \emph{Applicatifs}, \emph{Infrastructure}, \emph{Système}, \emph{Communication},
-\emph{Sécurité} et \emph{Backup}. C'est le référentiel employé par le service, introduit au
-chapitre~1.
-
-L'annotation est fiable : sur les 58 libellés de titre distincts que compte le corpus, la
-correspondance du titre vers la catégorie est une fonction, sans exception. Ce constat écarte le
-bruit d'étiquetage comme explication des performances observées au chapitre~4.
-
-\subsection{Un jeu de données public pour situer le corpus}
-
-Pour disposer d'un point de comparaison extérieur, nous avons chargé un jeu public de tickets de
-support~\cite{hfTickets}, filtré sur les enregistrements en langue anglaise, soit 11\,923 tickets
-décrits par quinze champs. Sa structure recoupe largement la nôtre
-(tableau~\ref{tab:bench}).
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Correspondance entre le corpus \OTBS et le jeu de données public}
-\label{tab:bench}
-\begin{tabular}{|Bp{3.6cm}|Lp{4.2cm}|Lp{5.4cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Corpus \OTBS} & \textbf{Jeu public} & \textbf{Rôle} \\
-\hline
-\texttt{Titre} & \texttt{subject} & Titre court \\
-\hline
-\texttt{Description} & \texttt{body} & Texte libre \\
-\hline
-\texttt{Catégorie} (8 classes) & \texttt{queue} (10 classes) & Cible de classification \\
-\hline
-\texttt{Classification} & \texttt{type} & Nature de la demande \\
-\hline
-\texttt{Priorité} & \texttt{priority} & Priorité déclarée \\
-\hline
-\texttt{Résolution/Motif} & \texttt{answer} & Réponse apportée \\
-\hline
-\end{tabular}
-\end{table}
-
-La langue et le domaine diffèrent trop pour que ce jeu serve à l'entraînement. Il sert de repère et
-livre un chiffre réexploité plus loin : 10\,891 titres distincts pour 11\,923 tickets, soit 91\,\%
-de titres uniques, contre 3\,\% chez nous. L'écart est considérable pour deux corpus qui décrivent
-la même activité ; nous y revenons à la section~\ref{sec:representativite}.
-
-\section{Analyse exploratoire des données}
-
-\subsection{Distribution des catégories}
-\label{sec:distribution}
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.94\textwidth]{ch03_distribution_categories.png}
-\caption{Répartition des tickets par catégorie}
-\label{fig:distcat}
-\end{figure}
-
-La distribution de la figure~\ref{fig:distcat} est nettement inégale. \emph{Microsoft} rassemble
-409 tickets et \emph{Réseau} 369, quand \emph{Sécurité} en compte 73 et \emph{Backup} 69. Le rapport
-entre la catégorie la plus fréquente et la plus rare atteint 5,93, et les trois premières
-concentrent 1\,104 tickets, soit 61\,\% du corpus.
-
-Ce déséquilibre est celui de l'activité réelle du service. Il pose une difficulté de modélisation :
-un classifieur entraîné sans précaution privilégie les catégories abondantes, affichant une
-exactitude globale élevée tout en échouant sur les catégories rares. Le problème est d'autant plus
-gênant que \emph{Sécurité} est celle dont une erreur de classement coûte le plus cher. Le chapitre~4
-le traite par le choix de la métrique et la pondération des classes.
-
-\subsection{Complétude des champs}
-\label{sec:completude}
-
-Douze des dix-huit champs sont renseignés sur la totalité des lignes, dont les quatre qui portent
-l'information exploitée par les modèles : \texttt{Titre}, \texttt{Description}, \texttt{Catégorie}
-et \texttt{knowledge Base}. La figure~\ref{fig:completude} donne le taux de remplissage des
-dix-huit champs, le tableau~\ref{tab:completude} détaille les six incomplets.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.92\textwidth]{ch03_completude.png}
-\caption{Taux de remplissage des dix-huit champs du jeu de données}
-\label{fig:completude}
-\end{figure}
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Champs incomplets et interprétation}
-\label{tab:completude}
-\begin{tabular}{|Bp{3.4cm}|Cp{2.0cm}|Lp{7.4cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Champ} & \textbf{Manquant} & \textbf{Interprétation} \\
-\hline
-\texttt{Date de résolution} & 73,6\,\% & Manquant par construction : seuls les 476 tickets au
-statut \emph{Résolu} en portent une \\
-\hline
-\texttt{CID} & 50,3\,\% & Référence de configuration renseignée au cas par cas, sans caractère
-obligatoire \\
-\hline
-\texttt{Résolution/Motif} & 5,9\,\% & Traité par un repli sur \texttt{knowledge Base} dans le
-moteur RAG \\
-\hline
-\texttt{Analyse} & 5,6\,\% & Champ de commentaire libre, facultatif \\
-\hline
-\texttt{Priorité} & 3,4\,\% & Non renseignée à la saisie \\
-\hline
-\texttt{Assigné à} & 3,1\,\% & Tickets non encore attribués au moment de l'export \\
-\hline
-\end{tabular}
-\end{table}
-
-Aucune de ces lacunes ne compromet le projet : les deux taux les plus élevés s'expliquent par la
-nature des champs concernés, et les quatre autres restent sous 6\,\%. Le service renseigne
-correctement les fiches qu'il traite ; ce qui manque relève du cycle de vie du ticket ou de champs
-facultatifs.
-
-\subsection{Longueur des textes et cycle de vie}
-
-Les descriptions sont courtes et homogènes : de 23 à 46 mots, pour une médiane de 33. Aucun ticket
-n'est vide ni aberrant par la longueur, et les titres comptent de 2 à 8 mots. Cette homogénéité
-dispense de tronquer ou de segmenter les textes avant de les soumettre à un transformer.
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.86\textwidth]{ch03_longueurs.png}
-\caption{Distribution de la longueur des descriptions, en nombre de mots}
-\label{fig:longueurs}
-\end{figure}
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Répartition des tickets par statut}
-\label{tab:statuts}
-\begin{tabular}{|Bp{4.0cm}|Cp{2.4cm}|Cp{2.4cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Statut} & \textbf{Tickets} & \textbf{Part} \\
-\hline
-Résolu & 476 & 26,4\,\% \\
-\hline
-Rejeté & 464 & 25,8\,\% \\
-\hline
-Problème & 328 & 18,2\,\% \\
-\hline
-Prise en charge & 321 & 17,8\,\% \\
-\hline
-En attente & 211 & 11,7\,\% \\
-\hline
-\end{tabular}
-\end{table}
-
-Le champ \texttt{STATUT} décrit l'état du ticket au moment de l'export
-(tableau~\ref{tab:statuts}). Deux lectures s'imposent.
-
-\begin{puces}
-\item \textbf{Le taux de rejet.} 464 tickets, plus d'un quart du corpus, ont été écartés sans
-résolution. Le chapitre~1 rattache ce taux à l'absence de contrôle à l'entrée. Aucun motif structuré
-de rejet n'est enregistré, ce qui interdit d'en décomposer les causes.
-\item \textbf{Une limite de mesure.} Les 476 tickets résolus sont les seuls à porter une date de
-résolution, ce qui restreint tout calcul de délai à 26,4\,\% du corpus. Sur ce sous-ensemble, le
-délai médian entre création et résolution s'établit à deux jours, avec un maximum de quatre. La
-charge réelle du service reste hors de portée.
-\end{puces}
-
-\subsection{Redondance du corpus}
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.90\textwidth]{ch03_redondance.png}
-\caption{Diversité du corpus : lignes, descriptions et titres distincts}
-\label{fig:redondance}
-\end{figure}
-
-La figure~\ref{fig:redondance} rapproche trois décomptes. Pour 1\,800 lignes, nous dénombrons
-1\,535 descriptions distinctes, soit 85\,\%. Les titres ne prennent que 58 valeurs distinctes, et le
-champ \texttt{knowledge Base} en prend exactement autant. Le corpus s'organise donc autour de
-58 types de tickets récurrents, chacun instancié en moyenne 31 fois avec des variations de surface :
-demandeur, dates, identifiants de configuration, tournures de phrase.
-
-La conséquence porte sur le protocole expérimental. Un découpage aléatoire placerait le même type de
-ticket des deux côtés ; le modèle retrouverait au test un scénario déjà vu, et le score mesuré
-refléterait sa capacité à mémoriser plutôt qu'à généraliser. La section~\ref{sec:antifuite} traite
-ce risque.
-
-\subsection{Synthèse du diagnostic de qualité}
-
-Les indicateurs du tableau~\ref{tab:dq} proviennent tous du script de diagnostic exécuté sur le
-corpus, qui écrit ses résultats dans un fichier de métriques et engendre les figures de cette
-section. Aucune valeur n'a été saisie à la main, ce qui rend le diagnostic reproductible à
-l'identique.
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Synthèse du diagnostic de qualité}
-\label{tab:dq}
-\begin{tabular}{|Bp{5.0cm}|Lp{3.6cm}|Lp{4.2cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Indicateur} & \textbf{Valeur} & \textbf{Lecture} \\
-\hline
-Lignes et champs & 1\,800 sur 18 champs & Volume exploitable \\
-\hline
-Catégories & 8 & Classification multi-classes \\
-\hline
-Déséquilibre maximal & 5,93 & À traiter en modélisation \\
-\hline
-Tickets vides & 0 & Aucun \\
-\hline
-Doublons de ligne complète & 0 & Aucun \\
-\hline
-Incohérences d'étiquetage & 0 & Annotation fiable \\
-\hline
-Descriptions distinctes & 1\,535 sur 1\,800 & Diversité satisfaisante \\
-\hline
-Titres distincts & 58 & Corpus organisé par scénarios \\
-\hline
-Longueur des descriptions & médiane 33 mots & Textes homogènes \\
-\hline
-Champs critiques manquants & 0 & Complétude assurée \\
-\hline
-\end{tabular}
-\end{table}
-
-Le corpus est structurellement sain. Ses difficultés portent sur la forme de sa distribution et sur
-sa composition ; son intégrité est acquise.
-
-\subsection{Risques identifiés et traitements retenus}
-
-\begin{table}[!htbp]
-\centering
-\styletableau
-\caption{Risques liés aux données et traitements associés}
-\label{tab:risques}
-\begin{tabular}{|Bp{3.2cm}|Lp{4.4cm}|Lp{5.2cm}|}
-\hline
-\rowcolor{enteteTab}
-\textbf{Risque} & \textbf{Effet attendu} & \textbf{Traitement} \\
-\hline
-Déséquilibre des catégories & Rappel faible sur \emph{Sécurité} et \emph{Backup} & Métrique
-F1-macro, pondération des classes, suivi du rappel par classe \\
-\hline
-Redondance des types de tickets & Fuite entre entraînement et test, scores surestimés & Découpage
-par groupe de titres \\
-\hline
-Nettoyage trop agressif & Perte de signal lexical, généralisation dégradée & Révision des règles,
-conservation du vocabulaire informatique \\
-\hline
-Champs incomplets & Base de connaissances lacunaire & Repli de \texttt{Résolution/Motif} sur
-\texttt{knowledge Base} \\
-\hline
-Données personnelles en clair & Exposition de noms et de rattachements & Non traité \\
-\hline
-\end{tabular}
-\end{table}
-
-Le tableau~\ref{tab:risques} associe à chaque risque son effet attendu sur les modèles et le
-traitement décidé.
-
-\subsection{Limite assumée : la représentativité du corpus}
-\label{sec:representativite}
-
-Les sous-sections précédentes traitaient de risques que nous avons pu corriger. Celle-ci énonce une
-limite que nous n'avons pas les moyens de lever : le corpus décrit fidèlement l'activité du service
-support d'\OTBS sur quatorze mois, et rien de plus.
-
-Sa composition en 58 scénarios récurrents en délimite la portée. Un modèle entraîné sur ces données
-apprend à reconnaître des familles de problèmes déjà rencontrées ; le corpus ne permet pas de
-mesurer sa capacité à traiter un problème inédit, faute d'y trouver de tels cas. Le rapprochement
-avec le jeu public conduit au même constat : 91\,\% de titres uniques d'un côté, 3\,\% de l'autre.
-Les performances du chapitre~4 doivent se lire à cette échelle.
-
-Deux restrictions de périmètre s'y ajoutent. Le corpus couvre les huit filiales du groupe et leur
-parc applicatif, si bien que les résultats ne se transposent pas à une organisation dont le paysage
-informatique diffère. Le référentiel de huit catégories est propre au service : un autre découpage
-métier produirait un autre problème de classification.
+Une dernière section porte sur la gouvernance : une chaîne de traitement ne vaut que si elle se
+rejoue à l'identique.
 
 \section{Préparation des données}
+
+Le diagnostic est posé et la phase de préparation des données s'ouvre. Elle transforme l'export
+brut en un jeu exploitable, sans jamais altérer la substance d'un ticket.
 
 \subsection{Nettoyage textuel}
 \label{sec:nettoyage}
@@ -371,6 +45,20 @@ l'information. Seules les adresses IP restent retirées, trop spécifiques pour 
 \og salle serveur \fg{} ou \og tentatives connexion \fg{} que le découpage en mots isolés dissout.
 \end{puces}
 
+La figure~\ref{fig:nettoyage3} donne l'effet de la version retenue sur la longueur des textes.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{ch03_longueurs_avant_apres.png}
+\caption{Effet du prétraitement retenu sur la longueur des textes}
+\label{fig:nettoyage3}
+\end{figure}
+
+La médiane passe de trente-trois mots sur la description brute à vingt-deux sur le texte nettoyé.
+La comparaison avec la première version situe l'enjeu : celle-ci ramenait la description à une
+douzaine de mots, soit près des deux tiers du contenu retirés, quand la version retenue en conserve
+l'essentiel tout en écartant ce qui ne discrimine pas.
+
 \subsection{Valeurs problématiques et champs manquants}
 
 Deux défauts de saisie demandent un traitement explicite. Le champ \texttt{Date de création} mélange
@@ -383,6 +71,8 @@ sens, comme la section~\ref{sec:completude} l'a établi, et aucun n'alimente les
 
 Nous ajoutons cinq variables aux dix-huit champs d'origine, ce qui porte le jeu préparé à
 vingt-trois colonnes.
+
+Le tableau~\ref{tab:variables} les détaille.
 
 \begin{table}[!htbp]
 \centering
@@ -414,9 +104,11 @@ transformer un signal contextuel que le texte libre ne porte pas toujours : une 
 accompagne plus souvent \emph{Infrastructure} et \emph{Sécurité} que \emph{Microsoft}. Le
 regroupement préalable des modalités réduit le nombre de préfixes possibles et limite la dispersion.
 
-\FloatBarrier
 
 \section{Préparation du corpus pour la classification}
+
+Le découpage entre apprentissage et test décide de la validité de toute mesure qui
+suivra. Nous le construisons en écartant d'abord le risque de fuite.
 
 \subsection{Séparation anti-fuite}
 \label{sec:antifuite}
@@ -443,8 +135,9 @@ que la première exécution.
 
 La base de connaissances du moteur RAG suit le même principe et ne retient que des tickets
 d'entraînement, ce qui empêche le moteur de retrouver la résolution d'un ticket de test au moment de
-l'évaluation. Elle rassemble 1\,357 tickets, tous ceux du jeu d'entraînement dont le champ
-\texttt{Résolution/Motif} est renseigné, quel que soit leur statut. Ce point s'écarte d'une
+l'évaluation. Elle rassemble 1\,357 \emph{tickets documentés} au sens du chapitre~2, c'est-à-dire
+tous ceux du jeu d'entraînement dont le champ \texttt{Résolution/Motif} est renseigné, quel que soit
+leur statut. Ce point s'écarte d'une
 intuition répandue et nous l'assumons : un ticket rejeté documente une demande hors périmètre, un
 ticket en cours documente une piste d'analyse, et l'un comme l'autre aident un consultant confronté
 à un cas voisin. La base se répartit en 363 tickets rejetés, 358 résolus, 237 au statut
@@ -498,8 +191,7 @@ configuration d'autant plus probable que le nombre de groupes est faible.
 La conséquence est directe. Toute moyenne par catégorie calculée sur ce jeu porte sur cinq classes
 et non sur huit. Le chiffre obtenu est mécaniquement supérieur à celui que donneraient les huit
 catégories, puisqu'il exclut les classes rares, celles-là mêmes que le modèle traite le moins bien.
-Les deux valeurs sont exactes ; seule leur comparaison est trompeuse. Le chapitre~4 rapporte donc
-ses résultats sous un protocole stratifié couvrant les huit catégories, et signale explicitement les
+Les deux valeurs sont exactes ; seule leur comparaison est trompeuse. Le chapitre~6 rapporte donc ses résultats sous un protocole stratifié couvrant les huit catégories, et signale explicitement les
 mesures issues du découpage groupé.
 
 Le découpage remplit la fonction pour laquelle nous l'avions conçu et introduit un biais que nous
@@ -514,7 +206,6 @@ reporte tel quel dans les deux jeux. C'est voulu : rééquilibrer avant de déco
 juger le modèle sur une distribution qu'il ne rencontrera jamais en service. Le déséquilibre se
 traite au moment de la modélisation, par le choix de la métrique et la pondération des classes.
 
-\FloatBarrier
 
 \section{Préparation des connaissances pour le RAG}
 \label{sec:kb3}
@@ -566,9 +257,11 @@ récapitule ce que le corpus devient, et le tableau~\ref{tab:deuxjeux} oppose le
 terme. Le chiffre de 1\,357 compte des documents, pas des réponses différentes : la redondance
 relevée plus haut se retrouve entière dans cette base, et le chapitre~5 en donne le détail.
 
-\FloatBarrier
 
 \section{Gouvernance et reproductibilité}
+
+Une chaîne de traitement ne vaut que si elle se rejoue à l'identique. Cette section décrit
+ce qui le garantit, et nomme la question qui reste ouverte.
 
 \subsection{Versionnement des données et du pipeline}
 
@@ -593,32 +286,36 @@ données et à un jeu de paramètres connu, et peut être recalculé à l'identi
 Le corpus contient des données à caractère personnel au sens du RGPD : le champ \texttt{Demandeur}
 porte les noms de 202 collaborateurs, le champ \texttt{Assigné à} ceux des onze consultants, et le
 champ \texttt{Filiale} rattache chaque personne à sa filiale. Le diagnostic de qualité avait
-identifié l'anonymisation de ces champs comme une action prioritaire. Nous ne l'avons pas réalisée :
-les traitements décrits opèrent sur les données nominatives telles qu'exportées.
+identifié l'anonymisation de ces champs comme une action prioritaire. Elle ne l'a pas été à ce
+stade : les traitements décrits dans ce chapitre opèrent sur les données nominatives telles
+qu'exportées.
 
-Le manquement est réel, même si deux circonstances en limitent la portée. L'ensemble de la chaîne
-s'exécute sur l'infrastructure d'\OTBS, sans transmission vers un service extérieur, de sorte que
-l'exigence de confidentialité posée au chapitre~1 est respectée ; les modèles se nourrissent par
-ailleurs du seul titre, de la description et des champs de résolution. Cela ne nous exonère pas :
-remplacer les noms par des identifiants stables au moment du chargement aurait coûté peu et supprimé
-le risque à la source. Le point figure parmi les travaux à conduire avant tout déploiement élargi.
+Le manquement était réel, et nous décrivons ici l'état dans lequel les données ont été reçues et
+traitées pendant la phase de préparation. L'ensemble de la chaîne s'exécute sur l'infrastructure
+d'\OTBS, sans transmission vers un service extérieur, de sorte que le volet (a) de l'exigence
+ENF-04 posée au chapitre~1 est respecté ; les modèles se nourrissent par ailleurs du seul titre, de
+la description et des champs de résolution. Le volet (b), celui des données personnelles, a été
+repris depuis : remplacer les noms par des identifiants stables au moment du chargement coûtait
+peu et supprimait le risque à la source, et c'est ce qui a été fait. La
+section~\ref{sec:conformite7} du chapitre~6 en rend compte, mesure de l'audit à l'appui, et dit
+aussi ce qui reste à la charge du service.
+
+% Aucun flottant du corps ne doit franchir la conclusion.
+\FloatBarrier
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
 
-Le corpus compte 1\,800 tickets couvrant quatorze mois d'activité, répartis en huit catégories et
-décrits par dix-huit champs. Son intégrité est bonne, son annotation cohérente, et les champs
-exploités par les modèles sont renseignés partout.
-
-Ses difficultés se situent ailleurs : la distribution des catégories est inégale d'un facteur 5,93,
-et le corpus s'organise autour de 58 types de tickets récurrents plutôt qu'autour de problèmes tous
-distincts. Le chapitre~4 traite la première par le choix de la métrique et la pondération. La
-seconde nous a conduits au découpage par groupe de titres, qui élimine la fuite visée et laisse
-trois catégories hors du jeu de test, limite dont le protocole du chapitre suivant tient compte.
-
 Le corpus ressort sous deux formes que la suite ne doit pas confondre. Un jeu d'apprentissage de
-1\,444 tickets et un jeu de test de 356, séparés par scénario, servent à évaluer les classifieurs du
-chapitre~4. Une base de 1\,357 documents, tirée du seul jeu d'apprentissage, fournit la matière du
-moteur de recherche du chapitre~5. Le diagnostic de représentativité de la
-section~\ref{sec:representativite} dit d'avance à quelle échelle lire les résultats de l'un comme de
-l'autre.
+1\,444 tickets et un jeu de test de 356, séparés par scénario pour écarter toute fuite, servent à
+évaluer les classifieurs. Une base de 1\,357 documents, tirée du seul jeu d'apprentissage, fournit
+la matière du moteur de recherche.
+
+La séparation anti-fuite a un coût qui sera rappelé au moment de lire les mesures : les
+cinquante-huit scénarios se répartissent en deux ensembles disjoints, quarante-six d'un côté et
+douze de l'autre.
+
+Le versionnement des données et du pipeline est en place, et la question des données personnelles
+reste ouverte, énoncée plutôt que masquée. Les deux chapitres suivants ouvrent la phase de
+modélisation, chacun sur un moteur.
+

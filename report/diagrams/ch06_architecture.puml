@@ -70,12 +70,12 @@ rectangle "**INTERFACE**" as C2 #EAF2FA {
 rectangle "**TRAITEMENT**" as C3 #EDF5EC {
   rectangle "**Service de tickets**\nrègles métier, contrôle d'accès RBAC, traçabilité des états" as API
   rectangle "**Classificateur**\ncatégorie et index de confiance" as CLF
-  rectangle "**Moteur de recherche**\ntickets résolus comparables" as RAG
+  rectangle "**Moteur de recherche**\ntickets documentés comparables" as RAG
   rectangle "**Modèle de langage**\nreformule les cas retrouvés" as LLM
 }
 
 rectangle "**DONNÉES**" as C4 #FDF4E6 {
-  database "**Base de connaissances**\nrésolutions indexées" as KB
+  database "**Base de connaissances**\nréponses déjà apportées, indexées" as KB
   database "**Base applicative**\ncomptes, tickets, historique" as PG
 }
 
@@ -98,7 +98,7 @@ legend bottom
   **Parcours d'une demande, dans l'ordre**
   **1.** le demandeur dépose sa demande
   **2.** le service de tickets la fait classer
-  **3.** il fait chercher les cas déjà résolus comparables
+  **3.** il fait chercher les cas déjà traités comparables
   **4.** il enregistre le ticket, sa proposition et son index de confiance
   **5.** l'administrateur reprend le ticket, le traite et le clôture
   **6.** il fait reformuler les cas retrouvés, à la demande
