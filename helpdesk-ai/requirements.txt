@@ -1,47 +1,47 @@
 # ── Data & NLP ────────────────────────────────────────────────────────────────
-pandas>=2.1.4
-numpy>=1.26.2
-scikit-learn>=1.6.0          # version requise pour best_pipeline.pkl
-imbalanced-learn>=0.12.0
-nltk>=3.8.1
-unidecode>=1.3.7
-regex>=2023.12.25
+pandas==3.0.2
+numpy==2.4.4
+scikit-learn==1.8.0          # version requise pour best_pipeline.pkl
+imbalanced-learn==0.14.1
+nltk==3.9.4
+unidecode==1.4.0
+regex==2026.5.9
 
 # ── Machine Learning additionnel ──────────────────────────────────────────────
 lightgbm>=4.0.0              # classification (optionnel — ignoré si absent)
 
 # ── MLOps ─────────────────────────────────────────────────────────────────────
 mlflow>=2.9.2
-dvc>=3.38.1
+dvc==3.67.1
 
 # ── API & Web ─────────────────────────────────────────────────────────────────
-fastapi>=0.108.0
-uvicorn>=0.25.0
-pydantic>=2.5.3
-pydantic-settings>=2.1.0
-python-multipart>=0.0.6
-email-validator>=2.0.0
+fastapi==0.138.2
+uvicorn==0.49.0
+pydantic==2.13.3
+pydantic-settings==2.14.0
+python-multipart==0.0.28
+email-validator==2.3.0
 
 # ── Base de données ───────────────────────────────────────────────────────────
-sqlalchemy>=2.0.25           # ORM — base opérationnelle (PostgreSQL)
+sqlalchemy==2.0.49           # ORM — base opérationnelle (PostgreSQL)
 psycopg2-binary>=2.9.9        # driver PostgreSQL
-chromadb>=0.5.0               # base vectorielle — base de connaissances RAG (tickets résolus)
+chromadb==1.5.9               # base vectorielle — base de connaissances RAG (tickets résolus)
 
 # ── RAG sémantique ────────────────────────────────────────────────────────────
-sentence-transformers>=2.2.2    # paraphrase-multilingual-mpnet-base-v2 (768d)
-faiss-cpu>=1.7.4                # index vectoriel FAISS — retrieval sémantique
-pyarrow>=14.0.0                 # pandas.read_parquet (SemanticRAGEngine.load)
+sentence-transformers==5.6.0    # paraphrase-multilingual-mpnet-base-v2 (768d)
+faiss-cpu==1.14.3                # index vectoriel FAISS — retrieval sémantique
+pyarrow==24.0.0                 # pandas.read_parquet (SemanticRAGEngine.load)
 
 # ── Sécurité / Auth ───────────────────────────────────────────────────────────
-python-jose>=3.3.0
-passlib[bcrypt]>=1.7.4
+python-jose==3.5.0
+passlib[bcrypt]==1.7.4
 bcrypt==4.0.1                # passlib 1.7.4 lit bcrypt.__about__.__version__, retire en bcrypt>=4.1
 
 # ── Utilitaires ───────────────────────────────────────────────────────────────
-python-dotenv>=1.0.0
-joblib>=1.3.2
-requests>=2.31.0             # scripts/load_test.py
-pytest>=7.4.3
-pytest-cov>=4.1.0            # ENF-10 : mesure de couverture (voir TESTING.md)
+python-dotenv==1.2.2
+joblib==1.5.3
+requests==2.33.1             # scripts/load_test.py
+pytest==9.1.1
+pytest-cov==7.1.0            # ENF-10 : mesure de couverture (voir TESTING.md)
 jupyter>=1.0.0
-ipykernel>=6.28.0
+ipykernel==7.2.0
