@@ -19,6 +19,7 @@ META_PATH    = os.path.join(os.path.dirname(__file__), '..', 'models', 'model_me
 SEM_RAG_DIR  = os.path.join(os.path.dirname(__file__), '..', 'models', 'semantic_rag')
 # Pointeur ecrit par src/registry/model_registry.py a chaque promotion ou rollback.
 POINTER_PATH = os.path.join(os.path.dirname(__file__), '..', 'models', 'registry', 'PRODUCTION')
+REGISTRY_DIR = os.path.join(os.path.dirname(__file__), '..', 'models', 'registry')
 
 # Intervalle minimal entre deux verifications du pointeur, en secondes. Le controle
 # est un simple open() sur un fichier de quelques octets, mais le faire a chaque
@@ -150,6 +151,39 @@ class Predictor:
                 return
             self._load_unlocked()
 
+    @staticmethod
+    def _resoudre_le_modele():
+        """
+        Chemins du pipeline servi et de ses metadonnees.
+
+        models/best_pipeline.pkl est une copie de la version promue, ecrite par
+        src/pipeline/promote.py. Le .gitignore exclut les .pkl a la racine de
+        models/ mais conserve ceux du registre : sur un clone frais, la copie
+        n'existe donc pas alors que la version qu'elle duplique est bien la.
+        Sans ce repli, le service refusait de demarrer apres un simple clone.
+
+        L'ordre est deliberement celui-la. La copie fait foi quand elle existe,
+        parce que c'est elle que promote.py met a jour et que ensure_fresh()
+        surveille. Le registre ne sert que de secours.
+        """
+        if os.path.exists(MODEL_PATH):
+            return MODEL_PATH, META_PATH
+
+        version = Predictor._read_pointer()
+        if version is not None:
+            dossier = os.path.join(REGISTRY_DIR, 'v%d' % version)
+            depuis_registre = os.path.join(dossier, 'pipeline.pkl')
+            if os.path.exists(depuis_registre):
+                meta = os.path.join(dossier, 'model_metadata.json')
+                print("[predictor] %s absent, repli sur le registre, version %d."
+                      % (os.path.relpath(MODEL_PATH), version))
+                return depuis_registre, (meta if os.path.exists(meta) else META_PATH)
+
+        raise FileNotFoundError(
+            "Aucun pipeline servi : ni %s, ni une version promue dans %s. "
+            "Lancer `python src/pipeline/promote.py --version 1` pour en designer une."
+            % (os.path.relpath(MODEL_PATH), os.path.relpath(REGISTRY_DIR)))
+
     def _load_unlocked(self):
         print("Chargement des modèles ML et RAG...")
 
@@ -157,10 +191,11 @@ class Predictor:
         import __main__
         __main__.RAGEngine = RAGEngine
 
-        self.pipeline = joblib.load(MODEL_PATH)
+        chemin_pipeline, chemin_meta = self._resoudre_le_modele()
+        self.pipeline = joblib.load(chemin_pipeline)
         self.rag = joblib.load(RAG_PATH)
 
-        with open(META_PATH, 'r', encoding='utf-8') as f:
+        with open(chemin_meta, 'r', encoding='utf-8') as f:
             self.metadata = json.load(f)
 
         # Seuil relevé 0.40→0.60 (Semaine 1 amélioration) : ~70% routage auto à ~85% précision
