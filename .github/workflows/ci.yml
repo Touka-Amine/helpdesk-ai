@@ -41,7 +41,12 @@ jobs:
           cache-dependency-path: helpdesk-ai/requirements.txt
 
       - name: Installer les dépendances
-        run: pip install -r requirements.txt ruff
+        # ruff est épinglé : installé sans version, pip prend la dernière, et le
+        # jeu de règles par défaut s'élargit d'une version à l'autre. Le même code
+        # passe sans rien signaler en 0.15.20 et remonte 858 écarts en 0.17.3,
+        # presque tous des préférences de style. Monter de version est un travail
+        # à conduire volontairement, pas une surprise au prochain push.
+        run: pip install -r requirements.txt ruff==0.15.20
 
       - name: Lint — ruff (src/ + api/ + tests/ + scripts/)
         run: ruff check src/ api/ tests/ scripts/ --ignore E501,E402
